@@ -2,33 +2,31 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; // <-- 1. IMPORT THE TRAIT
+use Spatie\Permission\Traits\HasRoles; // <-- Ensure this is here
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles; // <-- 2. USE THE TRAIT
+    use HasFactory, Notifiable, HasRoles; // <-- Ensure HasRoles is here
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', // Keep your original 'role' column for basic redirection
+        // The old 'role' column is no longer needed here
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -48,3 +46,4 @@ class User extends Authenticatable
         ];
     }
 }
+

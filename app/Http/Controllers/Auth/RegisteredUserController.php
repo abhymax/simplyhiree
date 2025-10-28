@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+// We don't need to import Role, the assignRole method is on the User model.
 
 class RegisteredUserController extends Controller
 {
@@ -33,12 +34,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // 1. Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
         
+        // 2. Assign the role using the Spatie package
         $user->assignRole('partner');
 
         event(new Registered($user));
@@ -65,12 +68,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // 1. Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+        // 2. Assign the role
         $user->assignRole('candidate');
 
         event(new Registered($user));
@@ -97,12 +102,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // 1. Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+        // 2. Assign the role
         $user->assignRole('client');
 
         event(new Registered($user));
@@ -110,4 +117,3 @@ class RegisteredUserController extends Controller
         return redirect()->route('client.dashboard');
     }
 }
-

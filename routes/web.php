@@ -13,11 +13,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Public & Guest Routes
 |--------------------------------------------------------------------------
-| Routes accessible to everyone or only to non-logged-in users.
 */
 
-// Public routes (visible to all)
-// REPLACED ARROW FUNCTION WITH STANDARD CLOSURE FOR GUARANTEED COMPATIBILITY
+// Public routes
 Route::get('/', function () {
     return view('landing');
 });
@@ -41,7 +39,6 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 | Authenticated User Routes
 |--------------------------------------------------------------------------
-| All routes in this group require the user to be logged in.
 */
 Route::middleware('auth')->group(function () {
     
@@ -91,10 +88,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
-        // Candidate Management Routes
         Route::get('/candidates/create', [PartnerController::class, 'createCandidate'])->name('candidates.create');
         Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store');
-        
         Route::get('/candidates', [PartnerController::class, 'listCandidates'])->name('candidates.index');
     });
     
