@@ -1,0 +1,31 @@
+[07-Oct-2025 08:06:50 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:06:50 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:06:50 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan:10
+Stack trace:
+#0 {main}
+  thrown in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:07:18 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:07:18 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:07:18 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan:10
+Stack trace:
+#0 {main}
+  thrown in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:08:03 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:08:03 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:08:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan:10
+Stack trace:
+#0 {main}
+  thrown in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:09:01 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:09:01 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:09:01 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan:10
+Stack trace:
+#0 {main}
+  thrown in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:09:21 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:09:21 UTC] PHP Warning:  require(/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php): Failed to open stream: No such file or directory in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[07-Oct-2025 08:09:21 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan:10
+Stack trace:
+#0 {main}
+  thrown in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
+[08-Oct-2025 10:37:40 UTC] PHP Fatal error:  Cannot redeclare Illuminate\Database\Migrations\Migration@anonymous::up() in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/database/migrations/2025_10_08_103329_add_role_to_users_table.php on line 29
