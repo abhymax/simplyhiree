@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\JobApplication; // <-- ADD THIS
 
 class AdminController extends Controller
 {
@@ -81,5 +82,40 @@ class AdminController extends Controller
 
         return redirect()->route('admin.jobs.pending')->with('success', 'Partner access for the job has been updated successfully.');
     }
+    
+    /**
+     * *** NEW METHOD ***
+     * Display a list of all job applications submitted by partners.
+     */
+    public function listApplications()
+    {
+        $applications = JobApplication::with(['job', 'candidate', 'partner'])
+                                      ->latest()
+                                      ->paginate(20); // Paginate for performance
+
+        return view('admin.applications.index', ['applications' => $applications]);
+    }
+    /**
+     * *** NEW METHOD ***
+     * Approve a submitted job application.
+     */
+    public function approveApplication(JobApplication $application)
+    {
+        $application->update(['status' => 'Approved']);
+        
+        return redirect()->route('admin.applications.index')->with('success', 'Application approved successfully.');
+    }
+
+    /**
+     * *** NEW METHOD ***
+     * Reject a submitted job application.
+     */
+    public function rejectApplication(JobApplication $application)
+    {
+        $application->update(['status' => 'Rejected']);
+        
+        return redirect()->route('admin.applications.index')->with('success', 'Application rejected successfully.');
+    }
+    
 }
 

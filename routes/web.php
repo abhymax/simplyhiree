@@ -68,6 +68,10 @@ Route::middleware('auth')->group(function () {
     // --- ADMIN PANEL ROUTES ---
     Route::middleware('role:Superadmin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/applications', [AdminController::class, 'listApplications'])->name('applications.index');
+        // --- ADD THESE TWO NEW ROUTES ---
+        Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
+        Route::post('/applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('applications.reject');
         Route::get('/jobs/pending', [AdminController::class, 'pendingJobs'])->name('jobs.pending');
         Route::post('/jobs/{job}/approve', [AdminController::class, 'approveJob'])->name('jobs.approve');
         Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
@@ -87,6 +91,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');
+        // --- ADD THIS NEW ROUTE ---
+    Route::get('/jobs/{job}/apply', [PartnerController::class, 'showApplyForm'])->name('jobs.showApplyForm');
+    // --- ADD THIS NEW ROUTE ---
+    Route::post('/jobs/{job}/submit', [PartnerController::class, 'submitApplication'])->name('jobs.submit');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
         Route::get('/candidates/create', [PartnerController::class, 'createCandidate'])->name('candidates.create');
         Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store');

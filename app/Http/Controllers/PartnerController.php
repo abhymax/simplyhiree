@@ -117,4 +117,69 @@ class PartnerController extends Controller
 
         return view('partner.candidates.index', ['candidates' => $candidates]);
     }
+    /**
+     * *** NEW METHOD (STEP 4) ***
+     * Show the form for submitting candidates for a specific job.
+     */
+    public function showApplyForm(Job $job)
+    {
+        $partner = Auth::user();
+
+        // Get all candidates belonging to this partner
+        $candidates = Candidate::where('partner_id', $partner->id)
+                                ->latest()
+                                ->get();
+
+        // You might want to add logic here to filter out candidates
+        // who have already applied for this job. We can add that later.
+
+        return view('partner.jobs.apply', [
+            'job' => $job,
+            'candidates' => $candidates
+        ]);
+    }
+    /**
+     * *** NEW METHOD (STEP 5) ***
+     * Store the new job applications from the partner.
+     */
+    public function submitApplication(Request $request, Job $job)
+    {
+        $request->validate([
+            'candidate_ids' => 'required|array|min:1',
+            'candidate_ids.*' => 'exists:candidates,id', // Ensure all IDs are valid candidates
+        ], [
+            'candidate_ids.required' => 'You must select at least one candidate to submit.',
+            'candidate_ids.min' => 'You must select at least one candidate to submit.'
+        ]);
+
+        $partner = Auth::user();
+        $submittedCount = 0;
+
+        foreach ($request->input('candidate_ids') as $candidateId) {
+            
+            // --- Check for duplicates (Optional but Recommended) ---
+            // This prevents a partner from submitting the same candidate twice for the same job.
+            $existingApplication = JobApplication::where('job_id', $job->id)
+                                                ->where('candidate_id', $candidateId)
+                                                ->first();
+            
+            if (!$existingApplication) {
+                JobApplication::create([
+                    'job_id' => $job->id,
+                    'candidate_id' => $candidateId,
+                    'partner_id' => $partner->id,
+                    'status' => 'Pending Review', // Set the initial status
+                ]);
+                $submittedCount++;
+            }
+        }
+
+        if ($submittedCount > 0) {
+            $message = $submittedCount . ' ' . \Illuminate\Support\Str::plural('application', $submittedCount) . ' submitted successfully!';
+            return redirect()->route('partner.jobs')->with('success', $message);
+        } else {
+            return redirect()->back()->with('info', 'All selected candidates have already been submitted for this job.');
+        }
+    }
+
 }
