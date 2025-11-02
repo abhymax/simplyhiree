@@ -6,6 +6,7 @@ use Illuminate\Http\Request; // <-- THE TYPO IS FIXED HERE
 use Illuminate\Support\Facades\Auth;
 use App\Models\Job;
 use App\Models\Candidate;
+use App\Models\JobApplication;
 use Illuminate\Support\Facades\Storage;
 
 class PartnerController extends Controller
@@ -24,8 +25,17 @@ class PartnerController extends Controller
      */
     public function applications()
     {
-        // Placeholder for now.
-        $applications = []; 
+        $partner = Auth::user();
+
+        // Get all applications where the related candidate
+        // belongs to this partner.
+        $applications = JobApplication::whereHas('candidate', function ($query) use ($partner) {
+                                          $query->where('partner_id', $partner->id);
+                                      })
+                                      ->with(['job', 'candidate'])
+                                      ->latest()
+                                      ->paginate(20); // Paginate the results
+
         return view('partner.applications', ['applications' => $applications]);
     }
 
@@ -37,7 +47,7 @@ class PartnerController extends Controller
         $partner = Auth::user();
         $jobs = Job::where('status', 'approved')
             ->whereDoesntHave('excludedPartners', function ($query) use ($partner) {
-                $query->where('partner_id', $partner->id);
+                $query->where('user_id', $partner->id);
             })
             ->latest()
             ->get();
@@ -181,5 +191,4 @@ class PartnerController extends Controller
             return redirect()->back()->with('info', 'All selected candidates have already been submitted for this job.');
         }
     }
-
 }

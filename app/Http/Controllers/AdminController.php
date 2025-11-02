@@ -89,7 +89,11 @@ class AdminController extends Controller
      */
     public function listApplications()
     {
-        $applications = JobApplication::with(['job', 'candidate', 'partner'])
+       $applications = JobApplication::with([
+                                          'job', 
+                                          'candidate.partner', // <-- THIS IS THE FIX (loads candidate AND the candidate's partner)
+                                          'candidateUser'      // This loads the direct-apply user (for later)
+                                      ])
                                       ->latest()
                                       ->paginate(20); // Paginate for performance
 
