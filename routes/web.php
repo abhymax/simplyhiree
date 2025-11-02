@@ -84,6 +84,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create');
         Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');
+        // --- ADD THIS NEW ROUTE ---
+        Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
+        // --- ADD THESE NEW HIRING ROUTES ---
+
+        // Route for the client to reject the applicant
+        Route::post('/applications/{application}/reject', [ClientController::class, 'rejectApplicant'])->name('applications.reject');
+        
+        // Route to SHOW the form to schedule an interview
+        Route::get('/applications/{application}/interview', [ClientController::class, 'showInterviewForm'])->name('applications.interview.show');
+        
+        // Route to SAVE the interview date
+        Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])->name('applications.interview.schedule');
     });
 
     // --- PARTNER (AGENCY) ROUTES ---

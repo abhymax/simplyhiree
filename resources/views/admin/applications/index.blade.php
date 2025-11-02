@@ -100,7 +100,7 @@
                                         No applications have been submitted yet.
                                     </td>
                                 </tr>
-                            @forelse
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

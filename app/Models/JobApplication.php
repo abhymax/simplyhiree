@@ -21,6 +21,19 @@ class JobApplication extends Model
         'candidate_user_id', // For candidates who are users
         'candidate_id',      // For candidates from a partner's pool
         'status',
+        'hiring_status',       // <-- ADD THIS
+        'interview_at',        // <-- ADD THIS
+        'joining_date',        // <-- ADD THIS
+        'client_notes',        // <-- ADD THIS
+    ];
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'interview_at' => 'datetime', // <-- ADD THIS
+        'joining_date' => 'date',     // <-- ADD THIS
     ];
 
     /**
