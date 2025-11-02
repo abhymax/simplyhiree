@@ -20,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'billable_period_days',
         // The old 'role' column is no longer needed here
     ];
 

@@ -3,69 +3,202 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
+use App\Models\JobApplication;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\JobApplication; // <-- ADD THIS
+use Spatie\Permission\Models\Role;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
     /**
-     * Display the admin dashboard.
+     * Show the admin dashboard with stats.
      */
     public function index()
     {
-        // Count how many jobs are waiting for approval
-        $pendingJobsCount = Job::where('status', 'pending_approval')->count();
+        // Fetch all stats
+        $totalUsers = User::count();
+        $totalClients = User::role('client')->count();
+        $totalPartners = User::role('partner')->count();
+        $pendingJobs = Job::where('status', 'pending_approval')->count();
+        $pendingApplications = JobApplication::where('status', 'Pending Review')->count(); // Added this as a bonus
 
-        return view('admin.dashboard', ['pendingJobsCount' => $pendingJobsCount]);
+        // Pass all stats to the view
+        return view('admin.dashboard', [
+            'totalUsers' => $totalUsers,
+            'totalClients' => $totalClients,
+            'totalPartners' => $totalPartners,
+            'pendingJobs' => $pendingJobs,
+            'pendingApplications' => $pendingApplications
+        ]);
     }
 
     /**
-     * Display a list of jobs pending approval.
+     * *** ADD THIS NEW METHOD ***
+     * Show all users in the system.
+     */
+    public function listUsers()
+    {
+        // Fetch all users, load their roles, and paginate
+        $users = User::with('roles')->latest()->paginate(25);
+
+        // We will create this new view file next
+        return view('admin.users.index', [
+            'users' => $users
+        ]);
+    }
+
+    /**
+     * *** ADD THIS NEW METHOD ***
+     * Show all CLIENT users.
+     */
+    public function listClients()
+    {
+        // Fetch only users with the 'client' role
+        $clients = User::role('client')
+                       ->with('roles') // Eager load role details
+                       ->latest()
+                       ->paginate(25);
+
+        // We will create this new view file next
+        return view('admin.clients.index', [
+            'users' => $clients // Pass the 'users' variable for consistency
+        ]);
+    }
+
+    /**
+     * *** ADD THIS NEW METHOD ***
+     * Show the form to edit a client's billable period.
+     */
+    public function editClient(User $user)
+    {
+        // Ensure we are only editing clients
+        if (!$user->hasRole('client')) {
+            abort(404);
+        }
+
+        return view('admin.clients.edit', [
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * *** ADD THIS NEW METHOD ***
+     * Update the client's billable period.
+     */
+    public function updateClient(Request $request, User $user)
+    {
+        // Ensure we are only editing clients
+        if (!$user->hasRole('client')) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'billable_period_days' => 'required|integer|min:1',
+        ]);
+
+        $user->update([
+            'billable_period_days' => $validated['billable_period_days']
+        ]);
+
+        return redirect()->route('admin.clients.index')->with('success', 'Client billable period updated successfully!');
+    }
+
+    /**
+     * *** ADD THIS NEW METHOD ***
+     * Show all PARTNER users.
+     */
+    public function listPartners()
+    {
+        // Fetch only users with the 'partner' role
+        $partners = User::role('partner')
+                        ->with('roles') // Eager load role details
+                        ->latest()
+                        ->paginate(25);
+
+        // We will create this new view file next
+        return view('admin.partners.index', [
+            'users' => $partners // Pass the 'users' variable for consistency
+        ]);
+    }
+
+    /**
+     * Show all submitted applications.
+     */
+    public function listApplications()
+    {
+        $applications = JobApplication::with(['job', 'candidate', 'candidateUser', 'candidate.partner'])
+                                    ->latest()
+                                    ->paginate(20);
+
+        return view('admin.applications.index', ['applications' => $applications]);
+    }
+
+    /**
+     * Approve a job application.
+     */
+    public function approveApplication(JobApplication $application)
+    {
+        $application->update(['status' => 'Approved']);
+        // TODO: Notify partner
+        return redirect()->back()->with('success', 'Application approved.');
+    }
+
+    /**
+     * Reject a job application.
+     */
+    public function rejectApplication(JobApplication $application)
+    {
+        $application->update(['status' => 'Rejected']);
+        // TODO: Notify partner
+        return redirect()->back()->with('success', 'Application rejected.');
+    }
+
+    /**
+     * Show pending jobs.
      */
     public function pendingJobs()
     {
-        $pendingJobs = Job::with('user')->where('status', 'pending_approval')->latest()->get();
+        $pendingJobs = Job::where('status', 'pending_approval')
+                          ->with('user') // Eager load the client who posted it
+                          ->latest()
+                          ->paginate(20);
+
         return view('admin.jobs.pending', ['jobs' => $pendingJobs]);
     }
 
     /**
-     * Approve a pending job.
+     * Approve a job posting.
      */
     public function approveJob(Job $job)
     {
-        $job->status = 'approved';
-        $job->save();
-
-        return redirect()->route('admin.jobs.pending')->with('success', 'Job has been approved and is now live.');
+        $job->update(['status' => 'approved']);
+        // TODO: Notify client
+        return redirect()->back()->with('success', 'Job has been approved and is now live.');
     }
 
     /**
-     * Reject a pending job.
+     * Reject a job posting.
      */
     public function rejectJob(Job $job)
     {
-        $job->status = 'rejected';
-        $job->save();
-
-        return redirect()->route('admin.jobs.pending')->with('success', 'Job has been rejected.');
+        $job->update(['status' => 'rejected']);
+        // TODO: Notify client
+        return redirect()->back()->with('success', 'Job has been rejected.');
     }
 
     /**
-     * Show the page to manage partner exclusions for a specific job.
+     * Show the page to manage partner exclusions for a job.
      */
     public function manageJobExclusions(Job $job)
     {
-        // Get a list of all users who have the 'partner' role
-        $allPartners = User::where('role', 'partner')->orderBy('name')->get();
-
-        // Get a list of IDs for partners who are already excluded from this job
+        $partners = User::role('partner')->get();
         $excludedPartnerIds = $job->excludedPartners()->pluck('users.id')->toArray();
 
         return view('admin.jobs.manage', [
             'job' => $job,
-            'allPartners' => $allPartners,
-            'excludedPartnerIds' => $excludedPartnerIds,
+            'partners' => $partners,
+            'excludedPartnerIds' => $excludedPartnerIds
         ]);
     }
 
@@ -74,52 +207,66 @@ class AdminController extends Controller
      */
     public function updateJobExclusions(Request $request, Job $job)
     {
-        // Get the list of partner IDs that were checked in the form
-        $excludedIds = $request->input('excluded_partners', []);
+        $job->excludedPartners()->sync($request->input('excluded_partners', []));
 
-        // Use the 'sync' method to update the relationship in the database.
-        $job->excludedPartners()->sync($excludedIds);
-
-        return redirect()->route('admin.jobs.pending')->with('success', 'Partner access for the job has been updated successfully.');
-    }
-    
-    /**
-     * *** NEW METHOD ***
-     * Display a list of all job applications submitted by partners.
-     */
-    public function listApplications()
-    {
-       $applications = JobApplication::with([
-                                          'job', 
-                                          'candidate.partner', // <-- THIS IS THE FIX (loads candidate AND the candidate's partner)
-                                          'candidateUser'      // This loads the direct-apply user (for later)
-                                      ])
-                                      ->latest()
-                                      ->paginate(20); // Paginate for performance
-
-        return view('admin.applications.index', ['applications' => $applications]);
-    }
-    /**
-     * *** NEW METHOD ***
-     * Approve a submitted job application.
-     */
-    public function approveApplication(JobApplication $application)
-    {
-        $application->update(['status' => 'Approved']);
-        
-        return redirect()->route('admin.applications.index')->with('success', 'Application approved successfully.');
+        return redirect()->route('admin.jobs.pending')->with('success', 'Partner exclusions updated successfully.');
     }
 
     /**
-     * *** NEW METHOD ***
-     * Reject a submitted job application.
+     * *** THIS IS THE NEW METHOD, CLEANED AND IN THE RIGHT PLACE ***
+     * Show the billing report for selected candidates.
      */
-    public function rejectApplication(JobApplication $application)
+    public function billingReport()
     {
-        $application->update(['status' => 'Rejected']);
-        
-        return redirect()->route('admin.applications.index')->with('success', 'Application rejected successfully.');
+        // 1. Get all placements that are "Selected"
+        $placements = JobApplication::where('hiring_status', 'Selected')
+                                    ->with(['job.user', 'candidate', 'candidateUser']) // Eager load all relationships
+                                    ->get();
+
+        $today = Carbon::now()->startOfDay();
+        $reportData = [];
+
+        // 2. Process each placement to calculate billing status
+        foreach ($placements as $app) {
+            
+            // Skip if data is incomplete (e.g., no joining date, or client not found)
+            if (empty($app->joining_date) || empty($app->job->user) || empty($app->job->user->billable_period_days)) {
+                continue;
+            }
+
+            // 3. Get all the data points
+            $client = $app->job->user;
+            $joiningDate = Carbon::parse($app->joining_date);
+            $billableDays = $client->billable_period_days;
+            $invoiceDate = $joiningDate->copy()->addDays($billableDays);
+
+            // 4. Determine the billing status
+            $status = $invoiceDate->isPast() ? 'Billable' : 'Pending';
+            
+            // Get candidate name (checking both partner and direct apply)
+            $candidateName = $app->candidate 
+                             ? $app->candidate->first_name . ' ' . $app->candidate->last_name
+                             : $app->candidateUser->name;
+
+            // 5. Add to our report
+            $reportData[] = (object) [
+                'candidate_name' => $candidateName,
+                'client_name' => $client->name,
+                'job_title' => $app->job->title,
+                'joining_date' => $app->joining_date->format('M d, Y'),
+                'billable_period' => $billableDays . ' days',
+                'invoice_date' => $invoiceDate->format('M d, Y'),
+                'status' => $status,
+            ];
+        }
+
+        // Sort by invoice date, newest first (using a compatible function)
+        $reportData = collect($reportData)->sortByDesc(function($item) {
+            return Carbon::parse($item->invoice_date);
+        });
+
+        return view('admin.billing.index', [
+            'placements' => $reportData
+        ]);
     }
-    
 }
-

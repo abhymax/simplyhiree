@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Job; // Import the Job model
-use App\Models\JobApplication; // <-- ADD THIS
-use App\Models\JobCategory; // <-- This might already exist, if not, add it
+use App\Models\Job;
+use App\Models\JobApplication;
+use App\Models\User; // <-- ADD THIS
+use App\Notifications\CandidateRejectedByClient; // <-- ADD THIS
+use App\Notifications\CandidateSelected;        // <-- ADD THIS
+use App\Notifications\InterviewScheduled;       // <-- ADD THIS
+use Illuminate\Support\Facades\Notification; // <-- ADD THIS
 
 class ClientController extends Controller
 {
@@ -16,99 +20,181 @@ class ClientController extends Controller
     public function index()
     {
         $client = Auth::user();
-
-        // Fetch all jobs posted by this client, ordered by the newest first.
         $jobs = Job::where('user_id', $client->id)->latest()->get();
-
-        // Pass both the client and their jobs to the view.
         return view('client.dashboard', [
             'client' => $client,
             'jobs'   => $jobs
         ]);
     }
+    
     /**
-     * *** NEW METHOD ***
      * Show the applicants for a specific job.
      */
     public function showApplicants(Job $job)
     {
-        // Check if the authenticated user is the one who posted the job
         if ($job->user_id !== Auth::id()) {
             abort(403, 'UNAUTHORIZED ACTION.');
         }
 
-        // Load the applications for this job that have been approved by the admin
         $approvedApplications = JobApplication::where('job_id', $job->id)
                                             ->where('status', 'Approved')
-                                            ->with(['candidate', 'candidateUser']) // Load candidate details
+                                            ->with(['candidate', 'candidateUser'])
                                             ->latest()
-                                            ->paginate(20);
+                                            ->paginate(20)
+                                            ->through(function ($app) {
+                                                if ($app->interview_at) {
+                                                    $app->interview_at = \Carbon\Carbon::parse($app->interview_at);
+                                                }
+                                                if ($app->joining_date) {
+                                                    $app->joining_date = \Carbon\Carbon::parse($app->joining_date);
+                                                }
+                                                return $app;
+                                            });
 
         return view('client.jobs.applicants', [
             'job' => $job,
             'applications' => $approvedApplications
         ]);
     }
+    
     /**
- * *** NEW METHOD ***
- * Client rejects a candidate.
- */
-public function rejectApplicant(JobApplication $application)
-{
-    // Security check: ensure this job application belongs to this client
-    if ($application->job->user_id !== Auth::id()) {
-        abort(403);
+     * Client rejects a candidate.
+     */
+    public function rejectApplicant(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $application->update([
+            'hiring_status' => 'Client Rejected'
+        ]);
+
+        // --- NOTIFICATION LOGIC ---
+        $this->notifyAdminAndPartner(new CandidateRejectedByClient($application), $application);
+        // --------------------------
+
+        return redirect()->back()->with('success', 'Candidate has been rejected.');
     }
 
-    $application->update([
-        'hiring_status' => 'Client Rejected'
-    ]);
-
-    return redirect()->back()->with('success', 'Candidate has been rejected.');
-}
-
-/**
- * *** NEW METHOD ***
- * Show the form to schedule an interview.
- */
-public function showInterviewForm(JobApplication $application)
-{
-    // Security check
-    if ($application->job->user_id !== Auth::id()) {
-        abort(403);
+    /**
+     * Show the form to schedule an interview.
+     */
+    public function showInterviewForm(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->load(['job', 'candidate', 'candidateUser']);
+        return view('client.jobs.interview', ['application' => $application]);
     }
 
-    // We must eager load the relations for the view
-    $application->load(['job', 'candidate', 'candidateUser']);
+    /**
+     * Store the interview details.
+     */
+    public function scheduleInterview(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-    return view('client.jobs.interview', ['application' => $application]);
-}
+        $validated = $request->validate([
+            'interview_at' => 'required|date|after:now',
+            'client_notes' => 'nullable|string|max:1000',
+        ]);
 
-/**
- * *** NEW METHOD ***
- * Store the interview details.
- */
-public function scheduleInterview(Request $request, JobApplication $application)
-{
-    // Security check
-    if ($application->job->user_id !== Auth::id()) {
-        abort(403);
+        $application->update([
+            'hiring_status' => 'Interview Scheduled',
+            'interview_at' => $validated['interview_at'],
+            'client_notes' => $validated['client_notes'],
+        ]);
+
+        // --- NOTIFICATION LOGIC ---
+        $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
+        // --------------------------
+
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
     }
 
-    $validated = $request->validate([
-        'interview_at' => 'required|date|after:now',
-        'client_notes' => 'nullable|string|max:1000',
-    ]);
+    /**
+     * Mark a candidate as 'Interviewed'.
+     */
+    public function markAsAppeared(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->update(['hiring_status' => 'Interviewed']);
+        return redirect()->back()->with('success', 'Candidate marked as \'Interviewed\'.');
+    }
 
-    $application->update([
-        'hiring_status' => 'Interview Scheduled',
-        'interview_at' => $validated['interview_at'],
-        'client_notes' => $validated['client_notes'],
-    ]);
+    /**
+     * Mark a candidate as 'No-Show'.
+     */
+    public function markAsNoShow(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->update(['hiring_status' => 'No-Show']);
+        return redirect()->back()->with('success', 'Candidate marked as \'No-Show\'.');
+    }
 
-    // TODO: This is where we will dispatch notifications to Admin and Partner.
+    /**
+     * Show the form to select a candidate.
+     */
+    public function showSelectForm(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->load(['job', 'candidate', 'candidateUser']);
+        return view('client.jobs.select', ['application' => $application]);
+    }
 
-    return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
+    /**
+     * Store the final selection and joining date.
+     */
+    public function storeSelection(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'joining_date' => 'required|date|after_or_equal:today',
+            'joining_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $application->update([
+            'hiring_status' => 'Selected',
+            'joining_date' => $validated['joining_date'],
+            'client_notes' => $validated['joining_notes'],
+        ]);
+
+        // --- NOTIFICATION LOGIC ---
+        $this->notifyAdminAndPartner(new CandidateSelected($application), $application);
+        // --------------------------
+
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
+    }
+
+
+    /**
+     * *** ADD THIS NEW HELPER METHOD ***
+     * Reusable function to notify admin and partner.
+     */
+    private function notifyAdminAndPartner($notification, JobApplication $application)
+    {
+        // 1. Notify all Superadmins
+        $admins = User::role('Superadmin')->get();
+        Notification::send($admins, $notification);
+
+        // 2. Notify the Partner (if one exists for this candidate)
+        // We check if it's a partner candidate (not a direct apply)
+        if ($application->candidate && $application->candidate->partner) {
+            $partner = $application->candidate->partner;
+            $partner->notify($notification);
+        }
+    }
 }
-}
-

@@ -68,6 +68,16 @@ Route::middleware('auth')->group(function () {
     // --- ADMIN PANEL ROUTES ---
     Route::middleware('role:Superadmin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        // --- ADD THIS NEW ROUTE FOR USER MANAGEMENT ---
+        Route::get('/users', [AdminController::class, 'listUsers'])->name('users.index');
+        // --- ADD THESE TWO NEW ROUTES ---
+        Route::get('/clients', [AdminController::class, 'listClients'])->name('clients.index');
+        // --- ADD THIS ROUTE TO SHOW THE EDIT FORM ---
+        Route::get('/clients/{user}/edit', [AdminController::class, 'editClient'])->name('clients.edit');
+        
+        // --- ADD THIS ROUTE TO SAVE THE FORM ---
+        Route::patch('/clients/{user}', [AdminController::class, 'updateClient'])->name('clients.update');
+        Route::get('/partners', [AdminController::class, 'listPartners'])->name('partners.index');
         Route::get('/applications', [AdminController::class, 'listApplications'])->name('applications.index');
         // --- ADD THESE TWO NEW ROUTES ---
         Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
@@ -77,6 +87,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
         Route::get('/jobs/{job}/manage', [AdminController::class, 'manageJobExclusions'])->name('jobs.manage');
         Route::post('/jobs/{job}/exclusions', [AdminController::class, 'updateJobExclusions'])->name('jobs.exclusions.update');
+        // --- *** ADD THIS NEW ROUTE *** ---
+        Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
     });
 
     // --- CLIENT (EMPLOYER) ROUTES ---
@@ -96,6 +108,15 @@ Route::middleware('auth')->group(function () {
         
         // Route to SAVE the interview date
         Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])->name('applications.interview.schedule');
+        // --- *** ADD THESE NEW ROUTES *** ---
+        
+        // Routes for post-interview status
+        Route::post('/applications/{application}/interview-appeared', [ClientController::class, 'markAsAppeared'])->name('applications.interview.appeared');
+        Route::post('/applications/{application}/interview-noshow', [ClientController::class, 'markAsNoShow'])->name('applications.interview.noshow');
+
+        // Routes for final selection
+        Route::get('/applications/{application}/select', [ClientController::class, 'showSelectForm'])->name('applications.select.show');
+        Route::post('/applications/{application}/select', [ClientController::class, 'storeSelection'])->name('applications.select.store');
     });
 
     // --- PARTNER (AGENCY) ROUTES ---

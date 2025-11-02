@@ -67,18 +67,29 @@
                                     </td>
 
                                     <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-600 align-top">
+                                        {{-- UPDATED STATUS LOGIC --}}
                                         @if($app->hiring_status == 'Interview Scheduled')
                                             <div class="font-semibold text-blue-700">Interview Scheduled</div>
                                             <div class="text-xs">{{ $app->interview_at->format('M d, Y \a\t g:i A') }}</div>
                                         @elseif($app->hiring_status == 'Client Rejected')
                                             <div class="font-semibold text-red-700">Rejected</div>
+                                        @elseif($app->hiring_status == 'Interviewed')
+                                            <div class="font-semibold text-purple-700">Interviewed</div>
+                                        @elseif($app->hiring_status == 'No-Show')
+                                            <div class="font-semibold text-yellow-700">Interview No-Show</div>
+                                        @elseif($app->hiring_status == 'Selected')
+                                            <div class="font-semibold text-green-700">Selected</div>
+                                            <div class="text-xs">Joining: {{ $app->joining_date->format('M d, Y') }}</div>
                                         @else
                                             <div class="font-semibold text-gray-500">Pending Action</div>
                                         @endif
                                     </td>
 
                                     <td class="py-4 px-4 whitespace-nowrap text-sm font-medium align-top">
+                                        {{-- *** ENTIRE ACTION BLOCK IS UPDATED *** --}}
+                                        
                                         @if(empty($app->hiring_status))
+                                            {{-- 1. PENDING (SCHEDULE / REJECT) --}}
                                             <div class="flex flex-col space-y-2">
                                                 <a href="{{ route('client.applications.interview.show', $app) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-center text-xs">
                                                     Schedule Interview
@@ -91,7 +102,42 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                        
+                                        @elseif($app->hiring_status == 'Interview Scheduled')
+                                            {{-- 2. POST-INTERVIEW (APPEARED / NO-SHOW) --}}
+                                            <div class="flex flex-col space-y-2">
+                                                <form action="{{ route('client.applications.interview.appeared', $app) }}" method="POST" onsubmit="return confirm('Mark this candidate as \'Interview Appeared\'?');">
+                                                    @csrf
+                                                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded text-center text-xs">
+                                                        Interview Appeared
+                                                    </button>
+                                                </form>
+                                                
+                                                <form action="{{ route('client.applications.interview.noshow', $app) }}" method="POST" onsubmit="return confirm('Mark this candidate as \'No-Show\'?');">
+                                                    @csrf
+                                                    <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-center text-xs">
+                                                        No-Show
+                                                    </button>
+                                                </form>
+                                            </div>
+
+                                        @elseif($app->hiring_status == 'Interviewed' || $app->hiring_status == 'No-Show')
+                                            {{-- 3. FINAL DECISION (SELECT / REJECT) --}}
+                                            <div class="flex flex-col space-y-2">
+                                                <a href="{{ route('client.applications.select.show', $app) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-center text-xs">
+                                                    Select for Job
+                                                </a>
+                                                
+                                                <form action="{{ route('client.applications.reject', $app) }}" method="POST" onsubmit="return confirm('Are you sure you want to reject this candidate?');">
+                                                    @csrf
+                                                    <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded text-center text-xs">
+                                                        Reject
+                                                    </button>
+                                                </form>
+                                            </div>
+
                                         @else
+                                            {{-- 4. FINALIZED (REJECTED / SELECTED) --}}
                                             <span class="text-gray-400">--</span>
                                         @endif
                                     </td>
