@@ -78,7 +78,7 @@
                                     </td>
 
                                     <td class="py-4 px-4 whitespace-nowrap text-sm font-medium align-top">
-                                        @if($app->hiring_status == null || $app->hiring_status == '')
+                                        @if(empty($app->hiring_status))
                                             <div class="flex flex-col space-y-2">
                                                 <a href="{{ route('client.applications.interview.show', $app) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-center text-xs">
                                                     Schedule Interview
