@@ -14,8 +14,6 @@ return new class extends Migration
     {
         Schema::table('jobs', function (Blueprint $table) {
             $table->integer('openings')->nullable()->after('salary');
-            $table->string('education_required')->nullable()->after('openings');
-            $table->string('experience_required')->nullable()->after('education_required');
             $table->integer('min_age')->nullable()->after('experience_required');
             $table->integer('max_age')->nullable()->after('min_age');
             $table->string('gender_preference')->nullable()->after('max_age');
@@ -32,8 +30,6 @@ return new class extends Migration
         Schema::table('jobs', function (Blueprint $table) {
             $table->dropColumn([
                 'openings',
-                'education_required',
-                'experience_required',
                 'min_age',
                 'max_age',
                 'gender_preference',
