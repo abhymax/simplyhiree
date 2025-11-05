@@ -20,10 +20,9 @@
                     <table class="min-w-full bg-white dark:bg-gray-800">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Job Title</th>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Company</th>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Posted By</th>
-                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Posted</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Job Details</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Requirements</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Client</th>
                                 <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -32,15 +31,21 @@
                                 <tr>
                                     <td class="py-4 px-4 whitespace-nowrap">
                                         <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $job->title }}</div>
-                                        <div class="text-sm text-gray-500">{{ $job->location }}</div>
+                                        <div class="text-xs text-gray-500">{{ $job->company_name }} - {{ $job->location }}</div>
+                                        <div class="text-xs text-gray-500 mt-1">Openings: <span class="font-bold">{{ $job->openings ?? 'N/A' }}</span></div>
                                     </td>
-                                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $job->company_name }}</td>
-                                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $job->user->name }}</td>
-                                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $job->created_at->format('d M, Y') }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        Exp: {{ $job->experience_required }}<br>
+                                        Edu: {{ $job->education_level }}<br>
+                                        Age: {{ $job->min_age ?? 'N/A' }} - {{ $job->max_age ?? 'N/A' }} yrs<br>
+                                        Gender: {{ $job->gender_preference ?? 'Any' }}
+                                    </td>
+                                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $job->user->name }}<br>
+                                        <span class="text-xs">{{ $job->created_at->format('d M, Y') }}</span>
+                                    </td>
                                     <td class="py-4 px-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                                        <!-- MANAGE BUTTON ADDED -->
                                         <a href="{{ route('admin.jobs.manage', $job) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold">Manage</a>
-                                        
                                         <form action="{{ route('admin.jobs.approve', $job) }}" method="POST" class="inline space-x-2">
                                             @csrf
                                             <input type="number" name="payout_amount" placeholder="Payout Amount" class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" required>

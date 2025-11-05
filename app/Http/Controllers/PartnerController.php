@@ -39,19 +39,73 @@ class PartnerController extends Controller
         return view('partner.applications', ['applications' => $applications]);
     }
 
-    /**
-     * Show the available job vacancies for the partner.
-     */
-    public function jobs()
+    public function jobs(Request $request)
     {
         $partner = Auth::user();
-        $jobs = Job::where('status', 'approved')
+
+        // Start building the query
+        $query = Job::where('status', 'approved')
             ->whereDoesntHave('excludedPartners', function ($query) use ($partner) {
                 $query->where('user_id', $partner->id);
-            })
-            ->latest()
-            ->get();
-        return view('partner.jobs', ['jobs' => $jobs]);
+            });
+
+        // Apply filters from the request
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('company_name', 'like', "%{$searchTerm}%")
+                  ->orWhere('skills_required', 'like', "%{$searchTerm}%");
+            });
+        }
+        if ($request->filled('location')) {
+            $query->where('location', $request->input('location'));
+        }
+        if ($request->filled('job_type')) {
+            $query->where('job_type', $request->input('job_type'));
+        }
+        if ($request->filled('experience')) {
+            $query->where('experience_required', $request->input('experience'));
+        }
+        if ($request->filled('education')) {
+            $query->where('education_level', $request->input('education'));
+        }
+
+        // Eager load applications for stats calculation
+        $jobs = $query->with(['jobApplications' => function ($query) use ($partner) {
+            $query->whereHas('candidate', function ($subQuery) use ($partner) {
+                $subQuery->where('partner_id', $partner->id);
+            });
+        }])
+        ->latest()
+        ->paginate(10)
+        ->appends($request->query()); // Append filters to pagination links
+
+        // Calculate the stats for each job
+        $jobs->each(function ($job) {
+            $stats = [
+                'applied' => $job->jobApplications->count(),
+                'screened' => $job->jobApplications->where('status', 'Approved')->count(),
+                'turned_up' => $job->jobApplications->where('interview_status', 'Appeared')->count(),
+                'selected' => $job->jobApplications->where('hiring_status', 'Selected')->count(),
+                'joined' => $job->jobApplications->where('hiring_status', 'Joined')->count(),
+            ];
+            $job->stats = (object)$stats;
+        });
+
+        // Data for filter dropdowns (can be optimized later)
+        $locations = Job::select('location')->distinct()->orderBy('location')->pluck('location');
+        $job_types = Job::select('job_type')->distinct()->orderBy('job_type')->pluck('job_type');
+        $experiences = Job::select('experience_required')->distinct()->orderBy('experience_required')->pluck('experience_required');
+        $educations = Job::select('education_level')->distinct()->orderBy('education_level')->pluck('education_level');
+
+        return view('partner.jobs', [
+            'jobs' => $jobs,
+            'locations' => $locations,
+            'job_types' => $job_types,
+            'experiences' => $experiences,
+            'educations' => $educations,
+        ]);
     }
 
     /**

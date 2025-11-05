@@ -29,6 +29,25 @@ class Job extends Model
         'application_deadline',
         'company_website',
         'status',
+        // Payout fields
+        'payout_amount',
+        'minimum_stay_days',
+        // New detailed fields
+        'openings',
+        'min_age',
+        'max_age',
+        'gender_preference',
+        'category',
+        'job_type_tags',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'job_type_tags' => 'array',
     ];
 
     /**
