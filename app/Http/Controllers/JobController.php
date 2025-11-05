@@ -37,13 +37,22 @@ class JobController extends Controller
             'skills_required' => 'required|string',
             'application_deadline' => 'required|date|after_or_equal:today',
             'company_website' => 'nullable|url|max:255',
+            // New fields validation
+            'openings' => 'nullable|integer|min:1',
+            'min_age' => 'nullable|integer|min:18',
+            'max_age' => 'nullable|integer|gt:min_age',
+            'gender_preference' => 'nullable|string|in:Any,Male,Female',
+            'category' => 'nullable|string|max:255',
+            'job_type_tags' => 'nullable|string',
         ]);
 
         $validatedData['user_id'] = Auth::id();
+
+        // Process job_type_tags from comma-separated string to array
+        if (!empty($validatedData['job_type_tags'])) {
+            $validatedData['job_type_tags'] = array_map('trim', explode(',', $validatedData['job_type_tags']));
+        }
         
-        // --- UPDATED FOR ADMIN APPROVAL ---
-        // The status is now automatically set to 'pending_approval'
-        // and is no longer part of the fillable data from the form.
         $job = new Job($validatedData);
         $job->status = 'pending_approval';
         $job->save();
