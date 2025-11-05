@@ -29,6 +29,9 @@
                         <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')">
                             Billing Report
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')">
+                            Master Job Report
+                        </x-nav-link>
                     @endrole
                     
                     @role('client')

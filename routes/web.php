@@ -89,6 +89,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/jobs/{job}/exclusions', [AdminController::class, 'updateJobExclusions'])->name('jobs.exclusions.update');
         // --- *** ADD THIS NEW ROUTE *** ---
         Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
+        // --- *** ADD THIS NEW ROUTE FOR THE JOB REPORT *** ---
+        Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
     });
 
     // --- CLIENT (EMPLOYER) ROUTES ---
