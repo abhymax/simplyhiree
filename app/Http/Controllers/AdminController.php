@@ -279,4 +279,20 @@ class AdminController extends Controller
             'placements' => $reportData
         ]);
     }
+
+    /**
+     * Show a report of all jobs with their lined-up partners and candidates.
+     */
+    public function jobReport()
+    {
+        $jobs = Job::with([
+                'user', // The client who posted the job
+                'jobApplications.candidate.partner.user', // The partner who submitted the candidate
+                'jobApplications.candidateUser' // The candidate's user record for name
+            ])
+            ->latest()
+            ->get();
+
+        return view('admin.reports.jobs', ['jobs' => $jobs]);
+    }
 }

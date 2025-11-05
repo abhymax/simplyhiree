@@ -94,7 +94,7 @@ class PartnerController extends Controller
                 'candidate_name' => $app->candidate->first_name . ' ' . $app->candidate->last_name,
                 'job_title' => $app->job->title,
                 'joining_date' => $app->joining_date->format('M d, Y'),
-                'payout_amount' => '$' . number_format($app->job->payout_amount, 2),
+                'payout_amount' => '₹' . number_format($app->job->payout_amount, 0),
                 'minimum_stay_days' => $app->job->minimum_stay_days,
                 'payout_date' => $payoutDate->format('M d, Y'),
                 'status' => $status,
