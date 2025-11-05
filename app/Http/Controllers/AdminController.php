@@ -170,9 +170,19 @@ class AdminController extends Controller
     /**
      * Approve a job posting.
      */
-    public function approveJob(Job $job)
+    public function approveJob(Request $request, Job $job)
     {
-        $job->update(['status' => 'approved']);
+        $validated = $request->validate([
+            'payout_amount' => 'required|numeric|min:0',
+            'minimum_stay_days' => 'required|integer|min:1',
+        ]);
+
+        $job->update([
+            'status' => 'approved',
+            'payout_amount' => $validated['payout_amount'],
+            'minimum_stay_days' => $validated['minimum_stay_days'],
+        ]);
+
         // TODO: Notify client
         return redirect()->back()->with('success', 'Job has been approved and is now live.');
     }

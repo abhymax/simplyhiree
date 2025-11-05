@@ -59,8 +59,54 @@ class PartnerController extends Controller
      */
     public function earnings()
     {
-        // This is a placeholder for now.
-        return view('partner.earnings');
+        $partner = Auth::user();
+
+        // 1. Get all of the partner's placements that have "Joined"
+        $placements = JobApplication::where('partner_id', $partner->id)
+                                    ->where('hiring_status', 'Joined')
+                                    ->with(['job', 'candidate']) // Eager load relationships
+                                    ->get();
+
+        $today = \Carbon\Carbon::now()->startOfDay();
+        $earningsData = [];
+
+        // 2. Process each placement
+        foreach ($placements as $app) {
+
+            // Skip if data is incomplete
+            if (empty($app->joining_date) || empty($app->job->payout_amount) || empty($app->job->minimum_stay_days)) {
+                continue;
+            }
+
+            // 3. Calculate dates and status
+            $joiningDate = \Carbon\Carbon::parse($app->joining_date);
+            $payoutDate = $joiningDate->copy()->addDays($app->job->minimum_stay_days);
+
+            // Status is eligible only if the payout date is past AND the candidate has not left.
+            $isEligible = $payoutDate->isPast() && is_null($app->left_at);
+            $status = $isEligible ? 'Eligible' : 'Pending';
+
+            // 4. Add to our report
+            $earningsData[] = (object) [
+                'candidate_name' => $app->candidate->first_name . ' ' . $app->candidate->last_name,
+                'job_title' => $app->job->title,
+                'joining_date' => $app->joining_date->format('M d, Y'),
+                'payout_amount' => '$' . number_format($app->job->payout_amount, 2),
+                'minimum_stay_days' => $app->job->minimum_stay_days,
+                'payout_date' => $payoutDate->format('M d, Y'),
+                'status' => $status,
+            ];
+        }
+
+        // 5. Sort by payout date, newest first
+        $earningsData = collect($earningsData)->sortByDesc(function($item) {
+            return \Carbon\Carbon::parse($item->payout_date);
+        });
+
+        // 6. Pass data to the view
+        return view('partner.earnings.index', [
+            'earnings' => $earningsData
+        ]);
     }
 
     

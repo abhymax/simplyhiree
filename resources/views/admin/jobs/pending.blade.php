@@ -41,8 +41,10 @@
                                         <!-- MANAGE BUTTON ADDED -->
                                         <a href="{{ route('admin.jobs.manage', $job) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold">Manage</a>
                                         
-                                        <form action="{{ route('admin.jobs.approve', $job) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.jobs.approve', $job) }}" method="POST" class="inline space-x-2">
                                             @csrf
+                                            <input type="number" name="payout_amount" placeholder="Payout Amount" class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" required>
+                                            <input type="number" name="minimum_stay_days" placeholder="Min. Stay (Days)" class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" required>
                                             <button type="submit" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 font-semibold">Approve</button>
                                         </form>
                                         
