@@ -62,8 +62,11 @@ class PartnerController extends Controller
         $partner = Auth::user();
 
         // 1. Get all of the partner's placements that have "Joined"
-        $placements = JobApplication::where('partner_id', $partner->id)
-                                    ->where('hiring_status', 'Joined')
+        // Corrected the query to use the relationship through the candidate.
+        $placements = JobApplication::where('hiring_status', 'Joined')
+                                    ->whereHas('candidate', function ($query) use ($partner) {
+                                        $query->where('partner_id', $partner->id);
+                                    })
                                     ->with(['job', 'candidate']) // Eager load relationships
                                     ->get();
 
