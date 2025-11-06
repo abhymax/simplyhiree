@@ -41,6 +41,8 @@ class Job extends Model
         'job_type_tags',
         'is_walkin',
         'interview_slot',
+        'experience_level_id',
+        'education_level_id',
     ];
 
     /**
@@ -84,6 +86,22 @@ class Job extends Model
     public function jobApplications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    /**
+     * Get the experience level for the job.
+     */
+    public function experienceLevel(): BelongsTo
+    {
+        return $this->belongsTo(ExperienceLevel::class);
+    }
+
+    /**
+     * Get the education level for the job.
+     */
+    public function educationLevel(): BelongsTo
+    {
+        return $this->belongsTo(EducationLevel::class);
     }
 }
 

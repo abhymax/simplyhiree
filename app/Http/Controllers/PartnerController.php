@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Job;
 use App\Models\Candidate;
 use App\Models\JobApplication;
+use App\Models\ExperienceLevel;
+use App\Models\EducationLevel;
 use Illuminate\Support\Facades\Storage;
 
 class PartnerController extends Controller
@@ -64,19 +66,23 @@ class PartnerController extends Controller
         if ($request->filled('job_type')) {
             $query->where('job_type', $request->input('job_type'));
         }
-        if ($request->filled('experience')) {
-            $query->where('experience_required', $request->input('experience'));
+        if ($request->filled('experience_level_id')) {
+            $query->where('experience_level_id', $request->input('experience_level_id'));
         }
-        if ($request->filled('education')) {
-            $query->where('education_level', $request->input('education'));
+        if ($request->filled('education_level_id')) {
+            $query->where('education_level_id', $request->input('education_level_id'));
         }
 
         // Eager load applications for stats calculation
-        $jobs = $query->with(['jobApplications' => function ($query) use ($partner) {
-            $query->whereHas('candidate', function ($subQuery) use ($partner) {
-                $subQuery->where('partner_id', $partner->id);
-            });
-        }])
+        $jobs = $query->with([
+            'jobApplications' => function ($query) use ($partner) {
+                $query->whereHas('candidate', function ($subQuery) use ($partner) {
+                    $subQuery->where('partner_id', $partner->id);
+                });
+            },
+            'experienceLevel',
+            'educationLevel'
+        ])
         ->latest()
         ->paginate(10)
         ->appends($request->query()); // Append filters to pagination links
@@ -93,18 +99,18 @@ class PartnerController extends Controller
             $job->stats = (object)$stats;
         });
 
-        // Data for filter dropdowns (can be optimized later)
+        // Data for filter dropdowns
         $locations = Job::select('location')->distinct()->orderBy('location')->pluck('location');
         $job_types = Job::select('job_type')->distinct()->orderBy('job_type')->pluck('job_type');
-        $experiences = Job::select('experience_required')->distinct()->orderBy('experience_required')->pluck('experience_required');
-        $educations = Job::select('education_level')->distinct()->orderBy('education_level')->pluck('education_level');
+        $experienceLevels = ExperienceLevel::all();
+        $educationLevels = EducationLevel::all();
 
         return view('partner.jobs', [
             'jobs' => $jobs,
             'locations' => $locations,
             'job_types' => $job_types,
-            'experiences' => $experiences,
-            'educations' => $educations,
+            'experienceLevels' => $experienceLevels,
+            'educationLevels' => $educationLevels,
         ]);
     }
 
