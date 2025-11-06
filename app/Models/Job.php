@@ -74,5 +74,13 @@ class Job extends Model
     {
         return $this->belongsToMany(User::class, 'job_partner_exclusions', 'job_id', 'partner_id');
     }
+
+    /**
+     * Get all of the applications for this job.
+     */
+    public function jobApplications()
+    {
+        return $this->hasMany(JobApplication::class);
+    }
 }
 
