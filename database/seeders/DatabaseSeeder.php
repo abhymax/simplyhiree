@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             JobCategorySeeder::class,
             RolesAndPermissionsSeeder::class,
+            ExperienceLevelSeeder::class,
+            EducationLevelSeeder::class,
         ]);
     }
 }
