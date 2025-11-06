@@ -57,7 +57,7 @@
                                                         {{ optional($application->candidateUser)->name ?? 'N/A' }}
                                                     </td>
                                                     <td class="py-4 px-6 whitespace-nowrap">
-                                                        {{ optional(optional(optional($application->candidate)->partner)->user)->name ?? 'Direct Application' }}
+                                                        {{ optional(optional($application->candidate)->partner)->name ?? 'Direct Application' }}
                                                     </td>
                                                     <td class="py-4 px-6 whitespace-nowrap text-center">
                                                         @if(optional($application->candidate)->cv_path)
