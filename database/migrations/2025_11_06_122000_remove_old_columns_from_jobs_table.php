@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('experience_levels', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
+        Schema::table('jobs', function (Blueprint $table) {
+            $table->dropColumn(['experience_required', 'education_level']);
         });
     }
 
@@ -23,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('experience_levels');
+        Schema::table('jobs', function (Blueprint $table) {
+            $table->string('experience_required')->nullable();
+            $table->string('education_level')->nullable();
+        });
     }
 };

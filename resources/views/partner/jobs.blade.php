@@ -26,16 +26,16 @@
                             <option value="{{ $job_type }}" {{ request('job_type') == $job_type ? 'selected' : '' }}>{{ $job_type }}</option>
                         @endforeach
                     </select>
-                    <select name="experience" onchange="this.form.submit()" class="form-select rounded-md border-gray-300 text-sm">
+                    <select name="experience_level_id" onchange="this.form.submit()" class="form-select rounded-md border-gray-300 text-sm">
                         <option value="">Experience</option>
-                        @foreach($experiences as $experience)
-                            <option value="{{ $experience }}" {{ request('experience') == $experience ? 'selected' : '' }}>{{ $experience }}</option>
+                        @foreach($experienceLevels as $level)
+                            <option value="{{ $level->id }}" {{ request('experience_level_id') == $level->id ? 'selected' : '' }}>{{ $level->name }}</option>
                         @endforeach
                     </select>
-                     <select name="education" onchange="this.form.submit()" class="form-select rounded-md border-gray-300 text-sm">
+                     <select name="education_level_id" onchange="this.form.submit()" class="form-select rounded-md border-gray-300 text-sm">
                         <option value="">Education</option>
-                        @foreach($educations as $education)
-                            <option value="{{ $education }}" {{ request('education') == $education ? 'selected' : '' }}>{{ $education }}</option>
+                        @foreach($educationLevels as $level)
+                            <option value="{{ $level->id }}" {{ request('education_level_id') == $level->id ? 'selected' : '' }}>{{ $level->name }}</option>
                         @endforeach
                     </select>
                     <a href="{{ route('partner.jobs') }}" class="text-blue-600 font-semibold text-sm">Reset All</a>
@@ -90,8 +90,8 @@
                             <!-- Details Column -->
                             <td class="py-4 px-6 align-top">
                                 <p class="font-bold text-gray-800">{{ $job->salary }}</p>
-                                <p class="text-sm text-gray-600">{{ $job->education_level }}</p>
-                                <p class="text-sm text-gray-600">Exp: {{ $job->experience_required }}</p>
+                                <p class="text-sm text-gray-600">{{ $job->educationLevel->name ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-600">Exp: {{ $job->experienceLevel->name ?? 'N/A' }}</p>
                                 <p class="text-sm text-gray-600">{{ $job->min_age ?? 'N/A' }} - {{ $job->max_age ?? 'N/A' }} yrs age</p>
                                 <p class="text-sm text-gray-600">{{ $job->gender_preference ?? 'Any' }}</p>
                             </td>
