@@ -39,6 +39,8 @@ class Job extends Model
         'gender_preference',
         'category',
         'job_type_tags',
+        'is_walkin',
+        'interview_slot',
     ];
 
     /**
@@ -48,6 +50,7 @@ class Job extends Model
      */
     protected $casts = [
         'job_type_tags' => 'array',
+        'interview_slot' => 'datetime',
     ];
 
     /**

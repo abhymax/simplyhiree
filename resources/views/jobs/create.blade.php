@@ -87,8 +87,8 @@
                             <h2 class="text-xl font-bold text-royal-blue">Candidate Requirements</h2>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-8 mt-4">
-                            <div class="input-group"><input type="text" name="experience_required" id="experience_required" value="{{ old('experience_required') }}" required class="input-field" placeholder="Experience Required"><label for="experience_required" class="input-label">Experience Required</label></div>
-                            <div class="input-group"><input type="text" name="education_level" id="education_level" value="{{ old('education_level') }}" required class="input-field" placeholder="Education Level"><label for="education_level" class="input-label">Education Level</label></div>
+                            <div><label for="experience_level_id" class="block text-sm font-medium text-gray-500">Experience Required</label><select name="experience_level_id" id="experience_level_id" required class="mt-1 block w-full shadow-sm select-field"><option value="">Select experience level</option>@foreach($experienceLevels as $level)<option value="{{ $level->id }}" {{ old('experience_level_id') == $level->id ? 'selected' : '' }}>{{ $level->name }}</option>@endforeach</select></div>
+                            <div><label for="education_level_id" class="block text-sm font-medium text-gray-500">Education Level</label><select name="education_level_id" id="education_level_id" required class="mt-1 block w-full shadow-sm select-field"><option value="">Select education level</option>@foreach($educationLevels as $level)<option value="{{ $level->id }}" {{ old('education_level_id') == $level->id ? 'selected' : '' }}>{{ $level->name }}</option>@endforeach</select></div>
                             <div class="input-group"><input type="number" name="openings" id="openings" value="{{ old('openings') }}" class="input-field" placeholder="Number of Openings"><label for="openings" class="input-label">Number of Openings</label></div>
                             <div class="input-group"><input type="number" name="min_age" id="min_age" value="{{ old('min_age') }}" class="input-field" placeholder="Minimum Age"><label for="min_age" class="input-label">Minimum Age</label></div>
                             <div class="input-group"><input type="number" name="max_age" id="max_age" value="{{ old('max_age') }}" class="input-field" placeholder="Maximum Age"><label for="max_age" class="input-label">Maximum Age</label></div>
@@ -97,6 +97,21 @@
                              <div><label for="job_type_tags" class="block text-sm font-medium text-gray-500">Job Tags (e.g., Walkin, New)</label><input type="text" name="job_type_tags" id="job_type_tags" value="{{ old('job_type_tags') }}" class="mt-1 block w-full shadow-sm select-field" placeholder="Comma-separated, e.g., Walkin, New"></div>
                             <div><label for="application_deadline" class="block text-sm font-medium text-gray-500">Application Deadline</label><input type="date" name="application_deadline" id="application_deadline" value="{{ old('application_deadline') }}" required class="mt-1 block w-full shadow-sm select-field"></div>
                         </div>
+
+                        <!-- Walk-in Details -->
+                        <div class="mt-6" x-data="{ isWalkin: {{ old('is_walkin') ? 'true' : 'false' }} }">
+                            <div class="flex items-center">
+                                <input id="is_walkin" name="is_walkin" type="checkbox" x-model="isWalkin" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="is_walkin" class="ml-2 block text-sm text-gray-900">
+                                    Is this a Walk-in Interview?
+                                </label>
+                            </div>
+                            <div x-show="isWalkin" class="mt-4">
+                                <label for="interview_slot" class="block text-sm font-medium text-gray-700">Interview Slot</label>
+                                <input type="datetime-local" id="interview_slot" name="interview_slot" value="{{ old('interview_slot') }}" class="mt-1 block w-full shadow-sm select-field">
+                            </div>
+                        </div>
+
                         <div class="mt-6"><label for="skills_required" class="block text-sm font-medium text-gray-700">Skills Required (Comma separated)</label><textarea name="skills_required" id="skills_required" rows="3" required class="mt-1 block w-full shadow-sm textarea-field">{{ old('skills_required') }}</textarea></div>
                     </div>
                     

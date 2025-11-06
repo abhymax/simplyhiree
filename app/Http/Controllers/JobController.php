@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Job;
 use App\Models\JobCategory;
 use App\Models\JobApplication;
+use App\Models\ExperienceLevel;
+use App\Models\EducationLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +18,9 @@ class JobController extends Controller
     public function create()
     {
         $categories = JobCategory::orderBy('name')->get();
-        return view('jobs.create', ['categories' => $categories]);
+        $experienceLevels = ExperienceLevel::all();
+        $educationLevels = EducationLevel::all();
+        return view('jobs.create', compact('categories', 'experienceLevels', 'educationLevels'));
     }
 
     /**
@@ -32,8 +36,8 @@ class JobController extends Controller
             'salary' => 'nullable|string|max:100',
             'category_id' => 'required|exists:job_categories,id',
             'description' => 'required|string',
-            'experience_required' => 'required|string|max:100',
-            'education_level' => 'required|string|max:100',
+            'experience_level_id' => 'required|exists:experience_levels,id',
+            'education_level_id' => 'required|exists:education_levels,id',
             'skills_required' => 'required|string',
             'application_deadline' => 'required|date|after_or_equal:today',
             'company_website' => 'nullable|url|max:255',
@@ -44,9 +48,13 @@ class JobController extends Controller
             'gender_preference' => 'nullable|string|in:Any,Male,Female',
             'category' => 'nullable|string|max:255',
             'job_type_tags' => 'nullable|string',
+            'is_walkin' => 'nullable|boolean',
+            'interview_slot' => 'nullable|date',
         ]);
 
         $validatedData['user_id'] = Auth::id();
+        $validatedData['is_walkin'] = $request->has('is_walkin');
+
 
         // Process job_type_tags from comma-separated string to array
         if (!empty($validatedData['job_type_tags'])) {
