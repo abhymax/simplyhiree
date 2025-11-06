@@ -287,7 +287,7 @@ class AdminController extends Controller
     {
         $jobs = Job::with([
                 'user', // The client who posted the job
-                'jobApplications.candidate.partner.user', // The partner who submitted the candidate
+                'jobApplications.candidate.partner', // The partner (User model) who submitted the candidate
                 'jobApplications.candidateUser' // The candidate's user record for name
             ])
             ->latest()
