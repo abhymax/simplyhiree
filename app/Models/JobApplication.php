@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JobApplication extends Model
 {
@@ -12,70 +11,54 @@ class JobApplication extends Model
 
     /**
      * The attributes that are mass assignable.
-     * Updated to match the real database schema.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'job_id',
-        'candidate_user_id', // For candidates who are users
-        'candidate_id',      // For candidates from a partner's pool
+        'job_id', 
+        'candidate_user_id', 
+        'candidate_id', 
         'status',
-        'hiring_status',       // <-- ADD THIS
-        'interview_at',        // <-- ADD THIS
-        'joining_date',        // <-- ADD THIS
-        'client_notes',        // <-- ADD THIS
-    ];
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'interview_at' => 'datetime', // <-- ADD THIS
-        'joining_date' => 'date',     // <-- ADD THIS
+        'hiring_status',
+        'interview_at',
+        'client_notes',
+        'joining_date',
+        'joined_status', // <-- ADDED THIS
+        'left_at',       // <-- ADDED THIS
     ];
 
     /**
-     * Get the job this application is for.
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
      */
-    public function job(): BelongsTo
+    protected $casts = [
+        'interview_at' => 'datetime',
+        'joining_date' => 'datetime',
+        'left_at' => 'datetime', // <-- ADDED THIS
+    ];
+
+    /**
+     * Get the job associated with the application.
+     */
+    public function job()
     {
         return $this->belongsTo(Job::class);
     }
 
     /**
-     * Get the candidate (from partner pool) this application is for.
+     * Get the candidate (from the 'users' table) associated with the application.
      */
-    public function candidate(): BelongsTo
+    public function candidateUser()
     {
-        // This links to the 'candidates' table
-        return $this->belongsTo(Candidate::class, 'candidate_id');
+        return $this->belongsTo(User::class, 'candidate_user_id');
     }
 
     /**
-     * Get the partner (user) who submitted this application.
-     * This relationship works by going THROUGH the candidate.
+     * Get the candidate (from the 'candidates' table) associated with the application.
      */
-   /* public function partner()
+    public function candidate()
     {
-        // An application belongs to a partner THROUGH its candidate
-        return $this->hasOneThrough(
-            User::class,      // The final model we want (Partner, which is a User)
-            Candidate::class, // The intermediate model (Candidate)
-            'id',             // Foreign key on Candidate table (candidates.id)
-            'id',             // Foreign key on User table (users.id)
-            'candidate_id',   // Local key on JobApplication table (job_applications.candidate_id)
-            'partner_id'      // Local key on Candidate table (candidates.partner_id)
-        );
-    }*/
-
-    /**
-     * Get the candidate (who is a user) this application is for.
-     */
-    public function candidateUser(): BelongsTo
-    {
-        // This links to the 'users' table
-        return $this->belongsTo(User::class, 'candidate_user_id');
+        return $this->belongsTo(Candidate::class, 'candidate_id');
     }
 }

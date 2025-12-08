@@ -2,64 +2,55 @@
 
 @section('content')
 <div class="py-12">
-    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6 md:p-8 text-gray-900">
-                
-                <div class="mb-6 border-b pb-4">
-                    <h1 class="text-2xl font-semibold">Schedule Interview</h1>
-                    <p class="text-lg text-gray-700 mt-1">
-                        For: 
-                        <span class="font-bold">
-                            @if($application->candidate)
-                                {{ $application->candidate->first_name }} {{ $application->candidate->last_name }}
-                            @else
-                                {{ $application->candidateUser->name }}
-                            @endif
-                        </span>
-                    </p>
-                    <p class="text-md text-gray-500">
-                        Job: {{ $application->job->title }}
-                    </p>
+            <div class="p-6 text-gray-900">
+
+                <div class="mb-6">
+                    <h1 class="text-2xl font-semibold">{{ $isEdit ? 'Edit Interview Details' : 'Schedule Interview' }}</h1>
+                    <p class="text-xl text-gray-700">for {{ $application->job->title }}</p>
                 </div>
 
-                <form action="{{ route('client.applications.interview.schedule', $application) }}" method="POST">
+                <form action="{{ $isEdit ? route('client.applications.interview.update', $application) : route('client.applications.interview.schedule', $application) }}" 
+                      method="POST">
                     @csrf
+                    @if($isEdit)
+                        @method('PATCH')
+                    @endif
 
-                    <div>
-                        <label for="interview_at" class="block text-sm font-medium text-gray-700">Interview Date & Time</label>
-                        <input type="datetime-local" 
-                               name="interview_at" 
-                               id="interview_at"
-                               value="{{ old('interview_at') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        @error('interview_at')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                    <div class="mb-4 border-b pb-4">
+                        <h2 class="text-lg font-medium text-gray-800">Candidate: {{ $application->candidate ? $application->candidate->first_name . ' ' . $application->candidate->last_name : $application->candidateUser->name }}</h2>
                     </div>
 
-                    <div class="mt-6">
-                        <label for="client_notes" class="block text-sm font-medium text-gray-700">
-                            Notes (e.g., Interview location, video call link)
-                        </label>
-                        <textarea name="client_notes" 
-                                  id="client_notes" 
-                                  rows="4"
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">{{ old('client_notes') }}</textarea>
-                        @error('client_notes')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                    <div class="mt-4">
+                        <x-input-label for="interview_at" :value="__('Interview Date & Time')" />
+                        <x-text-input id="interview_at" class="block mt-1 w-full md:w-1/2" 
+                                      type="datetime-local" 
+                                      name="interview_at" 
+                                      :value="old('interview_at', $isEdit && $application->interview_at ? $application->interview_at->format('Y-m-d\TH:i') : '')" 
+                                      required 
+                                      min="{{ now()->addMinutes(1)->format('Y-m-d\TH:i') }}" />
+                        <x-input-error :messages="$errors->get('interview_at')" class="mt-2" />
                     </div>
 
-                    <div class="mt-8 flex justify-end">
-                        <a href="{{ route('client.jobs.applicants', $application->job_id) }}" class="text-gray-600 hover:underline py-2 px-4">
+                    <div class="mt-4">
+                        <x-input-label for="client_notes" :value="__('Interview Notes (Optional)')" />
+                        <textarea id="client_notes" name="client_notes" rows="4" 
+                                  class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                  >{{ old('client_notes', $application->client_notes) }}</textarea>
+                        <x-input-error :messages="$errors->get('client_notes')" class="mt-2" />
+                    </div>
+
+                    <div class="flex items-center justify-start mt-6 space-x-4">
+                        <x-primary-button class="{{ $isEdit ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700' }}">
+                            {{ $isEdit ? __('Update Interview') : __('Schedule Interview') }}
+                        </x-primary-button>
+                        
+                        <a href="{{ route('client.jobs.applicants', $application->job_id) }}" 
+                           class="text-gray-600 hover:text-gray-900 underline">
                             Cancel
                         </a>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md ml-4">
-                            Schedule Interview
-                        </button>
                     </div>
-
                 </form>
 
             </div>

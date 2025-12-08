@@ -61,31 +61,33 @@
                                     <td class="py-4 px-4 whitespace-nowrap align-top">{{ $app->created_at->format('M d, Y') }}</td>
                                     
                                     <td class="py-4 px-4 whitespace-nowrap align-top">
-                                        {{-- *** STATUS BLOCK UPDATED *** --}}
                                         @if($app->status == 'Approved')
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                 Approved
                                             </span>
                                             
-                                            {{-- Show client hiring status --}}
-                                            @if($app->hiring_status)
-                                                <div class="text-sm text-gray-600 mt-1 pt-1 border-t">
-                                                    Client Status:
-                                                    <strong class="font-medium">
-                                                        @if($app->hiring_status == 'Interview Scheduled')
-                                                            <span class="text-blue-700">Interview</span>
-                                                        @elseif($app->hiring_status == 'Interviewed')
-                                                            <span class="text-purple-700">Interviewed</span>
-                                                        @elseif($app->hiring_status == 'Selected')
-                                                            <span class="text-green-700">Selected</span>
-                                                        @elseif($app->hiring_status == 'Client Rejected')
-                                                            <span class="text-red-700">Rejected</span>
-                                                        @else
-                                                            <span class="text-gray-600">{{ $app->hiring_status }}</span>
-                                                        @endif
-                                                    </strong>
-                                                </div>
-                                            @endif
+                                            <div class="text-sm text-gray-600 mt-1 pt-1 border-t">
+                                                Client Status:
+                                                <strong class="font-medium">
+                                                    @if($app->joined_status == 'Joined')
+                                                        <span class="text-green-700">Joined</span>
+                                                    @elseif($app->joined_status == 'Did Not Join')
+                                                        <span class="text-red-700">Did Not Join</span>
+                                                    @elseif($app->joined_status == 'Left')
+                                                        <span class="text-red-700">Left</span>
+                                                    @elseif($app->hiring_status == 'Selected')
+                                                        <span class="text-green-700">Selected</span>
+                                                    @elseif($app->hiring_status == 'Interviewed')
+                                                        <span class="text-purple-700">Interviewed</span>
+                                                    @elseif($app->hiring_status == 'Interview Scheduled')
+                                                        <span class="text-blue-700">Interview</span>
+                                                    @elseif($app->hiring_status == 'Client Rejected')
+                                                        <span class="text-red-700">Rejected</span>
+                                                    @else
+                                                        <span class="text-gray-600">{{ $app->hiring_status ?? 'Pending' }}</span>
+                                                    @endif
+                                                </strong>
+                                            </div>
 
                                         @elseif($app->status == 'Rejected')
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
@@ -97,7 +99,6 @@
                                             </span>
                                         @endif
                                     </td>
-
                                     <td class="py-4 px-4 whitespace-nowrap text-sm font-medium align-top">
                                         @if($app->status == 'Pending Review')
                                             <div class="flex space-x-2">

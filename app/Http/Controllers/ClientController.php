@@ -6,11 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Job;
 use App\Models\JobApplication;
-use App\Models\User; // <-- ADD THIS
-use App\Notifications\CandidateRejectedByClient; // <-- ADD THIS
-use App\Notifications\CandidateSelected;        // <-- ADD THIS
-use App\Notifications\InterviewScheduled;       // <-- ADD THIS
-use Illuminate\Support\Facades\Notification; // <-- ADD THIS
+use App\Models\User;
+use App\Notifications\CandidateRejectedByClient;
+use App\Notifications\CandidateSelected;
+use App\Notifications\InterviewScheduled;
+use App\Notifications\CandidateJoined; 
+use App\Notifications\CandidateDidNotJoin;
+use App\Notifications\CandidateLeft;
+use Illuminate\Support\Facades\Notification;
 
 class ClientController extends Controller
 {
@@ -48,6 +51,9 @@ class ClientController extends Controller
                                                 if ($app->joining_date) {
                                                     $app->joining_date = \Carbon\Carbon::parse($app->joining_date);
                                                 }
+                                                if ($app->left_at) {
+                                                    $app->left_at = \Carbon\Carbon::parse($app->left_at);
+                                                }
                                                 return $app;
                                             });
 
@@ -65,20 +71,14 @@ class ClientController extends Controller
         if ($application->job->user_id !== Auth::id()) {
             abort(403);
         }
-
-        $application->update([
-            'hiring_status' => 'Client Rejected'
-        ]);
-
-        // --- NOTIFICATION LOGIC ---
+        $application->update(['hiring_status' => 'Client Rejected']);
         $this->notifyAdminAndPartner(new CandidateRejectedByClient($application), $application);
-        // --------------------------
-
         return redirect()->back()->with('success', 'Candidate has been rejected.');
     }
 
+    // --- INTERVIEW SCHEDULING (POST/NEW) ---
     /**
-     * Show the form to schedule an interview.
+     * Show the form to schedule an interview (for new status).
      */
     public function showInterviewForm(JobApplication $application)
     {
@@ -86,35 +86,69 @@ class ClientController extends Controller
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
-        return view('client.jobs.interview', ['application' => $application]);
+        // Pass a flag to indicate this is a POST/NEW form
+        return view('client.jobs.interview', ['application' => $application, 'isEdit' => false]);
     }
 
     /**
-     * Store the interview details.
+     * Store the interview details (POST/NEW).
      */
     public function scheduleInterview(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
             abort(403);
         }
-
         $validated = $request->validate([
             'interview_at' => 'required|date|after:now',
             'client_notes' => 'nullable|string|max:1000',
         ]);
-
         $application->update([
             'hiring_status' => 'Interview Scheduled',
             'interview_at' => $validated['interview_at'],
             'client_notes' => $validated['client_notes'],
         ]);
-
-        // --- NOTIFICATION LOGIC ---
         $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
-        // --------------------------
-
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
     }
+    
+    // --- *** NEW EDIT METHODS FOR INTERVIEW DETAILS *** ---
+
+    /**
+     * Show the form to edit existing interview details.
+     */
+    public function editInterviewDetails(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->load(['job', 'candidate', 'candidateUser']);
+        // Pass a flag to indicate this is a PATCH/EDIT form
+        return view('client.jobs.interview', ['application' => $application, 'isEdit' => true]);
+    }
+
+    /**
+     * Update the existing interview details.
+     */
+    public function updateInterviewDetails(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $validated = $request->validate([
+            'interview_at' => 'required|date|after:now',
+            'client_notes' => 'nullable|string|max:1000',
+        ]);
+        // We do NOT change hiring_status here, as it's already "Interview Scheduled"
+        $application->update([
+            'interview_at' => $validated['interview_at'],
+            'client_notes' => $validated['client_notes'],
+        ]);
+        // No need to send full notification, just an update confirmation
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview details updated successfully!');
+    }
+    
+    // --- END NEW EDIT METHODS ---
+
 
     /**
      * Mark a candidate as 'Interviewed'.
@@ -139,9 +173,10 @@ class ClientController extends Controller
         $application->update(['hiring_status' => 'No-Show']);
         return redirect()->back()->with('success', 'Candidate marked as \'No-Show\'.');
     }
-
+    
+    // --- SELECTION (POST/NEW) ---
     /**
-     * Show the form to select a candidate.
+     * Show the form to select a candidate (for new status).
      */
     public function showSelectForm(JobApplication $application)
     {
@@ -149,49 +184,142 @@ class ClientController extends Controller
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
-        return view('client.jobs.select', ['application' => $application]);
+        return view('client.jobs.select', ['application' => $application, 'isEdit' => false]);
     }
 
     /**
-     * Store the final selection and joining date.
+     * Store the final selection and joining date (POST/NEW).
      */
     public function storeSelection(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
             abort(403);
         }
-
         $validated = $request->validate([
             'joining_date' => 'required|date|after_or_equal:today',
-            'joining_notes' => 'nullable|string|max:1000',
+            'client_notes' => 'nullable|string|max:1000',
         ]);
-
         $application->update([
             'hiring_status' => 'Selected',
             'joining_date' => $validated['joining_date'],
-            'client_notes' => $validated['joining_notes'],
+            'client_notes' => $validated['client_notes'],
+        ]);
+        $this->notifyAdminAndPartner(new CandidateSelected($application), $application);
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
+    }
+
+    // --- *** NEW EDIT METHODS FOR SELECTION DETAILS *** ---
+
+    /**
+     * Show the form to edit existing selection details.
+     */
+    public function editSelectionDetails(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->load(['job', 'candidate', 'candidateUser']);
+        return view('client.jobs.select', ['application' => $application, 'isEdit' => true]);
+    }
+
+    /**
+     * Update the existing selection and joining date.
+     */
+    public function updateSelectionDetails(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $validated = $request->validate([
+            'joining_date' => 'required|date|after_or_equal:today',
+            'client_notes' => 'nullable|string|max:1000',
+        ]);
+        $application->update([
+            'joining_date' => $validated['joining_date'],
+            'client_notes' => $validated['client_notes'],
+        ]);
+        // No need to send full notification, just an update confirmation
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Selection details updated successfully!');
+    }
+
+    // --- END NEW EDIT METHODS ---
+
+
+    /**
+     * Mark a candidate as 'Joined'.
+     */
+    public function markAsJoined(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->update(['joined_status' => 'Joined']);
+        $this->notifyAdminAndPartner(new CandidateJoined($application), $application);
+        return redirect()->back()->with('success', 'Candidate marked as \'Joined\'.');
+    }
+
+    /**
+     * Mark a candidate as 'Did Not Join'.
+     */
+    public function markAsNotJoined(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->update(['joined_status' => 'Did Not Join']);
+        $this->notifyAdminAndPartner(new CandidateDidNotJoin($application), $application);
+        return redirect()->back()->with('success', 'Candidate marked as \'Did Not Join\'.');
+    }
+
+    /**
+     * Show the form to mark a candidate as 'Left'.
+     */
+    public function showLeftForm(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->load(['job', 'candidate', 'candidateUser']);
+        return view('client.jobs.left', ['application' => $application]);
+    }
+
+    /**
+     * Store the date the candidate 'Left'.
+     */
+    public function markAsLeft(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'left_at' => 'required|date|after_or_equal:joining_date',
+            'client_notes' => 'nullable|string|max:1000',
         ]);
 
-        // --- NOTIFICATION LOGIC ---
-        $this->notifyAdminAndPartner(new CandidateSelected($application), $application);
-        // --------------------------
-
-        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
+        $application->update([
+            'joined_status' => 'Left',
+            'left_at' => $validated['left_at'],
+            'client_notes' => $validated['client_notes'],
+        ]);
+        
+        $this->notifyAdminAndPartner(new CandidateLeft($application), $application);
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate marked as \'Left\'.');
     }
 
 
     /**
-     * *** ADD THIS NEW HELPER METHOD ***
      * Reusable function to notify admin and partner.
      */
     private function notifyAdminAndPartner($notification, JobApplication $application)
     {
+        $application->load(['job.user', 'candidate.partner', 'candidateUser']);
+        
         // 1. Notify all Superadmins
         $admins = User::role('Superadmin')->get();
         Notification::send($admins, $notification);
 
         // 2. Notify the Partner (if one exists for this candidate)
-        // We check if it's a partner candidate (not a direct apply)
         if ($application->candidate && $application->candidate->partner) {
             $partner = $application->candidate->partner;
             $partner->notify($notification);
