@@ -24,10 +24,32 @@ class ClientController extends Controller
     public function index()
     {
         $client = Auth::user();
-        $jobs = Job::where('user_id', $client->id)->latest()->get();
+        
+        // Fetch jobs with eager loaded relationships for the dashboard list
+        $jobs = Job::where('user_id', $client->id)
+                    ->with(['experienceLevel', 'educationLevel']) 
+                    ->latest()
+                    ->get();
+        
+        // Calculate Stats
+        $totalJobs = $jobs->count();
+        $activeJobs = $jobs->where('status', 'approved')->count();
+        
+        // Count total applications across all client's jobs
+        $totalApplicants = JobApplication::whereIn('job_id', $jobs->pluck('id'))->count();
+        
+        // Count total hires (candidates marked as 'Selected' or 'Joined')
+        $totalHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+                        ->whereIn('hiring_status', ['Selected', 'Joined'])
+                        ->count();
+
         return view('client.dashboard', [
             'client' => $client,
-            'jobs'   => $jobs
+            'jobs'   => $jobs,
+            'totalJobs' => $totalJobs,
+            'activeJobs' => $activeJobs,
+            'totalApplicants' => $totalApplicants,
+            'totalHires' => $totalHires
         ]);
     }
     

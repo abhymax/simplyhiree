@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Job;
 use App\Models\Candidate;
 use App\Models\JobApplication;
 use App\Models\ExperienceLevel;
 use App\Models\EducationLevel;
+use Illuminate\Support\Facades\Storage;
 
 class PartnerController extends Controller
 {
@@ -69,14 +69,15 @@ class PartnerController extends Controller
             $query->where('education_level_id', $request->input('education_level_id'));
         }
 
+        // Eager load everything needed for the view
         $jobs = $query->with([
             'jobApplications' => function ($query) use ($partner) {
                 $query->whereHas('candidate', function ($subQuery) use ($partner) {
                     $subQuery->where('partner_id', $partner->id);
                 });
             },
-            'experienceLevel',
-            'educationLevel'
+            'experienceLevel', // Critical for Experience column
+            'educationLevel'   // Critical for Education column
         ])
         ->latest()
         ->paginate(10)
@@ -86,9 +87,9 @@ class PartnerController extends Controller
             $stats = [
                 'applied' => $job->jobApplications->count(),
                 'screened' => $job->jobApplications->where('status', 'Approved')->count(),
-                'turned_up' => $job->jobApplications->where('interview_status', 'Appeared')->count(),
+                'turned_up' => $job->jobApplications->where('hiring_status', 'Interviewed')->count(),
                 'selected' => $job->jobApplications->where('hiring_status', 'Selected')->count(),
-                'joined' => $job->jobApplications->where('hiring_status', 'Joined')->count(),
+                'joined' => $job->jobApplications->where('joined_status', 'Joined')->count(),
             ];
             $job->stats = (object)$stats;
         });
@@ -114,14 +115,13 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
 
-        $placements = JobApplication::where('hiring_status', 'Joined')
+        $placements = JobApplication::where('joined_status', 'Joined')
                                     ->whereHas('candidate', function ($query) use ($partner) {
                                         $query->where('partner_id', $partner->id);
                                     })
                                     ->with(['job', 'candidate'])
                                     ->get();
 
-        $today = \Carbon\Carbon::now()->startOfDay();
         $earningsData = [];
 
         foreach ($placements as $app) {
@@ -157,17 +157,11 @@ class PartnerController extends Controller
     
     // --- CANDIDATE MANAGEMENT METHODS ---
 
-    /**
-     * Show the form for creating a new candidate profile.
-     */
     public function createCandidate()
     {
         return view('partner.candidates.create');
     }
 
-    /**
-     * Store a newly created candidate in the database.
-     */
     public function storeCandidate(Request $request)
     {
         $partner = Auth::user();
@@ -189,7 +183,7 @@ class PartnerController extends Controller
             'job_role_preference' => 'nullable|string',
             'languages_spoken' => 'nullable|string',
             'skills' => 'nullable|string',
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048', 
+            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
         $validatedData['partner_id'] = $partner->id;
@@ -204,9 +198,6 @@ class PartnerController extends Controller
         return redirect()->route('partner.candidates.index')->with('success', 'Candidate added successfully!');
     }
 
-    /**
-     * Display a list of all candidates owned by this partner.
-     */
     public function listCandidates()
     {
         $partner = Auth::user();
@@ -217,34 +208,22 @@ class PartnerController extends Controller
         return view('partner.candidates.index', ['candidates' => $candidates]);
     }
 
-    /**
-     * *** ADD THIS METHOD ***
-     * Show the form for editing an existing candidate.
-     */
     public function editCandidate(Candidate $candidate)
     {
-        // Ensure the candidate belongs to the logged-in partner
         if ($candidate->partner_id !== Auth::id()) {
             abort(403);
         }
-
         return view('partner.candidates.edit', compact('candidate'));
     }
 
-    /**
-     * *** ADD THIS METHOD ***
-     * Update an existing candidate's information.
-     */
     public function updateCandidate(Request $request, Candidate $candidate)
     {
-        // Ensure the candidate belongs to the logged-in partner
         if ($candidate->partner_id !== Auth::id()) {
             abort(403);
         }
 
         $partner = Auth::user();
 
-        // Note: The unique validation rule ignores the current candidate's ID ($candidate->id)
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -265,9 +244,7 @@ class PartnerController extends Controller
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        // Handle Resume Upload
         if ($request->hasFile('resume')) {
-            // Delete old resume if it exists
             if ($candidate->resume_path && Storage::disk('public')->exists($candidate->resume_path)) {
                 Storage::disk('public')->delete($candidate->resume_path);
             }
@@ -280,13 +257,9 @@ class PartnerController extends Controller
         return redirect()->route('partner.candidates.index')->with('success', 'Candidate updated successfully!');
     }
 
-    /**
-     * Show the form for submitting candidates for a specific job.
-     */
     public function showApplyForm(Job $job)
     {
         $partner = Auth::user();
-
         $candidates = Candidate::where('partner_id', $partner->id)
                                 ->latest()
                                 ->get();
@@ -297,24 +270,17 @@ class PartnerController extends Controller
         ]);
     }
 
-    /**
-     * Store the new job applications from the partner.
-     */
     public function submitApplication(Request $request, Job $job)
     {
         $request->validate([
             'candidate_ids' => 'required|array|min:1',
             'candidate_ids.*' => 'exists:candidates,id',
-        ], [
-            'candidate_ids.required' => 'You must select at least one candidate to submit.',
-            'candidate_ids.min' => 'You must select at least one candidate to submit.'
         ]);
 
         $partner = Auth::user();
         $submittedCount = 0;
 
         foreach ($request->input('candidate_ids') as $candidateId) {
-            
             $existingApplication = JobApplication::where('job_id', $job->id)
                                                 ->where('candidate_id', $candidateId)
                                                 ->first();

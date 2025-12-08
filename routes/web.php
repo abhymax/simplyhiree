@@ -142,6 +142,8 @@ Route::middleware('auth')->group(function () {
         // --- ADD THESE NEW ROUTES ---
         Route::get('/candidates/{candidate}/edit', [PartnerController::class, 'editCandidate'])->name('candidates.edit');
         Route::patch('/candidates/{candidate}', [PartnerController::class, 'updateCandidate'])->name('candidates.update');
+        Route::get('/profile/business', [App\Http\Controllers\PartnerProfileController::class, 'edit'])->name('profile.business');
+        Route::patch('/profile/business', [App\Http\Controllers\PartnerProfileController::class, 'update'])->name('profile.update');
     });
     
     // --- CANDIDATE ROUTES ---

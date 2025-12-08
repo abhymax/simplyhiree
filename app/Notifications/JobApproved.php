@@ -2,12 +2,12 @@
 
 namespace App\Notifications;
 
-use App\Models\Job;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use App\Models\Job;
 
-class JobRejected extends Notification implements ShouldQueue
+class JobApproved extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -26,9 +26,9 @@ class JobRejected extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'message' => "Your job posting '{$this->job->title}' was rejected by the admin.",
+            'message' => "Your job '{$this->job->title}' has been approved and is now live.",
             'job_id' => $this->job->id,
-            'icon' => 'x-circle',
+            'icon' => 'check-circle',
         ];
     }
 }

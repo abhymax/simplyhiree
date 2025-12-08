@@ -35,8 +35,8 @@
                                         <div class="text-xs text-gray-500 mt-1">Openings: <span class="font-bold">{{ $job->openings ?? 'N/A' }}</span></div>
                                     </td>
                                     <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        Exp: {{ $job->experience_required }}<br>
-                                        Edu: {{ $job->education_level }}<br>
+                                        Exp: {{ $job->experienceLevel->name ?? 'Not Specified' }}<br>
+                                        Edu: {{ $job->educationLevel->name ?? 'Not Specified' }}<br>
                                         Age: {{ $job->min_age ?? 'N/A' }} - {{ $job->max_age ?? 'N/A' }} yrs<br>
                                         Gender: {{ $job->gender_preference ?? 'Any' }}
                                     </td>
@@ -74,4 +74,3 @@
     </div>
 </div>
 @endsection
-

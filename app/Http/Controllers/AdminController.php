@@ -158,8 +158,9 @@ class AdminController extends Controller
      */
     public function pendingJobs()
     {
+        // UPDATED: Eager load experience and education levels so they are not blank
         $pendingJobs = Job::where('status', 'pending_approval')
-                          ->with('user')
+                          ->with(['user', 'experienceLevel', 'educationLevel']) 
                           ->latest()
                           ->paginate(20);
 
@@ -210,12 +211,16 @@ class AdminController extends Controller
      */
     public function manageJobExclusions(Job $job)
     {
+        // UPDATED: Eager load relations for the view details
+        $job->load(['experienceLevel', 'educationLevel']);
+
         $partners = User::role('partner')->get();
         $excludedPartnerIds = $job->excludedPartners()->pluck('users.id')->toArray();
 
         return view('admin.jobs.manage', [
             'job' => $job,
-            'partners' => $partners,
+            // UPDATED: Changed key from 'partners' to 'allPartners' to match your View
+            'allPartners' => $partners, 
             'excludedPartnerIds' => $excludedPartnerIds
         ]);
     }
@@ -242,7 +247,6 @@ class AdminController extends Controller
         $reportData = [];
 
         foreach ($placements as $app) {
-            // Skip if data is incomplete
             if (empty($app->joining_date) || empty($app->job->user) || empty($app->job->user->billable_period_days)) {
                 continue;
             }
@@ -252,24 +256,22 @@ class AdminController extends Controller
             $billableDays = $client->billable_period_days;
             $invoiceDate = $joiningDate->copy()->addDays($billableDays);
 
-            // Logic: It is "Due" if the invoice date has passed and it hasn't been paid yet.
             $isDue = $invoiceDate->isPast();
             
-            // Determine display status
             $statusLabel = 'Pending Maturity';
             $rowClass = '';
 
             if ($app->payment_status === 'paid') {
                 $statusLabel = 'Paid';
-                $rowClass = 'bg-green-50'; // Visual cue for Paid
+                $rowClass = 'bg-green-50';
             } elseif ($isDue) {
                 $statusLabel = 'Due / Billable';
-                $rowClass = 'bg-red-50'; // Visual cue for Overdue/Due
+                $rowClass = 'bg-red-50';
             }
 
             $reportData[] = (object) [
                 'id' => $app->id,
-                'candidate_name' => $app->candidate_name, // Relies on the Accessor in JobApplication model
+                'candidate_name' => $app->candidate_name, 
                 'client_name' => $client->name,
                 'job_title' => $app->job->title,
                 'joining_date' => $app->joining_date->format('M d, Y'),
@@ -283,7 +285,6 @@ class AdminController extends Controller
             ];
         }
 
-        // Sort: Unpaid & Due first (1), then Pending (2), then Paid (3)
         $reportData = collect($reportData)->sortBy(function($item) {
             if ($item->payment_status === 'paid') return 3;
             if ($item->is_due) return 1;

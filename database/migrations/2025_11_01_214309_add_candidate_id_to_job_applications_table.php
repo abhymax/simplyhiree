@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('job_applications', function (Blueprint $table) {
-            // This column links to the 'candidates' table (the partner's pool)
-            $table->foreignId('candidate_id')
-                  ->nullable()
-                  ->constrained('candidates')
-                  ->onDelete('set null')
-                  ->after('partner_id'); // Places it after the 'partner_id' column
+            // Only add the column if it does not exist
+            if (!Schema::hasColumn('job_applications', 'candidate_id')) {
+                $table->foreignId('candidate_id')
+                      ->nullable()
+                      ->constrained('candidates')
+                      ->onDelete('set null')
+                      ->after('partner_id');
+            }
         });
     }
 
@@ -27,7 +29,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('job_applications', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('job_applications', 'candidate_id')) {
+                // Drop the foreign key and the column
+                $table->dropForeign(['candidate_id']);
+                $table->dropColumn('candidate_id');
+            }
         });
     }
 };

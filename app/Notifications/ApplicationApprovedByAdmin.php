@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
-use App\Models\JobApplication;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use App\Models\JobApplication;
 
 class ApplicationApprovedByAdmin extends Notification implements ShouldQueue
 {
@@ -25,11 +25,14 @@ class ApplicationApprovedByAdmin extends Notification implements ShouldQueue
 
     public function toDatabase(object $notifiable): array
     {
-        $candidateName = $this->application->candidate->first_name . ' ' . $this->application->candidate->last_name;
-        $jobTitle = $this->application->job->title;
+        $candidateName = $this->application->candidate 
+            ? $this->application->candidate->first_name 
+            : 'Candidate';
+            
+        $jobTitle = $this->application->job ? $this->application->job->title : 'Job';
 
         return [
-            'message' => "Application Approved: {$candidateName} for '{$jobTitle}' has been forwarded to the client.",
+            'message' => "Application Approved: {$candidateName} for '{$jobTitle}' forwarded to client.",
             'application_id' => $this->application->id,
             'icon' => 'check-circle',
         ];

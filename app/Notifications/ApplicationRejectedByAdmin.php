@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
-use App\Models\JobApplication;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use App\Models\JobApplication;
 
 class ApplicationRejectedByAdmin extends Notification implements ShouldQueue
 {
@@ -25,11 +25,14 @@ class ApplicationRejectedByAdmin extends Notification implements ShouldQueue
 
     public function toDatabase(object $notifiable): array
     {
-        $candidateName = $this->application->candidate->first_name . ' ' . $this->application->candidate->last_name;
-        $jobTitle = $this->application->job->title;
+        $candidateName = $this->application->candidate 
+            ? $this->application->candidate->first_name 
+            : 'Candidate';
+            
+        $jobTitle = $this->application->job ? $this->application->job->title : 'Job';
 
         return [
-            'message' => "Application Returned: {$candidateName} for '{$jobTitle}' was rejected by the admin.",
+            'message' => "Application Returned: {$candidateName} for '{$jobTitle}' was rejected.",
             'application_id' => $this->application->id,
             'icon' => 'x-circle',
         ];

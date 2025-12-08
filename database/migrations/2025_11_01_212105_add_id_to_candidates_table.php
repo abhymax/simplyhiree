@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            // This adds a standard auto-incrementing 'id' column as the primary key
-            // and places it as the first column in the table.
-            $table->id()->first();
+            // Only add the 'id' column if it does not already exist
+            if (!Schema::hasColumn('candidates', 'id')) {
+                $table->id()->first();
+            }
         });
     }
 
@@ -24,7 +25,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            //
+            // Only drop the 'id' column if it exists
+            if (Schema::hasColumn('candidates', 'id')) {
+                $table->dropColumn('id');
+            }
         });
     }
 };
