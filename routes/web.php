@@ -20,6 +20,7 @@ Route::get('/', function () {
     return view('landing');
 });
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
+Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show'); // <-- ADD THIS LINE
 
 // Guest-only registration routes
 Route::middleware('guest')->group(function () {
@@ -91,6 +92,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
         // --- *** ADD THIS NEW ROUTE FOR THE JOB REPORT *** ---
         Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
+        Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
     });
 
     // --- CLIENT (EMPLOYER) ROUTES ---
@@ -98,8 +100,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create');
         Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');
+        Route::get('/billing', [ClientController::class, 'billing'])->name('billing'); // <-- ADD THIS
         // --- ADD THIS NEW ROUTE ---
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
+    
+        
         // --- ADD THESE NEW HIRING ROUTES ---
 
         // Route for the client to reject the applicant
@@ -134,12 +139,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/candidates/create', [PartnerController::class, 'createCandidate'])->name('candidates.create');
         Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store');
         Route::get('/candidates', [PartnerController::class, 'listCandidates'])->name('candidates.index');
+        // --- ADD THESE NEW ROUTES ---
+        Route::get('/candidates/{candidate}/edit', [PartnerController::class, 'editCandidate'])->name('candidates.edit');
+        Route::patch('/candidates/{candidate}', [PartnerController::class, 'updateCandidate'])->name('candidates.update');
     });
     
     // --- CANDIDATE ROUTES ---
     Route::middleware('role:candidate')->prefix('candidate')->name('candidate.')->group(function () {
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');
+        
+        // --- ADD THESE NEW ROUTES ---
+        Route::get('/profile/edit', [App\Http\Controllers\CandidateProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile/update', [App\Http\Controllers\CandidateProfileController::class, 'update'])->name('profile.update');
     });
 });
 

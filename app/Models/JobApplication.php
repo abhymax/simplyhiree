@@ -4,16 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute; // <-- CRITICAL IMPORT
 
 class JobApplication extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'job_id', 
         'candidate_user_id', 
@@ -23,19 +19,18 @@ class JobApplication extends Model
         'interview_at',
         'client_notes',
         'joining_date',
-        'joined_status', // <-- ADDED THIS
-        'left_at',       // <-- ADDED THIS
+        'joined_status',
+        'left_at',
+        // New Billing Fields
+        'payment_status',
+        'paid_at',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'interview_at' => 'datetime',
         'joining_date' => 'datetime',
-        'left_at' => 'datetime', // <-- ADDED THIS
+        'left_at' => 'datetime',
+        'paid_at' => 'datetime', // <-- Add this
     ];
 
     /**
@@ -47,7 +42,7 @@ class JobApplication extends Model
     }
 
     /**
-     * Get the candidate (from the 'users' table) associated with the application.
+     * Get the candidate (from the 'users' table - Direct Applicants).
      */
     public function candidateUser()
     {
@@ -55,10 +50,34 @@ class JobApplication extends Model
     }
 
     /**
-     * Get the candidate (from the 'candidates' table) associated with the application.
+     * Get the candidate (from the 'candidates' table - Agency Applicants).
      */
     public function candidate()
     {
         return $this->belongsTo(Candidate::class, 'candidate_id');
+    }
+
+    // --- NEW ACCESSOR ---
+    /**
+     * Get the candidate's full name, regardless of source (User or Agency Candidate).
+     * Usage: $application->candidate_name
+     */
+    protected function candidateName(): Attribute
+    {
+        return Attribute::make(
+            get: function (mixed $value, array $attributes) {
+                // Check for Agency Candidate first
+                if ($this->candidate) {
+                    return $this->candidate->first_name . ' ' . $this->candidate->last_name;
+                }
+                
+                // Check for Direct User Candidate
+                if ($this->candidateUser) {
+                    return $this->candidateUser->name;
+                }
+
+                return 'Unknown Candidate';
+            }
+        );
     }
 }

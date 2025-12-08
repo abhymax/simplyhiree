@@ -11,33 +11,58 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Create lookup tables first
-        Schema::create('experience_levels', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
-        });
+        // 1. Create lookup tables only if they don't exist
+        if (!Schema::hasTable('experience_levels')) {
+            Schema::create('experience_levels', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('education_levels', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('education_levels')) {
+            Schema::create('education_levels', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
 
-        // Now, add all new columns to the jobs table
+        // 2. Add columns to jobs table (Check if they exist first)
         Schema::table('jobs', function (Blueprint $table) {
-            $table->integer('openings')->nullable()->after('salary');
-            $table->integer('min_age')->nullable()->after('openings');
-            $table->integer('max_age')->nullable()->after('min_age');
-            $table->string('gender_preference')->nullable()->after('max_age');
-            $table->string('category')->nullable()->after('gender_preference');
-            $table->json('job_type_tags')->nullable()->after('category');
-            $table->boolean('is_walkin')->default(false)->after('job_type_tags');
-            $table->dateTime('interview_slot')->nullable()->after('is_walkin');
+            
+            if (!Schema::hasColumn('jobs', 'openings')) {
+                $table->integer('openings')->nullable()->after('salary');
+            }
+            if (!Schema::hasColumn('jobs', 'min_age')) {
+                $table->integer('min_age')->nullable()->after('openings');
+            }
+            if (!Schema::hasColumn('jobs', 'max_age')) {
+                $table->integer('max_age')->nullable()->after('min_age');
+            }
+            if (!Schema::hasColumn('jobs', 'gender_preference')) {
+                $table->string('gender_preference')->nullable()->after('max_age');
+            }
+            if (!Schema::hasColumn('jobs', 'category')) {
+                $table->string('category')->nullable()->after('gender_preference');
+            }
+            if (!Schema::hasColumn('jobs', 'job_type_tags')) {
+                $table->json('job_type_tags')->nullable()->after('category');
+            }
+            if (!Schema::hasColumn('jobs', 'is_walkin')) {
+                $table->boolean('is_walkin')->default(false)->after('job_type_tags');
+            }
+            if (!Schema::hasColumn('jobs', 'interview_slot')) {
+                $table->dateTime('interview_slot')->nullable()->after('is_walkin');
+            }
 
-            // Add foreign key columns
-            $table->foreignId('experience_level_id')->nullable()->constrained('experience_levels')->after('experience_required');
-            $table->foreignId('education_level_id')->nullable()->constrained('education_levels')->after('education_level');
+            // Foreign Keys
+            if (!Schema::hasColumn('jobs', 'experience_level_id')) {
+                $table->foreignId('experience_level_id')->nullable()->constrained('experience_levels')->after('experience_required');
+            }
+            if (!Schema::hasColumn('jobs', 'education_level_id')) {
+                $table->foreignId('education_level_id')->nullable()->constrained('education_levels')->after('education_level');
+            }
         });
     }
 
@@ -47,11 +72,18 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('jobs', function (Blueprint $table) {
-            $table->dropForeign(['experience_level_id']);
-            $table->dropColumn('experience_level_id');
-            $table->dropForeign(['education_level_id']);
-            $table->dropColumn('education_level_id');
-            $table->dropColumn([
+            // Drop Foreign Keys if they exist
+            if (Schema::hasColumn('jobs', 'experience_level_id')) {
+                $table->dropForeign(['experience_level_id']);
+                $table->dropColumn('experience_level_id');
+            }
+            if (Schema::hasColumn('jobs', 'education_level_id')) {
+                $table->dropForeign(['education_level_id']);
+                $table->dropColumn('education_level_id');
+            }
+
+            // Drop Columns
+            $columnsToDrop = [
                 'openings',
                 'min_age',
                 'max_age',
@@ -60,10 +92,26 @@ return new class extends Migration
                 'job_type_tags',
                 'is_walkin',
                 'interview_slot'
-            ]);
+            ];
+            
+            $existingColumns = [];
+            foreach ($columnsToDrop as $col) {
+                if (Schema::hasColumn('jobs', $col)) {
+                    $existingColumns[] = $col;
+                }
+            }
+            
+            if (!empty($existingColumns)) {
+                $table->dropColumn($existingColumns);
+            }
         });
 
-        Schema::dropIfExists('experience_levels');
-        Schema::dropIfExists('education_levels');
+        // Only drop tables if they exist
+        if (Schema::hasTable('experience_levels')) {
+            Schema::dropIfExists('experience_levels');
+        }
+        if (Schema::hasTable('education_levels')) {
+            Schema::dropIfExists('education_levels');
+        }
     }
 };

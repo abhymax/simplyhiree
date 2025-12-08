@@ -5,40 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; // <-- Ensure this is here
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\HasOne; // <-- Add this import
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles; // <-- Ensure HasRoles is here
+    use HasFactory, Notifiable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
         'billable_period_days',
-        // The old 'role' column is no longer needed here
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -46,5 +31,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-}
 
+    // --- ADD THIS METHOD ---
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+}

@@ -14,6 +14,7 @@ use App\Notifications\CandidateJoined;
 use App\Notifications\CandidateDidNotJoin;
 use App\Notifications\CandidateLeft;
 use Illuminate\Support\Facades\Notification;
+use Carbon\Carbon;
 
 class ClientController extends Controller
 {
@@ -46,13 +47,13 @@ class ClientController extends Controller
                                             ->paginate(20)
                                             ->through(function ($app) {
                                                 if ($app->interview_at) {
-                                                    $app->interview_at = \Carbon\Carbon::parse($app->interview_at);
+                                                    $app->interview_at = Carbon::parse($app->interview_at);
                                                 }
                                                 if ($app->joining_date) {
-                                                    $app->joining_date = \Carbon\Carbon::parse($app->joining_date);
+                                                    $app->joining_date = Carbon::parse($app->joining_date);
                                                 }
                                                 if ($app->left_at) {
-                                                    $app->left_at = \Carbon\Carbon::parse($app->left_at);
+                                                    $app->left_at = Carbon::parse($app->left_at);
                                                 }
                                                 return $app;
                                             });
@@ -76,7 +77,8 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'Candidate has been rejected.');
     }
 
-    // --- INTERVIEW SCHEDULING (POST/NEW) ---
+    // --- INTERVIEW SCHEDULING ---
+
     /**
      * Show the form to schedule an interview (for new status).
      */
@@ -86,7 +88,6 @@ class ClientController extends Controller
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
-        // Pass a flag to indicate this is a POST/NEW form
         return view('client.jobs.interview', ['application' => $application, 'isEdit' => false]);
     }
 
@@ -111,8 +112,6 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
     }
     
-    // --- *** NEW EDIT METHODS FOR INTERVIEW DETAILS *** ---
-
     /**
      * Show the form to edit existing interview details.
      */
@@ -122,7 +121,6 @@ class ClientController extends Controller
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
-        // Pass a flag to indicate this is a PATCH/EDIT form
         return view('client.jobs.interview', ['application' => $application, 'isEdit' => true]);
     }
 
@@ -138,17 +136,14 @@ class ClientController extends Controller
             'interview_at' => 'required|date|after:now',
             'client_notes' => 'nullable|string|max:1000',
         ]);
-        // We do NOT change hiring_status here, as it's already "Interview Scheduled"
+        
         $application->update([
             'interview_at' => $validated['interview_at'],
             'client_notes' => $validated['client_notes'],
         ]);
-        // No need to send full notification, just an update confirmation
+        
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview details updated successfully!');
     }
-    
-    // --- END NEW EDIT METHODS ---
-
 
     /**
      * Mark a candidate as 'Interviewed'.
@@ -174,7 +169,8 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'Candidate marked as \'No-Show\'.');
     }
     
-    // --- SELECTION (POST/NEW) ---
+    // --- SELECTION ---
+
     /**
      * Show the form to select a candidate (for new status).
      */
@@ -208,8 +204,6 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
     }
 
-    // --- *** NEW EDIT METHODS FOR SELECTION DETAILS *** ---
-
     /**
      * Show the form to edit existing selection details.
      */
@@ -238,12 +232,9 @@ class ClientController extends Controller
             'joining_date' => $validated['joining_date'],
             'client_notes' => $validated['client_notes'],
         ]);
-        // No need to send full notification, just an update confirmation
+        
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Selection details updated successfully!');
     }
-
-    // --- END NEW EDIT METHODS ---
-
 
     /**
      * Mark a candidate as 'Joined'.
@@ -307,6 +298,64 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate marked as \'Left\'.');
     }
 
+    /**
+     * Show the billing/invoicing status for this client's hires.
+     */
+    public function billing()
+    {
+        $client = Auth::user();
+
+        // 1. Get all successful hires for this client
+        $hires = JobApplication::where('hiring_status', 'Selected')
+            ->whereHas('job', function($q) use ($client) {
+                $q->where('user_id', $client->id);
+            })
+            ->with(['job', 'candidate', 'candidateUser'])
+            ->get();
+
+        $billingData = [];
+
+        foreach ($hires as $hire) {
+            // Safety check for missing data
+            if (empty($hire->joining_date)) {
+                continue;
+            }
+
+            $joiningDate = Carbon::parse($hire->joining_date);
+            $billableDays = $client->billable_period_days ?? 30; // Default to 30 if null
+            $invoiceDate = $joiningDate->copy()->addDays($billableDays);
+            
+            // Status Logic
+            $isDue = $invoiceDate->isPast();
+            
+            if ($hire->payment_status === 'paid') {
+                $status = 'Paid';
+                $color = 'text-green-600 bg-green-100';
+            } elseif ($isDue) {
+                $status = 'Due for Payment';
+                $color = 'text-red-600 bg-red-100';
+            } else {
+                $status = 'Maturing'; // Still in cooling period
+                $color = 'text-yellow-600 bg-yellow-100';
+            }
+
+            $billingData[] = (object) [
+                'candidate_name' => $hire->candidate_name, // Uses the Accessor from JobApplication model
+                'job_title' => $hire->job->title,
+                'joining_date' => $joiningDate->format('M d, Y'),
+                'amount' => $hire->job->payout_amount ? '₹' . number_format($hire->job->payout_amount) : 'N/A',
+                'invoice_date' => $invoiceDate->format('M d, Y'),
+                'status' => $status,
+                'status_color' => $color,
+                'paid_at' => $hire->paid_at ? $hire->paid_at->format('M d, Y') : null,
+            ];
+        }
+
+        // Sort by Invoice Date (Newest first)
+        $billingData = collect($billingData)->sortByDesc('invoice_date');
+
+        return view('client.billing.index', compact('billingData'));
+    }
 
     /**
      * Reusable function to notify admin and partner.

@@ -8,6 +8,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
+use App\Notifications\JobApproved;
+use App\Notifications\JobRejected;
+use App\Notifications\ApplicationApprovedByAdmin;
+use App\Notifications\ApplicationRejectedByAdmin;
 
 class AdminController extends Controller
 {
@@ -16,14 +20,12 @@ class AdminController extends Controller
      */
     public function index()
     {
-        // Fetch all stats
         $totalUsers = User::count();
         $totalClients = User::role('client')->count();
         $totalPartners = User::role('partner')->count();
         $pendingJobs = Job::where('status', 'pending_approval')->count();
-        $pendingApplications = JobApplication::where('status', 'Pending Review')->count(); // Added this as a bonus
+        $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
-        // Pass all stats to the view
         return view('admin.dashboard', [
             'totalUsers' => $totalUsers,
             'totalClients' => $totalClients,
@@ -34,45 +36,37 @@ class AdminController extends Controller
     }
 
     /**
-     * *** ADD THIS NEW METHOD ***
      * Show all users in the system.
      */
     public function listUsers()
     {
-        // Fetch all users, load their roles, and paginate
         $users = User::with('roles')->latest()->paginate(25);
 
-        // We will create this new view file next
         return view('admin.users.index', [
             'users' => $users
         ]);
     }
 
     /**
-     * *** ADD THIS NEW METHOD ***
      * Show all CLIENT users.
      */
     public function listClients()
     {
-        // Fetch only users with the 'client' role
         $clients = User::role('client')
-                       ->with('roles') // Eager load role details
+                       ->with('roles')
                        ->latest()
                        ->paginate(25);
 
-        // We will create this new view file next
         return view('admin.clients.index', [
-            'users' => $clients // Pass the 'users' variable for consistency
+            'users' => $clients 
         ]);
     }
 
     /**
-     * *** ADD THIS NEW METHOD ***
      * Show the form to edit a client's billable period.
      */
     public function editClient(User $user)
     {
-        // Ensure we are only editing clients
         if (!$user->hasRole('client')) {
             abort(404);
         }
@@ -83,12 +77,10 @@ class AdminController extends Controller
     }
 
     /**
-     * *** ADD THIS NEW METHOD ***
      * Update the client's billable period.
      */
     public function updateClient(Request $request, User $user)
     {
-        // Ensure we are only editing clients
         if (!$user->hasRole('client')) {
             abort(404);
         }
@@ -105,20 +97,17 @@ class AdminController extends Controller
     }
 
     /**
-     * *** ADD THIS NEW METHOD ***
      * Show all PARTNER users.
      */
     public function listPartners()
     {
-        // Fetch only users with the 'partner' role
         $partners = User::role('partner')
-                        ->with('roles') // Eager load role details
+                        ->with('roles')
                         ->latest()
                         ->paginate(25);
 
-        // We will create this new view file next
         return view('admin.partners.index', [
-            'users' => $partners // Pass the 'users' variable for consistency
+            'users' => $partners
         ]);
     }
 
@@ -140,8 +129,13 @@ class AdminController extends Controller
     public function approveApplication(JobApplication $application)
     {
         $application->update(['status' => 'Approved']);
-        // TODO: Notify partner
-        return redirect()->back()->with('success', 'Application approved.');
+
+        // Notify Partner if the candidate belongs to one
+        if ($application->candidate && $application->candidate->partner) {
+            $application->candidate->partner->notify(new ApplicationApprovedByAdmin($application));
+        }
+
+        return redirect()->back()->with('success', 'Application approved and forwarded to client.');
     }
 
     /**
@@ -150,7 +144,12 @@ class AdminController extends Controller
     public function rejectApplication(JobApplication $application)
     {
         $application->update(['status' => 'Rejected']);
-        // TODO: Notify partner
+
+        // Notify Partner if the candidate belongs to one
+        if ($application->candidate && $application->candidate->partner) {
+            $application->candidate->partner->notify(new ApplicationRejectedByAdmin($application));
+        }
+
         return redirect()->back()->with('success', 'Application rejected.');
     }
 
@@ -160,7 +159,7 @@ class AdminController extends Controller
     public function pendingJobs()
     {
         $pendingJobs = Job::where('status', 'pending_approval')
-                          ->with('user') // Eager load the client who posted it
+                          ->with('user')
                           ->latest()
                           ->paginate(20);
 
@@ -183,7 +182,11 @@ class AdminController extends Controller
             'minimum_stay_days' => $validated['minimum_stay_days'],
         ]);
 
-        // TODO: Notify client
+        // Notify the Client who posted the job
+        if ($job->user) {
+            $job->user->notify(new JobApproved($job));
+        }
+
         return redirect()->back()->with('success', 'Job has been approved and is now live.');
     }
 
@@ -193,7 +196,12 @@ class AdminController extends Controller
     public function rejectJob(Job $job)
     {
         $job->update(['status' => 'rejected']);
-        // TODO: Notify client
+
+        // Notify the Client who posted the job
+        if ($job->user) {
+            $job->user->notify(new JobRejected($job));
+        }
+
         return redirect()->back()->with('success', 'Job has been rejected.');
     }
 
@@ -223,56 +231,63 @@ class AdminController extends Controller
     }
 
     /**
-     * *** THIS IS THE NEW METHOD, CLEANED AND IN THE RIGHT PLACE ***
      * Show the billing report for selected candidates.
      */
     public function billingReport()
     {
-        // 1. Get all placements that are "Selected"
         $placements = JobApplication::where('hiring_status', 'Selected')
-                                    ->with(['job.user', 'candidate', 'candidateUser']) // Eager load all relationships
+                                    ->with(['job.user', 'candidate', 'candidateUser'])
                                     ->get();
 
-        $today = Carbon::now()->startOfDay();
         $reportData = [];
 
-        // 2. Process each placement to calculate billing status
         foreach ($placements as $app) {
-            
-            // Skip if data is incomplete (e.g., no joining date, or client not found)
+            // Skip if data is incomplete
             if (empty($app->joining_date) || empty($app->job->user) || empty($app->job->user->billable_period_days)) {
                 continue;
             }
 
-            // 3. Get all the data points
             $client = $app->job->user;
             $joiningDate = Carbon::parse($app->joining_date);
             $billableDays = $client->billable_period_days;
             $invoiceDate = $joiningDate->copy()->addDays($billableDays);
 
-            // 4. Determine the billing status
-            $status = $invoiceDate->isPast() ? 'Billable' : 'Pending';
+            // Logic: It is "Due" if the invoice date has passed and it hasn't been paid yet.
+            $isDue = $invoiceDate->isPast();
             
-            // Get candidate name (checking both partner and direct apply)
-            $candidateName = $app->candidate 
-                             ? $app->candidate->first_name . ' ' . $app->candidate->last_name
-                             : $app->candidateUser->name;
+            // Determine display status
+            $statusLabel = 'Pending Maturity';
+            $rowClass = '';
 
-            // 5. Add to our report
+            if ($app->payment_status === 'paid') {
+                $statusLabel = 'Paid';
+                $rowClass = 'bg-green-50'; // Visual cue for Paid
+            } elseif ($isDue) {
+                $statusLabel = 'Due / Billable';
+                $rowClass = 'bg-red-50'; // Visual cue for Overdue/Due
+            }
+
             $reportData[] = (object) [
-                'candidate_name' => $candidateName,
+                'id' => $app->id,
+                'candidate_name' => $app->candidate_name, // Relies on the Accessor in JobApplication model
                 'client_name' => $client->name,
                 'job_title' => $app->job->title,
                 'joining_date' => $app->joining_date->format('M d, Y'),
                 'billable_period' => $billableDays . ' days',
                 'invoice_date' => $invoiceDate->format('M d, Y'),
-                'status' => $status,
+                'payment_status' => $app->payment_status,
+                'paid_at' => $app->paid_at ? $app->paid_at->format('M d, Y') : '-',
+                'status_label' => $statusLabel,
+                'row_class' => $rowClass,
+                'is_due' => $isDue,
             ];
         }
 
-        // Sort by invoice date, newest first (using a compatible function)
-        $reportData = collect($reportData)->sortByDesc(function($item) {
-            return Carbon::parse($item->invoice_date);
+        // Sort: Unpaid & Due first (1), then Pending (2), then Paid (3)
+        $reportData = collect($reportData)->sortBy(function($item) {
+            if ($item->payment_status === 'paid') return 3;
+            if ($item->is_due) return 1;
+            return 2;
         });
 
         return view('admin.billing.index', [
@@ -281,14 +296,27 @@ class AdminController extends Controller
     }
 
     /**
+     * Mark an application as Paid.
+     */
+    public function markAsPaid(JobApplication $application)
+    {
+        $application->update([
+            'payment_status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Invoice marked as PAID.');
+    }
+
+    /**
      * Show a report of all jobs with their lined-up partners and candidates.
      */
     public function jobReport()
     {
         $jobs = Job::with([
-                'user', // The client who posted the job
-                'jobApplications.candidate.partner', // The partner (User model) who submitted the candidate
-                'jobApplications.candidateUser' // The candidate's user record for name
+                'user',
+                'jobApplications.candidate.partner',
+                'jobApplications.candidateUser'
             ])
             ->latest()
             ->get();
