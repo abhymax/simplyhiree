@@ -10,6 +10,8 @@ use App\Models\JobApplication;
 use App\Models\ExperienceLevel;
 use App\Models\EducationLevel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class PartnerController extends Controller
 {
@@ -29,6 +31,7 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
 
+        // Retrieve applications where the candidate belongs to the logged-in partner
         $applications = JobApplication::whereHas('candidate', function ($query) use ($partner) {
                                           $query->where('partner_id', $partner->id);
                                       })
@@ -39,6 +42,9 @@ class PartnerController extends Controller
         return view('partner.applications', ['applications' => $applications]);
     }
 
+    /**
+     * List available jobs with filtering.
+     */
     public function jobs(Request $request)
     {
         $partner = Auth::user();
@@ -69,20 +75,22 @@ class PartnerController extends Controller
             $query->where('education_level_id', $request->input('education_level_id'));
         }
 
-        // Eager load everything needed for the view
+        // Eager load relationships using 'jobCategory'
         $jobs = $query->with([
             'jobApplications' => function ($query) use ($partner) {
                 $query->whereHas('candidate', function ($subQuery) use ($partner) {
                     $subQuery->where('partner_id', $partner->id);
                 });
             },
-            'experienceLevel', // Critical for Experience column
-            'educationLevel'   // Critical for Education column
+            'experienceLevel',
+            'educationLevel',
+            'jobCategory' 
         ])
         ->latest()
         ->paginate(10)
         ->appends($request->query());
 
+        // Attach stats to each job object
         $jobs->each(function ($job) {
             $stats = [
                 'applied' => $job->jobApplications->count(),
@@ -109,6 +117,56 @@ class PartnerController extends Controller
     }
 
     /**
+     * Show a single job with matching candidates and application history.
+     */
+    public function showJob(Job $job)
+    {
+        $partner = Auth::user();
+
+        // 1. Get Job Details
+        $job->load(['experienceLevel', 'educationLevel', 'jobCategory', 'user']);
+
+        // 2. Fetch Already Applied Candidates for this Partner
+        // FIXED: Used whereHas('candidate') instead of where('partner_id')
+        $appliedApplications = JobApplication::where('job_id', $job->id)
+                                             ->whereHas('candidate', function ($query) use ($partner) {
+                                                 $query->where('partner_id', $partner->id);
+                                             })
+                                             ->with('candidate')
+                                             ->latest()
+                                             ->get();
+
+        $appliedCandidateIds = $appliedApplications->pluck('candidate_id')->toArray();
+
+        // 3. Find Matching Candidates from this Partner's Pool
+        // Exclude candidates who have already applied
+        $myCandidates = Candidate::where('partner_id', $partner->id)
+                                 ->whereNotIn('id', $appliedCandidateIds)
+                                 ->get();
+        
+        $matchingCandidates = $myCandidates->filter(function ($candidate) use ($job) {
+            // Simple Match Logic
+            $jobKeywords = strtolower($job->title . ' ' . $job->skills_required);
+            $candidateKeywords = strtolower($candidate->skills . ' ' . $candidate->job_interest . ' ' . $candidate->job_role_preference);
+
+            $titleWords = explode(' ', strtolower($job->title));
+            foreach ($titleWords as $word) {
+                if (strlen($word) > 2 && str_contains($candidateKeywords, $word)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        return view('partner.jobs.show', [
+            'job' => $job,
+            'matchingCandidates' => $matchingCandidates,
+            'appliedApplications' => $appliedApplications,
+            'allCandidates' => $myCandidates
+        ]);
+    }
+
+    /**
      * Show the partner's earnings.
      */
     public function earnings()
@@ -129,7 +187,7 @@ class PartnerController extends Controller
                 continue;
             }
 
-            $joiningDate = \Carbon\Carbon::parse($app->joining_date);
+            $joiningDate = Carbon::parse($app->joining_date);
             $payoutDate = $joiningDate->copy()->addDays($app->job->minimum_stay_days);
 
             $isEligible = $payoutDate->isPast() && is_null($app->left_at);
@@ -147,7 +205,7 @@ class PartnerController extends Controller
         }
 
         $earningsData = collect($earningsData)->sortByDesc(function($item) {
-            return \Carbon\Carbon::parse($item->payout_date);
+            return Carbon::parse($item->payout_date);
         });
 
         return view('partner.earnings.index', [
@@ -157,9 +215,40 @@ class PartnerController extends Controller
     
     // --- CANDIDATE MANAGEMENT METHODS ---
 
-    public function createCandidate()
+    public function checkCandidateMobile()
     {
-        return view('partner.candidates.create');
+        return view('partner.candidates.check-mobile');
+    }
+
+    public function verifyCandidateMobile(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required|digits:10',
+        ]);
+
+        $partner = Auth::user();
+        $phone = $request->input('phone_number');
+
+        $existingCandidate = Candidate::where('partner_id', $partner->id)
+                                      ->where('phone_number', $phone)
+                                      ->first();
+
+        if ($existingCandidate) {
+            return redirect()->route('partner.candidates.edit', $existingCandidate->id)
+                             ->with('info', 'A candidate with this mobile number already exists in your pool. You have been redirected to their profile.');
+        }
+
+        return redirect()->route('partner.candidates.create', ['mobile' => $phone]);
+    }
+
+    public function createCandidate(Request $request)
+    {
+        if (!$request->has('mobile')) {
+            return redirect()->route('partner.candidates.check');
+        }
+
+        $mobile = $request->input('mobile');
+        return view('partner.candidates.create', compact('mobile'));
     }
 
     public function storeCandidate(Request $request)
@@ -281,6 +370,13 @@ class PartnerController extends Controller
         $submittedCount = 0;
 
         foreach ($request->input('candidate_ids') as $candidateId) {
+            // Verify candidate belongs to partner
+            $candidate = Candidate::where('id', $candidateId)
+                                  ->where('partner_id', $partner->id)
+                                  ->first();
+            
+            if (!$candidate) continue;
+
             $existingApplication = JobApplication::where('job_id', $job->id)
                                                 ->where('candidate_id', $candidateId)
                                                 ->first();
@@ -289,7 +385,7 @@ class PartnerController extends Controller
                 JobApplication::create([
                     'job_id' => $job->id,
                     'candidate_id' => $candidateId,
-                    'partner_id' => $partner->id,
+                    // FIXED: Removed 'partner_id' as it doesn't exist in the table
                     'status' => 'Pending Review',
                 ]);
                 $submittedCount++;
@@ -297,7 +393,7 @@ class PartnerController extends Controller
         }
 
         if ($submittedCount > 0) {
-            $message = $submittedCount . ' ' . \Illuminate\Support\Str::plural('application', $submittedCount) . ' submitted successfully!';
+            $message = $submittedCount . ' ' . Str::plural('application', $submittedCount) . ' submitted successfully!';
             return redirect()->route('partner.jobs')->with('success', $message);
         } else {
             return redirect()->back()->with('info', 'All selected candidates have already been submitted for this job.');

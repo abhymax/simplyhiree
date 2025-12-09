@@ -12,7 +12,6 @@ class Job extends Model
 
     /**
      * The attributes that are mass assignable.
-     * This now includes all our new advanced fields.
      */
     protected $fillable = [
         'user_id',
@@ -37,7 +36,7 @@ class Job extends Model
         'min_age',
         'max_age',
         'gender_preference',
-        'category',
+        'category', // <--- This column holds the text string, so we must rename the relationship below
         'job_type_tags',
         'is_walkin',
         'interview_slot',
@@ -64,14 +63,14 @@ class Job extends Model
     }
 
     /**
-     * Get the job category.
+     * Get the job category relationship.
+     * RENAMED from 'category' to 'jobCategory' to avoid conflict with the 'category' column.
      */
-    public function category(): BelongsTo
+    public function jobCategory(): BelongsTo
     {
         return $this->belongsTo(JobCategory::class, 'category_id');
     }
 
-    // --- ADD THIS NEW FUNCTION ---
     /**
      * The partners that are excluded from this job.
      */
@@ -104,4 +103,3 @@ class Job extends Model
         return $this->belongsTo(EducationLevel::class);
     }
 }
-
