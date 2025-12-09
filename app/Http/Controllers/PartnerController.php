@@ -43,17 +43,31 @@ class PartnerController extends Controller
     }
 
     /**
-     * List available jobs with filtering.
+     * List available jobs with filtering and visibility checks.
      */
     public function jobs(Request $request)
     {
         $partner = Auth::user();
 
         $query = Job::where('status', 'approved')
-            ->whereDoesntHave('excludedPartners', function ($query) use ($partner) {
-                $query->where('user_id', $partner->id);
+            // 1. Check Global Exclusions
+            ->whereDoesntHave('excludedPartners', function ($q) use ($partner) {
+                $q->where('user_id', $partner->id);
+            })
+            // 2. Check Visibility Logic (Admin Feature)
+            ->where(function ($q) use ($partner) {
+                // Show if Visibility is 'all'
+                $q->where('partner_visibility', 'all')
+                  // OR if Visibility is 'selected' AND partner is in allowed list
+                  ->orWhere(function ($subQ) use ($partner) {
+                      $subQ->where('partner_visibility', 'selected')
+                           ->whereHas('allowedPartners', function ($p) use ($partner) {
+                               $p->where('partner_id', $partner->id);
+                           });
+                  });
             });
 
+        // --- Search Filters ---
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
             $query->where(function ($q) use ($searchTerm) {
@@ -75,7 +89,8 @@ class PartnerController extends Controller
             $query->where('education_level_id', $request->input('education_level_id'));
         }
 
-        // Eager load relationships using 'jobCategory'
+        // --- Eager Load ---
+        // Note: Using 'jobCategory' to avoid conflict with text column
         $jobs = $query->with([
             'jobApplications' => function ($query) use ($partner) {
                 $query->whereHas('candidate', function ($subQuery) use ($partner) {
@@ -90,7 +105,7 @@ class PartnerController extends Controller
         ->paginate(10)
         ->appends($request->query());
 
-        // Attach stats to each job object
+        // --- Calculate Stats ---
         $jobs->each(function ($job) {
             $stats = [
                 'applied' => $job->jobApplications->count(),
@@ -102,6 +117,7 @@ class PartnerController extends Controller
             $job->stats = (object)$stats;
         });
 
+        // Filter Options
         $locations = Job::select('location')->distinct()->orderBy('location')->pluck('location');
         $job_types = Job::select('job_type')->distinct()->orderBy('job_type')->pluck('job_type');
         $experienceLevels = ExperienceLevel::all();
@@ -123,11 +139,11 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
 
-        // 1. Get Job Details
+        // 1. Get Job Details (Eager load using 'jobCategory')
         $job->load(['experienceLevel', 'educationLevel', 'jobCategory', 'user']);
 
         // 2. Fetch Already Applied Candidates for this Partner
-        // FIXED: Used whereHas('candidate') instead of where('partner_id')
+        // Using whereHas to check candidate ownership
         $appliedApplications = JobApplication::where('job_id', $job->id)
                                              ->whereHas('candidate', function ($query) use ($partner) {
                                                  $query->where('partner_id', $partner->id);
@@ -213,13 +229,19 @@ class PartnerController extends Controller
         ]);
     }
     
-    // --- CANDIDATE MANAGEMENT METHODS ---
+    // --- CANDIDATE MANAGEMENT (Mobile-First Workflow) ---
 
+    /**
+     * Step 1: Check Mobile Screen
+     */
     public function checkCandidateMobile()
     {
         return view('partner.candidates.check-mobile');
     }
 
+    /**
+     * Step 2: Verify Mobile Existence
+     */
     public function verifyCandidateMobile(Request $request)
     {
         $request->validate([
@@ -235,12 +257,15 @@ class PartnerController extends Controller
 
         if ($existingCandidate) {
             return redirect()->route('partner.candidates.edit', $existingCandidate->id)
-                             ->with('info', 'A candidate with this mobile number already exists in your pool. You have been redirected to their profile.');
+                             ->with('info', 'A candidate with this mobile number already exists in your pool.');
         }
 
         return redirect()->route('partner.candidates.create', ['mobile' => $phone]);
     }
 
+    /**
+     * Step 3: Create Form (Requires Mobile)
+     */
     public function createCandidate(Request $request)
     {
         if (!$request->has('mobile')) {
@@ -251,6 +276,9 @@ class PartnerController extends Controller
         return view('partner.candidates.create', compact('mobile'));
     }
 
+    /**
+     * Step 4: Store Candidate
+     */
     public function storeCandidate(Request $request)
     {
         $partner = Auth::user();
@@ -385,7 +413,7 @@ class PartnerController extends Controller
                 JobApplication::create([
                     'job_id' => $job->id,
                     'candidate_id' => $candidateId,
-                    // FIXED: Removed 'partner_id' as it doesn't exist in the table
+                    // No partner_id column needed, implied via candidate
                     'status' => 'Pending Review',
                 ]);
                 $submittedCount++;

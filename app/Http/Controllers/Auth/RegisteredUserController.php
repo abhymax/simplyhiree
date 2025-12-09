@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
-// We don't need to import Role, the assignRole method is on the User model.
 
 class RegisteredUserController extends Controller
 {
@@ -24,7 +23,8 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle partner registration using the Spatie role system.
+     * Handle partner registration.
+     * Partners are created as 'pending' and require approval.
      */
     public function registerPartner(Request $request): RedirectResponse
     {
@@ -34,19 +34,19 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // 1. Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'status' => 'pending', // Default to Pending
         ]);
         
-        // 2. Assign the role using the Spatie package
         $user->assignRole('partner');
 
         event(new Registered($user));
-        Auth::login($user);
-        return redirect()->route('partner.dashboard');
+
+        // Do NOT login automatically. Redirect to login with a message.
+        return redirect()->route('login')->with('status', 'Registration successful! Your account is pending Admin approval.');
     }
 
     /**
@@ -58,7 +58,8 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle candidate registration using the Spatie role system.
+     * Handle candidate registration.
+     * Candidates are 'active' immediately.
      */
     public function registerCandidate(Request $request): RedirectResponse
     {
@@ -68,18 +69,20 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // 1. Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'status' => 'active', // Candidates are Active by default
         ]);
 
-        // 2. Assign the role
         $user->assignRole('candidate');
 
         event(new Registered($user));
+
+        // Login immediately
         Auth::login($user);
+
         return redirect()->route('candidate.dashboard');
     }
 
@@ -92,7 +95,8 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle client registration using the Spatie role system.
+     * Handle client registration.
+     * Clients are created as 'pending' and require approval.
      */
     public function registerClient(Request $request): RedirectResponse
     {
@@ -102,18 +106,19 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // 1. Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'billable_period_days' => 30, // Default setting
+            'status' => 'pending', // Default to Pending
         ]);
 
-        // 2. Assign the role
         $user->assignRole('client');
 
         event(new Registered($user));
-        Auth::login($user);
-        return redirect()->route('client.dashboard');
+
+        // Do NOT login automatically. Redirect to login with a message.
+        return redirect()->route('login')->with('status', 'Registration successful! Your account is pending Admin approval.');
     }
 }

@@ -11,15 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // THE FIX IS HERE: We are putting the 'role' alias back.
-        // This tells Laravel that whenever it sees ->middleware('role:...'),
-        // it should use the RoleMiddleware class.
         $middleware->alias([
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            'role'     => \App\Http\Middleware\RoleMiddleware::class, // <-- THIS IS THE CORRECTED LINE
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            // Add the new status check alias
+            'status.check' => \App\Http\Middleware\CheckAccountStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-

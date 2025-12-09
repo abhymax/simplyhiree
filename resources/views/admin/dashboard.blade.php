@@ -1,97 +1,137 @@
-<x-app-layout>
+<x-app-layout title="Superadmin Dashboard">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-gray-800 leading-tight">
             {{ __('Superadmin Dashboard') }}
         </h2>
     </x-slot>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+    <div class="py-8 bg-gray-50 min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div class="bg-white shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 text-gray-900 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-2xl font-semibold">Welcome back, {{ Auth::user()->name }}!</h3>
-                        <p class="text-gray-600">Here's an overview of the platform's activity.</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-medium text-gray-700">{{ date('l, F j, Y') }}</p>
-                        <p class="text-sm text-gray-500">{{ date('g:i A') }}</p>
-                    </div>
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Overview</h1>
+                    <p class="text-gray-500 mt-1">Welcome back, {{ Auth::user()->name }}. Your platform at a glance.</p>
+                </div>
+                <div class="text-right mt-4 md:mt-0">
+                    <span class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium shadow-sm flex items-center gap-2">
+                        <i class="fa-regular fa-calendar text-indigo-500"></i> {{ date('F j, Y') }}
+                    </span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                <!-- Card 1: Pending Jobs (Already a link) -->
-                <a href="{{ route('admin.jobs.pending') }}" class="transform hover:scale-105 transition-transform duration-300">
-                    <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 flex justify-between items-center">
-                            <div>
-                                <p class="text-sm font-medium text-yellow-600 uppercase">Pending Jobs</p>
-                                <p class="text-4xl font-bold text-gray-800">{{ $pendingJobs }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <a href="{{ route('admin.jobs.create') }}" class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-6 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+                    <div class="relative z-10 flex items-center justify-between">
+                        <div>
+                            <div class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 backdrop-blur-md">
+                                <i class="fa-solid fa-briefcase text-xl"></i>
                             </div>
-                            <div class="text-yellow-500">
-                                <i class="fa-solid fa-briefcase fa-3x"></i>
+                            <h3 class="text-xl font-bold text-white">Post New Job</h3>
+                            <p class="text-indigo-100 text-sm mt-1">Create vacancy for Client</p>
+                        </div>
+                        <div class="h-10 w-10 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-lg group-hover:translate-x-1 transition-transform">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ route('admin.clients.create') }}" class="group relative bg-white rounded-3xl p-6 shadow-lg border border-gray-100 hover:border-emerald-100 hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-user-tie text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800">Add New Client</h3>
+                            <p class="text-gray-500 text-sm mt-1">Onboard a company</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-emerald-500 transition-colors"></i>
+                    </div>
+                </a>
+
+                <a href="{{ route('admin.partners.create') }}" class="group relative bg-white rounded-3xl p-6 shadow-lg border border-gray-100 hover:border-purple-100 hover:shadow-purple-100/50 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="h-12 w-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-handshake text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800">Add New Partner</h3>
+                            <p class="text-gray-500 text-sm mt-1">Register an agency</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-purple-500 transition-colors"></i>
+                    </div>
+                </a>
+            </div>
+
+            <h3 class="text-lg font-bold text-gray-800 mb-6 px-1">Live Metrics</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
+                
+                <a href="{{ route('admin.jobs.pending') }}" class="block group">
+                    <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-5 text-white shadow-lg shadow-orange-200 hover:shadow-xl hover:scale-[1.02] transition-all">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-orange-50 text-xs font-bold uppercase tracking-wider">Pending Jobs</p>
+                                <p class="text-3xl font-extrabold mt-1">{{ $pendingJobs }}</p>
+                            </div>
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-clock text-xl"></i>
                             </div>
                         </div>
                     </div>
                 </a>
 
-                <!-- Card 2: Pending Applications (Already a link) -->
-                <a href="{{ route('admin.applications.index') }}" class="transform hover:scale-105 transition-transform duration-300">
-                    <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 flex justify-between items-center">
+                <a href="{{ route('admin.applications.index') }}" class="block group">
+                    <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-5 text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:scale-[1.02] transition-all">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-red-600 uppercase">Pending Applications</p>
-                                <p class="text-4xl font-bold text-gray-800">{{ $pendingApplications }}</p>
+                                <p class="text-rose-50 text-xs font-bold uppercase tracking-wider">Review Apps</p>
+                                <p class="text-3xl font-extrabold mt-1">{{ $pendingApplications }}</p>
                             </div>
-                            <div class="text-red-500">
-                                <i class="fa-solid fa-file-invoice fa-3x"></i>
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-file-circle-check text-xl"></i>
                             </div>
                         </div>
                     </div>
                 </a>
 
-                <!-- Card 3: Total Clients (NOW A LINK) -->
-                <a href="{{ route('admin.clients.index') }}" class="transform hover:scale-105 transition-transform duration-300">
-                    <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 flex justify-between items-center">
+                <a href="{{ route('admin.clients.index') }}" class="block group">
+                    <div class="bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-5 text-white shadow-lg shadow-teal-200 hover:shadow-xl hover:scale-[1.02] transition-all">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-green-600 uppercase">Total Clients</p>
-                                <p class="text-4xl font-bold text-gray-800">{{ $totalClients }}</p>
+                                <p class="text-teal-50 text-xs font-bold uppercase tracking-wider">Total Clients</p>
+                                <p class="text-3xl font-extrabold mt-1">{{ $totalClients }}</p>
                             </div>
-                            <div class="text-green-500">
-                                <i class="fa-solid fa-user-tie fa-3x"></i>
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-user-tie text-xl"></i>
                             </div>
                         </div>
                     </div>
                 </a>
 
-                <!-- Card 4: Total Partners (NOW A LINK) -->
-                <a href="{{ route('admin.partners.index') }}" class="transform hover:scale-105 transition-transform duration-300">
-                    <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 flex justify-between items-center">
+                <a href="{{ route('admin.partners.index') }}" class="block group">
+                    <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-[1.02] transition-all">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-purple-600 uppercase">Total Partners</p>
-                                <p class="text-4xl font-bold text-gray-800">{{ $totalPartners }}</p>
+                                <p class="text-purple-50 text-xs font-bold uppercase tracking-wider">Total Partners</p>
+                                <p class="text-3xl font-extrabold mt-1">{{ $totalPartners }}</p>
                             </div>
-                            <div class="text-purple-500">
-                                <i class="fa-solid fa-handshake-angle fa-3x"></i>
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-handshake text-xl"></i>
                             </div>
                         </div>
                     </div>
                 </a>
 
-                <!-- Card 5: Total Users (NOW A LINK) -->
-                <a href="{{ route('admin.users.index') }}" class="transform hover:scale-105 transition-transform duration-300">
-                    <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 flex justify-between items-center">
+                <a href="{{ route('admin.users.index') }}" class="block group">
+                    <div class="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl p-5 text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-[1.02] transition-all">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm font-medium text-blue-600 uppercase">Total Users</p>
-                                <p class="text-4xl font-bold text-gray-800">{{ $totalUsers }}</p>
+                                <p class="text-blue-50 text-xs font-bold uppercase tracking-wider">Total Candidates</p>
+                                <p class="text-3xl font-extrabold mt-1">{{ $totalUsers - ($totalClients + $totalPartners) }}</p>
                             </div>
-                            <div class="text-blue-500">
-                                <i class="fa-solid fa-users fa-3x"></i>
+                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <i class="fa-solid fa-users text-xl"></i>
                             </div>
                         </div>
                     </div>
@@ -99,14 +139,85 @@
 
             </div>
 
-            <div class="mt-8 bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-xl font-semibold mb-4">Activity Feed</h3>
-                    <p class="text-gray-500">(This is a placeholder for future activity logs, charts, or recent applications)</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                
+                <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-gray-800">Platform Growth</h3>
+                        <div class="flex gap-2">
+                            <span class="w-3 h-3 rounded-full bg-blue-500 mt-1.5"></span>
+                            <span class="text-sm text-gray-500">Activity Trend</span>
+                        </div>
+                    </div>
+                    <div class="relative h-72 w-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
 
+                <div class="lg:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold text-gray-800 mb-6">User Distribution</h3>
+                    <div class="relative h-60 w-full flex justify-center">
+                        <canvas id="userDistChart"></canvas>
+                    </div>
+                    <div class="mt-6 space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Candidates</span>
+                            <span class="font-bold text-gray-700">{{ $totalUsers - ($totalClients + $totalPartners) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span> Clients</span>
+                            <span class="font-bold text-gray-700">{{ $totalClients }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span> Partners</span>
+                            <span class="font-bold text-gray-700">{{ $totalPartners }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctxDist = document.getElementById('userDistChart').getContext('2d');
+            const totalClients = {{ $totalClients }};
+            const totalPartners = {{ $totalPartners }};
+            const totalCandidates = {{ $totalUsers }} - (totalClients + totalPartners);
+
+            new Chart(ctxDist, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Candidates', 'Clients', 'Partners'],
+                    datasets: [{
+                        data: [totalCandidates, totalClients, totalPartners],
+                        backgroundColor: ['#3b82f6', '#10b981', '#a855f7'],
+                        borderWidth: 0, hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, cutout: '75%', plugins: { legend: { display: false } } }
+            });
+
+            const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+            let gradient = ctxGrowth.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            new Chart(ctxGrowth, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'New Activity',
+                        data: [12, 19, 15, 25, 22, 30, 45],
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradient,
+                        fill: true, tension: 0.4, pointRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } } }
+            });
+        });
+    </script>
 </x-app-layout>

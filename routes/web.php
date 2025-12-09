@@ -7,8 +7,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PartnerProfileController; // Import Added
-use App\Http\Controllers\CandidateProfileController; // Import Added
+use App\Http\Controllers\PartnerProfileController;
+use App\Http\Controllers\CandidateProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,7 +22,7 @@ Route::get('/', function () {
     return view('landing');
 });
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
-Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show');
+Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show'); 
 
 // Guest-only registration routes
 Route::middleware('guest')->group(function () {
@@ -45,7 +45,8 @@ require __DIR__.'/auth.php';
 */
 Route::middleware('auth')->group(function () {
     
-    // --- MAIN DASHBOARD REDIRECTOR (STANDARDIZED) ---
+    // --- MAIN DASHBOARD REDIRECTOR ---
+    // Added 'status.check' middleware to prevent pending users from accessing dashboards
     Route::get('/dashboard', function () {
         $user = auth()->user();
         if ($user->hasRole('Superadmin')) {
@@ -58,7 +59,7 @@ Route::middleware('auth')->group(function () {
             return redirect()->route('candidate.dashboard');
         }
         return redirect('/');
-    })->name('dashboard');
+    })->middleware('status.check')->name('dashboard');
 
     // --- GENERIC AUTH ROUTES (e.g., Profile) ---
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -70,38 +71,48 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Superadmin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         
-        // Users
+        // User Management
         Route::get('/users', [AdminController::class, 'listUsers'])->name('users.index');
+        // New routes for Status & Credentials
+        Route::patch('/users/{user}/status', [AdminController::class, 'updateUserStatus'])->name('users.status.update');
+        Route::patch('/users/{user}/credentials', [AdminController::class, 'updateUserCredentials'])->name('users.credentials.update');
         
-        // Clients
+        // Client Management
         Route::get('/clients', [AdminController::class, 'listClients'])->name('clients.index');
+        Route::get('/clients/create', [AdminController::class, 'createClient'])->name('clients.create');
+        Route::post('/clients', [AdminController::class, 'storeClient'])->name('clients.store');
         Route::get('/clients/{user}/edit', [AdminController::class, 'editClient'])->name('clients.edit');
         Route::patch('/clients/{user}', [AdminController::class, 'updateClient'])->name('clients.update');
         
-        // Partners
+        // Partner Management
         Route::get('/partners', [AdminController::class, 'listPartners'])->name('partners.index');
-        Route::get('/partners/{user}', [AdminController::class, 'showPartner'])->name('partners.show'); // <-- View Partner Profile
+        Route::get('/partners/create', [AdminController::class, 'createPartner'])->name('partners.create');
+        Route::post('/partners', [AdminController::class, 'storePartner'])->name('partners.store');
+        Route::get('/partners/{user}', [AdminController::class, 'showPartner'])->name('partners.show');
 
-        // Applications
+        // Application Management
         Route::get('/applications', [AdminController::class, 'listApplications'])->name('applications.index');
         Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
         Route::post('/applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('applications.reject');
-        
-        // Jobs
+        Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
+        // Job Creation
+        Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
+        Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
+        // Job Management
         Route::get('/jobs/pending', [AdminController::class, 'pendingJobs'])->name('jobs.pending');
         Route::post('/jobs/{job}/approve', [AdminController::class, 'approveJob'])->name('jobs.approve');
         Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
         Route::get('/jobs/{job}/manage', [AdminController::class, 'manageJobExclusions'])->name('jobs.manage');
         Route::post('/jobs/{job}/exclusions', [AdminController::class, 'updateJobExclusions'])->name('jobs.exclusions.update');
         
-        // Reports & Billing
+        // Finance & Reports
         Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
         Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
-        Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
     });
 
     // --- CLIENT (EMPLOYER) ROUTES ---
-    Route::middleware('role:client')->prefix('client')->name('client.')->group(function () {
+    // Added 'status.check' middleware
+    Route::middleware(['role:client', 'status.check'])->prefix('client')->name('client.')->group(function () {
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create');
         Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');
@@ -119,22 +130,23 @@ Route::middleware('auth')->group(function () {
     });
 
     // --- PARTNER (AGENCY) ROUTES ---
-    Route::middleware('role:partner')->prefix('partner')->name('partner.')->group(function () {
+    // Added 'status.check' middleware
+    Route::middleware(['role:partner', 'status.check'])->prefix('partner')->name('partner.')->group(function () {
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
         
         // Jobs
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');
-        Route::get('/jobs/{job}', [PartnerController::class, 'showJob'])->name('jobs.show'); // View Job Details
+        Route::get('/jobs/{job}', [PartnerController::class, 'showJob'])->name('jobs.show'); 
         Route::get('/jobs/{job}/apply', [PartnerController::class, 'showApplyForm'])->name('jobs.showApplyForm');
         Route::post('/jobs/{job}/submit', [PartnerController::class, 'submitApplication'])->name('jobs.submit');
 
-        // Candidate Management (MOVED HERE from candidate group)
-        Route::get('/candidates/check', [PartnerController::class, 'checkCandidateMobile'])->name('candidates.check'); // Step 1
-        Route::post('/candidates/check', [PartnerController::class, 'verifyCandidateMobile'])->name('candidates.verify'); // Step 2
-        Route::get('/candidates/create', [PartnerController::class, 'createCandidate'])->name('candidates.create'); // Step 3
-        Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store'); // Step 4
+        // Candidate Management (Mobile First Workflow)
+        Route::get('/candidates/check', [PartnerController::class, 'checkCandidateMobile'])->name('candidates.check'); 
+        Route::post('/candidates/check', [PartnerController::class, 'verifyCandidateMobile'])->name('candidates.verify'); 
+        Route::get('/candidates/create', [PartnerController::class, 'createCandidate'])->name('candidates.create'); 
+        Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store'); 
         
         Route::get('/candidates', [PartnerController::class, 'listCandidates'])->name('candidates.index');
         Route::get('/candidates/{candidate}/edit', [PartnerController::class, 'editCandidate'])->name('candidates.edit');
@@ -146,6 +158,7 @@ Route::middleware('auth')->group(function () {
     });
     
     // --- CANDIDATE ROUTES ---
+    // Candidates are usually active by default, but we can add check if needed. 
     Route::middleware('role:candidate')->prefix('candidate')->name('candidate.')->group(function () {
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');
