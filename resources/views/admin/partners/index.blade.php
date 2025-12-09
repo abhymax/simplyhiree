@@ -20,6 +20,7 @@
                                     <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                     <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                                     <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined On</th>
+                                    <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -39,10 +40,15 @@
                                         <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $user->created_at->format('M d, Y') }}
                                         </td>
+                                        <td class="py-4 px-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <a href="{{ route('admin.partners.show', $user->id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md transition">
+                                                View Profile
+                                            </a>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-6 px-4 text-center text-gray-500">
+                                        <td colspan="5" class="py-6 px-4 text-center text-gray-500">
                                             No partners found.
                                         </td>
                                     </tr>

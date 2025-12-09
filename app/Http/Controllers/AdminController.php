@@ -110,7 +110,23 @@ class AdminController extends Controller
             'users' => $partners
         ]);
     }
+/**
+     * Show a specific partner's full profile.
+     */
+    public function showPartner(User $user)
+    {
+        // Ensure the user is actually a partner
+        if (!$user->hasRole('partner')) {
+            abort(404);
+        }
 
+        $user->load('partnerProfile'); // Eager load the profile relation
+
+        return view('admin.partners.show', [
+            'user' => $user,
+            'profile' => $user->partnerProfile // Pass the profile model (can be null)
+        ]);
+    }
     /**
      * Show all submitted applications.
      */

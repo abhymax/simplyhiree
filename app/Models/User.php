@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Relations\HasOne; // <-- Add this import
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -32,9 +32,20 @@ class User extends Authenticatable
         ];
     }
 
-    // --- ADD THIS METHOD ---
+    /**
+     * Relationship for standard User Profile (if applicable).
+     */
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Relationship for Partner Profile.
+     * This fixes the "Call to undefined relationship [partnerProfile]" error.
+     */
+    public function partnerProfile(): HasOne
+    {
+        return $this->hasOne(PartnerProfile::class);
     }
 }

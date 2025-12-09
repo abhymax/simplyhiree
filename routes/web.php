@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
         // --- ADD THIS ROUTE TO SAVE THE FORM ---
         Route::patch('/clients/{user}', [AdminController::class, 'updateClient'])->name('clients.update');
         Route::get('/partners', [AdminController::class, 'listPartners'])->name('partners.index');
+        // *** NEW ROUTE FOR VIEWING PARTNER PROFILE ***
+Route::get('/partners/{user}', [AdminController::class, 'showPartner'])->name('partners.show');
         Route::get('/applications', [AdminController::class, 'listApplications'])->name('applications.index');
         // --- ADD THESE TWO NEW ROUTES ---
         Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
@@ -131,6 +133,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');
+        // *** NEW: View Single Job Details ***
+    Route::get('/jobs/{job}', [PartnerController::class, 'showJob'])->name('jobs.show');
         // --- ADD THIS NEW ROUTE ---
     Route::get('/jobs/{job}/apply', [PartnerController::class, 'showApplyForm'])->name('jobs.showApplyForm');
     // --- ADD THIS NEW ROUTE ---
@@ -150,7 +154,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:candidate')->prefix('candidate')->name('candidate.')->group(function () {
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');
-        
+      // --- CANDIDATES (Mobile First Workflow) ---
+    // 1. Show the "Check Mobile" screen (This becomes the first step)
+    Route::get('/candidates/check', [PartnerController::class, 'checkCandidateMobile'])->name('candidates.check');
+    // 2. Process the check
+    Route::post('/candidates/check', [PartnerController::class, 'verifyCandidateMobile'])->name('candidates.verify');
+    
+    // 3. The actual create form (now accepts a mobile param)
+    Route::get('/candidates/create', [PartnerController::class, 'createCandidate'])->name('candidates.create');
+    Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store');  
         // --- ADD THESE NEW ROUTES ---
         Route::get('/profile/edit', [App\Http\Controllers\CandidateProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile/update', [App\Http\Controllers\CandidateProfileController::class, 'update'])->name('profile.update');

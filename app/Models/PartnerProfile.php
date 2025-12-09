@@ -12,6 +12,20 @@ class PartnerProfile extends Model
 
     protected $fillable = [
         'user_id',
+        // Profile & Bio
+        'profile_picture_path',
+        'company_type',
+        'website',
+        'linkedin_url',
+        'facebook_url',
+        'twitter_url',
+        'instagram_url',
+        'establishment_year',
+        'preferred_categories',
+        'preferred_locations',
+        'bio',
+        'address',
+        'working_hours',
         // Bank
         'beneficiary_name',
         'account_number',
