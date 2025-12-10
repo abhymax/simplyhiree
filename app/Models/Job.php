@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Import this
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Job extends Model
 {
@@ -13,76 +14,85 @@ class Job extends Model
 
     protected $fillable = [
         'user_id',
-        'category_id',
-        'title',
-        'location',
         'company_name',
+        'title',
+        'category_id',
+        'location',
         'salary',
         'job_type',
         'description',
-        'experience_required',
-        'education_level',
-        'skills_required',
+        'experience_level_id',
+        'education_level_id',
         'application_deadline',
-        'company_website',
         'status',
+        // Admin / Billing fields
         'payout_amount',
         'minimum_stay_days',
+        'partner_visibility',
+        // Advanced fields
+        'skills_required',
+        'company_website',
         'openings',
         'min_age',
         'max_age',
         'gender_preference',
-        'category',
-        'job_type_tags',
-        'is_walkin',
-        'interview_slot',
-        'experience_level_id',
-        'education_level_id',
-        'partner_visibility', // <--- Added
     ];
 
     protected $casts = [
-        'job_type_tags' => 'array',
-        'interview_slot' => 'datetime',
+        'application_deadline' => 'date',
     ];
 
+    /**
+     * Get the user (Client) that owns the job.
+     */
     public function user(): BelongsTo
     {
-        // Allow user to be null (Simplyhiree post)
-        return $this->belongsTo(User::class)->withDefault([
-            'name' => 'Simplyhiree',
-        ]);
+        return $this->belongsTo(User::class);
     }
 
-    // ... (Keep existing relationships: jobCategory, jobApplications, etc.) ...
-    
-    public function jobCategory(): BelongsTo
+    /**
+     * Get the job category.
+     */
+    public function jobCategory(): BelongsTo // Renamed to avoid conflict with potential string column
     {
         return $this->belongsTo(JobCategory::class, 'category_id');
     }
 
+    /**
+     * Get the experience level.
+     */
     public function experienceLevel(): BelongsTo
     {
         return $this->belongsTo(ExperienceLevel::class);
     }
 
+    /**
+     * Get the education level.
+     */
     public function educationLevel(): BelongsTo
     {
         return $this->belongsTo(EducationLevel::class);
     }
 
-    // --- NEW ACCESS CONTROL RELATIONSHIPS ---
-
+    // --- MISSING RELATIONSHIP FIXED HERE ---
     /**
-     * Partners specifically ALLOWED to see this job (if visibility is 'selected').
+     * Get the applications for the job.
      */
-    public function allowedPartners(): BelongsToMany
+    public function jobApplications(): HasMany
     {
-        return $this->belongsToMany(User::class, 'job_partner_access', 'job_id', 'partner_id');
+        return $this->hasMany(JobApplication::class);
     }
 
     /**
-     * Partners excluded from this job (Legacy/Global exclusion).
+     * Partners specifically ALLOWED to see this job (when visibility is 'selected').
+     */
+    public function allowedPartners(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'job_partner_visibility', 'job_id', 'partner_id');
+    }
+
+    /**
+     * Partners specifically EXCLUDED from seeing this job.
      */
     public function excludedPartners(): BelongsToMany
     {
@@ -90,10 +100,10 @@ class Job extends Model
     }
 
     /**
-     * Candidates RESTRICTED from seeing this job.
+     * Candidates restricted from applying to this job.
      */
     public function restrictedCandidates(): BelongsToMany
     {
-        return $this->belongsToMany(Candidate::class, 'job_candidate_exclusions', 'job_id', 'candidate_id');
+        return $this->belongsToMany(Candidate::class, 'job_candidate_restrictions', 'job_id', 'candidate_id');
     }
 }

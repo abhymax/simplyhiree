@@ -20,8 +20,8 @@
                 </div>
             @endif
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div class="px-8 py-6 bg-gradient-to-r from-violet-500 to-purple-600 flex flex-col md:flex-row justify-between items-center">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div class="px-8 py-6 bg-gradient-to-r from-violet-500 to-purple-600 flex flex-col md:flex-row justify-between items-center rounded-t-2xl">
                     <div class="text-white">
                         <h3 class="text-2xl font-bold">Registered Partners</h3>
                         <p class="text-purple-100 text-sm mt-1">Manage recruitment agencies and access.</p>
@@ -74,44 +74,68 @@
                                     <td class="py-4 px-6 text-sm text-gray-500">
                                         {{ $user->created_at->format('M d, Y') }}
                                     </td>
-                                    <td class="py-4 px-6 text-right text-sm font-medium">
-                                        <div class="flex justify-end items-center gap-3">
-                                            <a href="{{ route('admin.partners.show', $user->id) }}" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-3 py-1 rounded transition">
-                                                View Profile
-                                            </a>
+                                    <td class="py-4 px-6 text-right text-sm font-medium" x-data>
+                                        <div class="flex justify-end items-center gap-2">
                                             
-                                            <div x-data="{ open: false }" class="relative">
-                                                <button @click="open = !open" class="text-gray-400 hover:text-gray-600 transition">
-                                                    <i class="fa-solid fa-ellipsis-vertical px-2"></i>
-                                                </button>
-                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-50 border border-gray-100 overflow-hidden" style="display: none;">
-                                                    @if($user->status !== 'active')
-                                                        <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST">
-                                                            @csrf @method('PATCH')
-                                                            <input type="hidden" name="status" value="active">
-                                                            <button class="w-full text-left px-4 py-3 text-sm text-green-600 hover:bg-green-50 flex items-center"><i class="fa-solid fa-check w-5"></i> Approve</button>
-                                                        </form>
-                                                    @endif
-                                                    @if($user->status !== 'restricted')
-                                                        <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST">
-                                                            @csrf @method('PATCH')
-                                                            <input type="hidden" name="status" value="restricted">
-                                                            <button class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center"><i class="fa-solid fa-ban w-5"></i> Restrict</button>
-                                                        </form>
-                                                    @endif
-                                                    <button @click="$dispatch('open-modal', 'pwd-p-{{ $user->id }}')" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-t flex items-center"><i class="fa-solid fa-key w-5"></i> Password</button>
-                                                </div>
-                                            </div>
+                                            <button @click="$dispatch('open-modal', 'pwd-p-{{ $user->id }}')" 
+                                                    class="text-gray-400 hover:text-indigo-600 p-2 rounded-full hover:bg-gray-100 transition" 
+                                                    title="Change Password">
+                                                <i class="fa-solid fa-key"></i>
+                                            </button>
+
+                                            <a href="{{ route('admin.partners.show', $user->id) }}" 
+                                               class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-3 py-1.5 rounded transition whitespace-nowrap">
+                                                View
+                                            </a>
+
+                                            @if($user->status !== 'active')
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="status" value="active">
+                                                    <button type="submit" class="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50 transition" title="Approve / Activate">
+                                                        <i class="fa-solid fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            
+                                            @if($user->status !== 'restricted')
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="status" value="restricted">
+                                                    <button type="submit" class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition" title="Restrict Access">
+                                                        <i class="fa-solid fa-ban"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
 
                                         <x-modal name="pwd-p-{{ $user->id }}">
                                             <div class="p-6 text-left">
-                                                <h2 class="text-lg font-bold mb-4">Reset Password</h2>
+                                                <div class="flex justify-between items-center mb-4">
+                                                    <h2 class="text-lg font-bold text-gray-900">Reset Password for {{ $user->name }}</h2>
+                                                    <button @click="$dispatch('close-modal', 'pwd-p-{{ $user->id }}')" class="text-gray-400 hover:text-gray-600">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                    </button>
+                                                </div>
+                                                
                                                 <form method="POST" action="{{ route('admin.users.credentials.update', $user->id) }}">
                                                     @csrf @method('PATCH')
-                                                    <div class="mb-4"><label class="block text-sm font-medium">New Password</label><input type="password" name="password" class="w-full rounded-md border-gray-300" required></div>
-                                                    <div class="mb-6"><label class="block text-sm font-medium">Confirm</label><input type="password" name="password_confirmation" class="w-full rounded-md border-gray-300" required></div>
-                                                    <div class="flex justify-end"><button class="bg-indigo-600 text-white px-4 py-2 rounded-md">Update</button></div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                                        <input type="password" name="password" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" placeholder="Enter new password" required>
+                                                        @error('password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                                    </div>
+                                                    
+                                                    <div class="mb-6">
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                                        <input type="password" name="password_confirmation" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" placeholder="Confirm new password" required>
+                                                    </div>
+                                                    
+                                                    <div class="flex justify-end gap-3">
+                                                        <button type="button" @click="$dispatch('close-modal', 'pwd-p-{{ $user->id }}')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+                                                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-md">Update Password</button>
+                                                    </div>
                                                 </form>
                                             </div>
                                         </x-modal>
@@ -123,7 +147,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4 bg-gray-50 border-t border-gray-100">
+                <div class="p-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
                     {{ $users->links() }}
                 </div>
             </div>

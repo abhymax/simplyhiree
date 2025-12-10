@@ -458,16 +458,48 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Invoice marked as PAID.');
     }
 
-    public function jobReport()
+    /**
+     * Master Job Report with Filters and Pagination.
+     */
+    public function jobReport(Request $request)
     {
-        $jobs = Job::with([
-                'user',
-                'jobApplications.candidate.partner',
-                'jobApplications.candidateUser'
+        // 1. Start the Query
+        $query = Job::with([
+                'user', // The Client
+                'jobApplications.candidate.partner', // Agency Candidates
+                'jobApplications.candidateUser'      // Direct Candidates
             ])
-            ->latest()
-            ->get();
+            ->latest();
 
-        return view('admin.reports.jobs', ['jobs' => $jobs]);
+        // 2. Apply Search Filter (Title or Company Name)
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('company_name', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // 3. Apply Status Filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 4. Apply Client Filter
+        if ($request->filled('client_id')) {
+            $query->where('user_id', $request->client_id);
+        }
+
+        // 5. Paginate Results (20 per page)
+        // appends() ensures filters stick when you click page 2
+        $jobs = $query->paginate(20)->appends($request->query());
+
+        // 6. Get Data for Filter Dropdowns
+        $clients = User::role('client')->orderBy('name')->get();
+
+        return view('admin.reports.jobs', [
+            'jobs' => $jobs,
+            'clients' => $clients
+        ]);
     }
 }

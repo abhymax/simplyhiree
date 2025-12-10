@@ -14,18 +14,19 @@
                     <p class="text-gray-500 mt-1">Welcome back, {{ Auth::user()->name }}. Your platform at a glance.</p>
                 </div>
                 <div class="text-right mt-4 md:mt-0">
-                    <span class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium shadow-sm flex items-center gap-2">
+                    <span class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-2xl text-sm font-medium shadow-sm flex items-center gap-2">
                         <i class="fa-regular fa-calendar text-indigo-500"></i> {{ date('F j, Y') }}
                     </span>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <a href="{{ route('admin.jobs.create') }}" class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-6 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                
+                <a href="{{ route('admin.jobs.create') }}" class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
                     <div class="relative z-10 flex items-center justify-between">
                         <div>
-                            <div class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-white mb-4 backdrop-blur-md">
+                            <div class="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center text-white mb-4 backdrop-blur-md shadow-inner">
                                 <i class="fa-solid fa-briefcase text-xl"></i>
                             </div>
                             <h3 class="text-xl font-bold text-white">Post New Job</h3>
@@ -37,10 +38,10 @@
                     </div>
                 </a>
 
-                <a href="{{ route('admin.clients.create') }}" class="group relative bg-white rounded-3xl p-6 shadow-lg border border-gray-100 hover:border-emerald-100 hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1">
+                <a href="{{ route('admin.clients.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-emerald-100 hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                            <div class="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                                 <i class="fa-solid fa-user-tie text-xl"></i>
                             </div>
                             <h3 class="text-lg font-bold text-gray-800">Add New Client</h3>
@@ -50,10 +51,10 @@
                     </div>
                 </a>
 
-                <a href="{{ route('admin.partners.create') }}" class="group relative bg-white rounded-3xl p-6 shadow-lg border border-gray-100 hover:border-purple-100 hover:shadow-purple-100/50 transition-all duration-300 transform hover:-translate-y-1">
+                <a href="{{ route('admin.partners.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-purple-100 hover:shadow-purple-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="h-12 w-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                            <div class="h-12 w-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                                 <i class="fa-solid fa-handshake text-xl"></i>
                             </div>
                             <h3 class="text-lg font-bold text-gray-800">Add New Partner</h3>
@@ -62,6 +63,18 @@
                         <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-purple-500 transition-colors"></i>
                     </div>
                 </a>
+                <a href="{{ route('admin.sub_admins.index') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-100 hover:shadow-blue-100/50 transition-all duration-300 transform hover:-translate-y-1">
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-user-shield text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800">Managers</h3>
+            <p class="text-gray-500 text-sm mt-1">Manage sub-admins</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+    </div>
+</a>
             </div>
 
             <h3 class="text-lg font-bold text-gray-800 mb-6 px-1">Live Metrics</h3>
@@ -74,7 +87,7 @@
                                 <p class="text-orange-50 text-xs font-bold uppercase tracking-wider">Pending Jobs</p>
                                 <p class="text-3xl font-extrabold mt-1">{{ $pendingJobs }}</p>
                             </div>
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                                 <i class="fa-solid fa-clock text-xl"></i>
                             </div>
                         </div>
@@ -88,7 +101,7 @@
                                 <p class="text-rose-50 text-xs font-bold uppercase tracking-wider">Review Apps</p>
                                 <p class="text-3xl font-extrabold mt-1">{{ $pendingApplications }}</p>
                             </div>
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                                 <i class="fa-solid fa-file-circle-check text-xl"></i>
                             </div>
                         </div>
@@ -102,7 +115,7 @@
                                 <p class="text-teal-50 text-xs font-bold uppercase tracking-wider">Total Clients</p>
                                 <p class="text-3xl font-extrabold mt-1">{{ $totalClients }}</p>
                             </div>
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                                 <i class="fa-solid fa-user-tie text-xl"></i>
                             </div>
                         </div>
@@ -116,7 +129,7 @@
                                 <p class="text-purple-50 text-xs font-bold uppercase tracking-wider">Total Partners</p>
                                 <p class="text-3xl font-extrabold mt-1">{{ $totalPartners }}</p>
                             </div>
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                                 <i class="fa-solid fa-handshake text-xl"></i>
                             </div>
                         </div>
@@ -130,7 +143,7 @@
                                 <p class="text-blue-50 text-xs font-bold uppercase tracking-wider">Total Candidates</p>
                                 <p class="text-3xl font-extrabold mt-1">{{ $totalUsers - ($totalClients + $totalPartners) }}</p>
                             </div>
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                                 <i class="fa-solid fa-users text-xl"></i>
                             </div>
                         </div>
@@ -140,8 +153,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                
-                <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-gray-800">Platform Growth</h3>
                         <div class="flex gap-2">
@@ -154,7 +166,7 @@
                     </div>
                 </div>
 
-                <div class="lg:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 class="text-lg font-bold text-gray-800 mb-6">User Distribution</h3>
                     <div class="relative h-60 w-full flex justify-center">
                         <canvas id="userDistChart"></canvas>
@@ -179,45 +191,75 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const ctxDist = document.getElementById('userDistChart').getContext('2d');
+            // Data from controller
             const totalClients = {{ $totalClients }};
             const totalPartners = {{ $totalPartners }};
+            // Calculate candidates: Total Users minus Clients and Partners
             const totalCandidates = {{ $totalUsers }} - (totalClients + totalPartners);
 
-            new Chart(ctxDist, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Candidates', 'Clients', 'Partners'],
-                    datasets: [{
-                        data: [totalCandidates, totalClients, totalPartners],
-                        backgroundColor: ['#3b82f6', '#10b981', '#a855f7'],
-                        borderWidth: 0, hoverOffset: 4
-                    }]
-                },
-                options: { responsive: true, cutout: '75%', plugins: { legend: { display: false } } }
-            });
+            // 1. Distribution Chart (Doughnut)
+            const ctxDist = document.getElementById('userDistChart');
+            if (ctxDist) {
+                new Chart(ctxDist.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Candidates', 'Clients', 'Partners'],
+                        datasets: [{
+                            data: [totalCandidates, totalClients, totalPartners],
+                            backgroundColor: ['#3b82f6', '#10b981', '#a855f7'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        cutout: '75%', 
+                        plugins: { legend: { display: false } } 
+                    }
+                });
+            }
 
-            const ctxGrowth = document.getElementById('growthChart').getContext('2d');
-            let gradient = ctxGrowth.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            // 2. Growth Chart (Line)
+            const ctxGrowth = document.getElementById('growthChart');
+            if (ctxGrowth) {
+                const ctx = ctxGrowth.getContext('2d');
+                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
-            new Chart(ctxGrowth, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'New Activity',
-                        data: [12, 19, 15, 25, 22, 30, 45],
-                        borderColor: '#3b82f6',
-                        backgroundColor: gradient,
-                        fill: true, tension: 0.4, pointRadius: 4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4] } }, x: { grid: { display: false } } } }
-            });
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'New Activity',
+                            data: [12, 19, 15, 25, 22, 30, 45], // Static data for demo
+                            borderColor: '#3b82f6',
+                            backgroundColor: gradient,
+                            fill: true, 
+                            tension: 0.4, 
+                            pointRadius: 4,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#3b82f6',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { 
+                            y: { beginAtZero: true, grid: { borderDash: [2, 4], drawBorder: false } }, 
+                            x: { grid: { display: false, drawBorder: false } } 
+                        } 
+                    }
+                });
+            }
         });
     </script>
 </x-app-layout>
