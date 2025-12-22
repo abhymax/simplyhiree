@@ -53,7 +53,11 @@
                                                 {{ substr($user->name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <div class="font-bold text-gray-900">{{ $user->name }}</div>
+                                                {{-- UPDATE: Display Client Code next to Name --}}
+                                                <div class="font-bold text-gray-900">
+                                                    {{ $user->name }} 
+                                                    <span class="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">{{ $user->client_code }}</span>
+                                                </div>
                                                 <div class="text-xs text-gray-500">{{ $user->email }}</div>
                                             </div>
                                         </div>

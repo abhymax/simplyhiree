@@ -10,7 +10,13 @@
             
             <div class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+                    {{-- UPDATE: Show Client ID --}}
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full border border-blue-200">
+                            ID: {{ Auth::user()->client_code }}
+                        </span>
+                    </div>
                     <p class="text-gray-600 mt-1">Welcome back, {{ Auth::user()->name }}</p>
                 </div>
                 <a href="{{ route('client.jobs.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition duration-150 flex items-center">

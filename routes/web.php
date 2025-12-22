@@ -185,7 +185,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         
         // 1. New Interview
         Route::get('/applications/{application}/interview/create', [ClientController::class, 'showInterviewForm'])
-            ->name('applications.interview.create');
+            ->name('applications.interview.create'); // Ensure View uses this name
         
         Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])
             ->name('applications.interview.store');
@@ -217,17 +217,22 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/applications/{application}/select', [ClientController::class, 'storeSelection'])
             ->name('applications.select.store');
 
-        // *** FIX: Added specific name for the update route ***
         Route::patch('/applications/{application}/select/update', [ClientController::class, 'updateSelectionDetails'])
             ->name('applications.select.update');
             
-        // 5. Final Status (Joined / Not Joined) -- *** UPDATED BLOCK ***
+        // 5. Final Status (Joined / Not Joined)
         Route::post('/applications/{application}/mark-joined', [ClientController::class, 'markAsJoined'])
             ->name('applications.markJoined');
 
-        // *** ADDED THIS MISSING ROUTE ***
         Route::post('/applications/{application}/mark-not-joined', [ClientController::class, 'markAsNotJoined'])
             ->name('applications.markNotJoined');
+
+        // 6. Left / Exited
+        Route::get('/applications/{application}/left', [ClientController::class, 'showLeftForm'])
+            ->name('applications.showLeftForm');
+
+        Route::post('/applications/{application}/left', [ClientController::class, 'markAsLeft'])
+            ->name('applications.markLeft');
     });
 
 

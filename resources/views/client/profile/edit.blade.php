@@ -21,6 +21,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                     <div class="md:col-span-2 space-y-6">
+                        
+                        {{-- 1. Brand Identity (Existing) --}}
                         <div class="p-6 bg-white shadow sm:rounded-lg">
                             <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Brand Identity</h3>
                             
@@ -64,6 +66,82 @@
                             </div>
                         </div>
 
+                        {{-- 2. Compliance & Legal (NEW SECTION) --}}
+                        <div class="p-6 bg-white shadow sm:rounded-lg">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Compliance & Legal Details</h3>
+                            
+                            {{-- PAN Details --}}
+                            <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-200">
+                                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3">PAN Details <span class="text-red-500">*</span></h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <x-input-label for="pan_number" :value="__('PAN Number')" />
+                                        <x-text-input id="pan_number" name="pan_number" type="text" class="mt-1 block w-full uppercase" :value="old('pan_number', $profile->pan_number ?? '')" placeholder="ABCDE1234F" required />
+                                        <x-input-error class="mt-2" :messages="$errors->get('pan_number')" />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="pan_file" :value="__('Upload PAN Card')" />
+                                        <input type="file" name="pan_file" id="pan_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf,.jpg,.jpeg,.png">
+                                        <x-input-error class="mt-2" :messages="$errors->get('pan_file')" />
+                                        
+                                        @if($profile->pan_file_path)
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-green-600 font-semibold">✓ File Uploaded.</span> 
+                                                <a href="{{ asset('storage/'.$profile->pan_file_path) }}" target="_blank" class="text-indigo-600 hover:underline ml-1">View Document</a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- TAN Details --}}
+                            <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-200">
+                                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3">TAN Details (Optional)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <x-input-label for="tan_number" :value="__('TAN Number')" />
+                                        <x-text-input id="tan_number" name="tan_number" type="text" class="mt-1 block w-full uppercase" :value="old('tan_number', $profile->tan_number ?? '')" />
+                                        <x-input-error class="mt-2" :messages="$errors->get('tan_number')" />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="tan_file" :value="__('Upload TAN Cert')" />
+                                        <input type="file" name="tan_file" id="tan_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf,.jpg,.jpeg,.png">
+                                        
+                                        @if($profile->tan_file_path)
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-green-600 font-semibold">✓ File Uploaded.</span> 
+                                                <a href="{{ asset('storage/'.$profile->tan_file_path) }}" target="_blank" class="text-indigo-600 hover:underline ml-1">View Document</a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- COI Details --}}
+                            <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3">Certificate of Incorporation (Optional)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <x-input-label for="coi_number" :value="__('CIN Number / Reg No.')" />
+                                        <x-text-input id="coi_number" name="coi_number" type="text" class="mt-1 block w-full uppercase" :value="old('coi_number', $profile->coi_number ?? '')" />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="coi_file" :value="__('Upload COI')" />
+                                        <input type="file" name="coi_file" id="coi_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf,.jpg,.jpeg,.png">
+                                        
+                                        @if($profile->coi_file_path)
+                                            <div class="mt-2 text-xs">
+                                                <span class="text-green-600 font-semibold">✓ File Uploaded.</span> 
+                                                <a href="{{ asset('storage/'.$profile->coi_file_path) }}" target="_blank" class="text-indigo-600 hover:underline ml-1">View Document</a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {{-- 3. Billing & Contact (Existing) --}}
                         <div class="p-6 bg-white shadow sm:rounded-lg">
                             <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Billing & Contact</h3>
                             
@@ -105,6 +183,7 @@
                         </div>
                     </div>
 
+                    {{-- Sidebar (Existing) --}}
                     <div class="md:col-span-1 space-y-6">
                         <div class="p-6 bg-white shadow sm:rounded-lg text-center">
                             <h3 class="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
@@ -129,8 +208,8 @@
                         </div>
 
                         <div class="p-6 bg-blue-50 border border-blue-100 rounded-lg">
-                            <h4 class="font-bold text-blue-800 mb-2"><i class="fa-solid fa-circle-info mr-1"></i> Why fill this?</h4>
-                            <p class="text-sm text-blue-600">Completing your profile helps candidates trust your brand. A logo and description increase application rates by up to 40%.</p>
+                            <h4 class="font-bold text-blue-800 mb-2"><i class="fa-solid fa-circle-info mr-1"></i> Compliance Check</h4>
+                            <p class="text-sm text-blue-600">Uploading your PAN and COI documents speeds up the verification process and allows for faster job approval.</p>
                         </div>
                         
                         <div class="mt-6">

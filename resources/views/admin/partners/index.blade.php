@@ -38,6 +38,8 @@
                         <thead class="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Partner Name</th>
+                                {{-- UPDATE: Added Type Column --}}
+                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
                                 <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Joined On</th>
                                 <th class="py-4 px-6 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
@@ -57,6 +59,18 @@
                                             </div>
                                         </div>
                                     </td>
+                                    
+                                    {{-- UPDATE: Display Type from PartnerProfile --}}
+                                    <td class="py-4 px-6 text-sm text-gray-700">
+                                        @if($user->partnerProfile && $user->partnerProfile->company_type)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ $user->partnerProfile->company_type }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400 italic">Not set</span>
+                                        @endif
+                                    </td>
+
                                     <td class="py-4 px-6">
                                         @php
                                             $class = match($user->status) {
@@ -142,7 +156,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="py-8 text-center text-gray-500">No partners found.</td></tr>
+                                <tr><td colspan="5" class="py-8 text-center text-gray-500">No partners found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

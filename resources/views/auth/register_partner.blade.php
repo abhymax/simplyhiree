@@ -2,33 +2,39 @@
     <form method="POST" action="{{ route('register.partner') }}">
         @csrf
 
-        <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" :value="__('Agency / Partner Name')" />
             <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
-        <!-- Email Address -->
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
+        <div class="mt-4">
+            <x-input-label for="company_type" :value="__('Partner Type')" />
+            <select id="company_type" name="company_type" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                <option value="" disabled selected>Select Type</option>
+                <option value="Placement Agency" {{ old('company_type') == 'Placement Agency' ? 'selected' : '' }}>Placement Agency</option>
+                <option value="Freelancer" {{ old('company_type') == 'Freelancer' ? 'selected' : '' }}>Freelancer</option>
+                <option value="Recruiter" {{ old('company_type') == 'Recruiter' ? 'selected' : '' }}>Recruiter</option>
+            </select>
+            <x-input-error :messages="$errors->get('company_type')" class="mt-2" />
+        </div>
+
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
             <div style="position: relative;">
                 <input id="password" type="password" name="password" required autocomplete="new-password"
                        class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm pr-10">
                 <div id="togglePassword" style="position: absolute; top: 50%; right: 0.75rem; transform: translateY(-50%);" class="flex items-center cursor-pointer">
-                    <!-- Eye Icon (Solid) -->
                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-500">
                         <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
                         <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" />
                     </svg>
-                    <!-- Eye Slash Icon (Solid, Hidden) -->
                     <svg id="eyeSlashIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-500 hidden">
                         <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" />
                         <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A5.25 5.25 0 0115.75 12zM12.53 15.713l-4.244-4.243a5.25 5.25 0 004.244 4.243z" />
@@ -39,19 +45,16 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Confirm Password -->
         <div class="mt-4">
             <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
             <div style="position: relative;">
                  <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
                        class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm pr-10">
                 <div id="togglePasswordConfirmation" style="position: absolute; top: 50%; right: 0.75rem; transform: translateY(-50%);" class="flex items-center cursor-pointer">
-                    <!-- Eye Icon (Solid) -->
                     <svg id="eyeIconConfirm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-500">
                         <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
                         <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" />
                     </svg>
-                    <!-- Eye Slash Icon (Solid, Hidden) -->
                     <svg id="eyeSlashIconConfirm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 text-gray-500 hidden">
                         <path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" />
                         <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A5.25 5.25 0 0115.75 12zM12.53 15.713l-4.244-4.243a5.25 5.25 0 004.244 4.243z" />
@@ -96,4 +99,3 @@
     // Setup for the confirmation password field
     setupPasswordToggle('togglePasswordConfirmation', 'password_confirmation', 'eyeIconConfirm', 'eyeSlashIconConfirm');
 </script>
-

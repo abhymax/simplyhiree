@@ -7,7 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany; // <-- ADD THIS IMPORT
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Casts\Attribute; // <--- Import Attribute
 
 class User extends Authenticatable
 {
@@ -33,6 +34,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    
+    // --- NEW ACCESSOR FOR CLIENT ID (Starts SH1000) ---
+    /**
+     * Get the formatted Client ID (e.g., SH1005).
+     */
+    protected function clientCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => 'SH' . (1000 + $this->id),
+        );
+    }
 
     public function profile(): HasOne
     {
@@ -43,34 +55,26 @@ class User extends Authenticatable
     {
         return $this->hasOne(PartnerProfile::class);
     }
+    
+    // ... [Rest of the relationships remain unchanged] ...
 
-    // --- NEW SUB-ADMIN RELATIONSHIPS ---
-
-    /**
-     * The clients assigned to this Manager (Sub-Admin).
-     */
     public function assignedClients(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'client_manager', 'manager_id', 'client_id')
                     ->withTimestamps();
     }
 
-    /**
-     * The managers assigned to this Client.
-     */
     public function managers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'client_manager', 'client_id', 'manager_id')
                     ->withTimestamps();
     }
+
     public function clientProfile()
     {
         return $this->hasOne(ClientProfile::class);
     }
 
-    /**
-     * Helper to check admin access
-     */
     public function isAdminOrManager(): bool
     {
         return $this->hasRole('Superadmin') || $this->hasRole('Manager');

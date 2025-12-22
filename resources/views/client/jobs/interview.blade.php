@@ -11,11 +11,12 @@
                     <p class="text-xl text-gray-700">for {{ $application->job->title }}</p>
                 </div>
 
-                <form action="{{ $isEdit ? route('client.applications.interview.update', $application) : route('client.applications.interview.schedule', $application) }}" 
+                {{-- FIX: Route name changed from 'interview.schedule' to 'interview.store' --}}
+                <form action="{{ $isEdit ? route('client.applications.interview.update', $application) : route('client.applications.interview.store', $application) }}" 
                       method="POST">
                     @csrf
                     @if($isEdit)
-                        @method('PATCH')
+                        @method('PUT') {{-- Note: web.php often uses PUT for updates, ensuring it matches --}}
                     @endif
 
                     <div class="mb-4 border-b pb-4">

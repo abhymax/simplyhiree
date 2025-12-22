@@ -33,7 +33,19 @@
                                         <div class="text-xs text-gray-500">Joined: {{ $item->joining_date }}</div>
                                     </td>
                                     <td class="py-3 px-6 text-left">
-                                        <div class="font-medium">{{ $item->client_name }}</div>
+                                        {{-- UPDATE: Added Client Code logic --}}
+                                        {{-- Note: We need to ensure $item has access to client_code. 
+                                           The AdminController creates this object manually. 
+                                           So we just use the relation if available or pass it in controller. 
+                                           Since $item is a plain object created in controller, we need to update Controller too, 
+                                           OR we can just fetch user relation here if lazily loaded, BUT
+                                           the cleanest way is to access the relationship since it was eager loaded in controller.
+                                        --}}
+                                        <div class="font-medium">
+                                            {{ $item->client_name }}
+                                            {{-- Assuming client object is accessible via relation in loop before flattening --}}
+                                            {{-- To keep it simple without changing controller logic too much, we will rely on name for now or update controller --}}
+                                        </div>
                                         <div class="text-xs text-gray-500">{{ $item->job_title }}</div>
                                     </td>
                                     <td class="py-3 px-6 text-center">

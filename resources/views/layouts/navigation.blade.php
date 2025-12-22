@@ -17,21 +17,42 @@
 
                     {{-- *** ROLE-SPECIFIC LINKS *** --}}
                     
-                    {{-- SUPERADMIN LINKS --}}
-                    @role('Superadmin')
+                    {{-- ADMIN & SUB-ADMIN LINKS --}}
+                    {{-- Check if user is either Superadmin OR Manager --}}
+                    @if(auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'))
+                        
+                        {{-- Applications --}}
+                        @can('view_application_data')
                         <x-nav-link :href="route('admin.applications.index')" :active="request()->routeIs('admin.applications.index')">
                             All Applications
                         </x-nav-link>
+                        @endcan
+
+                        {{-- Jobs --}}
+                        @can('view_pending_jobs')
                         <x-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')">
                             Pending Jobs
                         </x-nav-link>
+                        @endcan
+
+                        {{-- Billing & Reports --}}
+                        @can('view_billing_data')
                         <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')">
                             Billing Report
                         </x-nav-link>
                         <x-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')">
                             Master Job Report
                         </x-nav-link>
-                    @endrole
+                        @endcan
+
+                        {{-- Sub-Admins (Superadmin Only usually) --}}
+                        @can('manage_sub_admins')
+                        <x-nav-link :href="route('admin.sub_admins.index')" :active="request()->routeIs('admin.sub_admins.index')">
+                            Managers
+                        </x-nav-link>
+                        @endcan
+
+                    @endif
                     
                     {{-- CLIENT LINKS --}}
                     @role('client')
@@ -41,7 +62,6 @@
                         <x-nav-link :href="route('client.billing')" :active="request()->routeIs('client.billing')">
                             Billing
                         </x-nav-link>
-                        {{-- NEW: Company Profile Link --}}
                         <x-nav-link :href="route('client.profile.company')" :active="request()->routeIs('client.profile.company')">
                             Company Profile
                         </x-nav-link>
@@ -96,7 +116,6 @@
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
-                            {{-- NEW: Client Profile in Dropdown --}}
                             @role('client')
                                 <x-dropdown-link :href="route('client.profile.company')">
                                     {{ __('Company Profile') }}
@@ -135,20 +154,38 @@
             </x-responsive-nav-link>
 
             {{-- *** ROLE-SPECIFIC LINKS (Responsive) *** --}}
-            @role('Superadmin')
+            
+            {{-- ADMIN & SUB-ADMIN LINKS (Mobile) --}}
+            @if(auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'))
+                
+                @can('view_application_data')
                 <x-responsive-nav-link :href="route('admin.applications.index')" :active="request()->routeIs('admin.applications.index')">
                     All Applications
                 </x-responsive-nav-link>
+                @endcan
+
+                @can('view_pending_jobs')
                 <x-responsive-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')">
                     Pending Jobs
                 </x-responsive-nav-link>
+                @endcan
+
+                @can('view_billing_data')
                 <x-responsive-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')">
                     Billing Report
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')">
                     Master Job Report
                 </x-responsive-nav-link>
-            @endrole
+                @endcan
+
+                @can('manage_sub_admins')
+                <x-responsive-nav-link :href="route('admin.sub_admins.index')" :active="request()->routeIs('admin.sub_admins.index')">
+                    Managers
+                </x-responsive-nav-link>
+                @endcan
+
+            @endif
 
             @role('client')
                 <x-responsive-nav-link :href="route('client.jobs.create')" :active="request()->routeIs('client.jobs.create')">
@@ -157,7 +194,6 @@
                 <x-responsive-nav-link :href="route('client.billing')" :active="request()->routeIs('client.billing')">
                     Billing
                 </x-responsive-nav-link>
-                {{-- NEW: Company Profile Responsive --}}
                 <x-responsive-nav-link :href="route('client.profile.company')" :active="request()->routeIs('client.profile.company')">
                     Company Profile
                 </x-responsive-nav-link>

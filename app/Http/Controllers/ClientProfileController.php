@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ClientProfile;
+use Illuminate\Validation\Rule; // Import Rule
 
 class ClientProfileController extends Controller
 {
@@ -26,6 +27,8 @@ class ClientProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
+        // Load existing profile to check for existing files
+        $profile = $user->clientProfile; 
 
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
@@ -41,19 +44,46 @@ class ClientProfileController extends Controller
             'state' => 'nullable|string|max:100',
             'pincode' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            
+            // --- NEW VALIDATIONS ---
+            'pan_number' => 'required|string|max:20', // Mandatory
+            'pan_file' => [
+                // Mandatory only if not already uploaded
+                function ($attribute, $value, $fail) use ($profile) {
+                    if (empty($profile->pan_file_path) && empty($value)) {
+                        $fail('The PAN document is required.');
+                    }
+                },
+                'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'
+            ],
+            
+            'tan_number' => 'nullable|string|max:20',
+            'tan_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            
+            'coi_number' => 'nullable|string|max:50',
+            'coi_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
-        // Handle File Upload
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($user->clientProfile && $user->clientProfile->logo_path) {
-                if (Storage::disk('public')->exists($user->clientProfile->logo_path)) {
-                    Storage::disk('public')->delete($user->clientProfile->logo_path);
+        // Helper function to handle uploads
+        $handleUpload = function ($fileInputName, $dbColumnName, $folder) use ($request, $user, &$validated) {
+            if ($request->hasFile($fileInputName)) {
+                // Delete old file
+                if ($user->clientProfile && $user->clientProfile->$dbColumnName) {
+                    if (Storage::disk('public')->exists($user->clientProfile->$dbColumnName)) {
+                        Storage::disk('public')->delete($user->clientProfile->$dbColumnName);
+                    }
                 }
+                // Store new
+                $path = $request->file($fileInputName)->store($folder, 'public');
+                $validated[$dbColumnName] = $path;
             }
-            $path = $request->file('logo')->store('company_logos', 'public');
-            $validated['logo_path'] = $path;
-        }
+        };
+
+        // Process Uploads
+        $handleUpload('logo', 'logo_path', 'company_logos');
+        $handleUpload('pan_file', 'pan_file_path', 'compliance_docs');
+        $handleUpload('tan_file', 'tan_file_path', 'compliance_docs');
+        $handleUpload('coi_file', 'coi_file_path', 'compliance_docs');
 
         // Update or Create
         $user->clientProfile()->updateOrCreate(
@@ -61,9 +91,9 @@ class ClientProfileController extends Controller
             $validated
         );
 
-        // Optional: Update Main User Name to match Company Name if desired
+        // Optional: Update Main User Name
         $user->update(['name' => $validated['company_name']]);
 
-        return redirect()->back()->with('success', 'Company profile updated successfully.');
+        return redirect()->back()->with('success', 'Company profile and compliance details updated successfully.');
     }
 }

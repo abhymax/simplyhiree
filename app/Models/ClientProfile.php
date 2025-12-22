@@ -25,6 +25,13 @@ class ClientProfile extends Model
         'city',
         'state',
         'pincode',
+        // --- NEW FIELDS ---
+        'pan_number',
+        'pan_file_path',
+        'tan_number',
+        'tan_file_path',
+        'coi_number',
+        'coi_file_path',
     ];
 
     public function user(): BelongsTo

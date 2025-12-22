@@ -9,6 +9,7 @@ use App\Models\JobCategory;
 use App\Models\ExperienceLevel;
 use App\Models\EducationLevel;
 use App\Models\Candidate;
+use App\Models\PartnerProfile; // <--- ADDED THIS IMPORT
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
@@ -21,9 +22,8 @@ use App\Notifications\ApplicationRejectedByAdmin;
 
 class AdminController extends Controller
 {
-    /**
-     * Show the admin dashboard with stats.
-     */
+    // ... [Previous code for index() remains unchanged] ...
+
     public function index()
     {
         $totalUsers = User::count();
@@ -41,7 +41,7 @@ class AdminController extends Controller
         ]);
     }
 
-    // --- USER MANAGEMENT & ACCESS CONTROL ---
+    // ... [User Management functions remain unchanged] ...
 
     public function listUsers()
     {
@@ -80,6 +80,7 @@ class AdminController extends Controller
     }
 
     // --- CLIENT MANAGEMENT ---
+    // ... [Client functions listClients, storeClient, etc. remain unchanged] ...
 
     public function listClients()
     {
@@ -127,11 +128,13 @@ class AdminController extends Controller
         return redirect()->route('admin.clients.index')->with('success', 'Client updated successfully!');
     }
 
-    // --- PARTNER MANAGEMENT ---
+
+    // --- PARTNER MANAGEMENT (UPDATED) ---
 
     public function listPartners()
     {
-        $partners = User::role('partner')->with('roles')->latest()->paginate(25);
+        // UPDATE: Eager load 'partnerProfile' to access the type in the list
+        $partners = User::role('partner')->with(['roles', 'partnerProfile'])->latest()->paginate(25);
         return view('admin.partners.index', ['users' => $partners]);
     }
 
@@ -146,6 +149,8 @@ class AdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            // UPDATE: Add validation for company_type
+            'company_type' => ['required', 'string', 'in:Placement Agency,Freelancer,Recruiter'],
         ]);
 
         $user = User::create([
@@ -156,6 +161,13 @@ class AdminController extends Controller
         ]);
 
         $user->assignRole('partner');
+
+        // UPDATE: Create the profile with the selected type immediately
+        PartnerProfile::create([
+            'user_id' => $user->id,
+            'company_type' => $request->company_type,
+        ]);
+
         return redirect()->route('admin.partners.index')->with('success', 'Partner created successfully.');
     }
 
@@ -166,6 +178,8 @@ class AdminController extends Controller
         return view('admin.partners.show', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
 
+    // ... [Rest of the file (Job Management, Applications, Billing) remains unchanged] ...
+    
     // --- JOB MANAGEMENT ---
 
     public function createJob()
@@ -296,9 +310,6 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Job has been rejected.');
     }
 
-    /**
-     * NEW: Admin - Force update job status (Hold/Close/Live/Rejected).
-     */
     public function updateJobStatus(Request $request, Job $job)
     {
         $request->validate([
@@ -310,9 +321,6 @@ class AdminController extends Controller
         return redirect()->back()->with('success', "Job status updated to {$request->status}.");
     }
 
-    /**
-     * NEW: Admin - Delete a job permanently.
-     */
     public function destroyJob(Job $job)
     {
         $job->delete();
@@ -406,17 +414,13 @@ class AdminController extends Controller
         }
         return redirect()->back()->with('success', 'Application rejected.');
     }
-/**
-     * Show details of a specific application.
-     */
+
     public function showApplication(JobApplication $application)
     {
         $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser']);
         return view('admin.applications.show', compact('application'));
     }
-    /**
-     * Show list of applicants for a specific job in the Master Report.
-     */
+
     public function jobApplicantsReport(\App\Models\Job $job)
     {
         // Load the applicants with necessary relationships
@@ -427,6 +431,7 @@ class AdminController extends Controller
 
         return view('admin.reports.job_applicants', compact('job', 'applications'));
     }
+
     // --- BILLING & REPORTS ---
 
     public function billingReport()

@@ -98,9 +98,10 @@
                                         
                                         @if(empty($app->hiring_status))
                                             <div class="flex flex-col space-y-2">
-                                                <a href="{{ route('client.applications.interview.show', $app) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-center text-xs">
-                                                    Schedule Interview
-                                                </a>
+                                                {{-- FIX: Changed 'interview.show' to 'interview.create' to match web.php --}}
+<a href="{{ route('client.applications.interview.create', $app) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-center text-xs">
+    Schedule Interview
+</a>
                                                 <form action="{{ route('client.applications.reject', $app) }}" method="POST" onsubmit="return confirm('Are you sure you want to reject this candidate?');">
                                                     @csrf
                                                     <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded text-center text-xs">

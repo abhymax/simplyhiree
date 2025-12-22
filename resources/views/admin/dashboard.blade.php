@@ -22,6 +22,8 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 
+                {{-- 1. POST JOB: Requires 'view_pending_jobs' or 'manage_clients' --}}
+                @can('view_pending_jobs')
                 <a href="{{ route('admin.jobs.create') }}" class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
                     <div class="relative z-10 flex items-center justify-between">
@@ -37,7 +39,10 @@
                         </div>
                     </div>
                 </a>
+                @endcan
 
+                {{-- 2. ADD CLIENT: Requires 'manage_clients' --}}
+                @can('manage_clients')
                 <a href="{{ route('admin.clients.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-emerald-100 hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
                         <div>
@@ -50,7 +55,10 @@
                         <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-emerald-500 transition-colors"></i>
                     </div>
                 </a>
+                @endcan
 
+                {{-- 3. ADD PARTNER: Requires 'view_partner_data' --}}
+                @can('view_partner_data')
                 <a href="{{ route('admin.partners.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-purple-100 hover:shadow-purple-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
                         <div>
@@ -63,35 +71,45 @@
                         <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-purple-500 transition-colors"></i>
                     </div>
                 </a>
+                @endcan
+
+                {{-- 4. MANAGE SUB-ADMINS: Requires 'manage_sub_admins' --}}
+                @can('manage_sub_admins')
                 <a href="{{ route('admin.sub_admins.index') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-100 hover:shadow-blue-100/50 transition-all duration-300 transform hover:-translate-y-1">
-    <div class="flex items-center justify-between">
-        <div>
-            <div class="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <i class="fa-solid fa-user-shield text-xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-gray-800">Managers</h3>
-            <p class="text-gray-500 text-sm mt-1">Manage sub-admins</p>
-        </div>
-        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
-    </div>
-</a>
-<a href="{{ route('admin.reports.jobs') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-teal-100 hover:shadow-teal-100/50 transition-all duration-300 transform hover:-translate-y-1">
-    <div class="flex items-center justify-between">
-        <div>
-            <div class="h-12 w-12 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600 mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
-                <i class="fa-solid fa-list-check text-xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-gray-800">All Jobs Report</h3>
-            <p class="text-gray-500 text-sm mt-1">Manage all job posts</p>
-        </div>
-        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-teal-500 transition-colors"></i>
-    </div>
-</a>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-user-shield text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800">Managers</h3>
+                            <p class="text-gray-500 text-sm mt-1">Manage sub-admins</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+                    </div>
+                </a>
+                @endcan
+
+                {{-- 5. REPORTS: Requires 'view_billing_data' (assuming billing covers reports) --}}
+                @can('view_billing_data')
+                <a href="{{ route('admin.reports.jobs') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-teal-100 hover:shadow-teal-100/50 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="h-12 w-12 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600 mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-list-check text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800">All Jobs Report</h3>
+                            <p class="text-gray-500 text-sm mt-1">Manage all job posts</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-teal-500 transition-colors"></i>
+                    </div>
+                </a>
+                @endcan
             </div>
 
             <h3 class="text-lg font-bold text-gray-800 mb-6 px-1">Live Metrics</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
                 
+                @can('view_pending_jobs')
                 <a href="{{ route('admin.jobs.pending') }}" class="block group">
                     <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-5 text-white shadow-lg shadow-orange-200 hover:shadow-xl hover:scale-[1.02] transition-all">
                         <div class="flex justify-between items-start">
@@ -105,7 +123,9 @@
                         </div>
                     </div>
                 </a>
+                @endcan
 
+                @can('view_application_data')
                 <a href="{{ route('admin.applications.index') }}" class="block group">
                     <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-5 text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:scale-[1.02] transition-all">
                         <div class="flex justify-between items-start">
@@ -119,7 +139,9 @@
                         </div>
                     </div>
                 </a>
+                @endcan
 
+                @can('manage_clients')
                 <a href="{{ route('admin.clients.index') }}" class="block group">
                     <div class="bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-5 text-white shadow-lg shadow-teal-200 hover:shadow-xl hover:scale-[1.02] transition-all">
                         <div class="flex justify-between items-start">
@@ -133,7 +155,9 @@
                         </div>
                     </div>
                 </a>
+                @endcan
 
+                @can('view_partner_data')
                 <a href="{{ route('admin.partners.index') }}" class="block group">
                     <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-[1.02] transition-all">
                         <div class="flex justify-between items-start">
@@ -147,7 +171,9 @@
                         </div>
                     </div>
                 </a>
+                @endcan
 
+                @can('view_candidate_data')
                 <a href="{{ route('admin.users.index') }}" class="block group">
                     <div class="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl p-5 text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-[1.02] transition-all">
                         <div class="flex justify-between items-start">
@@ -161,9 +187,12 @@
                         </div>
                     </div>
                 </a>
+                @endcan
 
             </div>
-
+            
+            {{-- CHARTS: Restricted to Managers with Reporting access or Superadmins --}}
+            @if(auth()->user()->can('view_billing_data') || auth()->user()->hasRole('Superadmin'))
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div class="flex justify-between items-center mb-6">
@@ -199,12 +228,13 @@
                     </div>
                 </div>
             </div>
+            @endif
 
         </div>
     </div>
-
+    
+    {{-- SCRIPTS REMAIN UNCHANGED --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Data from controller
