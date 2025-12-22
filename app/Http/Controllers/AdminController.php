@@ -43,24 +43,14 @@ class AdminController extends Controller
 
     // --- USER MANAGEMENT & ACCESS CONTROL ---
 
-    /**
-     * Show all users in the system.
-     */
     public function listUsers()
     {
         $users = User::with('roles')->latest()->paginate(25);
-
-        return view('admin.users.index', [
-            'users' => $users
-        ]);
+        return view('admin.users.index', ['users' => $users]);
     }
 
-    /**
-     * Update the status of a user (Approve, Hold, Restrict).
-     */
     public function updateUserStatus(Request $request, User $user)
     {
-        // Prevent changing Superadmin status
         if ($user->hasRole('Superadmin')) {
             return redirect()->back()->with('error', 'Cannot change Superadmin status.');
         }
@@ -74,9 +64,6 @@ class AdminController extends Controller
         return redirect()->back()->with('success', "User status updated to {$validated['status']}.");
     }
 
-    /**
-     * Update user password (Admin Override).
-     */
     public function updateUserCredentials(Request $request, User $user)
     {
         if ($user->hasRole('Superadmin') && auth()->id() !== $user->id) {
@@ -87,9 +74,7 @@ class AdminController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        $user->update(['password' => Hash::make($validated['password'])]);
 
         return redirect()->back()->with('success', 'User credentials updated successfully.');
     }
@@ -98,11 +83,7 @@ class AdminController extends Controller
 
     public function listClients()
     {
-        $clients = User::role('client')
-                       ->with('roles')
-                       ->latest()
-                       ->paginate(25);
-
+        $clients = User::role('client')->with('roles')->latest()->paginate(25);
         return view('admin.clients.index', ['users' => $clients]);
     }
 
@@ -125,11 +106,10 @@ class AdminController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'billable_period_days' => $request->billable_period_days,
-            'status' => 'active', // Admin created clients are active by default
+            'status' => 'active',
         ]);
 
         $user->assignRole('client');
-
         return redirect()->route('admin.clients.index')->with('success', 'Client created successfully.');
     }
 
@@ -142,15 +122,8 @@ class AdminController extends Controller
     public function updateClient(Request $request, User $user)
     {
         if (!$user->hasRole('client')) abort(404);
-
-        $validated = $request->validate([
-            'billable_period_days' => 'required|integer|min:1',
-        ]);
-
-        $user->update([
-            'billable_period_days' => $validated['billable_period_days']
-        ]);
-
+        $validated = $request->validate(['billable_period_days' => 'required|integer|min:1']);
+        $user->update(['billable_period_days' => $validated['billable_period_days']]);
         return redirect()->route('admin.clients.index')->with('success', 'Client updated successfully!');
     }
 
@@ -158,11 +131,7 @@ class AdminController extends Controller
 
     public function listPartners()
     {
-        $partners = User::role('partner')
-                        ->with('roles')
-                        ->latest()
-                        ->paginate(25);
-
+        $partners = User::role('partner')->with('roles')->latest()->paginate(25);
         return view('admin.partners.index', ['users' => $partners]);
     }
 
@@ -183,11 +152,10 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'status' => 'active', // Admin created partners are active by default
+            'status' => 'active',
         ]);
 
         $user->assignRole('partner');
-
         return redirect()->route('admin.partners.index')->with('success', 'Partner created successfully.');
     }
 
@@ -198,16 +166,12 @@ class AdminController extends Controller
         return view('admin.partners.show', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
 
-    // --- JOB MANAGEMENT (Admin Creation & Approval) ---
+    // --- JOB MANAGEMENT ---
 
-    /**
-     * Show form for Superadmin to create a job.
-     */
     public function createJob()
     {
         $clients = User::role('client')->where('status', 'active')->get();
         $partners = User::role('partner')->where('status', 'active')->get();
-        // Optimizing candidate fetch: selecting only necessary fields
         $candidates = Candidate::select('id', 'first_name', 'last_name', 'email')->latest()->get(); 
         
         $categories = JobCategory::all();
@@ -220,19 +184,15 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Store the Superadmin created job.
-     */
     public function storeJob(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'client_id' => 'nullable|exists:users,id', // Null = Simplyhiree
+            'client_id' => 'nullable|exists:users,id',
             'partner_visibility' => 'required|in:all,selected',
             'allowed_partners' => 'array|required_if:partner_visibility,selected',
             'restricted_candidates' => 'array|nullable',
             
-            // Standard Job Fields
             'category_id' => 'required|exists:job_categories,id',
             'location' => 'required|string',
             'salary' => 'nullable|string',
@@ -244,7 +204,6 @@ class AdminController extends Controller
             'payout_amount' => 'nullable|numeric',
             'minimum_stay_days' => 'nullable|integer',
             
-            // Optional advanced fields
             'skills_required' => 'nullable|string',
             'company_website' => 'nullable|url',
             'openings' => 'nullable|integer',
@@ -253,21 +212,19 @@ class AdminController extends Controller
             'gender_preference' => 'nullable|string',
         ]);
 
-        // Determine Company Name
         $companyName = 'Simplyhiree';
         if ($request->filled('client_id')) {
             $client = User::find($request->client_id);
-            $companyName = $client->name; // Or a specific company_name field if you have one
+            $companyName = $client->name;
         }
         if ($request->filled('company_name')) {
-            $companyName = $request->company_name; // Allow manual override
+            $companyName = $request->company_name;
         }
 
-        // Create Job
         $job = Job::create([
-            'user_id' => $request->client_id, // Nullable
+            'user_id' => $request->client_id,
             'company_name' => $companyName,
-            'status' => 'approved', // Admin posted jobs are auto-approved
+            'status' => 'approved',
             'title' => $validated['title'],
             'category_id' => $validated['category_id'],
             'location' => $validated['location'],
@@ -289,12 +246,10 @@ class AdminController extends Controller
             'gender_preference' => $request->gender_preference,
         ]);
 
-        // Handle Partner Visibility
         if ($validated['partner_visibility'] === 'selected' && $request->has('allowed_partners')) {
             $job->allowedPartners()->sync($request->allowed_partners);
         }
 
-        // Handle Candidate Restrictions
         if ($request->has('restricted_candidates')) {
             $job->restrictedCandidates()->sync($request->restricted_candidates);
         }
@@ -341,6 +296,29 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Job has been rejected.');
     }
 
+    /**
+     * NEW: Admin - Force update job status (Hold/Close/Live/Rejected).
+     */
+    public function updateJobStatus(Request $request, Job $job)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,on_hold,closed,rejected',
+        ]);
+
+        $job->update(['status' => $request->status]);
+
+        return redirect()->back()->with('success', "Job status updated to {$request->status}.");
+    }
+
+    /**
+     * NEW: Admin - Delete a job permanently.
+     */
+    public function destroyJob(Job $job)
+    {
+        $job->delete();
+        return redirect()->route('admin.jobs.pending')->with('success', 'Job deleted permanently.');
+    }
+
     public function manageJobExclusions(Job $job)
     {
         $job->load(['experienceLevel', 'educationLevel']);
@@ -362,13 +340,53 @@ class AdminController extends Controller
 
     // --- APPLICATION MANAGEMENT ---
 
-    public function listApplications()
+    public function listApplications(Request $request)
     {
-        $applications = JobApplication::with(['job', 'candidate', 'candidateUser', 'candidate.partner'])
-                                    ->latest()
-                                    ->paginate(20);
+        $query = JobApplication::with(['job', 'candidate', 'candidateUser', 'candidate.partner']);
 
-        return view('admin.applications.index', ['applications' => $applications]);
+        // 1. Filter by Search (Candidate Name, Email, Job Title)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('candidate', function($subQ) use ($search) {
+                    $subQ->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('job', function($subQ) use ($search) {
+                    $subQ->where('title', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // 2. Filter by Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // 3. Filter by Specific Job
+        if ($request->filled('job_id')) {
+            $query->where('job_id', $request->input('job_id'));
+        }
+        
+        // 4. Filter by Partner
+        if ($request->filled('partner_id')) {
+             $query->whereHas('candidate', function($q) use ($request) {
+                $q->where('partner_id', $request->input('partner_id'));
+             });
+        }
+
+        $applications = $query->latest()->paginate(20)->withQueryString();
+        
+        // Fetch data for dropdowns
+        $jobs = Job::select('id', 'title')->orderBy('title')->get();
+        $partners = User::role('partner')->select('id', 'name')->orderBy('name')->get();
+
+        return view('admin.applications.index', [
+            'applications' => $applications,
+            'jobs' => $jobs,
+            'partners' => $partners
+        ]);
     }
 
     public function approveApplication(JobApplication $application)
@@ -388,7 +406,27 @@ class AdminController extends Controller
         }
         return redirect()->back()->with('success', 'Application rejected.');
     }
+/**
+     * Show details of a specific application.
+     */
+    public function showApplication(JobApplication $application)
+    {
+        $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser']);
+        return view('admin.applications.show', compact('application'));
+    }
+    /**
+     * Show list of applicants for a specific job in the Master Report.
+     */
+    public function jobApplicantsReport(\App\Models\Job $job)
+    {
+        // Load the applicants with necessary relationships
+        $applications = $job->jobApplications()
+            ->with(['candidate', 'candidate.partner'])
+            ->latest()
+            ->paginate(20);
 
+        return view('admin.reports.job_applicants', compact('job', 'applications'));
+    }
     // --- BILLING & REPORTS ---
 
     public function billingReport()
@@ -400,8 +438,6 @@ class AdminController extends Controller
         $reportData = [];
 
         foreach ($placements as $app) {
-            // Note: jobs created by Admin (user_id=null) might not have billable periods attached to a client user
-            // We skip or handle them differently. For now, we skip if no client user attached.
             if (empty($app->joining_date) || empty($app->job->user) || empty($app->job->user->billable_period_days)) {
                 continue;
             }
@@ -458,20 +494,15 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Invoice marked as PAID.');
     }
 
-    /**
-     * Master Job Report with Filters and Pagination.
-     */
     public function jobReport(Request $request)
     {
-        // 1. Start the Query
         $query = Job::with([
-                'user', // The Client
-                'jobApplications.candidate.partner', // Agency Candidates
-                'jobApplications.candidateUser'      // Direct Candidates
+                'user',
+                'jobApplications.candidate.partner', 
+                'jobApplications.candidateUser'
             ])
             ->latest();
 
-        // 2. Apply Search Filter (Title or Company Name)
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
@@ -480,21 +511,15 @@ class AdminController extends Controller
             });
         }
 
-        // 3. Apply Status Filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // 4. Apply Client Filter
         if ($request->filled('client_id')) {
             $query->where('user_id', $request->client_id);
         }
 
-        // 5. Paginate Results (20 per page)
-        // appends() ensures filters stick when you click page 2
         $jobs = $query->paginate(20)->appends($request->query());
-
-        // 6. Get Data for Filter Dropdowns
         $clients = User::role('client')->orderBy('name')->get();
 
         return view('admin.reports.jobs', [

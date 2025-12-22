@@ -75,6 +75,18 @@
         <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
     </div>
 </a>
+<a href="{{ route('admin.reports.jobs') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-teal-100 hover:shadow-teal-100/50 transition-all duration-300 transform hover:-translate-y-1">
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="h-12 w-12 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600 mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-list-check text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800">All Jobs Report</h3>
+            <p class="text-gray-500 text-sm mt-1">Manage all job posts</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-teal-500 transition-colors"></i>
+    </div>
+</a>
             </div>
 
             <h3 class="text-lg font-bold text-gray-800 mb-6 px-1">Live Metrics</h3>

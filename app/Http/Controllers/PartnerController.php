@@ -288,18 +288,7 @@ class PartnerController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:candidates,email,NULL,id,partner_id,'.$partner->id,
             'phone_number' => 'required|string|max:20|unique:candidates,phone_number,NULL,id,partner_id,'.$partner->id,
-            'alternate_phone_number' => 'nullable|string|max:20',
-            'location' => 'nullable|string|max:255',
-            'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|string|in:Male,Female,Other',
-            'job_interest' => 'nullable|string|max:255',
-            'education_level' => 'nullable|string|max:255',
-            'experience_status' => 'nullable|string|in:Experienced,Fresher',
-            'expected_ctc' => 'nullable|numeric|min:0',
-            'notice_period' => 'nullable|string|max:100',
-            'job_role_preference' => 'nullable|string',
-            'languages_spoken' => 'nullable|string',
-            'skills' => 'nullable|string',
+            // ... (keep other validations optional for quick add, or add them if needed)
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
@@ -310,7 +299,16 @@ class PartnerController extends Controller
             $validatedData['resume_path'] = $path;
         }
 
-        Candidate::create($validatedData);
+        $candidate = Candidate::create($validatedData);
+
+        // Check if the request expects JSON (AJAX request from the Apply page)
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'candidate' => $candidate,
+                'message' => 'Candidate added successfully'
+            ]);
+        }
 
         return redirect()->route('partner.candidates.index')->with('success', 'Candidate added successfully!');
     }

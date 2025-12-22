@@ -40,8 +40,8 @@ class ClientController extends Controller
         
         // Count total hires (candidates marked as 'Selected' or 'Joined')
         $totalHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
-                        ->whereIn('hiring_status', ['Selected', 'Joined'])
-                        ->count();
+                                ->whereIn('hiring_status', ['Selected', 'Joined'])
+                                ->count();
 
         return view('client.dashboard', [
             'client' => $client,
@@ -125,11 +125,13 @@ class ClientController extends Controller
             'interview_at' => 'required|date|after:now',
             'client_notes' => 'nullable|string|max:1000',
         ]);
+        
         $application->update([
             'hiring_status' => 'Interview Scheduled',
-            'interview_at' => $validated['interview_at'],
+            'interview_at' => Carbon::parse($validated['interview_at']),
             'client_notes' => $validated['client_notes'],
         ]);
+        
         $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
     }
@@ -160,7 +162,7 @@ class ClientController extends Controller
         ]);
         
         $application->update([
-            'interview_at' => $validated['interview_at'],
+            'interview_at' => Carbon::parse($validated['interview_at']),
             'client_notes' => $validated['client_notes'],
         ]);
         
@@ -217,19 +219,22 @@ class ClientController extends Controller
             'joining_date' => 'required|date|after_or_equal:today',
             'client_notes' => 'nullable|string|max:1000',
         ]);
+        
         $application->update([
             'hiring_status' => 'Selected',
-            'joining_date' => $validated['joining_date'],
+            'joining_date' => Carbon::parse($validated['joining_date']),
             'client_notes' => $validated['client_notes'],
         ]);
+        
         $this->notifyAdminAndPartner(new CandidateSelected($application), $application);
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
     }
 
     /**
      * Show the form to edit existing selection details.
+     * FIXED: Renamed from editSelectionDetails to editSelection to match Route.
      */
-    public function editSelectionDetails(JobApplication $application)
+    public function editSelection(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
             abort(403);
@@ -250,8 +255,9 @@ class ClientController extends Controller
             'joining_date' => 'required|date|after_or_equal:today',
             'client_notes' => 'nullable|string|max:1000',
         ]);
+        
         $application->update([
-            'joining_date' => $validated['joining_date'],
+            'joining_date' => Carbon::parse($validated['joining_date']),
             'client_notes' => $validated['client_notes'],
         ]);
         
@@ -312,7 +318,7 @@ class ClientController extends Controller
 
         $application->update([
             'joined_status' => 'Left',
-            'left_at' => $validated['left_at'],
+            'left_at' => Carbon::parse($validated['left_at']),
             'client_notes' => $validated['client_notes'],
         ]);
         
@@ -369,7 +375,7 @@ class ClientController extends Controller
                 'invoice_date' => $invoiceDate->format('M d, Y'),
                 'status' => $status,
                 'status_color' => $color,
-                'paid_at' => $hire->paid_at ? $hire->paid_at->format('M d, Y') : null,
+                'paid_at' => $hire->paid_at ? Carbon::parse($hire->paid_at)->format('M d, Y') : null,
             ];
         }
 

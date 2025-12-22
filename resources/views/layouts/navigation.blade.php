@@ -10,7 +10,7 @@
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     
-                    {{-- Generic Dashboard Link (Visible to all, redirects based on role) --}}
+                    {{-- Generic Dashboard Link --}}
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
@@ -40,6 +40,10 @@
                         </x-nav-link>
                         <x-nav-link :href="route('client.billing')" :active="request()->routeIs('client.billing')">
                             Billing
+                        </x-nav-link>
+                        {{-- NEW: Company Profile Link --}}
+                        <x-nav-link :href="route('client.profile.company')" :active="request()->routeIs('client.profile.company')">
+                            Company Profile
                         </x-nav-link>
                     @endrole
 
@@ -91,6 +95,13 @@
                             <x-dropdown-link :href="route('profile.edit')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
+
+                            {{-- NEW: Client Profile in Dropdown --}}
+                            @role('client')
+                                <x-dropdown-link :href="route('client.profile.company')">
+                                    {{ __('Company Profile') }}
+                                </x-dropdown-link>
+                            @endrole
 
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -145,6 +156,10 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('client.billing')" :active="request()->routeIs('client.billing')">
                     Billing
+                </x-responsive-nav-link>
+                {{-- NEW: Company Profile Responsive --}}
+                <x-responsive-nav-link :href="route('client.profile.company')" :active="request()->routeIs('client.profile.company')">
+                    Company Profile
                 </x-responsive-nav-link>
             @endrole
 

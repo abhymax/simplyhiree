@@ -37,7 +37,8 @@ return [
         'database' => [
             'driver' => 'database',
             'connection' => env('DB_QUEUE_CONNECTION'),
-            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            // CHANGED: Default table set to 'job_queues' to avoid conflict
+            'table' => env('DB_QUEUE_TABLE', 'job_queues'), 
             'queue' => env('DB_QUEUE', 'default'),
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
             'after_commit' => false,

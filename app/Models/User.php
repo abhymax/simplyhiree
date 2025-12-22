@@ -63,6 +63,10 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'client_manager', 'client_id', 'manager_id')
                     ->withTimestamps();
     }
+    public function clientProfile()
+    {
+        return $this->hasOne(ClientProfile::class);
+    }
 
     /**
      * Helper to check admin access
