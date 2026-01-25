@@ -8,9 +8,9 @@
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            {{-- WELCOME & ID HEADER --}}
             <div class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    {{-- UPDATE: Show Client ID --}}
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
                         <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full border border-blue-200">
@@ -24,6 +24,40 @@
                 </a>
             </div>
 
+            {{-- DAILY PULSE CARD --}}
+            <div class="mb-8 bg-white rounded-2xl p-6 shadow-md border-l-8 border-blue-500">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-blue-100 rounded-full text-blue-600">
+                            <i class="fa-solid fa-heart-pulse text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Daily Pulse</h3>
+                            <p class="text-gray-500 text-sm">Updates on your hiring pipeline and billing.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4 w-full md:w-auto">
+                        <div class="flex-1 md:flex-none bg-blue-50 rounded-xl p-4 min-w-[160px] text-center border border-blue-100">
+                            <div class="text-3xl font-bold text-blue-700">{{ $todayInterviews }}</div>
+                            <div class="text-xs text-blue-600 uppercase tracking-wide font-semibold mt-1">Interviews Today</div>
+                            @if($todayInterviews > 0)
+                                <a href="{{ route('client.interviews.today') }}" class="text-xs text-blue-800 hover:underline mt-2 block">View Candidates</a>
+                            @endif
+                        </div>
+
+                        <div class="flex-1 md:flex-none bg-red-50 rounded-xl p-4 min-w-[160px] text-center border border-red-100">
+                            <div class="text-3xl font-bold text-red-700">{{ $dueInvoicesCount }}</div>
+                            <div class="text-xs text-red-600 uppercase tracking-wide font-semibold mt-1">Payments Due</div>
+                            @if($dueInvoicesCount > 0)
+                                <a href="{{ route('client.billing') }}" class="text-xs text-red-800 hover:underline mt-2 block">View Invoices</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ACTION CARDS --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 
                 <a href="#my-jobs" class="block p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-300 transition">
@@ -45,6 +79,7 @@
                 </a>
             </div>
 
+            {{-- METRICS GRID --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
                     <div class="flex items-center">
@@ -95,6 +130,7 @@
                 </div>
             </div>
 
+            {{-- JOB POSTINGS TABLE --}}
             <div id="my-jobs" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-xl font-bold text-gray-800 mb-4">My Job Postings</h3>

@@ -16,6 +16,7 @@
             </div>
         @endif
 
+        {{-- WELCOME BANNER --}}
         <div class="flex flex-wrap justify-between items-center bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-6 rounded-lg shadow-lg mb-8">
             <div>
                 <h1 class="text-3xl md:text-4xl font-bold">Welcome, {{ Auth::user()->name }}!</h1>
@@ -26,6 +27,32 @@
             </a>
         </div>
 
+        {{-- DAILY PULSE CARD --}}
+        <div class="mb-8 bg-white rounded-2xl p-6 shadow-md border-l-8 border-purple-500">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-start gap-4">
+                    <div class="p-3 bg-purple-100 rounded-full text-purple-600">
+                        <i class="fa-solid fa-heart-pulse text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Daily Pulse</h3>
+                        <p class="text-gray-500 text-sm">Stay on top of your candidate schedules.</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <div class="bg-purple-50 rounded-xl p-4 min-w-[180px] text-center border border-purple-100">
+                        <div class="text-3xl font-bold text-purple-700">{{ $todayInterviews }}</div>
+                        <div class="text-xs text-purple-600 uppercase tracking-wide font-semibold mt-1">Interviews Today</div>
+                        @if($todayInterviews > 0)
+                            <a href="{{ route('partner.applications') }}" class="text-xs text-purple-800 hover:underline mt-2 block">Check Status</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- MAIN MODULES GRID --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-500 flex flex-col justify-between">

@@ -21,7 +21,18 @@ class PartnerController extends Controller
     public function index()
     {
         $partner = Auth::user();
-        return view('partner.dashboard', ['partner' => $partner]);
+        
+        // --- Morning Brief Data ---
+        $todayInterviews = JobApplication::whereHas('candidate', function ($query) use ($partner) {
+                $query->where('partner_id', $partner->id);
+            })
+            ->whereDate('interview_at', Carbon::today())
+            ->count();
+
+        return view('partner.dashboard', [
+            'partner' => $partner,
+            'todayInterviews' => $todayInterviews
+        ]);
     }
 
     /**
@@ -33,11 +44,11 @@ class PartnerController extends Controller
 
         // Retrieve applications where the candidate belongs to the logged-in partner
         $applications = JobApplication::whereHas('candidate', function ($query) use ($partner) {
-                                          $query->where('partner_id', $partner->id);
-                                      })
-                                      ->with(['job', 'candidate'])
-                                      ->latest()
-                                      ->paginate(20);
+                                    $query->where('partner_id', $partner->id);
+                                })
+                                ->with(['job', 'candidate'])
+                                ->latest()
+                                ->paginate(20);
 
         return view('partner.applications', ['applications' => $applications]);
     }
@@ -76,9 +87,12 @@ class PartnerController extends Controller
                   ->orWhere('skills_required', 'like', "%{$searchTerm}%");
             });
         }
+
+        // FIX: Location Search using LIKE to match partial strings (e.g., "Delhi" inside "Mumbai, Delhi")
         if ($request->filled('location')) {
-            $query->where('location', $request->input('location'));
+            $query->where('location', 'like', '%' . $request->input('location') . '%');
         }
+
         if ($request->filled('job_type')) {
             $query->where('job_type', $request->input('job_type'));
         }
@@ -90,7 +104,7 @@ class PartnerController extends Controller
         }
 
         // --- Eager Load ---
-        // Note: Using 'jobCategory' to avoid conflict with text column
+        // Using 'category' based on previous fixes (ensure Job model has category() or jobCategory())
         $jobs = $query->with([
             'jobApplications' => function ($query) use ($partner) {
                 $query->whereHas('candidate', function ($subQuery) use ($partner) {
@@ -99,7 +113,7 @@ class PartnerController extends Controller
             },
             'experienceLevel',
             'educationLevel',
-            'jobCategory' 
+            'category' // Changed to 'category' to align with Model alias fix
         ])
         ->latest()
         ->paginate(10)
@@ -117,8 +131,20 @@ class PartnerController extends Controller
             $job->stats = (object)$stats;
         });
 
-        // Filter Options
-        $locations = Job::select('location')->distinct()->orderBy('location')->pluck('location');
+        // --- FIX: Normalize Filter Options ---
+        // 1. Get all location strings
+        // 2. Explode by comma
+        // 3. Trim whitespace
+        // 4. Flatten into one list and remove duplicates
+        $locations = Job::where('status', 'approved')
+            ->pluck('location')
+            ->flatMap(function ($values) {
+                return array_map('trim', explode(',', $values));
+            })
+            ->unique()
+            ->sort()
+            ->values();
+
         $job_types = Job::select('job_type')->distinct()->orderBy('job_type')->pluck('job_type');
         $experienceLevels = ExperienceLevel::all();
         $educationLevels = EducationLevel::all();
@@ -139,11 +165,10 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
 
-        // 1. Get Job Details (Eager load using 'jobCategory')
-        $job->load(['experienceLevel', 'educationLevel', 'jobCategory', 'user']);
+        // 1. Get Job Details (Eager load using 'category' alias)
+        $job->load(['experienceLevel', 'educationLevel', 'category', 'user']);
 
         // 2. Fetch Already Applied Candidates for this Partner
-        // Using whereHas to check candidate ownership
         $appliedApplications = JobApplication::where('job_id', $job->id)
                                              ->whereHas('candidate', function ($query) use ($partner) {
                                                  $query->where('partner_id', $partner->id);
@@ -155,17 +180,15 @@ class PartnerController extends Controller
         $appliedCandidateIds = $appliedApplications->pluck('candidate_id')->toArray();
 
         // 3. Find Matching Candidates from this Partner's Pool
-        // Exclude candidates who have already applied
         $myCandidates = Candidate::where('partner_id', $partner->id)
                                  ->whereNotIn('id', $appliedCandidateIds)
                                  ->get();
         
         $matchingCandidates = $myCandidates->filter(function ($candidate) use ($job) {
             // Simple Match Logic
-            $jobKeywords = strtolower($job->title . ' ' . $job->skills_required);
             $candidateKeywords = strtolower($candidate->skills . ' ' . $candidate->job_interest . ' ' . $candidate->job_role_preference);
-
             $titleWords = explode(' ', strtolower($job->title));
+            
             foreach ($titleWords as $word) {
                 if (strlen($word) > 2 && str_contains($candidateKeywords, $word)) {
                     return true;
@@ -229,19 +252,13 @@ class PartnerController extends Controller
         ]);
     }
     
-    // --- CANDIDATE MANAGEMENT (Mobile-First Workflow) ---
+    // --- CANDIDATE MANAGEMENT ---
 
-    /**
-     * Step 1: Check Mobile Screen
-     */
     public function checkCandidateMobile()
     {
         return view('partner.candidates.check-mobile');
     }
 
-    /**
-     * Step 2: Verify Mobile Existence
-     */
     public function verifyCandidateMobile(Request $request)
     {
         $request->validate([
@@ -263,9 +280,6 @@ class PartnerController extends Controller
         return redirect()->route('partner.candidates.create', ['mobile' => $phone]);
     }
 
-    /**
-     * Step 3: Create Form (Requires Mobile)
-     */
     public function createCandidate(Request $request)
     {
         if (!$request->has('mobile')) {
@@ -276,9 +290,6 @@ class PartnerController extends Controller
         return view('partner.candidates.create', compact('mobile'));
     }
 
-    /**
-     * Step 4: Store Candidate
-     */
     public function storeCandidate(Request $request)
     {
         $partner = Auth::user();
@@ -288,7 +299,6 @@ class PartnerController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:candidates,email,NULL,id,partner_id,'.$partner->id,
             'phone_number' => 'required|string|max:20|unique:candidates,phone_number,NULL,id,partner_id,'.$partner->id,
-            // ... (keep other validations optional for quick add, or add them if needed)
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
@@ -301,7 +311,6 @@ class PartnerController extends Controller
 
         $candidate = Candidate::create($validatedData);
 
-        // Check if the request expects JSON (AJAX request from the Apply page)
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -317,8 +326,8 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
         $candidates = Candidate::where('partner_id', $partner->id)
-                                ->latest()
-                                ->paginate(20);
+                               ->latest()
+                               ->paginate(20);
 
         return view('partner.candidates.index', ['candidates' => $candidates]);
     }
@@ -404,14 +413,13 @@ class PartnerController extends Controller
             if (!$candidate) continue;
 
             $existingApplication = JobApplication::where('job_id', $job->id)
-                                                ->where('candidate_id', $candidateId)
-                                                ->first();
+                                                 ->where('candidate_id', $candidateId)
+                                                 ->first();
             
             if (!$existingApplication) {
                 JobApplication::create([
                     'job_id' => $job->id,
                     'candidate_id' => $candidateId,
-                    // No partner_id column needed, implied via candidate
                     'status' => 'Pending Review',
                 ]);
                 $submittedCount++;

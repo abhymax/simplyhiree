@@ -13,6 +13,16 @@
                     {{ session('success') }}
                 </div>
             @endif
+            
+            @if($errors->any())
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm">
+                    <ul class="list-disc ml-5">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <form method="post" action="{{ route('client.profile.update') }}" enctype="multipart/form-data">
                 @csrf
@@ -22,14 +32,13 @@
 
                     <div class="md:col-span-2 space-y-6">
                         
-                        {{-- 1. Brand Identity (Existing) --}}
+                        {{-- 1. Brand Identity --}}
                         <div class="p-6 bg-white shadow sm:rounded-lg">
                             <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Brand Identity</h3>
                             
                             <div class="mb-4">
                                 <x-input-label for="company_name" :value="__('Company Name')" />
                                 <x-text-input id="company_name" name="company_name" type="text" class="mt-1 block w-full" :value="old('company_name', $profile->company_name ?? $user->name)" required />
-                                <x-input-error class="mt-2" :messages="$errors->get('company_name')" />
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -57,91 +66,88 @@
                             <div class="mb-4">
                                 <x-input-label for="website" :value="__('Website URL')" />
                                 <x-text-input id="website" name="website" type="url" class="mt-1 block w-full" :value="old('website', $profile->website ?? '')" placeholder="https://www.example.com" />
-                                <x-input-error class="mt-2" :messages="$errors->get('website')" />
                             </div>
 
                             <div class="mb-4">
                                 <x-input-label for="description" :value="__('About Company')" />
-                                <textarea id="description" name="description" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Tell candidates about your company culture and mission...">{{ old('description', $profile->description ?? '') }}</textarea>
+                                <textarea id="description" name="description" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $profile->description ?? '') }}</textarea>
                             </div>
                         </div>
 
-                        {{-- 2. Compliance & Legal (NEW SECTION) --}}
+                        {{-- 2. Compliance & Legal --}}
                         <div class="p-6 bg-white shadow sm:rounded-lg">
-                            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Compliance & Legal Details</h3>
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Compliance & Legal</h3>
                             
                             {{-- PAN Details --}}
-                            <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-200">
-                                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3">PAN Details <span class="text-red-500">*</span></h4>
+                            <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <x-input-label for="pan_number" :value="__('PAN Number')" />
-                                        <x-text-input id="pan_number" name="pan_number" type="text" class="mt-1 block w-full uppercase" :value="old('pan_number', $profile->pan_number ?? '')" placeholder="ABCDE1234F" required />
-                                        <x-input-error class="mt-2" :messages="$errors->get('pan_number')" />
+                                        <x-input-label for="pan_number" :value="__('PAN Number *')" />
+                                        <x-text-input id="pan_number" name="pan_number" type="text" class="mt-1 block w-full uppercase" :value="old('pan_number', $profile->pan_number ?? '')" required />
                                     </div>
                                     <div>
-                                        <x-input-label for="pan_file" :value="__('Upload PAN Card')" />
-                                        <input type="file" name="pan_file" id="pan_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf,.jpg,.jpeg,.png">
-                                        <x-input-error class="mt-2" :messages="$errors->get('pan_file')" />
-                                        
-                                        @if($profile->pan_file_path)
-                                            <div class="mt-2 text-xs">
-                                                <span class="text-green-600 font-semibold">✓ File Uploaded.</span> 
-                                                <a href="{{ asset('storage/'.$profile->pan_file_path) }}" target="_blank" class="text-indigo-600 hover:underline ml-1">View Document</a>
-                                            </div>
+                                        <x-input-label for="pan_file" :value="__('Upload PAN *')" />
+                                        <input type="file" name="pan_file" id="pan_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                        @if(isset($profile->pan_file_path))
+                                            <a href="{{ asset('storage/'.$profile->pan_file_path) }}" target="_blank" class="text-xs text-green-600 font-bold hover:underline mt-1 block">✓ View Uploaded PAN</a>
                                         @endif
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- TAN Details --}}
-                            <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-200">
-                                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3">TAN Details (Optional)</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <x-input-label for="tan_number" :value="__('TAN Number')" />
-                                        <x-text-input id="tan_number" name="tan_number" type="text" class="mt-1 block w-full uppercase" :value="old('tan_number', $profile->tan_number ?? '')" />
-                                        <x-input-error class="mt-2" :messages="$errors->get('tan_number')" />
-                                    </div>
-                                    <div>
-                                        <x-input-label for="tan_file" :value="__('Upload TAN Cert')" />
-                                        <input type="file" name="tan_file" id="tan_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf,.jpg,.jpeg,.png">
-                                        
-                                        @if($profile->tan_file_path)
-                                            <div class="mt-2 text-xs">
-                                                <span class="text-green-600 font-semibold">✓ File Uploaded.</span> 
-                                                <a href="{{ asset('storage/'.$profile->tan_file_path) }}" target="_blank" class="text-indigo-600 hover:underline ml-1">View Document</a>
-                                            </div>
-                                        @endif
-                                    </div>
+                            {{-- Other Compliance --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <x-input-label for="tan_number" :value="__('TAN Number')" />
+                                    <x-text-input id="tan_number" name="tan_number" type="text" class="mt-1 block w-full uppercase" :value="old('tan_number', $profile->tan_number ?? '')" />
+                                </div>
+                                <div>
+                                    <x-input-label for="tan_file" :value="__('Upload TAN')" />
+                                    <input type="file" name="tan_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                    @if(isset($profile->tan_file_path)) <a href="{{ asset('storage/'.$profile->tan_file_path) }}" target="_blank" class="text-xs text-green-600 font-bold hover:underline">✓ View TAN</a> @endif
                                 </div>
                             </div>
 
-                            {{-- COI Details --}}
-                            <div class="p-4 bg-gray-50 rounded border border-gray-200">
-                                <h4 class="text-sm font-bold text-gray-700 uppercase mb-3">Certificate of Incorporation (Optional)</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <x-input-label for="coi_number" :value="__('CIN Number / Reg No.')" />
-                                        <x-text-input id="coi_number" name="coi_number" type="text" class="mt-1 block w-full uppercase" :value="old('coi_number', $profile->coi_number ?? '')" />
-                                    </div>
-                                    <div>
-                                        <x-input-label for="coi_file" :value="__('Upload COI')" />
-                                        <input type="file" name="coi_file" id="coi_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf,.jpg,.jpeg,.png">
-                                        
-                                        @if($profile->coi_file_path)
-                                            <div class="mt-2 text-xs">
-                                                <span class="text-green-600 font-semibold">✓ File Uploaded.</span> 
-                                                <a href="{{ asset('storage/'.$profile->coi_file_path) }}" target="_blank" class="text-indigo-600 hover:underline ml-1">View Document</a>
-                                            </div>
-                                        @endif
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <x-input-label for="coi_number" :value="__('CIN / COI Number')" />
+                                    <x-text-input id="coi_number" name="coi_number" type="text" class="mt-1 block w-full uppercase" :value="old('coi_number', $profile->coi_number ?? '')" />
+                                </div>
+                                <div>
+                                    <x-input-label for="coi_file" :value="__('Upload COI')" />
+                                    <input type="file" name="coi_file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                    @if(isset($profile->coi_file_path)) <a href="{{ asset('storage/'.$profile->coi_file_path) }}" target="_blank" class="text-xs text-green-600 font-bold hover:underline">✓ View COI</a> @endif
                                 </div>
                             </div>
-
                         </div>
 
-                        {{-- 3. Billing & Contact (Existing) --}}
+                        {{-- 3. OTHER DOCUMENTS (NEW SECTION) --}}
+                        <div class="p-6 bg-white shadow sm:rounded-lg">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Other Documents</h3>
+                            
+                            <div class="mb-4">
+                                <x-input-label for="other_docs" :value="__('Upload Additional Documents (Max 10 total)')" />
+                                <input type="file" name="other_docs[]" id="other_docs" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, JPG, PNG, DOCX. Max 5MB each. <strong>Note: Uploaded documents cannot be deleted.</strong></p>
+                            </div>
+
+                            @if(isset($profile->other_docs) && count($profile->other_docs) > 0)
+                                <div class="mt-4">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Uploaded Documents ({{ count($profile->other_docs) }}/10):</h4>
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        @foreach($profile->other_docs as $index => $docPath)
+                                            <li class="text-sm">
+                                                <a href="{{ asset('storage/'.$docPath) }}" target="_blank" class="text-indigo-600 hover:underline">
+                                                    Document #{{ $index + 1 }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- 4. Billing & Contact --}}
                         <div class="p-6 bg-white shadow sm:rounded-lg">
                             <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Billing & Contact</h3>
                             
@@ -183,13 +189,12 @@
                         </div>
                     </div>
 
-                    {{-- Sidebar (Existing) --}}
                     <div class="md:col-span-1 space-y-6">
                         <div class="p-6 bg-white shadow sm:rounded-lg text-center">
                             <h3 class="text-lg font-bold text-gray-900 mb-4">Company Logo</h3>
                             
                             <div class="mb-4">
-                                @if($profile->logo_path)
+                                @if(isset($profile->logo_path))
                                     <img src="{{ asset('storage/' . $profile->logo_path) }}" alt="Logo" class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-gray-100 shadow-sm mb-4">
                                 @else
                                     <div class="w-32 h-32 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-4 border-2 border-dashed border-gray-300">
@@ -209,7 +214,7 @@
 
                         <div class="p-6 bg-blue-50 border border-blue-100 rounded-lg">
                             <h4 class="font-bold text-blue-800 mb-2"><i class="fa-solid fa-circle-info mr-1"></i> Compliance Check</h4>
-                            <p class="text-sm text-blue-600">Uploading your PAN and COI documents speeds up the verification process and allows for faster job approval.</p>
+                            <p class="text-sm text-blue-600">Uploading your PAN and COI documents speeds up the verification process.</p>
                         </div>
                         
                         <div class="mt-6">

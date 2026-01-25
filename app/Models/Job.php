@@ -29,6 +29,8 @@ class Job extends Model
         'job_type',
         'description',
         'experience_level_id',
+        'min_experience',      // <--- ADD THIS
+    'max_experience',      // <--- ADD THIS
         'education_level_id',
         'application_deadline',
         'status',
@@ -43,9 +45,9 @@ class Job extends Model
         'min_age',
         'max_age',
         'gender_preference',
-        'category',      // Text column fallback
+        'category',       // Text column fallback
         'job_type_tags', 
-        'is_walkin',     
+        'is_walkin',      
         'interview_slot',
     ];
 
@@ -64,10 +66,19 @@ class Job extends Model
     }
 
     /**
-     * Get the job category.
-     * Kept as 'jobCategory' to avoid conflict with the 'category' text column.
+     * Get the job category (Original Method).
+     * Kept to ensure Partner Dashboard keeps working.
      */
     public function jobCategory(): BelongsTo
+    {
+        return $this->belongsTo(JobCategory::class, 'category_id');
+    }
+
+    /**
+     * Get the job category (Alias Method).
+     * ADDED: This supports the Admin Controller which calls 'category'.
+     */
+    public function category(): BelongsTo
     {
         return $this->belongsTo(JobCategory::class, 'category_id');
     }

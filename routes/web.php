@@ -97,7 +97,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             
             // View Single Application Details
             Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
-            
+            // --- ADD THIS NEW ROUTE ---
+            Route::get('/interviews/today', [AdminController::class, 'dailySchedule'])->name('interviews.today');
             // Critical Job Management
             Route::delete('/jobs/{job}', [AdminController::class, 'destroyJob'])->name('jobs.destroy'); 
         });
@@ -135,7 +136,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/jobs/pending', [AdminController::class, 'pendingJobs'])->name('jobs.pending');
             Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
             Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
-            
+            // *** ADD THIS NEW ROUTE ***
+            Route::get('/jobs/{job}', [AdminController::class, 'showJob'])->name('jobs.show');
             Route::post('/jobs/{job}/approve', [AdminController::class, 'approveJob'])->name('jobs.approve');
             Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
             Route::patch('/jobs/{job}/status', [AdminController::class, 'updateJobStatus'])->name('jobs.status.update'); 
@@ -168,9 +170,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         
-        // Job Management
-        Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create');
-        Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');
+        // --- Job Management (UPDATED) ---
+        // NEW ROUTES for creating and storing jobs
+        Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
+        Route::post('/jobs', [ClientController::class, 'storeJob'])->name('jobs.store');
+        
+        // Existing Routes (Don't duplicate if they exist)
+        // Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create'); // REMOVED - using ClientController
+        // Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');       // REMOVED - using ClientController
+        
         Route::patch('/jobs/{job}/status', [JobController::class, 'updateStatus'])->name('jobs.status.update'); 
         Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy'); 
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
@@ -180,6 +188,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/profile/company', [ClientProfileController::class, 'update'])->name('profile.update');
         
         Route::get('/billing', [ClientController::class, 'billing'])->name('billing');
+        
+        // --- ADD THIS NEW ROUTE ---
+        Route::get('/interviews/today', [ClientController::class, 'dailySchedule'])->name('interviews.today');
 
         // --- INTERVIEW & HIRING WORKFLOW ---
         

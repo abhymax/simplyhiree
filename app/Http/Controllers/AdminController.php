@@ -9,7 +9,7 @@ use App\Models\JobCategory;
 use App\Models\ExperienceLevel;
 use App\Models\EducationLevel;
 use App\Models\Candidate;
-use App\Models\PartnerProfile; // <--- ADDED THIS IMPORT
+use App\Models\PartnerProfile;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
@@ -22,8 +22,9 @@ use App\Notifications\ApplicationRejectedByAdmin;
 
 class AdminController extends Controller
 {
-    // ... [Previous code for index() remains unchanged] ...
-
+    /**
+     * Show the admin dashboard with stats.
+     */
     public function index()
     {
         $totalUsers = User::count();
@@ -32,16 +33,56 @@ class AdminController extends Controller
         $pendingJobs = Job::where('status', 'pending_approval')->count();
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
+        // --- NEW: Daily Pulse Data ---
+        
+        // 1. Interviews Scheduled Today
+        $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())->count();
+
+        // 2. Invoices Due (Calculation)
+        $dueInvoicesCount = 0;
+        $unpaidHires = JobApplication::where('hiring_status', 'Selected')
+            ->where('payment_status', '!=', 'paid')
+            ->whereNotNull('joining_date')
+            ->with('job.user') // Eager load client to get billable days
+            ->get();
+
+        foreach ($unpaidHires as $hire) {
+            if ($hire->job && $hire->job->user) {
+                $billableDays = $hire->job->user->billable_period_days ?? 30;
+                $invoiceDate = $hire->joining_date->copy()->addDays($billableDays);
+                
+                if ($invoiceDate->isPast() || $invoiceDate->isToday()) {
+                    $dueInvoicesCount++;
+                }
+            }
+        }
+
         return view('admin.dashboard', [
             'totalUsers' => $totalUsers,
             'totalClients' => $totalClients,
             'totalPartners' => $totalPartners,
             'pendingJobs' => $pendingJobs,
-            'pendingApplications' => $pendingApplications
+            'pendingApplications' => $pendingApplications,
+            // New Variables
+            'todayInterviews' => $todayInterviews,
+            'dueInvoicesCount' => $dueInvoicesCount
         ]);
     }
 
-    // ... [User Management functions remain unchanged] ...
+    /**
+     * Show interviews scheduled for today (Daily Pulse Detail View).
+     */
+    public function dailySchedule()
+    {
+        $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())
+            ->with(['job', 'candidate', 'candidateUser', 'job.user'])
+            ->orderBy('interview_at', 'asc')
+            ->get();
+
+        return view('admin.daily_interviews', compact('todayInterviews'));
+    }
+
+    // --- USER MANAGEMENT & ACCESS CONTROL ---
 
     public function listUsers()
     {
@@ -80,7 +121,6 @@ class AdminController extends Controller
     }
 
     // --- CLIENT MANAGEMENT ---
-    // ... [Client functions listClients, storeClient, etc. remain unchanged] ...
 
     public function listClients()
     {
@@ -128,12 +168,10 @@ class AdminController extends Controller
         return redirect()->route('admin.clients.index')->with('success', 'Client updated successfully!');
     }
 
-
-    // --- PARTNER MANAGEMENT (UPDATED) ---
+    // --- PARTNER MANAGEMENT ---
 
     public function listPartners()
     {
-        // UPDATE: Eager load 'partnerProfile' to access the type in the list
         $partners = User::role('partner')->with(['roles', 'partnerProfile'])->latest()->paginate(25);
         return view('admin.partners.index', ['users' => $partners]);
     }
@@ -149,7 +187,6 @@ class AdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            // UPDATE: Add validation for company_type
             'company_type' => ['required', 'string', 'in:Placement Agency,Freelancer,Recruiter'],
         ]);
 
@@ -162,7 +199,6 @@ class AdminController extends Controller
 
         $user->assignRole('partner');
 
-        // UPDATE: Create the profile with the selected type immediately
         PartnerProfile::create([
             'user_id' => $user->id,
             'company_type' => $request->company_type,
@@ -178,8 +214,6 @@ class AdminController extends Controller
         return view('admin.partners.show', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
 
-    // ... [Rest of the file (Job Management, Applications, Billing) remains unchanged] ...
-    
     // --- JOB MANAGEMENT ---
 
     public function createJob()
@@ -212,7 +246,9 @@ class AdminController extends Controller
             'salary' => 'nullable|string',
             'job_type' => 'required|string',
             'description' => 'required|string',
-            'experience_level_id' => 'required|exists:experience_levels,id',
+           'min_experience' => 'required|integer|min:0',
+'max_experience' => 'required|integer|gte:min_experience|max:50', // gte ensures max is >= min
+'experience_level_id' => 'nullable', // Make this optional
             'education_level_id' => 'required|exists:education_levels,id',
             'application_deadline' => 'nullable|date',
             'payout_amount' => 'nullable|numeric',
@@ -245,7 +281,9 @@ class AdminController extends Controller
             'salary' => $validated['salary'],
             'job_type' => $validated['job_type'],
             'description' => $validated['description'],
-            'experience_level_id' => $validated['experience_level_id'],
+            'min_experience' => $request->min_experience,
+    'max_experience' => $request->max_experience,
+    'experience_level_id' => null, // We are not using this anymore
             'education_level_id' => $validated['education_level_id'],
             'application_deadline' => $validated['application_deadline'],
             'payout_amount' => $validated['payout_amount'] ?? 0,
@@ -270,7 +308,14 @@ class AdminController extends Controller
 
         return redirect()->route('admin.jobs.pending')->with('success', 'Job created successfully.');
     }
-
+/**
+     * Show details of a specific job (for approval review).
+     */
+    public function showJob(Job $job)
+    {
+        $job->load(['user', 'experienceLevel', 'educationLevel', 'category']);
+        return view('admin.jobs.show', compact('job'));
+    }
     public function pendingJobs()
     {
         $pendingJobs = Job::where('status', 'pending_approval')
@@ -352,7 +397,6 @@ class AdminController extends Controller
     {
         $query = JobApplication::with(['job', 'candidate', 'candidateUser', 'candidate.partner']);
 
-        // 1. Filter by Search (Candidate Name, Email, Job Title)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -367,17 +411,14 @@ class AdminController extends Controller
             });
         }
 
-        // 2. Filter by Status
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
-        // 3. Filter by Specific Job
         if ($request->filled('job_id')) {
             $query->where('job_id', $request->input('job_id'));
         }
         
-        // 4. Filter by Partner
         if ($request->filled('partner_id')) {
              $query->whereHas('candidate', function($q) use ($request) {
                 $q->where('partner_id', $request->input('partner_id'));
@@ -386,7 +427,6 @@ class AdminController extends Controller
 
         $applications = $query->latest()->paginate(20)->withQueryString();
         
-        // Fetch data for dropdowns
         $jobs = Job::select('id', 'title')->orderBy('title')->get();
         $partners = User::role('partner')->select('id', 'name')->orderBy('name')->get();
 
@@ -423,7 +463,6 @@ class AdminController extends Controller
 
     public function jobApplicantsReport(\App\Models\Job $job)
     {
-        // Load the applicants with necessary relationships
         $applications = $job->jobApplications()
             ->with(['candidate', 'candidate.partner'])
             ->latest()

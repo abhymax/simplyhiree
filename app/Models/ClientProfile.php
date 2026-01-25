@@ -25,13 +25,20 @@ class ClientProfile extends Model
         'city',
         'state',
         'pincode',
-        // --- NEW FIELDS ---
+        // Compliance Fields
         'pan_number',
         'pan_file_path',
         'tan_number',
         'tan_file_path',
         'coi_number',
         'coi_file_path',
+        // NEW FIELD
+        'other_docs', 
+    ];
+
+    // Automatically convert JSON to Array
+    protected $casts = [
+        'other_docs' => 'array',
     ];
 
     public function user(): BelongsTo

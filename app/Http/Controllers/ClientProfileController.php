@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ClientProfile;
-use Illuminate\Validation\Rule; // Import Rule
+use Illuminate\Validation\Rule;
 
 class ClientProfileController extends Controller
 {
@@ -27,8 +27,7 @@ class ClientProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        // Load existing profile to check for existing files
-        $profile = $user->clientProfile; 
+        $profile = $user->clientProfile; // Get existing profile for reference
 
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
@@ -45,41 +44,55 @@ class ClientProfileController extends Controller
             'pincode' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             
-            // --- NEW VALIDATIONS ---
-            'pan_number' => 'required|string|max:20', // Mandatory
+            // Compliance Validations
+            'pan_number' => 'required|string|max:20',
             'pan_file' => [
-                // Mandatory only if not already uploaded
                 function ($attribute, $value, $fail) use ($profile) {
-                    if (empty($profile->pan_file_path) && empty($value)) {
+                    if ((!$profile || empty($profile->pan_file_path)) && empty($value)) {
                         $fail('The PAN document is required.');
                     }
                 },
                 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'
             ],
-            
             'tan_number' => 'nullable|string|max:20',
             'tan_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            
             'coi_number' => 'nullable|string|max:50',
             'coi_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+
+            // NEW: Other Documents Validation
+            'other_docs' => 'nullable|array',
+            'other_docs.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // 5MB max per file
         ]);
 
-        // Helper function to handle uploads
+        // --- Handle Other Documents (Append Logic) ---
+        $currentDocs = $profile ? ($profile->other_docs ?? []) : [];
+        $newDocsCount = $request->hasFile('other_docs') ? count($request->file('other_docs')) : 0;
+
+        if (count($currentDocs) + $newDocsCount > 10) {
+            return back()->withErrors(['other_docs' => 'You cannot upload more than 10 documents in total. You currently have ' . count($currentDocs) . ' uploaded.']);
+        }
+
+        if ($request->hasFile('other_docs')) {
+            foreach ($request->file('other_docs') as $file) {
+                $path = $file->store('client_other_docs', 'public');
+                $currentDocs[] = $path; // Append new path to array
+            }
+        }
+        $validated['other_docs'] = $currentDocs; // Save the updated list
+
+        // --- Handle Standard File Uploads ---
         $handleUpload = function ($fileInputName, $dbColumnName, $folder) use ($request, $user, &$validated) {
             if ($request->hasFile($fileInputName)) {
-                // Delete old file
                 if ($user->clientProfile && $user->clientProfile->$dbColumnName) {
                     if (Storage::disk('public')->exists($user->clientProfile->$dbColumnName)) {
                         Storage::disk('public')->delete($user->clientProfile->$dbColumnName);
                     }
                 }
-                // Store new
                 $path = $request->file($fileInputName)->store($folder, 'public');
                 $validated[$dbColumnName] = $path;
             }
         };
 
-        // Process Uploads
         $handleUpload('logo', 'logo_path', 'company_logos');
         $handleUpload('pan_file', 'pan_file_path', 'compliance_docs');
         $handleUpload('tan_file', 'tan_file_path', 'compliance_docs');
@@ -91,9 +104,8 @@ class ClientProfileController extends Controller
             $validated
         );
 
-        // Optional: Update Main User Name
         $user->update(['name' => $validated['company_name']]);
 
-        return redirect()->back()->with('success', 'Company profile and compliance details updated successfully.');
+        return redirect()->back()->with('success', 'Company profile updated successfully.');
     }
 }

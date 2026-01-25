@@ -45,7 +45,12 @@
                                         <span class="text-xs">{{ $job->created_at->format('d M, Y') }}</span>
                                     </td>
                                     <td class="py-4 px-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                        
+                                        {{-- NEW: View Details Link --}}
+                                        <a href="{{ route('admin.jobs.show', $job) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">View</a>
+
                                         <a href="{{ route('admin.jobs.manage', $job) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold">Manage</a>
+                                        
                                         <form action="{{ route('admin.jobs.approve', $job) }}" method="POST" class="inline space-x-2">
                                             @csrf
                                             <input type="number" name="payout_amount" placeholder="Payout Amount" class="w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" required>

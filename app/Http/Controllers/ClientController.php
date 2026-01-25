@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\User;
+// Added missing models for Job Creation
+use App\Models\JobCategory; 
+use App\Models\EducationLevel;
+// Notifications
 use App\Notifications\CandidateRejectedByClient;
 use App\Notifications\CandidateSelected;
 use App\Notifications\InterviewScheduled;
@@ -25,23 +29,39 @@ class ClientController extends Controller
     {
         $client = Auth::user();
         
-        // Fetch jobs with eager loaded relationships for the dashboard list
         $jobs = Job::where('user_id', $client->id)
-                    ->with(['experienceLevel', 'educationLevel']) 
+                    ->with(['educationLevel']) // Removed experienceLevel as we use min/max now
                     ->latest()
                     ->get();
         
-        // Calculate Stats
         $totalJobs = $jobs->count();
         $activeJobs = $jobs->where('status', 'approved')->count();
-        
-        // Count total applications across all client's jobs
         $totalApplicants = JobApplication::whereIn('job_id', $jobs->pluck('id'))->count();
         
-        // Count total hires (candidates marked as 'Selected' or 'Joined')
         $totalHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
                                 ->whereIn('hiring_status', ['Selected', 'Joined'])
                                 ->count();
+
+        // --- Daily Pulse Data ---
+        $todayInterviews = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+            ->whereDate('interview_at', Carbon::today())
+            ->count();
+
+        $dueInvoicesCount = 0;
+        $myHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+            ->where('hiring_status', 'Selected')
+            ->where('payment_status', '!=', 'paid')
+            ->whereNotNull('joining_date')
+            ->get();
+
+        $billableDays = $client->billable_period_days ?? 30;
+
+        foreach ($myHires as $hire) {
+            $invoiceDate = $hire->joining_date->copy()->addDays($billableDays);
+            if ($invoiceDate->isPast() || $invoiceDate->isToday()) {
+                $dueInvoicesCount++;
+            }
+        }
 
         return view('client.dashboard', [
             'client' => $client,
@@ -49,10 +69,97 @@ class ClientController extends Controller
             'totalJobs' => $totalJobs,
             'activeJobs' => $activeJobs,
             'totalApplicants' => $totalApplicants,
-            'totalHires' => $totalHires
+            'totalHires' => $totalHires,
+            'todayInterviews' => $todayInterviews,
+            'dueInvoicesCount' => $dueInvoicesCount
         ]);
     }
+
+    // --- NEW: JOB CREATION METHODS ---
+
+    /**
+     * Show the form to create a new job.
+     */
+    public function createJob()
+    {
+        $categories = JobCategory::all();
+        $educationLevels = EducationLevel::all();
+        // Note: ExperienceLevels are no longer needed for the form
+        
+        return view('client.jobs.create', compact('categories', 'educationLevels'));
+    }
+
+    /**
+     * Store the newly created job.
+     */
+    public function storeJob(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|exists:job_categories,id',
+            'location' => 'required|string',
+            'salary' => 'nullable|string',
+            'job_type' => 'required|string',
+            'description' => 'required|string',
+            
+            // FIX: Validating manual experience range
+            'min_experience' => 'required|integer|min:0',
+            'max_experience' => 'required|integer|gte:min_experience|max:50',
+            
+            'education_level_id' => 'required|exists:education_levels,id',
+            'application_deadline' => 'nullable|date',
+            'skills_required' => 'nullable|string',
+            'company_website' => 'nullable|url',
+            'openings' => 'nullable|integer|min:1',
+        ]);
+
+        Job::create([
+            'user_id' => Auth::id(), // Automatically assign to logged-in client
+            'company_name' => Auth::user()->name, // Default to client name
+            'status' => 'pending_approval', // Jobs posted by clients need approval
+            'title' => $validated['title'],
+            'category_id' => $validated['category_id'],
+            'location' => $validated['location'],
+            'salary' => $validated['salary'],
+            'job_type' => $validated['job_type'],
+            'description' => $validated['description'],
+            
+            // FIX: Saving manual experience
+            'min_experience' => $validated['min_experience'],
+            'max_experience' => $validated['max_experience'],
+            'experience_level_id' => null, // No longer used
+            
+            'education_level_id' => $validated['education_level_id'],
+            'application_deadline' => $validated['application_deadline'],
+            'skills_required' => $request->skills_required,
+            'company_website' => $request->company_website,
+            'openings' => $request->openings ?? 1,
+            'partner_visibility' => 'all', // Default visibility
+        ]);
+
+        return redirect()->route('client.dashboard')->with('success', 'Job posted successfully! Waiting for admin approval.');
+    }
+
+    // ---------------------------------
     
+    /**
+     * Show interviews scheduled for today.
+     */
+    public function dailySchedule()
+    {
+        $client = Auth::user();
+        
+        $todayInterviews = JobApplication::whereHas('job', function($q) use ($client){
+                $q->where('user_id', $client->id);
+            })
+            ->whereDate('interview_at', Carbon::today())
+            ->with(['job', 'candidate', 'candidateUser'])
+            ->orderBy('interview_at', 'asc')
+            ->get();
+
+        return view('client.daily_interviews', compact('todayInterviews'));
+    }
+
     /**
      * Show the applicants for a specific job.
      */
@@ -66,19 +173,7 @@ class ClientController extends Controller
                                             ->where('status', 'Approved')
                                             ->with(['candidate', 'candidateUser'])
                                             ->latest()
-                                            ->paginate(20)
-                                            ->through(function ($app) {
-                                                if ($app->interview_at) {
-                                                    $app->interview_at = Carbon::parse($app->interview_at);
-                                                }
-                                                if ($app->joining_date) {
-                                                    $app->joining_date = Carbon::parse($app->joining_date);
-                                                }
-                                                if ($app->left_at) {
-                                                    $app->left_at = Carbon::parse($app->left_at);
-                                                }
-                                                return $app;
-                                            });
+                                            ->paginate(20);
 
         return view('client.jobs.applicants', [
             'job' => $job,
@@ -86,9 +181,6 @@ class ClientController extends Controller
         ]);
     }
     
-    /**
-     * Client rejects a candidate.
-     */
     public function rejectApplicant(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -101,9 +193,6 @@ class ClientController extends Controller
 
     // --- INTERVIEW SCHEDULING ---
 
-    /**
-     * Show the form to schedule an interview (for new status).
-     */
     public function showInterviewForm(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -113,9 +202,6 @@ class ClientController extends Controller
         return view('client.jobs.interview', ['application' => $application, 'isEdit' => false]);
     }
 
-    /**
-     * Store the interview details (POST/NEW).
-     */
     public function scheduleInterview(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -136,9 +222,6 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
     }
     
-    /**
-     * Show the form to edit existing interview details.
-     */
     public function editInterviewDetails(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -148,9 +231,6 @@ class ClientController extends Controller
         return view('client.jobs.interview', ['application' => $application, 'isEdit' => true]);
     }
 
-    /**
-     * Update the existing interview details.
-     */
     public function updateInterviewDetails(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -169,9 +249,6 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview details updated successfully!');
     }
 
-    /**
-     * Mark a candidate as 'Interviewed'.
-     */
     public function markAsAppeared(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -181,9 +258,6 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'Candidate marked as \'Interviewed\'.');
     }
 
-    /**
-     * Mark a candidate as 'No-Show'.
-     */
     public function markAsNoShow(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -195,9 +269,6 @@ class ClientController extends Controller
     
     // --- SELECTION ---
 
-    /**
-     * Show the form to select a candidate (for new status).
-     */
     public function showSelectForm(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -207,9 +278,6 @@ class ClientController extends Controller
         return view('client.jobs.select', ['application' => $application, 'isEdit' => false]);
     }
 
-    /**
-     * Store the final selection and joining date (POST/NEW).
-     */
     public function storeSelection(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -230,10 +298,6 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
     }
 
-    /**
-     * Show the form to edit existing selection details.
-     * FIXED: Renamed from editSelectionDetails to editSelection to match Route.
-     */
     public function editSelection(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -243,9 +307,6 @@ class ClientController extends Controller
         return view('client.jobs.select', ['application' => $application, 'isEdit' => true]);
     }
 
-    /**
-     * Update the existing selection and joining date.
-     */
     public function updateSelectionDetails(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -264,9 +325,6 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Selection details updated successfully!');
     }
 
-    /**
-     * Mark a candidate as 'Joined'.
-     */
     public function markAsJoined(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -277,9 +335,6 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'Candidate marked as \'Joined\'.');
     }
 
-    /**
-     * Mark a candidate as 'Did Not Join'.
-     */
     public function markAsNotJoined(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -290,9 +345,6 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'Candidate marked as \'Did Not Join\'.');
     }
 
-    /**
-     * Show the form to mark a candidate as 'Left'.
-     */
     public function showLeftForm(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -302,9 +354,6 @@ class ClientController extends Controller
         return view('client.jobs.left', ['application' => $application]);
     }
 
-    /**
-     * Store the date the candidate 'Left'.
-     */
     public function markAsLeft(Request $request, JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -326,14 +375,10 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate marked as \'Left\'.');
     }
 
-    /**
-     * Show the billing/invoicing status for this client's hires.
-     */
     public function billing()
     {
         $client = Auth::user();
 
-        // 1. Get all successful hires for this client
         $hires = JobApplication::where('hiring_status', 'Selected')
             ->whereHas('job', function($q) use ($client) {
                 $q->where('user_id', $client->id);
@@ -344,16 +389,14 @@ class ClientController extends Controller
         $billingData = [];
 
         foreach ($hires as $hire) {
-            // Safety check for missing data
             if (empty($hire->joining_date)) {
                 continue;
             }
 
             $joiningDate = Carbon::parse($hire->joining_date);
-            $billableDays = $client->billable_period_days ?? 30; // Default to 30 if null
+            $billableDays = $client->billable_period_days ?? 30; 
             $invoiceDate = $joiningDate->copy()->addDays($billableDays);
             
-            // Status Logic
             $isDue = $invoiceDate->isPast();
             
             if ($hire->payment_status === 'paid') {
@@ -363,12 +406,12 @@ class ClientController extends Controller
                 $status = 'Due for Payment';
                 $color = 'text-red-600 bg-red-100';
             } else {
-                $status = 'Maturing'; // Still in cooling period
+                $status = 'Maturing';
                 $color = 'text-yellow-600 bg-yellow-100';
             }
 
             $billingData[] = (object) [
-                'candidate_name' => $hire->candidate_name, // Uses the Accessor from JobApplication model
+                'candidate_name' => $hire->candidate_name,
                 'job_title' => $hire->job->title,
                 'joining_date' => $joiningDate->format('M d, Y'),
                 'amount' => $hire->job->payout_amount ? '₹' . number_format($hire->job->payout_amount) : 'N/A',
@@ -379,24 +422,17 @@ class ClientController extends Controller
             ];
         }
 
-        // Sort by Invoice Date (Newest first)
         $billingData = collect($billingData)->sortByDesc('invoice_date');
-
         return view('client.billing.index', compact('billingData'));
     }
 
-    /**
-     * Reusable function to notify admin and partner.
-     */
     private function notifyAdminAndPartner($notification, JobApplication $application)
     {
         $application->load(['job.user', 'candidate.partner', 'candidateUser']);
         
-        // 1. Notify all Superadmins
         $admins = User::role('Superadmin')->get();
         Notification::send($admins, $notification);
 
-        // 2. Notify the Partner (if one exists for this candidate)
         if ($application->candidate && $application->candidate->partner) {
             $partner = $application->candidate->partner;
             $partner->notify($notification);

@@ -1,14 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Create New Job / Vacancy') }}
+            {{ __('Post a New Job') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             
-            {{-- Error Display Section --}}
             @if ($errors->any())
                 <div class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm">
                     <p class="font-bold">Please fix the following errors:</p>
@@ -22,40 +21,14 @@
 
             <div class="bg-white shadow rounded-lg p-6">
                 
-                <form action="{{ route('admin.jobs.store') }}" method="POST" x-data="{ visibility: 'all', clientMode: 'simplyhiree' }">
+                <form action="{{ route('client.jobs.store') }}" method="POST">
                     @csrf
 
-                    {{-- 1. Client / Company Details --}}
-                    <div class="mb-6 border-b pb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Posting Details</h3>
-                        
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Post On Behalf Of</label>
-                            <select name="client_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" x-model="clientMode">
-                                <option value="">Simplyhiree (Internal)</option>
-                                @foreach($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->name }} (Client)</option>
-                                @endforeach
-                            </select>
-                            @error('client_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div x-show="clientMode == ''" class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Display Company Name</label>
-                            <input type="text" name="company_name" value="Simplyhiree" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Company Website (Optional)</label>
-                            <input type="url" name="company_website" value="{{ old('company_website') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-                    </div>
-
-                    {{-- 2. Job Specification --}}
+                    {{-- 1. Job Specification --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Job Title <span class="text-red-500">*</span></label>
-                            <input type="text" name="title" value="{{ old('title') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="text" name="title" value="{{ old('title') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g. Senior Accountant">
                             @error('title') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
                         
@@ -93,7 +66,7 @@
                             <input type="text" name="salary" value="{{ old('salary') }}" placeholder="e.g. 5-7 LPA" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
 
-                        {{-- FIX: REPLACED DROPDOWN WITH MANUAL EXPERIENCE RANGE --}}
+                        {{-- NEW: MANUAL EXPERIENCE RANGE --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Experience Range (Years) <span class="text-red-500">*</span></label>
                             <div class="flex space-x-2">
@@ -120,7 +93,6 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Application Deadline</label>
                             <input type="date" name="application_deadline" value="{{ old('application_deadline') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" min="{{ date('Y-m-d') }}">
-                            @error('application_deadline') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
@@ -140,66 +112,17 @@
                         <input type="text" name="skills_required" value="{{ old('skills_required') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
 
-                    {{-- 3. Commercials --}}
-                    <div class="mb-6 border-b border-t py-6 bg-gray-50 -mx-6 px-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Payout Settings</h3>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Payout Amount (₹)</label>
-                                <input type="number" name="payout_amount" value="{{ old('payout_amount') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Maturity Period (Days)</label>
-                                <input type="number" name="minimum_stay_days" value="{{ old('minimum_stay_days', 30) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- 4. Visibility & Access --}}
                     <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Partner Visibility</h3>
-                        
-                        <div class="space-y-4">
-                            <label class="flex items-center">
-                                <input type="radio" name="partner_visibility" value="all" x-model="visibility" class="text-indigo-600 focus:ring-indigo-500">
-                                <span class="ml-2 text-gray-700">Visible to All Active Partners</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="partner_visibility" value="selected" x-model="visibility" class="text-indigo-600 focus:ring-indigo-500">
-                                <span class="ml-2 text-gray-700">Restrict to Specific Partners</span>
-                            </label>
-                        </div>
-
-                        <div x-show="visibility === 'selected'" class="mt-4 p-4 bg-gray-50 rounded border">
-                            <p class="text-sm font-bold text-gray-700 mb-2">Select Partners:</p>
-                            <div class="h-40 overflow-y-auto grid grid-cols-2 gap-2">
-                                @foreach($partners as $partner)
-                                    <label class="flex items-center space-x-2">
-                                        <input type="checkbox" name="allowed_partners[]" value="{{ $partner->id }}" class="rounded text-indigo-600 focus:ring-indigo-500">
-                                        <span class="text-sm">{{ $partner->name }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                            @error('allowed_partners') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-
-                    <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Restricted Candidates</h3>
-                        <p class="text-sm text-gray-500 mb-2">Select candidates who should NOT see this job.</p>
-                        <div class="h-40 overflow-y-auto p-4 bg-gray-50 rounded border">
-                            @foreach($candidates as $candidate)
-                                <label class="flex items-center space-x-2 mb-1">
-                                    <input type="checkbox" name="restricted_candidates[]" value="{{ $candidate->id }}" class="rounded text-red-600 focus:ring-red-500">
-                                    <span class="text-sm">{{ $candidate->first_name }} {{ $candidate->last_name }} ({{ $candidate->email }})</span>
-                                </label>
-                            @endforeach
-                        </div>
+                        <label class="block text-sm font-medium text-gray-700">Company Website (Optional)</label>
+                        <input type="url" name="company_website" value="{{ old('company_website') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
 
                     <div class="flex justify-end">
+                        <a href="{{ route('client.dashboard') }}" class="bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded shadow hover:bg-gray-300 transition mr-4">
+                            Cancel
+                        </a>
                         <button type="submit" class="bg-blue-600 text-white font-bold py-3 px-8 rounded shadow hover:bg-blue-700 transition">
-                            Create Job
+                            Post Job
                         </button>
                     </div>
 

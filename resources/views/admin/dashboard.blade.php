@@ -20,9 +20,42 @@
                 </div>
             </div>
 
+            {{-- DAILY PULSE CARD (Fixed Colors: Changed slate-800 to gray-800) --}}
+            <div class="mb-8 bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 text-white shadow-xl border-l-8 border-yellow-400">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-white/10 rounded-full">
+                            <i class="fa-solid fa-heart-pulse text-2xl text-yellow-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Daily Pulse</h3>
+                            <p class="text-gray-300 text-sm">Real-time updates and priority actions for today.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4 w-full md:w-auto">
+                        <div class="flex-1 md:flex-none bg-white/10 rounded-xl p-4 min-w-[160px] text-center border border-white/5 hover:bg-white/20 transition">
+                            <div class="text-3xl font-bold text-white">{{ $todayInterviews }}</div>
+                            <div class="text-xs text-gray-300 uppercase tracking-wide font-semibold mt-1">Interviews Today</div>
+                            @if($todayInterviews > 0)
+                                <a href="{{ route('admin.interviews.today') }}" class="text-xs text-yellow-400 hover:text-yellow-300 underline mt-2 block">View Details</a>
+                            @endif
+                        </div>
+
+                        <div class="flex-1 md:flex-none bg-white/10 rounded-xl p-4 min-w-[160px] text-center border border-white/5 hover:bg-white/20 transition">
+                            <div class="text-3xl font-bold {{ $dueInvoicesCount > 0 ? 'text-red-400' : 'text-white' }}">{{ $dueInvoicesCount }}</div>
+                            <div class="text-xs text-gray-300 uppercase tracking-wide font-semibold mt-1">Invoices Due</div>
+                            @if($dueInvoicesCount > 0)
+                                <a href="{{ route('admin.billing.index') }}" class="text-xs text-yellow-400 hover:text-yellow-300 underline mt-2 block">Raise Invoices</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 
-                {{-- 1. POST JOB: Requires 'view_pending_jobs' or 'manage_clients' --}}
+                {{-- 1. POST JOB --}}
                 @can('view_pending_jobs')
                 <a href="{{ route('admin.jobs.create') }}" class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
@@ -41,7 +74,7 @@
                 </a>
                 @endcan
 
-                {{-- 2. ADD CLIENT: Requires 'manage_clients' --}}
+                {{-- 2. ADD CLIENT --}}
                 @can('manage_clients')
                 <a href="{{ route('admin.clients.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-emerald-100 hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
@@ -57,7 +90,7 @@
                 </a>
                 @endcan
 
-                {{-- 3. ADD PARTNER: Requires 'view_partner_data' --}}
+                {{-- 3. ADD PARTNER --}}
                 @can('view_partner_data')
                 <a href="{{ route('admin.partners.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-purple-100 hover:shadow-purple-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
@@ -73,7 +106,7 @@
                 </a>
                 @endcan
 
-                {{-- 4. MANAGE SUB-ADMINS: Requires 'manage_sub_admins' --}}
+                {{-- 4. MANAGE SUB-ADMINS --}}
                 @can('manage_sub_admins')
                 <a href="{{ route('admin.sub_admins.index') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-100 hover:shadow-blue-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
@@ -89,7 +122,7 @@
                 </a>
                 @endcan
 
-                {{-- 5. REPORTS: Requires 'view_billing_data' (assuming billing covers reports) --}}
+                {{-- 5. REPORTS --}}
                 @can('view_billing_data')
                 <a href="{{ route('admin.reports.jobs') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-teal-100 hover:shadow-teal-100/50 transition-all duration-300 transform hover:-translate-y-1">
                     <div class="flex items-center justify-between">
@@ -191,7 +224,7 @@
 
             </div>
             
-            {{-- CHARTS: Restricted to Managers with Reporting access or Superadmins --}}
+            {{-- CHARTS --}}
             @if(auth()->user()->can('view_billing_data') || auth()->user()->hasRole('Superadmin'))
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -233,17 +266,13 @@
         </div>
     </div>
     
-    {{-- SCRIPTS REMAIN UNCHANGED --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Data from controller
             const totalClients = {{ $totalClients }};
             const totalPartners = {{ $totalPartners }};
-            // Calculate candidates: Total Users minus Clients and Partners
             const totalCandidates = {{ $totalUsers }} - (totalClients + totalPartners);
 
-            // 1. Distribution Chart (Doughnut)
             const ctxDist = document.getElementById('userDistChart');
             if (ctxDist) {
                 new Chart(ctxDist.getContext('2d'), {
@@ -257,16 +286,10 @@
                             hoverOffset: 4
                         }]
                     },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false,
-                        cutout: '75%', 
-                        plugins: { legend: { display: false } } 
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
                 });
             }
 
-            // 2. Growth Chart (Line)
             const ctxGrowth = document.getElementById('growthChart');
             if (ctxGrowth) {
                 const ctx = ctxGrowth.getContext('2d');
@@ -280,26 +303,13 @@
                         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                         datasets: [{
                             label: 'New Activity',
-                            data: [12, 19, 15, 25, 22, 30, 45], // Static data for demo
+                            data: [12, 19, 15, 25, 22, 30, 45],
                             borderColor: '#3b82f6',
                             backgroundColor: gradient,
-                            fill: true, 
-                            tension: 0.4, 
-                            pointRadius: 4,
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: '#3b82f6',
-                            pointBorderWidth: 2
+                            fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointBorderWidth: 2
                         }]
                     },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } }, 
-                        scales: { 
-                            y: { beginAtZero: true, grid: { borderDash: [2, 4], drawBorder: false } }, 
-                            x: { grid: { display: false, drawBorder: false } } 
-                        } 
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4], drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } }
                 });
             }
         });
