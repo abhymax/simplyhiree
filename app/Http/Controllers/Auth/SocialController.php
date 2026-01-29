@@ -32,7 +32,7 @@ class SocialController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')->stateless()->user();
 
             // 1. Check if user already exists
             $user = User::where('google_id', $googleUser->id)
@@ -87,6 +87,7 @@ class SocialController extends Controller
             return redirect()->route('candidate.dashboard');
 
         } catch (\Exception $e) {
+            dd($e->getMessage()); // <--- Run this FIRST to see the error on screen
             return redirect()->route('login')->with('error', 'Google Login failed. Please try again.');
         }
     }
