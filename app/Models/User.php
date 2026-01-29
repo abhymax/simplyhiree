@@ -18,6 +18,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id', // Add this
         'billable_period_days',
         'status',
     ];

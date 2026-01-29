@@ -12,6 +12,7 @@ use App\Http\Controllers\PartnerProfileController;
 use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\ClientProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\SocialController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,7 +72,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/apply/{job}', [JobController::class, 'apply'])->middleware('role:candidate')->name('jobs.apply');
-
+    
+    Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
 
     // ==========================================
     //        ADMIN PANEL ROUTES (Shared)
