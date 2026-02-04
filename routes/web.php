@@ -27,6 +27,10 @@ Route::get('/', function () {
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show'); 
 
+// --- GOOGLE AUTH ROUTES (Moved here so they are accessible to guests) ---
+Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
+
 // Guest-only registration routes
 Route::middleware('guest')->group(function () {
     Route::get('/register/partner', [RegisteredUserController::class, 'showPartnerRegistrationForm'])->name('register.partner');
@@ -73,9 +77,6 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/apply/{job}', [JobController::class, 'apply'])->middleware('role:candidate')->name('jobs.apply');
     
-    Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('google.login');
-Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
-
     // ==========================================
     //        ADMIN PANEL ROUTES (Shared)
     // ==========================================
