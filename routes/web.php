@@ -23,7 +23,14 @@ use App\Http\Controllers\Auth\SocialController;
 // Public routes
 Route::get('/', function () {
     return view('landing');
-});
+})->name('home'); // Named 'home' for the logo link
+
+// --- NEW STATIC PAGES ---
+Route::view('/about', 'pages.about')->name('about');
+Route::view('/contact', 'pages.contact')->name('contact');
+Route::view('/terms', 'pages.terms')->name('terms');
+Route::view('/privacy', 'pages.privacy')->name('privacy');
+
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show'); 
 
