@@ -2,7 +2,6 @@
     {{-- FULL PAGE DEEP BLUE WRAPPER --}}
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
         
-        {{-- Background Glows --}}
         <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
         <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
 
@@ -19,11 +18,6 @@
                 </div>
                 
                 <div class="mt-4 md:mt-0 flex items-center gap-4">
-                    <div class="bg-purple-500/20 border border-purple-500/30 text-white px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-3">
-                        <span class="text-purple-300 text-xs font-bold uppercase tracking-wider">Total Partners</span>
-                        <span class="text-2xl font-black">{{ $users->total() }}</span>
-                    </div>
-                    
                     <a href="{{ route('admin.partners.create') }}" class="inline-flex items-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-1">
                         <i class="fa-solid fa-user-plus mr-2"></i> New Partner
                     </a>
@@ -104,37 +98,32 @@
                                         </div>
                                     </td>
 
-                                    {{-- Type --}}
+                                    {{-- Type (NULL SAFE) --}}
                                     <td class="px-6 py-5">
-                                        @php $type = $user->partnerProfile->company_type ?? 'Unknown'; @endphp
+                                        @php $type = optional($user->partnerProfile)->company_type ?? 'Unknown'; @endphp
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                                             {{ $type }}
                                         </span>
                                     </td>
 
-                                    {{-- Status --}}
                                     <td class="px-6 py-5">
                                         @if($user->status === 'active')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-xs font-bold shadow-lg shadow-emerald-500/10"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active</span>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active</span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/50 text-xs font-bold"><i class="fa-solid fa-ban"></i> Restricted</span>
                                         @endif
                                     </td>
 
-                                    {{-- Date --}}
                                     <td class="px-6 py-5 text-slate-300 font-medium">{{ $user->created_at->format('M d, Y') }}</td>
 
-                                    {{-- Actions --}}
                                     <td class="px-6 py-5 text-right" x-data>
                                         <div class="flex justify-end items-center gap-2">
                                             <a href="{{ route('admin.partners.show', $user->id) }}" class="h-9 w-9 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white transition flex items-center justify-center border border-purple-500/30 shadow-md" title="View"><i class="fa-solid fa-eye"></i></a>
                                             
-                                            {{-- EDIT BUTTON --}}
                                             <a href="{{ route('admin.partners.edit', $user->id) }}" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Edit"><i class="fa-solid fa-pen"></i></a>
 
                                             <button @click="$dispatch('open-modal', 'pwd-p-{{ $user->id }}')" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Password"><i class="fa-solid fa-key"></i></button>
 
-                                            {{-- Status Toggle --}}
                                             @if($user->status !== 'active')
                                                 <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">@csrf @method('PATCH')<input type="hidden" name="status" value="active"><button class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-emerald-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-check"></i></button></form>
                                             @else

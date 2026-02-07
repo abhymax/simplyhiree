@@ -338,7 +338,7 @@ class AdminController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // 4. Type Filter (Freelancer vs Agency)
+        // 4. Type Filter (Safe Query using whereHas)
         if ($request->filled('type')) {
             $query->whereHas('partnerProfile', function($q) use ($request) {
                 $q->where('company_type', $request->input('type'));
@@ -384,8 +384,10 @@ class AdminController extends Controller
     public function editPartner(User $user)
     {
         if (!$user->hasRole('partner')) abort(404);
-        // Load existing profile data
+        
+        // Load existing profile data (or empty relation if none)
         $user->load('partnerProfile');
+        
         return view('admin.partners.edit', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
 
