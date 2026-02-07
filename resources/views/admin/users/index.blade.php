@@ -17,7 +17,7 @@
                     <p class="text-blue-200 mt-1 text-lg font-medium">Manage registered job seekers.</p>
                 </div>
                 
-                {{-- Quick Stats --}}
+                {{-- Quick Stats (FIXED TO MATCH CONTROLLER) --}}
                 <div class="mt-4 md:mt-0 flex gap-3">
                     <div class="bg-white/5 border border-white/10 px-5 py-2 rounded-xl text-center">
                         <span class="block text-xs text-slate-400 font-bold uppercase">Total</span>
@@ -34,15 +34,9 @@
                 </div>
             </div>
 
-            {{-- ALERTS --}}
             @if(session('success'))
                 <div class="mb-8 px-6 py-4 bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 rounded-2xl font-bold flex items-center shadow-lg backdrop-blur-md">
                     <i class="fa-solid fa-circle-check mr-3 text-2xl"></i> {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="mb-8 px-6 py-4 bg-rose-500/20 border border-rose-500/50 text-rose-300 rounded-2xl font-bold flex items-center shadow-lg backdrop-blur-md">
-                    <i class="fa-solid fa-circle-xmark mr-3 text-2xl"></i> {{ session('error') }}
                 </div>
             @endif
 
@@ -68,7 +62,6 @@
                                 <option value="" class="text-gray-400">All Status</option>
                                 <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                                 <option value="restricted" {{ request('status') == 'restricted' ? 'selected' : '' }}>Restricted</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             </select>
                         </div>
 

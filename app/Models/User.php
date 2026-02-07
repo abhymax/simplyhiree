@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Casts\Attribute; // <--- Import Attribute
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
@@ -18,7 +18,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'google_id', // Add this
+        'google_id', 
         'billable_period_days',
         'status',
     ];
@@ -36,10 +36,6 @@ class User extends Authenticatable
         ];
     }
     
-    // --- NEW ACCESSOR FOR CLIENT ID (Starts SH1000) ---
-    /**
-     * Get the formatted Client ID (e.g., SH1005).
-     */
     protected function clientCode(): Attribute
     {
         return Attribute::make(
@@ -52,13 +48,17 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
+    // *** THIS FUNCTION WAS MISSING. IT IS REQUIRED. ***
+    public function candidate(): HasOne
+    {
+        return $this->hasOne(Candidate::class);
+    }
+
     public function partnerProfile(): HasOne
     {
         return $this->hasOne(PartnerProfile::class);
     }
     
-    // ... [Rest of the relationships remain unchanged] ...
-
     public function assignedClients(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'client_manager', 'manager_id', 'client_id')

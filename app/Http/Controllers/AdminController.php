@@ -23,9 +23,6 @@ use App\Notifications\ApplicationRejectedByAdmin;
 
 class AdminController extends Controller
 {
-    /**
-     * Show the admin dashboard with stats.
-     */
     public function index()
     {
         $totalUsers = User::count();
@@ -34,7 +31,7 @@ class AdminController extends Controller
         $pendingJobs = Job::where('status', 'pending_approval')->count();
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
-        // --- Daily Pulse Data ---
+        // --- Daily Pulse ---
         $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())->count();
 
         $dueInvoicesCount = 0;
@@ -79,10 +76,10 @@ class AdminController extends Controller
 
     public function listUsers(Request $request)
     {
-        // 1. Base Query: ONLY Candidates
-        $query = User::role('candidate')->with(['candidate', 'roles']);
+        // 1. Filter ONLY Candidates and load relation
+        $query = User::role('candidate')->with('candidate');
 
-        // 2. Search Filter (Name or Email)
+        // 2. Search
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -91,14 +88,14 @@ class AdminController extends Controller
             });
         }
 
-        // 3. Status Filter
+        // 3. Status
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
         $users = $query->latest()->paginate(25)->withQueryString();
         
-        // 4. Candidate Specific Stats
+        // Stats
         $counts = [
             'total' => User::role('candidate')->count(),
             'active' => User::role('candidate')->where('status', 'active')->count(),
@@ -108,18 +105,11 @@ class AdminController extends Controller
         return view('admin.users.index', ['users' => $users, 'counts' => $counts]);
     }
 
-    /**
-     * Show specific candidate profile details.
-     */
     public function showUser(User $user)
     {
-        // Guard: Ensure we only view candidates, not admins/partners
-        if (!$user->hasRole('candidate')) {
-            abort(404);
-        }
-
-        $user->load(['candidate', 'roles']); 
-
+        if (!$user->hasRole('candidate')) abort(404);
+        
+        $user->load('candidate'); // Load candidate profile details
         return view('admin.users.show', compact('user'));
     }
 
@@ -204,7 +194,6 @@ class AdminController extends Controller
 
         $user->assignRole('client');
         
-        // Initialize profile to prevent errors
         ClientProfile::create(['user_id' => $user->id]);
 
         return redirect()->route('admin.clients.index')->with('success', 'Client created successfully.');
@@ -367,12 +356,11 @@ class AdminController extends Controller
             'instagram_url' => 'nullable|url',
             'beneficiary_name' => 'nullable|string',
             'account_number' => 'nullable|string',
-            'account_type' => 'nullable|string', // Added
+            'account_type' => 'nullable|string', 
             'ifsc_code' => 'nullable|string',
-            'pan_name' => 'nullable|string', // Added
+            'pan_name' => 'nullable|string', 
             'pan_number' => 'nullable|string',
             'gst_number' => 'nullable|string',
-            // Files
             'profile_picture' => 'nullable|image|max:2048',
             'cancelled_cheque' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
             'pan_card' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
@@ -381,7 +369,6 @@ class AdminController extends Controller
 
         $user->update(['name' => $validated['name'], 'email' => $validated['email']]);
 
-        // Prepare data
         $profileData = $request->only([
             'company_type', 'website', 'establishment_year', 'bio', 'address',
             'linkedin_url', 'facebook_url', 'twitter_url', 'instagram_url',
@@ -389,7 +376,6 @@ class AdminController extends Controller
             'pan_name', 'pan_number', 'gst_number'
         ]);
 
-        // Handle File Uploads
         if ($request->hasFile('profile_picture')) {
             $profileData['profile_picture_path'] = $request->file('profile_picture')->store('partner_profiles/photos', 'public');
         }
@@ -403,10 +389,7 @@ class AdminController extends Controller
             $profileData['gst_certificate_path'] = $request->file('gst_certificate')->store('partner_profiles/docs', 'public');
         }
 
-        $user->partnerProfile()->updateOrCreate(
-            ['user_id' => $user->id],
-            $profileData
-        );
+        $user->partnerProfile()->updateOrCreate(['user_id' => $user->id], $profileData);
 
         return redirect()->route('admin.partners.index')->with('success', 'Partner profile updated successfully.');
     }
