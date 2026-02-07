@@ -23,9 +23,9 @@ use App\Http\Controllers\Auth\SocialController;
 // Public routes
 Route::get('/', function () {
     return view('landing');
-})->name('home'); // Named 'home' for the logo link
+})->name('home');
 
-// --- NEW STATIC PAGES ---
+// --- STATIC PAGES ---
 Route::view('/about', 'pages.about')->name('about');
 Route::view('/contact', 'pages.contact')->name('contact');
 Route::view('/terms', 'pages.terms')->name('terms');
@@ -34,7 +34,7 @@ Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show'); 
 
-// --- GOOGLE AUTH ROUTES (Moved here so they are accessible to guests) ---
+// --- GOOGLE AUTH ROUTES ---
 Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
 
@@ -103,18 +103,16 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             
             // User Management
             Route::get('/users', [AdminController::class, 'listUsers'])->name('users.index');
+            Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');
             Route::patch('/users/{user}/status', [AdminController::class, 'updateUserStatus'])->name('users.status.update');
             Route::patch('/users/{user}/credentials', [AdminController::class, 'updateUserCredentials'])->name('users.credentials.update');
             
             // View Single Application Details
             Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
-            // --- ADD THIS NEW ROUTE ---
+            
             Route::get('/interviews/today', [AdminController::class, 'dailySchedule'])->name('interviews.today');
-            // Critical Job Management
             Route::delete('/jobs/{job}', [AdminController::class, 'destroyJob'])->name('jobs.destroy'); 
         });
-
-    Route::get('/partners/{user}/show', [AdminController::class, 'showPartner'])->name('partners.show');
 
         // --- CLIENT MANAGEMENT ---
         Route::middleware(['can:manage_clients'])->group(function() {
@@ -132,7 +130,12 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/partners', [AdminController::class, 'listPartners'])->name('partners.index');
             Route::get('/partners/create', [AdminController::class, 'createPartner'])->name('partners.create');
             Route::post('/partners', [AdminController::class, 'storePartner'])->name('partners.store');
-            Route::get('/partners/{user}', [AdminController::class, 'showPartner'])->name('partners.show');
+            
+            // Route Fixed: This handles viewing the partner profile
+            Route::get('/partners/{user}/show', [AdminController::class, 'showPartner'])->name('partners.show');
+            
+            Route::get('/partners/{user}/edit', [AdminController::class, 'editPartner'])->name('partners.edit');
+            Route::patch('/partners/{user}', [AdminController::class, 'updatePartner'])->name('partners.update');
         });
 
 
@@ -149,7 +152,6 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/jobs/pending', [AdminController::class, 'pendingJobs'])->name('jobs.pending');
             Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
             Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
-            // *** ADD THIS NEW ROUTE ***
             Route::get('/jobs/{job}', [AdminController::class, 'showJob'])->name('jobs.show');
             Route::post('/jobs/{job}/approve', [AdminController::class, 'approveJob'])->name('jobs.approve');
             Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
@@ -168,7 +170,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             // MASTER JOB REPORT
             Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
             
-            // NEW: Drill-down to see applicants for a specific job
+            // Drill-down to see applicants for a specific job
             Route::get('/reports/jobs/{job}/applicants', [AdminController::class, 'jobApplicantsReport'])
                 ->name('reports.jobs.applicants');
         });
@@ -177,20 +179,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 
 
     // ==========================================
-    //          CLIENT (EMPLOYER) ROUTES
+    //         CLIENT (EMPLOYER) ROUTES
     // ==========================================
     Route::middleware(['role:client'])->prefix('client')->name('client.')->group(function () {
         
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         
-        // --- Job Management (UPDATED) ---
-        // NEW ROUTES for creating and storing jobs
+        // --- Job Management ---
         Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
         Route::post('/jobs', [ClientController::class, 'storeJob'])->name('jobs.store');
-        
-        // Existing Routes (Don't duplicate if they exist)
-        // Route::get('/jobs/create', [JobController::class, 'create'])->name('jobs.create'); // REMOVED - using ClientController
-        // Route::post('/jobs', [JobController::class, 'store'])->name('jobs.store');       // REMOVED - using ClientController
         
         Route::patch('/jobs/{job}/status', [JobController::class, 'updateStatus'])->name('jobs.status.update'); 
         Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy'); 
@@ -201,62 +198,36 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/profile/company', [ClientProfileController::class, 'update'])->name('profile.update');
         
         Route::get('/billing', [ClientController::class, 'billing'])->name('billing');
-        
-        // --- ADD THIS NEW ROUTE ---
         Route::get('/interviews/today', [ClientController::class, 'dailySchedule'])->name('interviews.today');
 
         // --- INTERVIEW & HIRING WORKFLOW ---
         
         // 1. New Interview
-        Route::get('/applications/{application}/interview/create', [ClientController::class, 'showInterviewForm'])
-            ->name('applications.interview.create'); // Ensure View uses this name
-        
-        Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])
-            ->name('applications.interview.store');
+        Route::get('/applications/{application}/interview/create', [ClientController::class, 'showInterviewForm'])->name('applications.interview.create'); 
+        Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])->name('applications.interview.store');
 
         // 2. Edit Existing Interview
-        Route::get('/applications/{application}/interview/edit', [ClientController::class, 'editInterviewDetails'])
-            ->name('applications.interview.edit');
-
-        Route::put('/applications/{application}/interview', [ClientController::class, 'updateInterviewDetails'])
-            ->name('applications.interview.update');
+        Route::get('/applications/{application}/interview/edit', [ClientController::class, 'editInterviewDetails'])->name('applications.interview.edit');
+        Route::put('/applications/{application}/interview', [ClientController::class, 'updateInterviewDetails'])->name('applications.interview.update');
         
         // 3. Status Actions
-        Route::post('/applications/{application}/reject', [ClientController::class, 'rejectApplicant'])
-            ->name('applications.reject');
-            
-        Route::post('/applications/{application}/interview-appeared', [ClientController::class, 'markAsAppeared'])
-            ->name('applications.interview.appeared');
-            
-        Route::post('/applications/{application}/interview-noshow', [ClientController::class, 'markAsNoShow'])
-            ->name('applications.interview.noshow');
+        Route::post('/applications/{application}/reject', [ClientController::class, 'rejectApplicant'])->name('applications.reject');
+        Route::post('/applications/{application}/interview-appeared', [ClientController::class, 'markAsAppeared'])->name('applications.interview.appeared');
+        Route::post('/applications/{application}/interview-noshow', [ClientController::class, 'markAsNoShow'])->name('applications.interview.noshow');
 
         // 4. Selection
-        Route::get('/applications/{application}/select', [ClientController::class, 'showSelectForm'])
-            ->name('applications.select.show');
-
-        Route::get('/applications/{application}/select/edit', [ClientController::class, 'editSelection'])
-            ->name('applications.select.edit');
-            
-        Route::post('/applications/{application}/select', [ClientController::class, 'storeSelection'])
-            ->name('applications.select.store');
-
-        Route::patch('/applications/{application}/select/update', [ClientController::class, 'updateSelectionDetails'])
-            ->name('applications.select.update');
+        Route::get('/applications/{application}/select', [ClientController::class, 'showSelectForm'])->name('applications.select.show');
+        Route::get('/applications/{application}/select/edit', [ClientController::class, 'editSelection'])->name('applications.select.edit');
+        Route::post('/applications/{application}/select', [ClientController::class, 'storeSelection'])->name('applications.select.store');
+        Route::patch('/applications/{application}/select/update', [ClientController::class, 'updateSelectionDetails'])->name('applications.select.update');
             
         // 5. Final Status (Joined / Not Joined)
-        Route::post('/applications/{application}/mark-joined', [ClientController::class, 'markAsJoined'])
-            ->name('applications.markJoined');
-
-        Route::post('/applications/{application}/mark-not-joined', [ClientController::class, 'markAsNotJoined'])
-            ->name('applications.markNotJoined');
+        Route::post('/applications/{application}/mark-joined', [ClientController::class, 'markAsJoined'])->name('applications.markJoined');
+        Route::post('/applications/{application}/mark-not-joined', [ClientController::class, 'markAsNotJoined'])->name('applications.markNotJoined');
 
         // 6. Left / Exited
-        Route::get('/applications/{application}/left', [ClientController::class, 'showLeftForm'])
-            ->name('applications.showLeftForm');
-
-        Route::post('/applications/{application}/left', [ClientController::class, 'markAsLeft'])
-            ->name('applications.markLeft');
+        Route::get('/applications/{application}/left', [ClientController::class, 'showLeftForm'])->name('applications.showLeftForm');
+        Route::post('/applications/{application}/left', [ClientController::class, 'markAsLeft'])->name('applications.markLeft');
     });
 
 

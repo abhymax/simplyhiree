@@ -75,12 +75,52 @@ class AdminController extends Controller
         return view('admin.daily_interviews', compact('todayInterviews'));
     }
 
-    // --- USER MANAGEMENT ---
+    // --- CANDIDATE (USER) MANAGEMENT ---
 
-    public function listUsers()
+    public function listUsers(Request $request)
     {
-        $users = User::with('roles')->latest()->paginate(25);
-        return view('admin.users.index', ['users' => $users]);
+        // 1. Base Query: ONLY Candidates
+        $query = User::role('candidate')->with(['candidate', 'roles']);
+
+        // 2. Search Filter (Name or Email)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // 3. Status Filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $users = $query->latest()->paginate(25)->withQueryString();
+        
+        // 4. Candidate Specific Stats
+        $counts = [
+            'total' => User::role('candidate')->count(),
+            'active' => User::role('candidate')->where('status', 'active')->count(),
+            'restricted' => User::role('candidate')->where('status', 'restricted')->count(),
+        ];
+
+        return view('admin.users.index', ['users' => $users, 'counts' => $counts]);
+    }
+
+    /**
+     * Show specific candidate profile details.
+     */
+    public function showUser(User $user)
+    {
+        // Guard: Ensure we only view candidates, not admins/partners
+        if (!$user->hasRole('candidate')) {
+            abort(404);
+        }
+
+        $user->load(['candidate', 'roles']); 
+
+        return view('admin.users.show', compact('user'));
     }
 
     public function updateUserStatus(Request $request, User $user)
@@ -164,7 +204,7 @@ class AdminController extends Controller
 
         $user->assignRole('client');
         
-        // Initialize profile
+        // Initialize profile to prevent errors
         ClientProfile::create(['user_id' => $user->id]);
 
         return redirect()->route('admin.clients.index')->with('success', 'Client created successfully.');
@@ -327,31 +367,45 @@ class AdminController extends Controller
             'instagram_url' => 'nullable|url',
             'beneficiary_name' => 'nullable|string',
             'account_number' => 'nullable|string',
+            'account_type' => 'nullable|string', // Added
             'ifsc_code' => 'nullable|string',
+            'pan_name' => 'nullable|string', // Added
             'pan_number' => 'nullable|string',
             'gst_number' => 'nullable|string',
+            // Files
+            'profile_picture' => 'nullable|image|max:2048',
+            'cancelled_cheque' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
+            'pan_card' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
+            'gst_certificate' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         $user->update(['name' => $validated['name'], 'email' => $validated['email']]);
 
+        // Prepare data
+        $profileData = $request->only([
+            'company_type', 'website', 'establishment_year', 'bio', 'address',
+            'linkedin_url', 'facebook_url', 'twitter_url', 'instagram_url',
+            'beneficiary_name', 'account_number', 'account_type', 'ifsc_code',
+            'pan_name', 'pan_number', 'gst_number'
+        ]);
+
+        // Handle File Uploads
+        if ($request->hasFile('profile_picture')) {
+            $profileData['profile_picture_path'] = $request->file('profile_picture')->store('partner_profiles/photos', 'public');
+        }
+        if ($request->hasFile('cancelled_cheque')) {
+            $profileData['cancelled_cheque_path'] = $request->file('cancelled_cheque')->store('partner_profiles/docs', 'public');
+        }
+        if ($request->hasFile('pan_card')) {
+            $profileData['pan_card_path'] = $request->file('pan_card')->store('partner_profiles/docs', 'public');
+        }
+        if ($request->hasFile('gst_certificate')) {
+            $profileData['gst_certificate_path'] = $request->file('gst_certificate')->store('partner_profiles/docs', 'public');
+        }
+
         $user->partnerProfile()->updateOrCreate(
             ['user_id' => $user->id],
-            [
-                'company_type' => $request->company_type,
-                'website' => $request->website,
-                'establishment_year' => $request->establishment_year,
-                'bio' => $request->bio,
-                'address' => $request->address,
-                'linkedin_url' => $request->linkedin_url,
-                'facebook_url' => $request->facebook_url,
-                'twitter_url' => $request->twitter_url,
-                'instagram_url' => $request->instagram_url,
-                'beneficiary_name' => $request->beneficiary_name,
-                'account_number' => $request->account_number,
-                'ifsc_code' => $request->ifsc_code,
-                'pan_number' => $request->pan_number,
-                'gst_number' => $request->gst_number,
-            ]
+            $profileData
         );
 
         return redirect()->route('admin.partners.index')->with('success', 'Partner profile updated successfully.');
