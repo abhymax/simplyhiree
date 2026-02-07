@@ -1,116 +1,165 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Job Applicant Report') }}
-        </h2>
-    </x-slot>
+    {{-- FULL PAGE DEEP BLUE WRAPPER --}}
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
+        
+        {{-- Background Glows --}}
+        <div class="absolute top-0 left-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
 
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="relative z-10 max-w-7xl mx-auto">
             
-            <div class="mb-6 flex justify-between items-center">
-                <a href="{{ route('admin.reports.jobs') }}" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Master Report
-                </a>
+            {{-- HEADER --}}
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-white/10 pb-6">
+                <div>
+                    <a href="{{ route('admin.reports.jobs') }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-2 transition-colors text-sm font-bold tracking-wide uppercase">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Master Report
+                    </a>
+                    <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Applicant Report</h1>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="text-blue-200 text-lg">Candidates for</span>
+                        <span class="text-amber-300 font-bold text-lg border-b border-amber-300/30 pb-0.5">{{ $job->title }}</span>
+                        <span class="text-blue-200 text-lg">at</span>
+                        <span class="text-white font-bold text-lg">{{ $job->company_name }}</span>
+                    </div>
+                </div>
                 
-                <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                    <span class="text-gray-500 text-xs uppercase font-bold">Job Profile</span>
-                    <h1 class="text-lg font-bold text-gray-900">{{ $job->title }} <span class="text-gray-400">at</span> {{ $job->company_name }}</h1>
+                <div class="mt-4 md:mt-0">
+                    <div class="bg-blue-600/20 backdrop-blur-md border border-blue-500/30 text-white px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-3">
+                        <p class="text-blue-300 text-xs font-bold uppercase tracking-wider">Total Applicants</p>
+                        <p class="text-2xl font-black text-white">{{ $applications->total() }}</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            {{-- MAIN GLASS CONTAINER --}}
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+                
+                {{-- DATA TABLE --}}
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Candidate Name</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Source (Partner)</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applied Date</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Current Pipeline Status</th>
-                                <th class="py-4 px-6 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Details</th>
+                                <th class="px-6 py-5">Candidate Name</th>
+                                <th class="px-6 py-5">Source (Partner)</th>
+                                <th class="px-6 py-5">Applied Date</th>
+                                <th class="px-6 py-5">Current Pipeline Status</th>
+                                <th class="px-6 py-5 text-right">Details</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-white/10 text-white">
                             @forelse($applications as $application)
-                                <tr class="hover:bg-gray-50 transition duration-150">
-                                    <td class="py-4 px-6">
-                                        <div class="font-bold text-gray-900">{{ $application->candidate->first_name }} {{ $application->candidate->last_name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $application->candidate->email }}</div>
-                                        <div class="text-xs text-gray-500">{{ $application->candidate->phone_number }}</div>
+                                <tr class="hover:bg-white/5 transition duration-200 cursor-default group">
+                                    
+                                    {{-- Candidate --}}
+                                    <td class="px-6 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-1 ring-white/20">
+                                                {{ substr($application->candidate->first_name ?? 'C', 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-white text-base">{{ $application->candidate->first_name }} {{ $application->candidate->last_name }}</div>
+                                                <div class="text-xs text-cyan-200 mt-0.5 flex items-center gap-1"><i class="fa-regular fa-envelope"></i> {{ $application->candidate->email }}</div>
+                                                <div class="text-xs text-blue-300 mt-0.5 flex items-center gap-1"><i class="fa-solid fa-phone"></i> {{ $application->candidate->phone_number }}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     
-                                    <td class="py-4 px-6">
+                                    {{-- Source --}}
+                                    <td class="px-6 py-5">
                                         @if($application->candidate->partner)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                {{ $application->candidate->partner->name }}
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/30 text-xs font-bold shadow-sm">
+                                                <i class="fa-solid fa-handshake"></i> {{ $application->candidate->partner->name }}
                                             </span>
                                         @else
-                                            <span class="text-gray-400 text-xs">Direct/Unknown</span>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/10 text-xs font-bold">
+                                                <i class="fa-solid fa-globe"></i> Direct
+                                            </span>
                                         @endif
                                     </td>
 
-                                    <td class="py-4 px-6 text-sm text-gray-600">
-                                        {{ $application->created_at->format('M d, Y') }}
+                                    {{-- Date --}}
+                                    <td class="px-6 py-5">
+                                        <span class="text-blue-100 font-medium">{{ $application->created_at->format('M d, Y') }}</span>
                                     </td>
 
-                                    <td class="py-4 px-6">
-                                        {{-- STATUS LOGIC --}}
+                                    {{-- Status Pipeline --}}
+                                    <td class="px-6 py-5">
                                         @php
                                             $adminStatus = strtolower($application->status);
                                             $clientStatus = $application->hiring_status;
                                         @endphp
 
                                         @if($adminStatus === 'pending review')
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-yellow-100 text-yellow-800">
-                                                Pending Admin Review
+                                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50 text-xs font-bold animate-pulse">
+                                                <i class="fa-regular fa-clock"></i> Pending Admin Review
                                             </span>
                                         @elseif($adminStatus === 'rejected')
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800">
-                                                Rejected by Admin
+                                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/50 text-xs font-bold">
+                                                <i class="fa-solid fa-ban"></i> Rejected by Admin
                                             </span>
                                         @elseif($adminStatus === 'approved')
                                             @if($clientStatus == 'Interview Scheduled')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-blue-100 text-blue-800">
-                                                    Interview Scheduled
+                                                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/50 text-xs font-bold">
+                                                    <i class="fa-solid fa-video"></i> Interview Scheduled
                                                 </span>
                                             @elseif($clientStatus == 'Selected')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-teal-100 text-teal-800">
-                                                    Selected
+                                                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 text-xs font-bold">
+                                                    <i class="fa-solid fa-user-check"></i> Selected
                                                 </span>
                                             @elseif($clientStatus == 'Joined')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800">
-                                                    Joined
+                                                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-xs font-bold shadow-lg shadow-emerald-500/20">
+                                                    <i class="fa-solid fa-trophy"></i> Joined
                                                 </span>
                                             @elseif($clientStatus == 'Client Rejected')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-gray-100 text-red-600">
-                                                    Client Rejected
+                                                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/50 text-xs font-bold">
+                                                    <i class="fa-solid fa-user-xmark"></i> Client Rejected
                                                 </span>
                                             @else
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-50 text-green-700">
-                                                    With Client (Reviewing)
+                                                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/50 text-xs font-bold">
+                                                    <i class="fa-solid fa-building-user"></i> With Client (Reviewing)
                                                 </span>
                                             @endif
                                         @endif
                                     </td>
 
-                                    <td class="py-4 px-6 text-right">
-                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded text-xs font-bold">
-                                            View
+                                    {{-- Actions --}}
+                                    <td class="px-6 py-5 text-right">
+                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition border border-blue-500 hover:shadow-blue-500/30">
+                                            View <i class="fa-solid fa-chevron-right text-[10px]"></i>
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-gray-500">
-                                        No candidates have applied for this job yet.
+                                    <td colspan="5" class="px-6 py-20 text-center">
+                                        <div class="bg-white/10 inline-block p-6 rounded-full mb-4 backdrop-blur-md border border-white/10">
+                                            <i class="fa-solid fa-users-slash text-5xl text-blue-200"></i>
+                                        </div>
+                                        <p class="text-xl font-bold text-white">No applicants yet.</p>
+                                        <p class="text-blue-200 mt-2">This job hasn't received any applications.</p>
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4 bg-gray-50">
+
+                {{-- PAGINATION --}}
+                <div class="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
+                    <style>
+                        nav[role="navigation"] p { color: #e2e8f0 !important; font-weight: 600; }
+                        nav[role="navigation"] span.relative, nav[role="navigation"] a.relative {
+                            background-color: rgba(255, 255, 255, 0.1) !important;
+                            border-color: rgba(255, 255, 255, 0.2) !important;
+                            color: white !important;
+                            font-weight: 700;
+                        }
+                        nav[role="navigation"] span[aria-current="page"] span {
+                            background-color: #0ea5e9 !important;
+                            border-color: #0ea5e9 !important;
+                            color: white !important;
+                        }
+                    </style>
                     {{ $applications->links() }}
                 </div>
             </div>

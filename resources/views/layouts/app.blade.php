@@ -5,39 +5,67 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Simply Hiree') }}</title>
+        <title>{{ config('app.name', 'SimplyHiree') }}</title>
 
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%232563eb' /><stop offset='100%' stop-color='%234f46e5' /></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)' /><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='white' font-family='Roboto'>SH</text></svg>">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
         @livewireStyles
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+        <style>
+            body { font-family: 'Outfit', sans-serif; }
+            [x-cloak] { display: none !important; }
+            
+            /* Glassmorphism Classes */
+            .glass-panel {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+        </style>
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+    <body class="font-sans antialiased bg-slate-50 text-slate-900">
+        
+        <div class="flex flex-col min-h-screen">
+            
             @include('layouts.navigation')
 
             @if (isset($header))
-                <header class="bg-white shadow">
+                <header class="bg-white shadow-sm border-b border-slate-100 z-10 relative">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
             @endif
 
-            <main>
-                
+            <main class="flex-grow">
                 @if (isset($slot))
                     {{ $slot }}
                 @else
                     @yield('content')
                 @endif
-                </main>
+            </main>
+
+            <footer class="bg-white border-t border-slate-200 mt-auto py-8 z-10 relative">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="text-sm text-slate-500">
+                        &copy; {{ date('Y') }} <span class="font-bold text-slate-700">SimplyHiree</span>. All rights reserved.
+                    </div>
+                    
+                    <div class="flex gap-6 text-sm font-medium text-slate-500">
+                        <a href="#" class="hover:text-indigo-600 transition-colors">Privacy Policy</a>
+                        <a href="#" class="hover:text-indigo-600 transition-colors">Terms of Service</a>
+                        <a href="#" class="hover:text-indigo-600 transition-colors">Support</a>
+                    </div>
+                </div>
+            </footer>
+
         </div>
+
         @livewireScripts
     </body>
 </html>

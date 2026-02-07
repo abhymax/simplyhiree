@@ -1,59 +1,92 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Add New Client') }}
-        </h2>
-    </x-slot>
+    {{-- FULL PAGE DEEP BLUE WRAPPER --}}
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
+        
+        {{-- Background Glows --}}
+        <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
 
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    
-                    <form method="POST" action="{{ route('admin.clients.store') }}" class="space-y-6">
-                        @csrf
-
-                        <div>
-                            <x-input-label for="name" :value="__('Company / Client Name')" />
-                            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="email" :value="__('Email Address')" />
-                            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required />
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="billable_period_days" :value="__('Billable Period (Days)')" />
-                            <x-text-input id="billable_period_days" class="block mt-1 w-full" type="number" name="billable_period_days" :value="old('billable_period_days', 90)" required />
-                            <p class="text-sm text-gray-500 mt-1">Default payment maturity period for this client.</p>
-                            <x-input-error :messages="$errors->get('billable_period_days')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="password" :value="__('Password')" />
-                            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-                            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                            <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required />
-                            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
-                            <a href="{{ route('admin.clients.index') }}" class="text-sm text-gray-600 underline hover:text-gray-900 mr-4">Cancel</a>
-                            <x-primary-button>
-                                {{ __('Create Client') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
-
-                </div>
+        <div class="relative z-10 max-w-4xl mx-auto">
+            
+            {{-- HEADER --}}
+            <div class="mb-8 border-b border-white/10 pb-6">
+                <a href="{{ route('admin.clients.index') }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-4 transition-colors text-sm font-bold tracking-wide uppercase">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Client List
+                </a>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Onboard New Client</h1>
+                <p class="text-blue-200 mt-1 text-lg font-medium">Create a new client account for job postings.</p>
             </div>
+
+            {{-- ERROR HANDLING --}}
+            @if ($errors->any())
+                <div class="mb-8 p-6 bg-rose-500/20 border border-rose-500/50 rounded-2xl backdrop-blur-md shadow-lg">
+                    <div class="flex items-center gap-2 text-rose-300 font-bold mb-3">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Submission Failed
+                    </div>
+                    <ul class="list-disc list-inside text-rose-100 text-sm space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('admin.clients.store') }}" method="POST">
+                @csrf
+                
+                {{-- MAIN FORM CONTAINER --}}
+                <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 mb-8 shadow-2xl">
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie text-emerald-400"></i> Client Details
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {{-- Name --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Company / Client Name <span class="text-rose-400">*</span></label>
+                            <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g. Acme Solutions" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white text-lg font-bold placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-14" required>
+                        </div>
+
+                        {{-- Email --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Email Address (Login ID) <span class="text-rose-400">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-slate-400"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" name="email" value="{{ old('email') }}" placeholder="client@company.com" class="w-full pl-10 bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-12" required>
+                            </div>
+                        </div>
+
+                        {{-- Password --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Password <span class="text-rose-400">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" name="password" class="w-full pl-10 bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-12" required>
+                            </div>
+                        </div>
+
+                        {{-- Confirm Password --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Confirm Password <span class="text-rose-400">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" name="password_confirmation" class="w-full pl-10 bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-12" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ACTIONS --}}
+                <div class="flex justify-end gap-4 border-t border-white/10 pt-8 pb-12">
+                    <a href="{{ route('admin.clients.index') }}" class="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition border border-white/10">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-10 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i> Register Client
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>

@@ -1,80 +1,116 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+<x-app-layout>
+    {{-- FULL PAGE DEEP BLUE WRAPPER --}}
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
         
-        <div class="mb-6">
-            <a href="{{ route('admin.jobs.pending') }}" class="text-indigo-600 hover:text-indigo-900 font-medium flex items-center">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Pending Jobs
-            </a>
-        </div>
+        {{-- Background Glow Effects --}}
+        <div class="absolute top-0 right-0 w-96 h-96 bg-rose-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6 text-gray-900">
+        <div class="relative z-10 max-w-5xl mx-auto">
+            
+            {{-- HEADER --}}
+            <div class="mb-8 border-b border-white/10 pb-6">
+                <a href="{{ route('admin.jobs.pending') }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-4 transition-colors text-sm font-bold tracking-wide uppercase">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Pending Jobs
+                </a>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Partner Visibility</h1>
+                <p class="text-blue-200 mt-1 text-lg font-medium">Control who can access and work on this vacancy.</p>
+            </div>
+
+            {{-- JOB CONTEXT CARD --}}
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 mb-8 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-6 opacity-10">
+                    <i class="fa-solid fa-shield-halved text-8xl text-white"></i>
+                </div>
                 
-                <div class="border-b border-gray-200 pb-6 mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">Manage Partner Visibility</h1>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Control which partners can see and apply for <strong>{{ $job->title }}</strong> ({{ $job->company_name }}).
-                    </p>
-                    
-                    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <span class="block text-gray-500 font-bold">Location</span>
-                            {{ $job->location }}
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-bold text-white mb-1">{{ $job->title }}</h2>
+                    <div class="flex items-center gap-2 text-amber-300 font-bold mb-6 text-sm">
+                        <i class="fa-solid fa-building"></i> {{ $job->company_name }}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10">
+                            <span class="block text-xs font-bold text-blue-300 uppercase mb-1">Location</span>
+                            <span class="text-white font-medium"><i class="fa-solid fa-location-dot text-rose-400 mr-1"></i> {{ $job->location }}</span>
                         </div>
-                        <div>
-                            <span class="block text-gray-500 font-bold">Experience Required</span>
-                            {{ $job->experienceLevel->name ?? 'Not Specified' }}
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10">
+                            <span class="block text-xs font-bold text-blue-300 uppercase mb-1">Experience</span>
+                            <span class="text-white font-medium">{{ $job->experienceLevel->name ?? 'Not Specified' }}</span>
                         </div>
-                        <div>
-                            <span class="block text-gray-500 font-bold">Education</span>
-                            {{ $job->educationLevel->name ?? 'Not Specified' }}
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10">
+                            <span class="block text-xs font-bold text-blue-300 uppercase mb-1">Education</span>
+                            <span class="text-white font-medium">{{ $job->educationLevel->name ?? 'Not Specified' }}</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            {{-- EXCLUSION FORM --}}
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden p-8">
+                
                 <form action="{{ route('admin.jobs.exclusions.update', $job->id) }}" method="POST">
                     @csrf
                     
-                    <div class="mb-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">Exclude Partners</h3>
-                        <p class="text-sm text-gray-600 mb-4">
-                            Selected partners will <strong>NOT</strong> see this job in their dashboard.
+                    <div class="mb-8">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-ban text-rose-500"></i> Exclude Partners
+                        </h3>
+                        <p class="text-sm text-blue-200 mb-6 bg-blue-500/10 p-3 rounded-lg border border-blue-500/20 inline-block">
+                            <i class="fa-solid fa-circle-info mr-1"></i> Selected partners will <strong>NOT</strong> see this job in their dashboard.
                         </p>
 
                         @if($allPartners->isEmpty())
-                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-yellow-700">
-                                <p>No partners found in the system.</p>
+                            <div class="bg-amber-500/20 border border-amber-500/50 p-6 rounded-2xl text-center">
+                                <p class="text-amber-300 font-bold text-lg">No partners found in the system.</p>
+                                <p class="text-amber-200 text-sm mt-1">Onboard partners first to manage visibility.</p>
                             </div>
                         @else
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border p-4 rounded-lg max-h-96 overflow-y-auto">
+                            {{-- Partner Grid --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                 @foreach($allPartners as $partner)
-                                    <div class="flex items-start">
+                                    <label class="relative flex items-start p-4 rounded-xl border cursor-pointer transition-all duration-200 group hover:border-blue-400
+                                        {{ in_array($partner->id, $excludedPartnerIds) ? 'bg-rose-900/20 border-rose-500/50' : 'bg-slate-800/50 border-white/10' }}">
+                                        
                                         <div class="flex items-center h-5">
                                             <input id="partner_{{ $partner->id }}" 
                                                    name="excluded_partners[]" 
                                                    type="checkbox" 
                                                    value="{{ $partner->id }}"
-                                                   class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                                   class="w-5 h-5 text-rose-600 bg-slate-900 border-slate-600 rounded focus:ring-rose-500 focus:ring-2"
                                                    {{ in_array($partner->id, $excludedPartnerIds) ? 'checked' : '' }}>
                                         </div>
+                                        
                                         <div class="ml-3 text-sm">
-                                            <label for="partner_{{ $partner->id }}" class="font-medium text-gray-700">
+                                            <span class="block font-bold text-white group-hover:text-blue-300 transition-colors">
                                                 {{ $partner->name }}
-                                            </label>
-                                            <p class="text-gray-500 text-xs">{{ $partner->email }}</p>
+                                            </span>
+                                            <span class="block text-slate-400 text-xs mt-0.5">{{ $partner->email }}</span>
+                                            
+                                            {{-- Status Indicator --}}
+                                            @if(in_array($partner->id, $excludedPartnerIds))
+                                                <span class="inline-block mt-2 text-[10px] uppercase font-bold text-rose-400 tracking-wider">
+                                                    <i class="fa-solid fa-lock mr-1"></i> Blocked
+                                                </span>
+                                            @else
+                                                <span class="inline-block mt-2 text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
+                                                    <i class="fa-solid fa-check mr-1"></i> Allowed
+                                                </span>
+                                            @endif
                                         </div>
-                                    </div>
+                                    </label>
                                 @endforeach
                             </div>
                         @endif
                     </div>
 
-                    <div class="flex justify-end pt-4 border-t border-gray-200">
-                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            Update Exclusions
+                    {{-- Actions --}}
+                    <div class="flex justify-end pt-6 border-t border-white/10">
+                        <a href="{{ route('admin.jobs.pending') }}" class="mr-4 px-6 py-3 rounded-xl text-sm font-bold text-white hover:bg-white/10 transition border border-transparent hover:border-white/10">
+                            Cancel
+                        </a>
+                        <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-rose-600/30 transition transform hover:-translate-y-1 flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
                         </button>
                     </div>
                 </form>
@@ -82,5 +118,12 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
+
+    {{-- Custom Scrollbar Style for this page --}}
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+    </style>
+</x-app-layout>

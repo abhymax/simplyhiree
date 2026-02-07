@@ -1,262 +1,266 @@
 <x-app-layout title="Superadmin Dashboard">
-    <x-slot name="header">
-        <h2 class="font-bold text-2xl text-gray-800 leading-tight">
-            {{ __('Superadmin Dashboard') }}
-        </h2>
-    </x-slot>
+    {{-- 
+        FULL PAGE BLUE BACKGROUND WRAPPER 
+        - 'min-h-screen' ensures it covers the whole page.
+        - '-m-6' negative margins cancel out default padding from the layout if any exists.
+    --}}
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
 
-    <div class="py-8 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{-- DECORATIVE BACKGROUND GLOWS --}}
+        <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
+
+        <div class="relative z-10 max-w-7xl mx-auto">
             
-            <div class="flex flex-col md:flex-row justify-between items-end mb-8">
+            {{-- HEADER SECTION --}}
+            <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-white/10 pb-6">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Overview</h1>
-                    <p class="text-gray-500 mt-1">Welcome back, {{ Auth::user()->name }}. Your platform at a glance.</p>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
+                            Superadmin Control
+                        </span>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+                        Overview
+                    </h1>
+                    <p class="text-blue-200 mt-2 text-lg">
+                        Welcome back, <span class="text-white font-semibold">{{ Auth::user()->name }}</span>.
+                    </p>
                 </div>
-                <div class="text-right mt-4 md:mt-0">
-                    <span class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-2xl text-sm font-medium shadow-sm flex items-center gap-2">
-                        <i class="fa-regular fa-calendar text-indigo-500"></i> {{ date('F j, Y') }}
-                    </span>
-                </div>
-            </div>
-
-            {{-- DAILY PULSE CARD (Fixed Colors: Changed slate-800 to gray-800) --}}
-            <div class="mb-8 bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 text-white shadow-xl border-l-8 border-yellow-400">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div class="flex items-start gap-4">
-                        <div class="p-3 bg-white/10 rounded-full">
-                            <i class="fa-solid fa-heart-pulse text-2xl text-yellow-400"></i>
+                <div class="mt-6 md:mt-0">
+                    <div class="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl flex items-center gap-4">
+                        <div class="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-lg">
+                            <i class="fa-regular fa-calendar text-white"></i>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold">Daily Pulse</h3>
-                            <p class="text-gray-300 text-sm">Real-time updates and priority actions for today.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-4 w-full md:w-auto">
-                        <div class="flex-1 md:flex-none bg-white/10 rounded-xl p-4 min-w-[160px] text-center border border-white/5 hover:bg-white/20 transition">
-                            <div class="text-3xl font-bold text-white">{{ $todayInterviews }}</div>
-                            <div class="text-xs text-gray-300 uppercase tracking-wide font-semibold mt-1">Interviews Today</div>
-                            @if($todayInterviews > 0)
-                                <a href="{{ route('admin.interviews.today') }}" class="text-xs text-yellow-400 hover:text-yellow-300 underline mt-2 block">View Details</a>
-                            @endif
-                        </div>
-
-                        <div class="flex-1 md:flex-none bg-white/10 rounded-xl p-4 min-w-[160px] text-center border border-white/5 hover:bg-white/20 transition">
-                            <div class="text-3xl font-bold {{ $dueInvoicesCount > 0 ? 'text-red-400' : 'text-white' }}">{{ $dueInvoicesCount }}</div>
-                            <div class="text-xs text-gray-300 uppercase tracking-wide font-semibold mt-1">Invoices Due</div>
-                            @if($dueInvoicesCount > 0)
-                                <a href="{{ route('admin.billing.index') }}" class="text-xs text-yellow-400 hover:text-yellow-300 underline mt-2 block">Raise Invoices</a>
-                            @endif
+                            <p class="text-xs text-blue-300 font-bold uppercase">Today's Date</p>
+                            <p class="text-white font-bold">{{ date('F j, Y') }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                
-                {{-- 1. POST JOB --}}
+            {{-- SECTION 1: DAILY PULSE (High Priority) --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+                {{-- Interviews Card --}}
+                <div class="col-span-1 lg:col-span-2 bg-gradient-to-r from-indigo-600/90 to-blue-600/90 rounded-3xl p-1 shadow-2xl">
+                    <div class="h-full bg-slate-900/50 backdrop-blur-xl rounded-[20px] p-8 relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110 duration-500">
+                            <i class="fa-solid fa-users-viewfinder text-9xl text-white"></i>
+                        </div>
+                        
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="bg-white/20 p-2 rounded-lg"><i class="fa-solid fa-video"></i></span>
+                                <h3 class="font-bold text-xl text-white">Interviews Today</h3>
+                            </div>
+                            
+                            <div class="flex items-baseline gap-4">
+                                <span class="text-6xl font-black text-white tracking-tighter">{{ $todayInterviews }}</span>
+                                <span class="text-blue-200 font-medium">Scheduled</span>
+                            </div>
+
+                            <div class="mt-8">
+                                @if($todayInterviews > 0)
+                                    <a href="{{ route('admin.interviews.today') }}" class="inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg hover:shadow-white/20">
+                                        View Schedule <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                @else
+                                    <span class="inline-block px-4 py-2 rounded-lg bg-white/10 text-sm text-blue-200 border border-white/10">
+                                        No interviews scheduled today.
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Financials Card --}}
+                <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-8 relative overflow-hidden hover:bg-white/15 transition duration-300">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400 border border-emerald-500/20">
+                            <i class="fa-solid fa-file-invoice-dollar text-2xl"></i>
+                        </div>
+                        @if($dueInvoicesCount > 0)
+                            <span class="animate-pulse bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">Action Needed</span>
+                        @else
+                            <span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full">All Clear</span>
+                        @endif
+                    </div>
+
+                    <div>
+                        <p class="text-blue-300 text-sm font-bold uppercase tracking-wider">Invoices Due</p>
+                        <p class="text-5xl font-extrabold text-white mt-2 mb-1">{{ $dueInvoicesCount }}</p>
+                        <p class="text-slate-400 text-sm">Pending payments</p>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-white/10">
+                        <a href="{{ route('admin.billing.index') }}" class="w-full flex items-center justify-between text-white font-bold hover:text-emerald-400 transition-colors">
+                            <span>Process Billing</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- SECTION 2: QUICK ACTIONS (5 Items) --}}
+            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> Quick Actions
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-12">
+                {{-- 1. Post Job --}}
                 @can('view_pending_jobs')
-                <a href="{{ route('admin.jobs.create') }}" class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
-                    <div class="relative z-10 flex items-center justify-between">
-                        <div>
-                            <div class="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center text-white mb-4 backdrop-blur-md shadow-inner">
-                                <i class="fa-solid fa-briefcase text-xl"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-white">Post New Job</h3>
-                            <p class="text-indigo-100 text-sm mt-1">Create vacancy for Client</p>
+                <a href="{{ route('admin.jobs.create') }}" class="group bg-blue-600 rounded-2xl p-5 text-white shadow-lg hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-plus text-5xl"></i></div>
+                    <div class="relative z-10">
+                        <div class="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 backdrop-blur-sm">
+                            <i class="fa-solid fa-briefcase"></i>
                         </div>
-                        <div class="h-10 w-10 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-lg group-hover:translate-x-1 transition-transform">
-                            <i class="fa-solid fa-plus"></i>
-                        </div>
+                        <h4 class="font-bold text-lg">Post Job</h4>
+                        <p class="text-blue-200 text-xs">Create vacancy</p>
                     </div>
                 </a>
                 @endcan
 
-                {{-- 2. ADD CLIENT --}}
+                {{-- 2. Add Client --}}
                 @can('manage_clients')
-                <a href="{{ route('admin.clients.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-emerald-100 hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="h-12 w-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                                <i class="fa-solid fa-user-tie text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800">Add New Client</h3>
-                            <p class="text-gray-500 text-sm mt-1">Onboard a company</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-emerald-500 transition-colors"></i>
+                <a href="{{ route('admin.clients.create') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                    <div class="h-10 w-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-user-tie"></i>
                     </div>
+                    <h4 class="font-bold text-white">Add Client</h4>
+                    <p class="text-slate-400 text-xs">Onboard company</p>
                 </a>
                 @endcan
 
-                {{-- 3. ADD PARTNER --}}
+                {{-- 3. Add Partner --}}
                 @can('view_partner_data')
-                <a href="{{ route('admin.partners.create') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-purple-100 hover:shadow-purple-100/50 transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="h-12 w-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                                <i class="fa-solid fa-handshake text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800">Add New Partner</h3>
-                            <p class="text-gray-500 text-sm mt-1">Register an agency</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-purple-500 transition-colors"></i>
+                <a href="{{ route('admin.partners.create') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                    <div class="h-10 w-10 bg-purple-500/20 text-purple-400 rounded-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-handshake"></i>
                     </div>
+                    <h4 class="font-bold text-white">Add Partner</h4>
+                    <p class="text-slate-400 text-xs">Register agency</p>
                 </a>
                 @endcan
 
-                {{-- 4. MANAGE SUB-ADMINS --}}
+                {{-- 4. Managers --}}
                 @can('manage_sub_admins')
-                <a href="{{ route('admin.sub_admins.index') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-blue-100 hover:shadow-blue-100/50 transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                <i class="fa-solid fa-user-shield text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800">Managers</h3>
-                            <p class="text-gray-500 text-sm mt-1">Manage sub-admins</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+                <a href="{{ route('admin.sub_admins.index') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                    <div class="h-10 w-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-user-shield"></i>
                     </div>
+                    <h4 class="font-bold text-white">Managers</h4>
+                    <p class="text-slate-400 text-xs">Access Control</p>
                 </a>
                 @endcan
 
-                {{-- 5. REPORTS --}}
+                {{-- 5. Reports --}}
                 @can('view_billing_data')
-                <a href="{{ route('admin.reports.jobs') }}" class="group relative bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:border-teal-100 hover:shadow-teal-100/50 transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="h-12 w-12 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600 mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
-                                <i class="fa-solid fa-list-check text-xl"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800">All Jobs Report</h3>
-                            <p class="text-gray-500 text-sm mt-1">Manage all job posts</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-teal-500 transition-colors"></i>
+                <a href="{{ route('admin.reports.jobs') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                    <div class="h-10 w-10 bg-teal-500/20 text-teal-400 rounded-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-chart-pie"></i>
                     </div>
+                    <h4 class="font-bold text-white">Reports</h4>
+                    <p class="text-slate-400 text-xs">View Analytics</p>
                 </a>
                 @endcan
             </div>
 
-            <h3 class="text-lg font-bold text-gray-800 mb-6 px-1">Live Metrics</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
-                
+            {{-- SECTION 3: LIVE METRICS (5 Items) --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+                {{-- Pending Jobs --}}
                 @can('view_pending_jobs')
-                <a href="{{ route('admin.jobs.pending') }}" class="block group">
-                    <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-5 text-white shadow-lg shadow-orange-200 hover:shadow-xl hover:scale-[1.02] transition-all">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-orange-50 text-xs font-bold uppercase tracking-wider">Pending Jobs</p>
-                                <p class="text-3xl font-extrabold mt-1">{{ $pendingJobs }}</p>
-                            </div>
-                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                <i class="fa-solid fa-clock text-xl"></i>
-                            </div>
-                        </div>
+                <a href="{{ route('admin.jobs.pending') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-xs font-bold uppercase">Pending Jobs</span>
+                        <i class="fa-solid fa-clock text-amber-400"></i>
                     </div>
+                    <div class="text-2xl font-extrabold text-white">{{ $pendingJobs }}</div>
                 </a>
                 @endcan
 
+                {{-- Review Apps --}}
                 @can('view_application_data')
-                <a href="{{ route('admin.applications.index') }}" class="block group">
-                    <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-5 text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:scale-[1.02] transition-all">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-rose-50 text-xs font-bold uppercase tracking-wider">Review Apps</p>
-                                <p class="text-3xl font-extrabold mt-1">{{ $pendingApplications }}</p>
-                            </div>
-                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                <i class="fa-solid fa-file-circle-check text-xl"></i>
-                            </div>
-                        </div>
+                <a href="{{ route('admin.applications.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-xs font-bold uppercase">Review Apps</span>
+                        <i class="fa-solid fa-file-contract text-rose-400"></i>
                     </div>
+                    <div class="text-2xl font-extrabold text-white">{{ $pendingApplications }}</div>
                 </a>
                 @endcan
 
+                {{-- Total Clients --}}
                 @can('manage_clients')
-                <a href="{{ route('admin.clients.index') }}" class="block group">
-                    <div class="bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl p-5 text-white shadow-lg shadow-teal-200 hover:shadow-xl hover:scale-[1.02] transition-all">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-teal-50 text-xs font-bold uppercase tracking-wider">Total Clients</p>
-                                <p class="text-3xl font-extrabold mt-1">{{ $totalClients }}</p>
-                            </div>
-                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                <i class="fa-solid fa-user-tie text-xl"></i>
-                            </div>
-                        </div>
+                <a href="{{ route('admin.clients.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-xs font-bold uppercase">Clients</span>
+                        <i class="fa-solid fa-user-tie text-emerald-400"></i>
                     </div>
+                    <div class="text-2xl font-extrabold text-white">{{ $totalClients }}</div>
                 </a>
                 @endcan
 
+                {{-- Total Partners --}}
                 @can('view_partner_data')
-                <a href="{{ route('admin.partners.index') }}" class="block group">
-                    <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-[1.02] transition-all">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-purple-50 text-xs font-bold uppercase tracking-wider">Total Partners</p>
-                                <p class="text-3xl font-extrabold mt-1">{{ $totalPartners }}</p>
-                            </div>
-                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                <i class="fa-solid fa-handshake text-xl"></i>
-                            </div>
-                        </div>
+                <a href="{{ route('admin.partners.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-xs font-bold uppercase">Partners</span>
+                        <i class="fa-solid fa-handshake text-purple-400"></i>
                     </div>
+                    <div class="text-2xl font-extrabold text-white">{{ $totalPartners }}</div>
                 </a>
                 @endcan
 
+                {{-- Total Candidates --}}
                 @can('view_candidate_data')
-                <a href="{{ route('admin.users.index') }}" class="block group">
-                    <div class="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl p-5 text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-[1.02] transition-all">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-blue-50 text-xs font-bold uppercase tracking-wider">Total Candidates</p>
-                                <p class="text-3xl font-extrabold mt-1">{{ $totalUsers - ($totalClients + $totalPartners) }}</p>
-                            </div>
-                            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                <i class="fa-solid fa-users text-xl"></i>
-                            </div>
-                        </div>
+                <a href="{{ route('admin.users.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-xs font-bold uppercase">Candidates</span>
+                        <i class="fa-solid fa-users text-blue-400"></i>
                     </div>
+                    <div class="text-2xl font-extrabold text-white">{{ $totalUsers - ($totalClients + $totalPartners) }}</div>
                 </a>
                 @endcan
-
             </div>
-            
-            {{-- CHARTS --}}
+
+            {{-- SECTION 4: CHARTS (Dark Mode Style) --}}
             @if(auth()->user()->can('view_billing_data') || auth()->user()->hasRole('Superadmin'))
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {{-- Growth Chart --}}
+                <div class="lg:col-span-2 bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-3xl">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold text-gray-800">Platform Growth</h3>
+                        <h3 class="text-lg font-bold text-white">Activity Growth</h3>
                         <div class="flex gap-2">
-                            <span class="w-3 h-3 rounded-full bg-blue-500 mt-1.5"></span>
-                            <span class="text-sm text-gray-500">Activity Trend</span>
+                            <span class="px-3 py-1 rounded-full bg-white/10 text-xs text-white border border-white/10">Weekly</span>
                         </div>
                     </div>
-                    <div class="relative h-72 w-full">
+                    <div class="h-72 w-full">
                         <canvas id="growthChart"></canvas>
                     </div>
                 </div>
 
-                <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-800 mb-6">User Distribution</h3>
-                    <div class="relative h-60 w-full flex justify-center">
+                {{-- User Distribution --}}
+                <div class="lg:col-span-1 bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-3xl flex flex-col justify-between">
+                    <h3 class="text-lg font-bold text-white mb-4">User Ecosystem</h3>
+                    <div class="h-48 w-full flex justify-center">
                         <canvas id="userDistChart"></canvas>
                     </div>
                     <div class="mt-6 space-y-3">
-                        <div class="flex justify-between text-sm">
-                            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Candidates</span>
-                            <span class="font-bold text-gray-700">{{ $totalUsers - ($totalClients + $totalPartners) }}</span>
+                        <div class="flex justify-between text-sm border-b border-white/10 pb-2">
+                            <span class="flex items-center text-slate-300"><span class="w-2 h-2 rounded-full bg-blue-400 mr-2"></span> Candidates</span>
+                            <span class="font-bold text-white">{{ $totalUsers - ($totalClients + $totalPartners) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm border-b border-white/10 pb-2">
+                            <span class="flex items-center text-slate-300"><span class="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span> Clients</span>
+                            <span class="font-bold text-white">{{ $totalClients }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
-                            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span> Clients</span>
-                            <span class="font-bold text-gray-700">{{ $totalClients }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span> Partners</span>
-                            <span class="font-bold text-gray-700">{{ $totalPartners }}</span>
+                            <span class="flex items-center text-slate-300"><span class="w-2 h-2 rounded-full bg-purple-400 mr-2"></span> Partners</span>
+                            <span class="font-bold text-white">{{ $totalPartners }}</span>
                         </div>
                     </div>
                 </div>
@@ -265,14 +269,20 @@
 
         </div>
     </div>
-    
+
+    {{-- CHART SCRIPTS (Updated for Dark Mode) --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Dark Mode Chart Configuration
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
             const totalClients = {{ $totalClients }};
             const totalPartners = {{ $totalPartners }};
             const totalCandidates = {{ $totalUsers }} - (totalClients + totalPartners);
 
+            // User Distribution
             const ctxDist = document.getElementById('userDistChart');
             if (ctxDist) {
                 new Chart(ctxDist.getContext('2d'), {
@@ -281,35 +291,53 @@
                         labels: ['Candidates', 'Clients', 'Partners'],
                         datasets: [{
                             data: [totalCandidates, totalClients, totalPartners],
-                            backgroundColor: ['#3b82f6', '#10b981', '#a855f7'],
+                            backgroundColor: ['#60a5fa', '#34d399', '#c084fc'], // Bright colors for dark bg
                             borderWidth: 0,
-                            hoverOffset: 4
+                            hoverOffset: 10
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '75%', 
+                        plugins: { legend: { display: false } } 
+                    }
                 });
             }
 
+            // Growth Chart
             const ctxGrowth = document.getElementById('growthChart');
             if (ctxGrowth) {
                 const ctx = ctxGrowth.getContext('2d');
-                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-                gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+                let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(96, 165, 250, 0.5)'); // Blue-400
+                gradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
 
                 new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                         datasets: [{
-                            label: 'New Activity',
+                            label: 'Platform Activity',
                             data: [12, 19, 15, 25, 22, 30, 45],
-                            borderColor: '#3b82f6',
+                            borderColor: '#60a5fa',
                             backgroundColor: gradient,
-                            fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointBorderWidth: 2
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4], drawBorder: false } }, x: { grid: { display: false, drawBorder: false } } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { 
+                            y: { beginAtZero: true, grid: { borderDash: [4, 4], color: 'rgba(255,255,255,0.05)' } }, 
+                            x: { grid: { display: false } } 
+                        } 
+                    }
                 });
             }
         });

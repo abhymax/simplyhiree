@@ -1,206 +1,206 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Application Management') }}
-        </h2>
-    </x-slot>
+    {{-- FULL PAGE BLUE BACKGROUND WRAPPER --}}
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
+        
+        {{-- High Contrast Background Glows --}}
+        <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[120px] opacity-40 animate-pulse"></div>
+        <div class="absolute bottom-0 left-0 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen filter blur-[120px] opacity-40"></div>
 
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="relative z-10 max-w-7xl mx-auto">
             
-            <div class="mb-6">
-                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-gray-500 hover:text-indigo-600 font-medium transition duration-150">
-                    <i class="fa-solid fa-arrow-left-long mr-2"></i> Back to Dashboard
-                </a>
+            {{-- HEADER --}}
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-white/20 pb-6">
+                <div>
+                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-2 transition-colors text-sm font-bold tracking-wide uppercase">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                    <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">All Applications</h1>
+                    <p class="text-blue-100 mt-1 text-lg font-medium">Manage candidate pipeline</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="bg-blue-600 border border-blue-400 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3">
+                        <span class="text-blue-100 text-xs font-bold uppercase tracking-wider">Total Count</span>
+                        <span class="text-3xl font-black">{{ $applications->total() }}</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            {{-- MAIN CARD CONTAINER --}}
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 
-                <div class="border-b border-gray-100 bg-white p-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold text-gray-800">All Applications</h3>
-                            <p class="text-gray-500 text-sm mt-1">Track candidates from application to hiring.</p>
-                        </div>
-                        <div class="mt-4 md:mt-0">
-                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                                Total: {{ $applications->total() }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <form method="GET" action="{{ route('admin.applications.index') }}" class="flex flex-col lg:flex-row gap-4 lg:items-end bg-gray-50 p-4 rounded-xl border border-gray-200">
+                {{-- FILTERS --}}
+                <div class="p-6 border-b border-white/10 bg-white/5">
+                    <form method="GET" action="{{ route('admin.applications.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         
-                        <div class="flex-1 w-full">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Search</label>
+                        {{-- Search --}}
+                        <div class="lg:col-span-1">
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Search</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+                                    <i class="fa-solid fa-magnifying-glass text-white"></i>
                                 </div>
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Email..." class="w-full pl-10 text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Email..." 
+                                    class="w-full pl-10 bg-slate-800 border border-blue-500/30 rounded-xl text-white placeholder-blue-200/50 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
                             </div>
                         </div>
 
-                        <div class="flex-1 w-full">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                            <select name="status" class="w-full text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">All Statuses</option>
+                        {{-- Status --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Status</label>
+                            <select name="status" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
+                                <option value="" class="text-gray-400">All Statuses</option>
                                 @foreach(['Pending Review', 'Approved', 'Rejected', 'Interview Scheduled', 'Selected', 'Joined'] as $status)
-                                    <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>{{ $status }}</option>
+                                    <option value="{{ $status }}" class="bg-slate-900" {{ request('status') == $status ? 'selected' : '' }}>{{ $status }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="flex-1 w-full">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Job Role</label>
-                            <select name="job_id" class="w-full text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">All Jobs</option>
+                        {{-- Job Role --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Job Role</label>
+                            <select name="job_id" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
+                                <option value="" class="text-gray-400">All Jobs</option>
                                 @foreach($jobs as $job)
-                                    <option value="{{ $job->id }}" {{ request('job_id') == $job->id ? 'selected' : '' }}>{{ Str::limit($job->title, 20) }}</option>
+                                    <option value="{{ $job->id }}" class="bg-slate-900" {{ request('job_id') == $job->id ? 'selected' : '' }}>{{ Str::limit($job->title, 20) }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="flex-1 w-full">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Partner</label>
-                            <select name="partner_id" class="w-full text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">All Partners</option>
+                        {{-- Partner --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Partner</label>
+                            <select name="partner_id" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
+                                <option value="" class="text-gray-400">All Partners</option>
                                 @foreach($partners as $partner)
-                                    <option value="{{ $partner->id }}" {{ request('partner_id') == $partner->id ? 'selected' : '' }}>{{ Str::limit($partner->name, 20) }}</option>
+                                    <option value="{{ $partner->id }}" class="bg-slate-900" {{ request('partner_id') == $partner->id ? 'selected' : '' }}>{{ Str::limit($partner->name, 20) }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div class="w-full lg:w-auto flex items-center gap-2">
-                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition h-[38px] flex items-center justify-center whitespace-nowrap">
-                                Filter
+                        {{-- Filter Actions --}}
+                        <div class="flex items-end gap-2">
+                            <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 text-sm h-[42px] flex items-center justify-center">
+                                <i class="fa-solid fa-filter mr-2"></i> Filter
                             </button>
                             @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id']))
-                                <a href="{{ route('admin.applications.index') }}" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 h-[38px] flex items-center justify-center transition" title="Reset Filters">
-                                    <i class="fa-solid fa-rotate-left"></i>
+                                <a href="{{ route('admin.applications.index') }}" class="bg-rose-500 hover:bg-rose-400 text-white p-2 rounded-xl transition h-[42px] w-[42px] flex items-center justify-center shadow-lg" title="Reset Filters">
+                                    <i class="fa-solid fa-xmark text-lg"></i>
                                 </a>
                             @endif
                         </div>
                     </form>
                 </div>
 
+                {{-- DATA TABLE --}}
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Candidate</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Job Applied For</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Submitted By</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Live Status</th>
-                                <th class="py-4 px-6 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Admin Actions</th>
+                                <th class="px-6 py-5">Candidate</th>
+                                <th class="px-6 py-5">Job Details</th>
+                                <th class="px-6 py-5">Source</th>
+                                <th class="px-6 py-5">Status</th>
+                                <th class="px-6 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-white/10 text-white">
                             @forelse($applications as $application)
-                                <tr class="hover:bg-gray-50 transition duration-150">
-                                    <td class="py-4 px-6">
-                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="font-bold text-indigo-600 hover:text-indigo-900 hover:underline">
-                                            {{ $application->candidate->first_name ?? 'N/A' }} {{ $application->candidate->last_name ?? '' }}
-                                        </a>
-                                        <div class="text-xs text-gray-500">{{ $application->candidate->email ?? '' }}</div>
-                                        <div class="text-xs text-gray-400 mt-1">
-                                            Applied: {{ $application->created_at->format('M d, Y') }}
+                                <tr class="group hover:bg-white/10 transition-all duration-200 transform hover:scale-[1.005] cursor-default border-l-4 border-transparent hover:border-cyan-400">
+                                    {{-- Candidate --}}
+                                    <td class="px-6 py-5">
+                                        <div class="flex items-center gap-4">
+                                            <div class="h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/20">
+                                                {{ substr($application->candidate->first_name ?? 'U', 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-white text-lg leading-tight">{{ $application->candidate->first_name ?? 'N/A' }} {{ $application->candidate->last_name ?? '' }}</div>
+                                                <div class="text-cyan-200 text-sm font-medium mt-0.5"><i class="fa-regular fa-envelope mr-1"></i> {{ $application->candidate->email ?? '' }}</div>
+                                                <div class="text-blue-300 text-xs mt-1 opacity-80">{{ $application->created_at->format('M d, Y') }}</div>
+                                            </div>
                                         </div>
                                     </td>
-                                    
-                                    <td class="py-4 px-6">
-                                        <div class="text-sm text-gray-900 font-medium">{{ $application->job->title ?? 'Deleted Job' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $application->job->company_name ?? '' }}</div>
+
+                                    {{-- Job Details (Fixed High Visibility) --}}
+                                    <td class="px-6 py-5">
+                                        <div class="font-bold text-white text-lg">{{ $application->job->title ?? 'Deleted Job' }}</div>
+                                        
+                                        {{-- COMPANY NAME: BRIGHT AMBER --}}
+                                        <div class="text-amber-300 font-bold text-sm mt-1 flex items-center gap-1.5" style="color: #fcd34d !important;">
+                                            <i class="fa-solid fa-building text-amber-400"></i> 
+                                            {{ $application->job->company_name ?? 'Internal' }}
+                                        </div>
                                     </td>
-                                    
-                                    <td class="py-4 px-6">
+
+                                    {{-- Source --}}
+                                    <td class="px-6 py-5">
                                         @if($application->candidate && $application->candidate->partner)
-                                            <div class="flex items-center">
-                                                <div class="h-6 w-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold mr-2">
-                                                    {{ substr($application->candidate->partner->name, 0, 1) }}
-                                                </div>
-                                                <span class="text-sm text-gray-600">{{ $application->candidate->partner->name }}</span>
-                                            </div>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-bold shadow-md">
+                                                <i class="fa-solid fa-handshake"></i> {{ Str::limit($application->candidate->partner->name, 12) }}
+                                            </span>
                                         @else
-                                            <span class="text-xs text-gray-400">Self/Unknown</span>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-bold border border-slate-500">
+                                                <i class="fa-solid fa-globe"></i> Direct
+                                            </span>
                                         @endif
                                     </td>
 
-                                    <td class="py-4 px-6">
-                                        @php
-                                            $status = strtolower($application->status);
-                                            $hiringStatus = $application->hiring_status;
-                                        @endphp
+                                    {{-- Status --}}
+                                    <td class="px-6 py-5">
+                                        @php $status = strtolower($application->status); @endphp
 
                                         @if($status === 'pending review')
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">
-                                                <i class="fa-solid fa-clock mr-1 self-center"></i> Pending Review
+                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500 text-black border-2 border-amber-300 text-xs font-extrabold shadow-lg shadow-amber-500/20 animate-pulse">
+                                                <i class="fa-regular fa-clock"></i> Pending Review
                                             </span>
-                                        
-                                        @elseif($status === 'rejected')
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 border border-red-200">
-                                                <i class="fa-solid fa-ban mr-1 self-center"></i> Rejected
-                                            </span>
-
                                         @elseif($status === 'approved')
-                                            @if($hiringStatus == 'Interview Scheduled')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
-                                                    <i class="fa-solid fa-calendar-check mr-1 self-center"></i> Interview Scheduled
-                                                </span>
-                                            @elseif($hiringStatus == 'Selected')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-teal-100 text-teal-800 border border-teal-200">
-                                                    <i class="fa-solid fa-trophy mr-1 self-center"></i> Selected
-                                                </span>
-                                            @elseif($hiringStatus == 'Joined')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800 border border-green-200">
-                                                    <i class="fa-solid fa-check-double mr-1 self-center"></i> Joined
-                                                </span>
-                                            @elseif($hiringStatus == 'Client Rejected')
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-gray-100 text-red-600 border border-red-200">
-                                                    <i class="fa-solid fa-xmark mr-1 self-center"></i> Client Rejected
-                                                </span>
-                                            @else
-                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-50 text-green-700 border border-green-200">
-                                                    <i class="fa-solid fa-check mr-1 self-center"></i> Approved (With Client)
-                                                </span>
-                                            @endif
+                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white border-2 border-emerald-400 text-xs font-extrabold shadow-lg">
+                                                <i class="fa-solid fa-check"></i> Approved
+                                            </span>
+                                        @elseif($status === 'rejected')
+                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 text-white border-2 border-red-400 text-xs font-extrabold shadow-lg">
+                                                <i class="fa-solid fa-xmark"></i> Rejected
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white border-2 border-blue-400 text-xs font-extrabold shadow-lg">
+                                                <i class="fa-solid fa-circle-info"></i> {{ ucfirst($status) }}
+                                            </span>
                                         @endif
                                     </td>
 
-                                    <td class="py-4 px-6 text-right text-sm font-medium">
-                                        @php
-                                            $status = strtolower($application->status);
-                                        @endphp
-                                        
-                                        @if($status === 'pending review')
-                                            <div class="flex justify-end gap-2">
+                                    {{-- Actions (Bright Icons) --}}
+                                    <td class="px-6 py-5 text-right">
+                                        @if(strtolower($application->status) === 'pending review')
+                                            <div class="flex justify-end gap-3">
+                                                {{-- APPROVE BUTTON --}}
                                                 <form action="{{ route('admin.applications.approve', $application->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded transition" title="Approve & Forward">
-                                                        <i class="fa-solid fa-check"></i>
+                                                    <button class="h-11 w-11 rounded-xl bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-500/40 hover:scale-110 hover:shadow-green-400/60 transition-all flex items-center justify-center border border-green-300" title="Approve">
+                                                        <i class="fa-solid fa-check text-xl font-bold drop-shadow-md"></i>
                                                     </button>
                                                 </form>
+                                                {{-- REJECT BUTTON --}}
                                                 <form action="{{ route('admin.applications.reject', $application->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded transition" title="Reject">
-                                                        <i class="fa-solid fa-xmark"></i>
+                                                    <button class="h-11 w-11 rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg shadow-red-500/40 hover:scale-110 hover:shadow-red-400/60 transition-all flex items-center justify-center border border-red-400" title="Reject">
+                                                        <i class="fa-solid fa-xmark text-xl font-bold drop-shadow-md"></i>
                                                     </button>
                                                 </form>
                                             </div>
                                         @else
-                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded transition inline-block" title="View Details">
-                                                <i class="fa-solid fa-eye"></i>
+                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition border border-indigo-400">
+                                                View Details
                                             </a>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-gray-500">
-                                        <div class="flex flex-col items-center justify-center">
-                                            <i class="fa-regular fa-folder-open text-3xl mb-2 text-gray-300"></i>
-                                            <p>No applications found matching your filters.</p>
+                                    <td colspan="5" class="px-6 py-20 text-center">
+                                        <div class="bg-white/10 inline-block p-6 rounded-full mb-4 backdrop-blur-md border border-white/10">
+                                            <i class="fa-regular fa-folder-open text-5xl text-blue-200"></i>
                                         </div>
+                                        <p class="text-xl font-bold text-white">No applications found.</p>
+                                        <p class="text-blue-200 mt-2">Adjust filters or check back later.</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -208,8 +208,30 @@
                     </table>
                 </div>
 
-                <div class="p-4 bg-gray-50 border-t border-gray-100">
-                    {{ $applications->links() }}
+                {{-- PAGINATION FIX (Forces White Text) --}}
+                <div class="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
+                    {{-- Force Laravel Pagination Styles --}}
+                    <style>
+                        /* Target the 'Showing 1 to 10' text */
+                        nav[role="navigation"] div.hidden div p.text-sm {
+                            color: #e2e8f0 !important; /* Light Slate */
+                            font-size: 0.95rem;
+                        }
+                        /* Target the pagination buttons */
+                        nav[role="navigation"] span.relative, nav[role="navigation"] a.relative {
+                            background-color: rgba(255, 255, 255, 0.1) !important;
+                            border-color: rgba(255, 255, 255, 0.2) !important;
+                            color: white !important;
+                            font-weight: 700;
+                        }
+                        /* Active Page */
+                        nav[role="navigation"] span[aria-current="page"] span {
+                            background-color: #0ea5e9 !important; /* Cyan-500 */
+                            border-color: #0ea5e9 !important;
+                            color: white !important;
+                        }
+                    </style>
+                    {{ $applications->links() }} 
                 </div>
             </div>
         </div>
