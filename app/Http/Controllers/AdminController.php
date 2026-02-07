@@ -319,6 +319,8 @@ class AdminController extends Controller
 
     // --- PARTNER MANAGEMENT ---
 
+   // --- PARTNER MANAGEMENT ---
+
     public function listPartners(Request $request)
     {
         // 1. Base Query with Profile Relation
@@ -385,7 +387,7 @@ class AdminController extends Controller
     {
         if (!$user->hasRole('partner')) abort(404);
         
-        // Load existing profile data (or empty relation if none)
+        // Load existing profile data (if any)
         $user->load('partnerProfile');
         
         return view('admin.partners.edit', ['user' => $user, 'profile' => $user->partnerProfile]);
@@ -454,7 +456,6 @@ class AdminController extends Controller
         $user->load('partnerProfile'); 
         return view('admin.partners.show', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
-
     // --- JOB MANAGEMENT ---
 
     public function createJob()

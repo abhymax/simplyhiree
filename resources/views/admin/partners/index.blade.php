@@ -7,7 +7,6 @@
 
         <div class="relative z-10 max-w-7xl mx-auto">
             
-            {{-- HEADER --}}
             <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-white/10 pb-6">
                 <div>
                     <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-purple-300 hover:text-white mb-2 transition-colors text-sm font-bold tracking-wide uppercase">
@@ -18,6 +17,11 @@
                 </div>
                 
                 <div class="mt-4 md:mt-0 flex items-center gap-4">
+                    <div class="bg-purple-500/20 border border-purple-500/30 text-white px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-3">
+                        <span class="text-purple-300 text-xs font-bold uppercase tracking-wider">Total Partners</span>
+                        <span class="text-2xl font-black">{{ $users->total() }}</span>
+                    </div>
+                    
                     <a href="{{ route('admin.partners.create') }}" class="inline-flex items-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-1">
                         <i class="fa-solid fa-user-plus mr-2"></i> New Partner
                     </a>
@@ -31,10 +35,8 @@
                 </div>
             @endif
 
-            {{-- MAIN GLASS CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 
-                {{-- 🔍 FILTER BAR --}}
                 <div class="p-6 border-b border-white/10 bg-white/5">
                     <form method="GET" action="{{ route('admin.partners.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div class="md:col-span-5 relative">
@@ -68,7 +70,6 @@
                     </form>
                 </div>
 
-                {{-- DATA TABLE --}}
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-left text-sm">
                         <thead class="bg-blue-950/50 text-purple-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
@@ -83,7 +84,6 @@
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse($users as $user)
                                 <tr class="hover:bg-white/5 transition duration-200 cursor-default group">
-                                    {{-- CLICKABLE NAME --}}
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-4">
                                             <div class="h-11 w-11 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/10">
@@ -98,7 +98,6 @@
                                         </div>
                                     </td>
 
-                                    {{-- Type (NULL SAFE) --}}
                                     <td class="px-6 py-5">
                                         @php $type = optional($user->partnerProfile)->company_type ?? 'Unknown'; @endphp
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
