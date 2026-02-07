@@ -1,169 +1,166 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Partner Management') }}
-        </h2>
-    </x-slot>
+    {{-- FULL PAGE DEEP BLUE WRAPPER --}}
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
+        
+        {{-- Background Glows --}}
+        <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
 
-    <div class="py-10 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative z-10 max-w-7xl mx-auto">
             
-            <div class="mb-6">
-                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-gray-500 hover:text-indigo-600 font-medium transition duration-150">
-                    <i class="fa-solid fa-arrow-left-long mr-2"></i> Back to Dashboard
-                </a>
+            {{-- HEADER --}}
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-white/10 pb-6">
+                <div>
+                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-purple-300 hover:text-white mb-2 transition-colors text-sm font-bold tracking-wide uppercase">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                    <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Partner Network</h1>
+                    <p class="text-blue-200 mt-1 text-lg font-medium">Manage agencies, recruiters, and freelancers.</p>
+                </div>
+                
+                <div class="mt-4 md:mt-0 flex items-center gap-4">
+                    <div class="bg-purple-500/20 border border-purple-500/30 text-white px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-3">
+                        <span class="text-purple-300 text-xs font-bold uppercase tracking-wider">Total Partners</span>
+                        <span class="text-2xl font-black">{{ $users->total() }}</span>
+                    </div>
+                    
+                    <a href="{{ route('admin.partners.create') }}" class="inline-flex items-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-1">
+                        <i class="fa-solid fa-user-plus mr-2"></i> New Partner
+                    </a>
+                </div>
             </div>
 
             @if(session('success'))
-                <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-r shadow-sm">
+                <div class="mb-8 px-6 py-4 bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 rounded-2xl font-bold flex items-center shadow-lg backdrop-blur-md animate-bounce-short">
+                    <i class="fa-solid fa-circle-check mr-3 text-2xl"></i> 
                     {{ session('success') }}
                 </div>
             @endif
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
-                <div class="px-8 py-6 bg-gradient-to-r from-violet-500 to-purple-600 flex flex-col md:flex-row justify-between items-center rounded-t-2xl">
-                    <div class="text-white">
-                        <h3 class="text-2xl font-bold">Registered Partners</h3>
-                        <p class="text-purple-100 text-sm mt-1">Manage recruitment agencies and access.</p>
-                    </div>
-                    <div class="mt-4 md:mt-0">
-                        <a href="{{ route('admin.partners.create') }}" class="inline-flex items-center bg-white text-purple-600 font-bold px-5 py-2.5 rounded-full shadow-md hover:bg-purple-50 hover:scale-105 transition transform">
-                            <i class="fa-solid fa-plus mr-2"></i> New Partner
-                        </a>
-                    </div>
+            {{-- MAIN GLASS CONTAINER --}}
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+                
+                {{-- 🔍 FILTER BAR --}}
+                <div class="p-6 border-b border-white/10 bg-white/5">
+                    <form method="GET" action="{{ route('admin.partners.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-5 relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                            </div>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Name or Email..." 
+                                class="w-full pl-10 bg-slate-800 border border-purple-500/30 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 font-medium h-[42px]">
+                        </div>
+                        <div class="md:col-span-3">
+                            <select name="type" class="w-full bg-slate-800 border border-purple-500/30 rounded-xl text-white focus:ring-2 focus:ring-purple-400 focus:border-purple-400 font-medium h-[42px]">
+                                <option value="" class="text-gray-400">All Types</option>
+                                <option value="Placement Agency" {{ request('type') == 'Placement Agency' ? 'selected' : '' }}>Agencies</option>
+                                <option value="Freelancer" {{ request('type') == 'Freelancer' ? 'selected' : '' }}>Freelancers</option>
+                                <option value="Recruiter" {{ request('type') == 'Recruiter' ? 'selected' : '' }}>Recruiters</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <select name="status" class="w-full bg-slate-800 border border-purple-500/30 rounded-xl text-white focus:ring-2 focus:ring-purple-400 focus:border-purple-400 font-medium h-[42px]">
+                                <option value="" class="text-gray-400">All Status</option>
+                                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="restricted" {{ request('status') == 'restricted' ? 'selected' : '' }}>Restricted</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 flex items-center gap-2">
+                            <button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-xl font-bold shadow-lg transition h-[42px] flex items-center justify-center">Filter</button>
+                            @if(request()->anyFilled(['search', 'type', 'status']))
+                                <a href="{{ route('admin.partners.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-xl transition h-[42px] flex items-center justify-center"><i class="fa-solid fa-xmark"></i></a>
+                            @endif
+                        </div>
+                    </form>
                 </div>
 
+                {{-- DATA TABLE --}}
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-blue-950/50 text-purple-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Partner Name</th>
-                                {{-- UPDATE: Added Type Column --}}
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="py-4 px-6 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Joined On</th>
-                                <th class="py-4 px-6 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-5">Partner Name</th>
+                                <th class="px-6 py-5">Type</th>
+                                <th class="px-6 py-5">Status</th>
+                                <th class="px-6 py-5">Joined On</th>
+                                <th class="px-6 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-white/10 text-white">
                             @forelse($users as $user)
-                                <tr class="hover:bg-gray-50 transition duration-150">
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center">
-                                            <div class="h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold mr-3 text-lg">
+                                <tr class="hover:bg-white/5 transition duration-200 cursor-default group">
+                                    {{-- CLICKABLE NAME --}}
+                                    <td class="px-6 py-5">
+                                        <div class="flex items-center gap-4">
+                                            <div class="h-11 w-11 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/10">
                                                 {{ substr($user->name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <div class="font-bold text-gray-900">{{ $user->name }}</div>
-                                                <div class="text-xs text-gray-500">{{ $user->email }}</div>
+                                                <a href="{{ route('admin.partners.show', $user->id) }}" class="font-bold text-white text-base hover:text-purple-400 transition underline decoration-transparent hover:decoration-purple-400">
+                                                    {{ $user->name }}
+                                                </a>
+                                                <div class="text-xs text-slate-400 mt-0.5">{{ $user->email }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    
-                                    {{-- UPDATE: Display Type from PartnerProfile --}}
-                                    <td class="py-4 px-6 text-sm text-gray-700">
-                                        @if($user->partnerProfile && $user->partnerProfile->company_type)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                {{ $user->partnerProfile->company_type }}
-                                            </span>
+
+                                    {{-- Type --}}
+                                    <td class="px-6 py-5">
+                                        @php $type = $user->partnerProfile->company_type ?? 'Unknown'; @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                            {{ $type }}
+                                        </span>
+                                    </td>
+
+                                    {{-- Status --}}
+                                    <td class="px-6 py-5">
+                                        @if($user->status === 'active')
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-xs font-bold shadow-lg shadow-emerald-500/10"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active</span>
                                         @else
-                                            <span class="text-gray-400 italic">Not set</span>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/50 text-xs font-bold"><i class="fa-solid fa-ban"></i> Restricted</span>
                                         @endif
                                     </td>
 
-                                    <td class="py-4 px-6">
-                                        @php
-                                            $class = match($user->status) {
-                                                'active' => 'bg-green-100 text-green-800 border-green-200',
-                                                'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                                                'on_hold' => 'bg-orange-100 text-orange-800 border-orange-200',
-                                                'restricted' => 'bg-red-100 text-red-800 border-red-200',
-                                                default => 'bg-gray-100 text-gray-800'
-                                            };
-                                        @endphp
-                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border {{ $class }}">
-                                            {{ ucfirst(str_replace('_', ' ', $user->status)) }}
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-6 text-sm text-gray-500">
-                                        {{ $user->created_at->format('M d, Y') }}
-                                    </td>
-                                    <td class="py-4 px-6 text-right text-sm font-medium" x-data>
+                                    {{-- Date --}}
+                                    <td class="px-6 py-5 text-slate-300 font-medium">{{ $user->created_at->format('M d, Y') }}</td>
+
+                                    {{-- Actions --}}
+                                    <td class="px-6 py-5 text-right" x-data>
                                         <div class="flex justify-end items-center gap-2">
+                                            <a href="{{ route('admin.partners.show', $user->id) }}" class="h-9 w-9 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white transition flex items-center justify-center border border-purple-500/30 shadow-md" title="View"><i class="fa-solid fa-eye"></i></a>
                                             
-                                            <button @click="$dispatch('open-modal', 'pwd-p-{{ $user->id }}')" 
-                                                    class="text-gray-400 hover:text-indigo-600 p-2 rounded-full hover:bg-gray-100 transition" 
-                                                    title="Change Password">
-                                                <i class="fa-solid fa-key"></i>
-                                            </button>
+                                            {{-- EDIT BUTTON --}}
+                                            <a href="{{ route('admin.partners.edit', $user->id) }}" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Edit"><i class="fa-solid fa-pen"></i></a>
 
-                                            <a href="{{ route('admin.partners.show', $user->id) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-3 py-1.5 rounded transition whitespace-nowrap">
-                                                View
-                                            </a>
+                                            <button @click="$dispatch('open-modal', 'pwd-p-{{ $user->id }}')" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Password"><i class="fa-solid fa-key"></i></button>
 
+                                            {{-- Status Toggle --}}
                                             @if($user->status !== 'active')
-                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
-                                                    @csrf @method('PATCH')
-                                                    <input type="hidden" name="status" value="active">
-                                                    <button type="submit" class="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50 transition" title="Approve / Activate">
-                                                        <i class="fa-solid fa-check"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                            
-                                            @if($user->status !== 'restricted')
-                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
-                                                    @csrf @method('PATCH')
-                                                    <input type="hidden" name="status" value="restricted">
-                                                    <button type="submit" class="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition" title="Restrict Access">
-                                                        <i class="fa-solid fa-ban"></i>
-                                                    </button>
-                                                </form>
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">@csrf @method('PATCH')<input type="hidden" name="status" value="active"><button class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-emerald-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-check"></i></button></form>
+                                            @else
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">@csrf @method('PATCH')<input type="hidden" name="status" value="restricted"><button class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-rose-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-ban"></i></button></form>
                                             @endif
                                         </div>
-
                                         <x-modal name="pwd-p-{{ $user->id }}">
-                                            <div class="p-6 text-left">
-                                                <div class="flex justify-between items-center mb-4">
-                                                    <h2 class="text-lg font-bold text-gray-900">Reset Password for {{ $user->name }}</h2>
-                                                    <button @click="$dispatch('close-modal', 'pwd-p-{{ $user->id }}')" class="text-gray-400 hover:text-gray-600">
-                                                        <i class="fa-solid fa-xmark"></i>
-                                                    </button>
-                                                </div>
-                                                
+                                            <div class="p-6 bg-slate-900 border border-white/20 rounded-2xl text-white text-left">
+                                                <h2 class="text-xl font-bold mb-4">Reset Password</h2>
                                                 <form method="POST" action="{{ route('admin.users.credentials.update', $user->id) }}">
                                                     @csrf @method('PATCH')
-                                                    
-                                                    <div class="mb-4">
-                                                        <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                                                        <input type="password" name="password" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" placeholder="Enter new password" required>
-                                                        @error('password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                                                    </div>
-                                                    
-                                                    <div class="mb-6">
-                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                                                        <input type="password" name="password_confirmation" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" placeholder="Confirm new password" required>
-                                                    </div>
-                                                    
-                                                    <div class="flex justify-end gap-3">
-                                                        <button type="button" @click="$dispatch('close-modal', 'pwd-p-{{ $user->id }}')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-                                                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-md">Update Password</button>
-                                                    </div>
+                                                    <div class="mb-4"><label class="block text-xs font-bold text-purple-300 uppercase mb-1">New Password</label><input type="password" name="password" class="w-full bg-slate-800 border-slate-600 rounded-xl text-white" required></div>
+                                                    <div class="mb-6"><label class="block text-xs font-bold text-purple-300 uppercase mb-1">Confirm</label><input type="password" name="password_confirmation" class="w-full bg-slate-800 border-slate-600 rounded-xl text-white" required></div>
+                                                    <div class="flex justify-end"><button class="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold">Update</button></div>
                                                 </form>
                                             </div>
                                         </x-modal>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="py-8 text-center text-gray-500">No partners found.</td></tr>
+                                <tr><td colspan="5" class="px-6 py-20 text-center text-slate-400">No partners found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                <div class="p-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
-                    {{ $users->links() }}
-                </div>
+                <div class="p-6 border-t border-white/10">{{ $users->links() }}</div>
             </div>
         </div>
     </div>

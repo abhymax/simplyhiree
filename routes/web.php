@@ -122,6 +122,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/clients', [AdminController::class, 'storeClient'])->name('clients.store');
             Route::get('/clients/{user}/edit', [AdminController::class, 'editClient'])->name('clients.edit');
             Route::patch('/clients/{user}', [AdminController::class, 'updateClient'])->name('clients.update');
+            Route::get('/clients/{user}/show', [AdminController::class, 'showClient'])->name('clients.show');
         });
 
 
