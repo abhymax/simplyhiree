@@ -114,6 +114,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::delete('/jobs/{job}', [AdminController::class, 'destroyJob'])->name('jobs.destroy'); 
         });
 
+    Route::get('/partners/{user}/show', [AdminController::class, 'showPartner'])->name('partners.show');
 
         // --- CLIENT MANAGEMENT ---
         Route::middleware(['can:manage_clients'])->group(function() {
