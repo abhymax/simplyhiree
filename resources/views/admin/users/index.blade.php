@@ -17,7 +17,7 @@
                     <p class="text-blue-200 mt-1 text-lg font-medium">Manage registered job seekers.</p>
                 </div>
                 
-                {{-- Quick Stats (FIXED TO MATCH CONTROLLER) --}}
+                {{-- Quick Stats (FIXED: Uses 'active' and 'restricted' to match Controller) --}}
                 <div class="mt-4 md:mt-0 flex gap-3">
                     <div class="bg-white/5 border border-white/10 px-5 py-2 rounded-xl text-center">
                         <span class="block text-xs text-slate-400 font-bold uppercase">Total</span>
@@ -112,7 +112,7 @@
 
                                     {{-- Mobile --}}
                                     <td class="px-6 py-5 text-slate-300 font-mono">
-                                        {{ optional($user->candidate)->mobile ?? 'N/A' }}
+                                        {{ optional($user->profile)->phone_number ?? 'N/A' }}
                                     </td>
 
                                     {{-- Status --}}
@@ -137,7 +137,7 @@
                                     <td class="px-6 py-5 text-right" x-data>
                                         <div class="flex justify-end items-center gap-2">
                                             
-                                            {{-- VIEW BUTTON --}}
+                                            {{-- VIEW BUTTON (This is what you asked for) --}}
                                             <a href="{{ route('admin.users.show', $user->id) }}" class="h-8 w-8 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition flex items-center justify-center border border-emerald-500/30 shadow-md" title="View Profile">
                                                 <i class="fa-solid fa-eye"></i>
                                             </a>

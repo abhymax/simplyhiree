@@ -23,6 +23,9 @@ use App\Notifications\ApplicationRejectedByAdmin;
 
 class AdminController extends Controller
 {
+    /**
+     * Show the admin dashboard with stats.
+     */
     public function index()
     {
         $totalUsers = User::count();
@@ -31,7 +34,7 @@ class AdminController extends Controller
         $pendingJobs = Job::where('status', 'pending_approval')->count();
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
-        // --- Daily Pulse ---
+        // --- Daily Pulse Data ---
         $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())->count();
 
         $dueInvoicesCount = 0;
@@ -76,8 +79,8 @@ class AdminController extends Controller
 
     public function listUsers(Request $request)
     {
-        // 1. Filter ONLY Candidates and load relation
-        $query = User::role('candidate')->with('candidate');
+        // Load candidate users with their real profile relation (user_profiles table)
+        $query = User::role('candidate')->with('profile');
 
         // 2. Search
         if ($request->filled('search')) {
@@ -94,8 +97,19 @@ class AdminController extends Controller
         }
 
         $users = $query->latest()->paginate(25)->withQueryString();
+
+        // Backward compatibility for existing admin blade files that still read $user->candidate
+        $users->getCollection()->transform(function ($user) {
+            $profile = $user->profile;
+            if ($profile) {
+                $profile->setAttribute('mobile', $profile->phone_number);
+                $profile->setAttribute('dob', $profile->date_of_birth);
+            }
+            $user->setRelation('candidate', $profile);
+            return $user;
+        });
         
-        // Stats
+        // 4. Correct Stats for the View
         $counts = [
             'total' => User::role('candidate')->count(),
             'active' => User::role('candidate')->where('status', 'active')->count(),
@@ -109,7 +123,16 @@ class AdminController extends Controller
     {
         if (!$user->hasRole('candidate')) abort(404);
         
-        $user->load('candidate'); // Load candidate profile details
+        $user->load('profile');
+
+        // Backward compatibility for existing admin blade file that reads $user->candidate
+        $profile = $user->profile;
+        if ($profile) {
+            $profile->setAttribute('mobile', $profile->phone_number);
+            $profile->setAttribute('dob', $profile->date_of_birth);
+        }
+        $user->setRelation('candidate', $profile);
+
         return view('admin.users.show', compact('user'));
     }
 
@@ -356,7 +379,7 @@ class AdminController extends Controller
             'instagram_url' => 'nullable|url',
             'beneficiary_name' => 'nullable|string',
             'account_number' => 'nullable|string',
-            'account_type' => 'nullable|string', 
+            'account_type' => 'nullable|string',
             'ifsc_code' => 'nullable|string',
             'pan_name' => 'nullable|string', 
             'pan_number' => 'nullable|string',
