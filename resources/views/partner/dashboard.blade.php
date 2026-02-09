@@ -1,6 +1,25 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .fx-card {
+        transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background-color .25s ease;
+    }
+    .fx-card:hover {
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 0 20px 40px rgba(14, 165, 233, 0.22);
+        border-color: rgba(255, 255, 255, 0.35);
+    }
+    .fx-btn {
+        transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .fx-btn:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.35);
+        filter: brightness(1.05);
+    }
+</style>
+
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
     <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
@@ -14,7 +33,6 @@
             </div>
         @endif
 
-        {{-- HEADER --}}
         <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-white/10 pb-6">
             <div>
                 <div class="flex items-center gap-2 mb-2">
@@ -43,7 +61,6 @@
             </div>
         </div>
 
-        {{-- DAILY PULSE + QUICK ACTION --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             <div class="col-span-1 lg:col-span-2 bg-gradient-to-r from-indigo-600/90 to-blue-600/90 rounded-3xl p-1 shadow-2xl">
                 <div class="h-full bg-slate-900/50 backdrop-blur-xl rounded-[20px] p-8 relative overflow-hidden">
@@ -63,7 +80,7 @@
                         </div>
 
                         <div class="mt-8">
-                            <a href="{{ route('partner.applications') }}" class="inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg">
+                            <a href="{{ route('partner.applications') }}" class="fx-btn inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg">
                                 Check Application Status <i class="fa-solid fa-arrow-right"></i>
                             </a>
                         </div>
@@ -71,7 +88,7 @@
                 </div>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:bg-white/15 transition duration-300">
+            <div class="fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:bg-white/15 transition duration-300">
                 <div class="flex justify-between items-start mb-6">
                     <div class="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400 border border-emerald-500/20">
                         <i class="fa-solid fa-user-plus text-2xl"></i>
@@ -91,13 +108,12 @@
             </div>
         </div>
 
-        {{-- MODULE CARDS --}}
         <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> Quick Actions
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-            <a href="{{ route('partner.profile.business') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            <a href="{{ route('partner.profile.business') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-user-gear"></i>
                 </div>
@@ -105,7 +121,7 @@
                 <p class="text-slate-400 text-xs">Manage business details</p>
             </a>
 
-            <a href="{{ route('partner.candidates.index') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            <a href="{{ route('partner.candidates.index') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-users"></i>
                 </div>
@@ -113,7 +129,7 @@
                 <p class="text-slate-400 text-xs">View and manage candidates</p>
             </a>
 
-            <a href="{{ route('partner.jobs') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            <a href="{{ route('partner.jobs') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-briefcase"></i>
                 </div>
@@ -121,7 +137,7 @@
                 <p class="text-slate-400 text-xs">Browse approved roles</p>
             </a>
 
-            <a href="{{ route('partner.applications') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            <a href="{{ route('partner.applications') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-purple-500/20 text-purple-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-file-circle-check"></i>
                 </div>
@@ -129,7 +145,7 @@
                 <p class="text-slate-400 text-xs">Track submissions</p>
             </a>
 
-            <a href="{{ route('partner.earnings') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            <a href="{{ route('partner.earnings') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-amber-500/20 text-amber-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-sack-dollar"></i>
                 </div>
