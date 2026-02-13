@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PartnerJobResource;
 use App\Models\Job;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class PartnerJobController extends Controller
 {
@@ -17,13 +18,18 @@ class PartnerJobController extends Controller
             return response()->json(['message' => 'Only partner users can access this endpoint.'], 403);
         }
 
-        $query = Job::query()
-            ->where('status', 'approved')
-            ->whereDoesntHave('excludedPartners', function ($q) use ($partner) {
+        $query = Job::query()->where('status', 'approved');
+
+        if (Schema::hasTable('job_partner_exclusions')) {
+            $query->whereDoesntHave('excludedPartners', function ($q) use ($partner) {
                 $q->where('users.id', $partner->id);
-            })
-            ->where(function ($q) use ($partner) {
+            });
+        }
+
+        if (Schema::hasTable('job_partner_access')) {
+            $query->where(function ($q) use ($partner) {
                 $q->where('partner_visibility', 'all')
+                    ->orWhereNull('partner_visibility')
                     ->orWhere(function ($subQ) use ($partner) {
                         $subQ->where('partner_visibility', 'selected')
                             ->whereHas('allowedPartners', function ($p) use ($partner) {
@@ -31,6 +37,7 @@ class PartnerJobController extends Controller
                             });
                     });
             });
+        }
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -50,7 +57,7 @@ class PartnerJobController extends Controller
         }
 
         $jobs = $query
-            ->with(['category', 'experienceLevel', 'educationLevel'])
+            ->with(['jobCategory', 'experienceLevel', 'educationLevel'])
             ->withCount([
                 'jobApplications as partner_applications_count' => function ($q) use ($partner) {
                     $q->whereHas('candidate', function ($subQ) use ($partner) {
