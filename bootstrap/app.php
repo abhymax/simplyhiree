@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckAccountStatus;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +13,9 @@ return Application::configure(dirname(__DIR__))
         require base_path('routes/console.php');
     })
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'status.check' => CheckAccountStatus::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
