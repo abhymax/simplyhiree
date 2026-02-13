@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use App\Models\JobApplication; // Import this so we can look up Job IDs
 
 class NotificationsBell extends Component
@@ -19,9 +20,17 @@ class NotificationsBell extends Component
     public function loadNotifications()
     {
         $user = Auth::user();
-        // We load unread notifications to show in the list
+
+        // Fail-safe for guest users or missing notifications table.
+        if (!$user || !Schema::hasTable('notifications')) {
+            $this->unreadNotifications = collect();
+            $this->notificationCount = 0;
+            return;
+        }
+
+        // We load unread notifications to show in the list.
         $this->unreadNotifications = $user->unreadNotifications;
-        $this->notificationCount = $user->unreadNotifications->count();
+        $this->notificationCount = $this->unreadNotifications->count();
     }
 
     /**
@@ -31,6 +40,9 @@ class NotificationsBell extends Component
     public function markAsRead($notificationId)
     {
         $user = Auth::user();
+        if (!$user || !Schema::hasTable('notifications')) {
+            return;
+        }
         $notification = $user->notifications()->find($notificationId);
 
         if (!$notification) {
@@ -89,6 +101,10 @@ class NotificationsBell extends Component
 
     public function markAllAsRead()
     {
+        if (!Auth::check() || !Schema::hasTable('notifications')) {
+            return;
+        }
+
         Auth::user()->unreadNotifications->markAsRead();
         $this->loadNotifications();
     }
