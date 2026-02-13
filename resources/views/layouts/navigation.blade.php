@@ -12,48 +12,42 @@
                 </div>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    
                     {{-- Generic Dashboard Link --}}
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-slate-600 hover:text-indigo-600 border-transparent hover:border-indigo-600 transition-all">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
                     {{-- *** ROLE-SPECIFIC LINKS *** --}}
-                    
                     {{-- ADMIN & SUB-ADMIN LINKS --}}
-                    @auth
-                    @if(auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'))
-                        
+                    @if(auth()->check() && (auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager')))
                         @can('view_application_data')
-                        <x-nav-link :href="route('admin.applications.index')" :active="request()->routeIs('admin.applications.index')" class="text-slate-600 hover:text-indigo-600">
-                            All Applications
-                        </x-nav-link>
+                            <x-nav-link :href="route('admin.applications.index')" :active="request()->routeIs('admin.applications.index')" class="text-slate-600 hover:text-indigo-600">
+                                All Applications
+                            </x-nav-link>
                         @endcan
 
                         @can('view_pending_jobs')
-                        <x-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')" class="text-slate-600 hover:text-indigo-600">
-                            Pending Jobs
-                        </x-nav-link>
+                            <x-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')" class="text-slate-600 hover:text-indigo-600">
+                                Pending Jobs
+                            </x-nav-link>
                         @endcan
 
                         @can('view_billing_data')
-                        <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')" class="text-slate-600 hover:text-indigo-600">
-                            Billing Report
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')" class="text-slate-600 hover:text-indigo-600">
-                            Master Job Report
-                        </x-nav-link>
+                            <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')" class="text-slate-600 hover:text-indigo-600">
+                                Billing Report
+                            </x-nav-link>
+                            <x-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')" class="text-slate-600 hover:text-indigo-600">
+                                Master Job Report
+                            </x-nav-link>
                         @endcan
 
                         @can('manage_sub_admins')
-                        <x-nav-link :href="route('admin.sub_admins.index')" :active="request()->routeIs('admin.sub_admins.index')" class="text-slate-600 hover:text-indigo-600">
-                            Managers
-                        </x-nav-link>
+                            <x-nav-link :href="route('admin.sub_admins.index')" :active="request()->routeIs('admin.sub_admins.index')" class="text-slate-600 hover:text-indigo-600">
+                                Managers
+                            </x-nav-link>
                         @endcan
-
                     @endif
-                    @endauth
-                    
+
                     {{-- CLIENT LINKS --}}
                     @role('client')
                         <x-nav-link :href="route('client.jobs.create')" :active="request()->routeIs('client.jobs.create')" class="text-slate-600 hover:text-indigo-600">
@@ -69,10 +63,10 @@
 
                     {{-- PARTNER LINKS --}}
                     @role('partner')
-                         <x-nav-link :href="route('partner.jobs')" :active="request()->routeIs('partner.jobs')" class="text-slate-600 hover:text-indigo-600">
+                        <x-nav-link :href="route('partner.jobs')" :active="request()->routeIs('partner.jobs')" class="text-slate-600 hover:text-indigo-600">
                             Browse Jobs
                         </x-nav-link>
-                         <x-nav-link :href="route('partner.applications')" :active="request()->routeIs('partner.applications')" class="text-slate-600 hover:text-indigo-600">
+                        <x-nav-link :href="route('partner.applications')" :active="request()->routeIs('partner.applications')" class="text-slate-600 hover:text-indigo-600">
                             My Applications
                         </x-nav-link>
                         <x-nav-link :href="route('partner.candidates.index')" :active="request()->routeIs('partner.candidates.index')" class="text-slate-600 hover:text-indigo-600">
@@ -85,11 +79,10 @@
 
                     {{-- CANDIDATE LINKS --}}
                     @role('candidate')
-                         <x-nav-link :href="route('candidate.applications')" :active="request()->routeIs('candidate.applications')" class="text-slate-600 hover:text-indigo-600">
+                        <x-nav-link :href="route('candidate.applications')" :active="request()->routeIs('candidate.applications')" class="text-slate-600 hover:text-indigo-600">
                             My Applications
                         </x-nav-link>
                     @endrole
-
                 </div>
             </div>
 
@@ -130,9 +123,8 @@
                                     @csrf
 
                                     <x-dropdown-link :href="route('logout')"
-                                            onclick="event.preventDefault();
-                                                        this.closest('form').submit();"
-                                            class="text-red-600 hover:bg-red-50">
+                                        onclick="event.preventDefault(); this.closest('form').submit();"
+                                        class="text-red-600 hover:bg-red-50">
                                         {{ __('Log Out') }}
                                     </x-dropdown-link>
                                 </form>
@@ -165,39 +157,34 @@
             </x-responsive-nav-link>
 
             {{-- *** ROLE-SPECIFIC LINKS (Responsive) *** --}}
-            
-            @auth
-            @if(auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'))
-                
+            @if(auth()->check() && (auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager')))
                 @can('view_application_data')
-                <x-responsive-nav-link :href="route('admin.applications.index')" :active="request()->routeIs('admin.applications.index')">
-                    All Applications
-                </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.applications.index')" :active="request()->routeIs('admin.applications.index')">
+                        All Applications
+                    </x-responsive-nav-link>
                 @endcan
 
                 @can('view_pending_jobs')
-                <x-responsive-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')">
-                    Pending Jobs
-                </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')">
+                        Pending Jobs
+                    </x-responsive-nav-link>
                 @endcan
 
                 @can('view_billing_data')
-                <x-responsive-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')">
-                    Billing Report
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')">
-                    Master Job Report
-                </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')">
+                        Billing Report
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')">
+                        Master Job Report
+                    </x-responsive-nav-link>
                 @endcan
 
                 @can('manage_sub_admins')
-                <x-responsive-nav-link :href="route('admin.sub_admins.index')" :active="request()->routeIs('admin.sub_admins.index')">
-                    Managers
-                </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.sub_admins.index')" :active="request()->routeIs('admin.sub_admins.index')">
+                        Managers
+                    </x-responsive-nav-link>
                 @endcan
-
             @endif
-            @endauth
 
             @role('client')
                 <x-responsive-nav-link :href="route('client.jobs.create')" :active="request()->routeIs('client.jobs.create')">
@@ -231,7 +218,6 @@
                     My Applications
                 </x-responsive-nav-link>
             @endrole
-
         </div>
 
         <div class="pt-4 pb-4 border-t border-slate-200 bg-slate-50">
@@ -255,8 +241,8 @@
                         @csrf
 
                         <x-responsive-nav-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                            this.closest('form').submit();" class="text-red-600 hover:bg-red-50 hover:text-red-700">
+                            onclick="event.preventDefault(); this.closest('form').submit();"
+                            class="text-red-600 hover:bg-red-50 hover:text-red-700">
                             {{ __('Log Out') }}
                         </x-responsive-nav-link>
                     </form>
