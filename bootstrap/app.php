@@ -3,20 +3,18 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
-return Application::configure(basePath: dirname(__DIR__))
-    ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
-        health: '/up',
-    )
+return Application::configure(dirname(__DIR__))
+    ->withRouting(function () {
+        Route::middleware('web')->group(base_path('routes/web.php'));
+        Route::middleware('api')->prefix('api')->group(base_path('routes/api.php'));
+        require base_path('routes/console.php');
+    })
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            // Add the new status check alias
-            'status.check' => \App\Http\Middleware\CheckAccountStatus::class,
-        ]);
+        //
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    ->create();

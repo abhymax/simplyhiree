@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,13 +13,13 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'google_id', 
+        'google_id',
         'billable_period_days',
         'status',
     ];
@@ -35,7 +36,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    
+
     protected function clientCode(): Attribute
     {
         return Attribute::make(
@@ -48,7 +49,6 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
-    // *** THIS FUNCTION WAS MISSING. IT IS REQUIRED. ***
     public function candidate(): HasOne
     {
         return $this->hasOne(Candidate::class);
@@ -58,20 +58,20 @@ class User extends Authenticatable
     {
         return $this->hasOne(PartnerProfile::class);
     }
-    
+
     public function assignedClients(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'client_manager', 'manager_id', 'client_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     public function managers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'client_manager', 'client_id', 'manager_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
-    public function clientProfile()
+    public function clientProfile(): HasOne
     {
         return $this->hasOne(ClientProfile::class);
     }

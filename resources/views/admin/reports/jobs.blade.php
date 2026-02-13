@@ -19,9 +19,15 @@
                 </div>
                 
                 <div class="mt-4 md:mt-0">
-                    <div class="bg-blue-600/20 backdrop-blur-md border border-blue-500/30 text-white px-6 py-3 rounded-2xl shadow-lg flex items-center gap-3">
-                        <p class="text-blue-300 text-xs font-bold uppercase tracking-wider">Total Jobs</p>
-                        <p class="text-3xl font-black text-white">{{ $jobs->total() }}</p>
+                    <div class="flex flex-col items-stretch md:items-end gap-3">
+                        <div class="bg-blue-600/20 backdrop-blur-md border border-blue-500/30 text-white px-6 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                            <p class="text-blue-300 text-xs font-bold uppercase tracking-wider">Total Jobs</p>
+                            <p class="text-3xl font-black text-white">{{ $jobs->total() }}</p>
+                        </div>
+                        <a href="{{ route('admin.reports.jobs.export', request()->query()) }}"
+                           class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/20 text-emerald-200 border border-emerald-400/40 hover:bg-emerald-500 hover:text-white transition font-bold shadow-lg shadow-emerald-900/30">
+                            <i class="fa-solid fa-file-arrow-down"></i> Download Excel (CSV)
+                        </a>
                     </div>
                 </div>
             </div>

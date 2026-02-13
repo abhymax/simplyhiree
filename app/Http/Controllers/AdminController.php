@@ -636,6 +636,54 @@ class AdminController extends Controller
         return view('admin.reports.job_applicants', compact('job', 'applications'));
     }
 
+    public function exportJobApplicantsReport(\App\Models\Job $job)
+    {
+        $applications = $job->jobApplications()
+            ->with(['candidate', 'candidate.partner'])
+            ->latest()
+            ->get();
+
+        $safeTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', $job->title ?? 'job');
+        $fileName = 'job_applicants_' . $safeTitle . '_' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($applications) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Candidate Name',
+                'Email',
+                'Phone',
+                'Source Partner',
+                'Admin Status',
+                'Client Stage',
+                'Applied Date',
+                'Interview Date',
+                'Joining Date',
+            ]);
+
+            foreach ($applications as $application) {
+                $candidate = $application->candidate;
+                $partnerName = $candidate && $candidate->partner ? $candidate->partner->name : 'Direct';
+
+                fputcsv($handle, [
+                    trim(($candidate->first_name ?? '') . ' ' . ($candidate->last_name ?? '')),
+                    $candidate->email ?? '',
+                    $candidate->phone_number ?? '',
+                    $partnerName,
+                    $application->status ?? '',
+                    $application->hiring_status ?? '',
+                    optional($application->created_at)->format('Y-m-d H:i:s'),
+                    optional($application->interview_at)->format('Y-m-d H:i:s'),
+                    optional($application->joining_date)->format('Y-m-d'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     // --- BILLING ---
 
     public function billingReport()
@@ -720,5 +768,64 @@ class AdminController extends Controller
         $clients = User::role('client')->orderBy('name')->get();
 
         return view('admin.reports.jobs', ['jobs' => $jobs, 'clients' => $clients]);
+    }
+
+    public function exportJobReport(Request $request)
+    {
+        $query = Job::with(['user', 'jobApplications'])->latest();
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                    ->orWhere('company_name', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('client_id')) {
+            $query->where('user_id', $request->client_id);
+        }
+
+        $jobs = $query->get();
+        $fileName = 'master_job_report_' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($jobs) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Job ID',
+                'Job Title',
+                'Company',
+                'Client',
+                'Status',
+                'Applicants',
+                'Joined',
+                'Posted Date',
+            ]);
+
+            foreach ($jobs as $job) {
+                $applicationsCount = $job->jobApplications->count();
+                $joinedCount = $job->jobApplications->where('joined_status', 'Joined')->count();
+
+                fputcsv($handle, [
+                    $job->id,
+                    $job->title,
+                    $job->company_name,
+                    optional($job->user)->name ?? '',
+                    $job->status,
+                    $applicationsCount,
+                    $joinedCount,
+                    optional($job->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }

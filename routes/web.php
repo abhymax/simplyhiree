@@ -169,10 +169,13 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             
             // MASTER JOB REPORT
             Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
+            Route::get('/reports/jobs/export', [AdminController::class, 'exportJobReport'])->name('reports.jobs.export');
             
             // Drill-down to see applicants for a specific job
             Route::get('/reports/jobs/{job}/applicants', [AdminController::class, 'jobApplicantsReport'])
                 ->name('reports.jobs.applicants');
+            Route::get('/reports/jobs/{job}/applicants/export', [AdminController::class, 'exportJobApplicantsReport'])
+                ->name('reports.jobs.applicants.export');
         });
 
     });
