@@ -69,16 +69,29 @@ class PartnerEarningController extends Controller
             return strcmp($b['payout_date'], $a['payout_date']);
         });
 
+        $page = max((int) $request->input('page', 1), 1);
+        $perPage = max((int) $request->input('per_page', 10), 1);
+        $total = count($rows);
+        $lastPage = (int) max((int) ceil($total / $perPage), 1);
+        $offset = ($page - 1) * $perPage;
+        $pagedRows = array_slice($rows, $offset, $perPage);
+
         return response()->json([
-            'data' => $rows,
+            'data' => $pagedRows,
             'summary' => [
-                'total_items' => count($rows),
+                'total_items' => $total,
                 'eligible_count' => $eligibleCount,
                 'pending_count' => $pendingCount,
                 'eligible_amount' => $eligibleAmount,
                 'pending_amount' => $pendingAmount,
                 'eligible_amount_formatted' => '₹' . number_format($eligibleAmount, 0),
                 'pending_amount_formatted' => '₹' . number_format($pendingAmount, 0),
+            ],
+            'meta' => [
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'per_page' => $perPage,
+                'total' => $total,
             ],
         ]);
     }
