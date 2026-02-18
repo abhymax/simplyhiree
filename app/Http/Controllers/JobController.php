@@ -152,7 +152,14 @@ class JobController extends Controller
             return redirect()->back()->with('error', 'You have already applied for this job.');
         }
 
-        if (!auth()->user()->profile) {
+        $profile = auth()->user()->profile;
+        $isProfileComplete = $profile
+            && !empty($profile->phone_number)
+            && !empty($profile->location)
+            && !empty($profile->experience_status)
+            && !empty($profile->skills);
+
+        if (!$isProfileComplete) {
             return redirect()->route('candidate.profile.edit')
                 ->with('error', 'Please complete your profile details before applying.');
         }

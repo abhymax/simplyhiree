@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,7 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -30,6 +32,11 @@ class AuthController extends Controller
 
         // Mobile self-registration is candidate-only.
         $user->assignRole('candidate');
+
+        UserProfile::create([
+            'user_id' => $user->id,
+            'phone_number' => $validated['phone_number'],
+        ]);
 
         $token = $user->createToken('mobile-token')->plainTextToken;
 

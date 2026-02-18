@@ -46,8 +46,17 @@
                         </div>
 
                         <div>
-                            <label class="block text-blue-100 text-sm font-bold mb-2">Phone Number</label>
-                            <input type="text" name="phone_number" value="{{ old('phone_number') }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                            <label class="block text-blue-100 text-sm font-bold mb-2">Phone Number (India)</label>
+                            <input
+                                type="tel"
+                                name="phone_number"
+                                value="{{ old('phone_number') }}"
+                                required
+                                maxlength="10"
+                                minlength="10"
+                                pattern="[6-9][0-9]{9}"
+                                placeholder="10-digit mobile number"
+                                class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         </div>
 
                         <div>

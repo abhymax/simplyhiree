@@ -110,7 +110,14 @@ class CandidateJobController extends Controller
             return response()->json(['message' => 'You have already applied for this job.'], 422);
         }
 
-        if (!$candidate->profile) {
+        $profile = $candidate->profile;
+        $isProfileComplete = $profile
+            && !empty($profile->phone_number)
+            && !empty($profile->location)
+            && !empty($profile->experience_status)
+            && !empty($profile->skills);
+
+        if (!$isProfileComplete) {
             return response()->json([
                 'message' => 'Please complete your profile before applying.',
                 'profile_required' => true,
