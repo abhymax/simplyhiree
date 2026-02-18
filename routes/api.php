@@ -12,6 +12,10 @@ use App\Http\Controllers\Api\ClientApplicantController;
 use App\Http\Controllers\Api\ClientBillingController;
 use App\Http\Controllers\Api\ClientDashboardController;
 use App\Http\Controllers\Api\ClientProfileApiController;
+use App\Http\Controllers\Api\CandidateDashboardController;
+use App\Http\Controllers\Api\CandidateJobController;
+use App\Http\Controllers\Api\CandidateApplicationController;
+use App\Http\Controllers\Api\CandidateProfileApiController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -46,4 +50,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/client/profile', [ClientProfileApiController::class, 'show']);
     Route::post('/client/profile', [ClientProfileApiController::class, 'update']);
     Route::put('/client/profile', [ClientProfileApiController::class, 'update']);
+    Route::get('/candidate/dashboard', [CandidateDashboardController::class, 'index']);
+    Route::get('/candidate/jobs', [CandidateJobController::class, 'index']);
+    Route::get('/candidate/jobs/{job}', [CandidateJobController::class, 'show']);
+    Route::post('/candidate/jobs/{job}/apply', [CandidateJobController::class, 'apply']);
+    Route::get('/candidate/applications', [CandidateApplicationController::class, 'index']);
+    Route::get('/candidate/profile', [CandidateProfileApiController::class, 'show']);
+    Route::post('/candidate/profile', [CandidateProfileApiController::class, 'update']);
+    Route::put('/candidate/profile', [CandidateProfileApiController::class, 'update']);
 });
