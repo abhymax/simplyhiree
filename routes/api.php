@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ClientApplicantController;
 use App\Http\Controllers\Api\ClientBillingController;
 use App\Http\Controllers\Api\ClientDashboardController;
 use App\Http\Controllers\Api\ClientProfileApiController;
+use App\Http\Controllers\Api\ClientNotificationController;
 use App\Http\Controllers\Api\CandidateDashboardController;
 use App\Http\Controllers\Api\CandidateJobController;
 use App\Http\Controllers\Api\CandidateApplicationController;
@@ -47,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/client/applications/{application}/no-show', [ClientApplicantController::class, 'markNoShow']);
     Route::post('/client/applications/{application}/select', [ClientApplicantController::class, 'selectCandidate']);
     Route::get('/client/billing', [ClientBillingController::class, 'index']);
+    Route::get('/client/notifications', [ClientNotificationController::class, 'index']);
+    Route::post('/client/notifications/{notification}/read', [ClientNotificationController::class, 'markRead']);
+    Route::post('/client/notifications/read-all', [ClientNotificationController::class, 'markAllRead']);
     Route::get('/client/profile', [ClientProfileApiController::class, 'show']);
     Route::post('/client/profile', [ClientProfileApiController::class, 'update']);
     Route::put('/client/profile', [ClientProfileApiController::class, 'update']);

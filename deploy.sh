@@ -45,11 +45,16 @@ $PHP_BIN artisan config:cache
 $PHP_BIN artisan route:cache
 $PHP_BIN artisan view:cache
 
+echo "==> Disabling maintenance mode before health check..."
+$PHP_BIN artisan up || true
+
 echo "==> Health check..."
-HTTP_CODE="$(curl -k -s -o /dev/null -w "%{http_code}" https://www.simplyhiree.com/ || true)"
+HTTP_CODE="$(curl -k -s -o /dev/null -w "%{http_code}" https://www.simplyhiree.com/up || true)"
 if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "302" ]; then
   echo "!! Health check failed with HTTP $HTTP_CODE"
   echo "!! Rolling back to previous commit: $CURRENT_COMMIT"
+
+  $PHP_BIN artisan down --render="errors::503" --retry=60 || true
 
   git reset --hard "$CURRENT_COMMIT"
 
@@ -63,6 +68,7 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "302" ]; then
   $PHP_BIN artisan config:cache
   $PHP_BIN artisan route:cache
   $PHP_BIN artisan view:cache
+  $PHP_BIN artisan up || true
 
   exit 1
 fi

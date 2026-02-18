@@ -20,6 +20,7 @@ use App\Notifications\JobApproved;
 use App\Notifications\JobRejected;
 use App\Notifications\ApplicationApprovedByAdmin;
 use App\Notifications\ApplicationRejectedByAdmin;
+use App\Notifications\ClientJobApprovedForAdmin;
 
 class AdminController extends Controller
 {
@@ -535,7 +536,7 @@ class AdminController extends Controller
             'payout_amount' => $validated['payout_amount'],
             'minimum_stay_days' => $validated['minimum_stay_days'],
         ]);
-        if ($job->user) $job->user->notify(new JobApproved($job));
+        $this->sendJobApprovedNotifications($job);
         return redirect()->back()->with('success', 'Job has been approved and is now live.');
     }
 
@@ -549,8 +550,27 @@ class AdminController extends Controller
     public function updateJobStatus(Request $request, Job $job)
     {
         $request->validate(['status' => 'required|in:approved,on_hold,closed,rejected']);
+        $wasApproved = $job->status === 'approved';
         $job->update(['status' => $request->status]);
+
+        if ($request->status === 'approved' && !$wasApproved) {
+            $this->sendJobApprovedNotifications($job);
+        }
+
         return redirect()->back()->with('success', "Job status updated to {$request->status}.");
+    }
+
+    private function sendJobApprovedNotifications(Job $job): void
+    {
+        if ($job->user) {
+            $job->user->notify(new JobApproved($job));
+        }
+
+        $actorName = auth()->user()?->name;
+        $superadmins = User::role('Superadmin')->get();
+        foreach ($superadmins as $superadmin) {
+            $superadmin->notify(new ClientJobApprovedForAdmin($job, $actorName));
+        }
     }
 
     public function destroyJob(Job $job)
