@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\PartnerApplicationController;
 use App\Http\Controllers\Api\PartnerCandidateController;
 use App\Http\Controllers\Api\PartnerEarningController;
 use App\Http\Controllers\Api\PartnerProfileController;
+use App\Http\Controllers\Api\ClientJobController;
+use App\Http\Controllers\Api\ClientApplicantController;
+use App\Http\Controllers\Api\ClientBillingController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -27,4 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/partner/earnings', [PartnerEarningController::class, 'index']);
     Route::get('/partner/profile', [PartnerProfileController::class, 'show']);
     Route::put('/partner/profile', [PartnerProfileController::class, 'update']);
+    Route::get('/client/job-form-data', [ClientJobController::class, 'formData']);
+    Route::get('/client/jobs', [ClientJobController::class, 'index']);
+    Route::post('/client/jobs', [ClientJobController::class, 'store']);
+    Route::get('/client/applicants', [ClientApplicantController::class, 'index']);
+    Route::get('/client/billing', [ClientBillingController::class, 'index']);
 });
