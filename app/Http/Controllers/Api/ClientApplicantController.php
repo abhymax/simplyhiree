@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ClientApplicantController extends Controller
@@ -33,6 +34,10 @@ class ClientApplicantController extends Controller
             $query->where('hiring_status', $request->input('hiring_status'));
         }
 
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
         $applications = $query->paginate($perPage)->appends($request->query());
 
         $data = $applications->getCollection()->map(function (JobApplication $application) {
@@ -60,6 +65,11 @@ class ClientApplicantController extends Controller
                     'name' => $candidateName,
                     'email' => $candidateEmail,
                     'phone' => $candidatePhone,
+                    'skills' => $application->candidate?->skills,
+                    'experience_status' => $application->candidate?->experience_status,
+                    'education_level' => $application->candidate?->education_level,
+                    'expected_ctc' => $application->candidate?->expected_ctc,
+                    'resume_path' => $application->candidate?->resume_path,
                 ],
             ];
         })->values();
@@ -74,5 +84,110 @@ class ClientApplicantController extends Controller
             ],
         ]);
     }
-}
 
+    public function reject(Request $request, JobApplication $application)
+    {
+        $client = $this->authorizedClient($request);
+        if ($client === null) {
+            return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
+        }
+        if (!$this->ownsApplication($client->id, $application)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $application->update(['hiring_status' => 'Client Rejected']);
+        return response()->json(['message' => 'Candidate rejected successfully.']);
+    }
+
+    public function scheduleInterview(Request $request, JobApplication $application)
+    {
+        $client = $this->authorizedClient($request);
+        if ($client === null) {
+            return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
+        }
+        if (!$this->ownsApplication($client->id, $application)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $validated = $request->validate([
+            'interview_at' => ['required', 'date', 'after:now'],
+            'client_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $application->update([
+            'hiring_status' => 'Interview Scheduled',
+            'interview_at' => Carbon::parse($validated['interview_at']),
+            'client_notes' => $validated['client_notes'] ?? null,
+        ]);
+
+        return response()->json(['message' => 'Interview scheduled successfully.']);
+    }
+
+    public function markAppeared(Request $request, JobApplication $application)
+    {
+        $client = $this->authorizedClient($request);
+        if ($client === null) {
+            return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
+        }
+        if (!$this->ownsApplication($client->id, $application)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $application->update(['hiring_status' => 'Interviewed']);
+        return response()->json(['message' => 'Candidate marked as interviewed.']);
+    }
+
+    public function markNoShow(Request $request, JobApplication $application)
+    {
+        $client = $this->authorizedClient($request);
+        if ($client === null) {
+            return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
+        }
+        if (!$this->ownsApplication($client->id, $application)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $application->update(['hiring_status' => 'No-Show']);
+        return response()->json(['message' => 'Candidate marked as no-show.']);
+    }
+
+    public function selectCandidate(Request $request, JobApplication $application)
+    {
+        $client = $this->authorizedClient($request);
+        if ($client === null) {
+            return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
+        }
+        if (!$this->ownsApplication($client->id, $application)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $validated = $request->validate([
+            'joining_date' => ['required', 'date', 'after_or_equal:today'],
+            'client_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $application->update([
+            'hiring_status' => 'Selected',
+            'joining_date' => Carbon::parse($validated['joining_date']),
+            'client_notes' => $validated['client_notes'] ?? null,
+        ]);
+
+        return response()->json(['message' => 'Candidate selected successfully.']);
+    }
+
+    private function authorizedClient(Request $request)
+    {
+        $client = $request->user();
+        if (!$client || !$client->hasRole('client')) {
+            return null;
+        }
+
+        return $client;
+    }
+
+    private function ownsApplication(int $clientId, JobApplication $application): bool
+    {
+        $application->loadMissing('job');
+        return (int) $application->job?->user_id === $clientId;
+    }
+}

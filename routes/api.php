@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\PartnerProfileController;
 use App\Http\Controllers\Api\ClientJobController;
 use App\Http\Controllers\Api\ClientApplicantController;
 use App\Http\Controllers\Api\ClientBillingController;
+use App\Http\Controllers\Api\ClientDashboardController;
+use App\Http\Controllers\Api\ClientProfileApiController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -31,8 +33,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/partner/profile', [PartnerProfileController::class, 'show']);
     Route::put('/partner/profile', [PartnerProfileController::class, 'update']);
     Route::get('/client/job-form-data', [ClientJobController::class, 'formData']);
+    Route::get('/client/dashboard', [ClientDashboardController::class, 'index']);
     Route::get('/client/jobs', [ClientJobController::class, 'index']);
     Route::post('/client/jobs', [ClientJobController::class, 'store']);
     Route::get('/client/applicants', [ClientApplicantController::class, 'index']);
+    Route::post('/client/applications/{application}/reject', [ClientApplicantController::class, 'reject']);
+    Route::post('/client/applications/{application}/interview', [ClientApplicantController::class, 'scheduleInterview']);
+    Route::post('/client/applications/{application}/appeared', [ClientApplicantController::class, 'markAppeared']);
+    Route::post('/client/applications/{application}/no-show', [ClientApplicantController::class, 'markNoShow']);
+    Route::post('/client/applications/{application}/select', [ClientApplicantController::class, 'selectCandidate']);
     Route::get('/client/billing', [ClientBillingController::class, 'index']);
+    Route::get('/client/profile', [ClientProfileApiController::class, 'show']);
+    Route::put('/client/profile', [ClientProfileApiController::class, 'update']);
 });
