@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClientApplicantController extends Controller
 {
@@ -23,7 +24,7 @@ class ClientApplicantController extends Controller
             ->whereHas('job', function ($q) use ($client) {
                 $q->where('user_id', $client->id);
             })
-            ->with(['job', 'candidate', 'candidateUser'])
+            ->with(['job', 'candidate', 'candidateUser.profile'])
             ->latest();
 
         if ($request->filled('job_id')) {
@@ -43,7 +44,9 @@ class ClientApplicantController extends Controller
         $data = $applications->getCollection()->map(function (JobApplication $application) {
             $candidateName = $application->candidate_name;
             $candidateEmail = $application->candidate?->email ?? $application->candidateUser?->email;
-            $candidatePhone = $application->candidate?->phone_number;
+            $candidatePhone = $application->candidate?->phone_number ?? $application->candidateUser?->profile?->phone;
+            $resumePath = $application->candidate?->resume_path ?? $application->candidateUser?->profile?->resume_path;
+            $resumeUrl = $resumePath ? Storage::disk('public')->url($resumePath) : null;
 
             return [
                 'id' => $application->id,
@@ -69,7 +72,8 @@ class ClientApplicantController extends Controller
                     'experience_status' => $application->candidate?->experience_status,
                     'education_level' => $application->candidate?->education_level,
                     'expected_ctc' => $application->candidate?->expected_ctc,
-                    'resume_path' => $application->candidate?->resume_path,
+                    'resume_path' => $resumePath,
+                    'resume_url' => $resumeUrl ? url($resumeUrl) : null,
                 ],
             ];
         })->values();

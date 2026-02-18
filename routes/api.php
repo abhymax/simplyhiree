@@ -44,5 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/client/applications/{application}/select', [ClientApplicantController::class, 'selectCandidate']);
     Route::get('/client/billing', [ClientBillingController::class, 'index']);
     Route::get('/client/profile', [ClientProfileApiController::class, 'show']);
+    Route::post('/client/profile', [ClientProfileApiController::class, 'update']);
     Route::put('/client/profile', [ClientProfileApiController::class, 'update']);
 });
