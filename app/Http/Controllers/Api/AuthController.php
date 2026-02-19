@@ -77,8 +77,8 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        // Only partner/client/candidate can use mobile app
-        if (!($user->hasRole('partner') || $user->hasRole('client') || $user->hasRole('candidate'))) {
+        // Only admin/partner/client/candidate can use mobile app
+        if (!($user->hasRole('Superadmin') || $user->hasRole('Manager') || $user->hasRole('partner') || $user->hasRole('client') || $user->hasRole('candidate'))) {
             Auth::logout();
             return response()->json(['message' => 'Role not allowed for mobile app.'], 403);
         }
@@ -91,7 +91,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->getRoleNames()->first(),
+                'role' => $this->getPrimaryRole($user),
             ],
         ]);
     }
@@ -100,7 +100,7 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'access_token' => ['required', 'string'],
-            'role' => ['nullable', 'in:candidate,partner,client'],
+            'role' => ['nullable', 'in:candidate,partner,client,admin'],
         ]);
 
         try {
@@ -126,7 +126,7 @@ class AuthController extends Controller
 
             $existingRole = $this->getPrimaryRole($user);
 
-            if (!in_array($existingRole, ['partner', 'client', 'candidate'], true)) {
+            if (!in_array($existingRole, ['admin', 'partner', 'client', 'candidate'], true)) {
                 return response()->json(['message' => 'Role not allowed for mobile app.'], 403);
             }
 
@@ -154,6 +154,10 @@ class AuthController extends Controller
                     'role' => $existingRole,
                 ],
             ]);
+        }
+
+        if ($requestedRole === 'admin') {
+            return response()->json(['message' => 'Admin account cannot be self-registered from Google login.'], 403);
         }
 
         $newRole = $requestedRole ?: 'candidate';
@@ -196,7 +200,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $user->getRoleNames()->first(),
+            'role' => $this->getPrimaryRole($user),
         ]);
     }
 
@@ -258,6 +262,10 @@ class AuthController extends Controller
 
     private function getPrimaryRole(User $user): string
     {
+        if ($user->hasRole('Superadmin') || $user->hasRole('Manager')) {
+            return 'admin';
+        }
+
         if ($user->hasRole('client')) {
             return 'client';
         }

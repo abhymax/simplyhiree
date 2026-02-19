@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminMobileController;
 use App\Http\Controllers\Api\PartnerJobController;
 use App\Http\Controllers\Api\PartnerApplicationController;
 use App\Http\Controllers\Api\PartnerCandidateController;
@@ -27,6 +28,26 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/admin/dashboard', [AdminMobileController::class, 'dashboard']);
+    Route::get('/admin/applications', [AdminMobileController::class, 'applications']);
+    Route::get('/admin/jobs/pending', [AdminMobileController::class, 'pendingJobs']);
+    Route::post('/admin/jobs/{job}/approve', [AdminMobileController::class, 'approveJob']);
+    Route::post('/admin/jobs/{job}/reject', [AdminMobileController::class, 'rejectJob']);
+    Route::post('/admin/jobs/{job}/status', [AdminMobileController::class, 'updateJobStatus']);
+    Route::delete('/admin/jobs/{job}', [AdminMobileController::class, 'deleteJob']);
+    Route::get('/admin/applications/pending', [AdminMobileController::class, 'pendingApplications']);
+    Route::post('/admin/applications/{application}/approve', [AdminMobileController::class, 'approveApplication']);
+    Route::post('/admin/applications/{application}/reject', [AdminMobileController::class, 'rejectApplication']);
+    Route::patch('/admin/applications/{application}/mark-paid', [AdminMobileController::class, 'markApplicationPaid']);
+    Route::get('/admin/billing', [AdminMobileController::class, 'billing']);
+    Route::get('/admin/reports/jobs', [AdminMobileController::class, 'jobReports']);
+    Route::get('/admin/reports/jobs/{job}/applicants', [AdminMobileController::class, 'jobApplicants']);
+    Route::get('/admin/managers', [AdminMobileController::class, 'managers']);
+    Route::get('/admin/managers/meta', [AdminMobileController::class, 'managerMeta']);
+    Route::post('/admin/managers', [AdminMobileController::class, 'storeManager']);
+    Route::put('/admin/managers/{manager}', [AdminMobileController::class, 'updateManager']);
+    Route::patch('/admin/managers/{manager}/status', [AdminMobileController::class, 'updateManagerStatus']);
+    Route::patch('/admin/managers/{manager}/password', [AdminMobileController::class, 'updateManagerPassword']);
     Route::get('/partner/jobs', [PartnerJobController::class, 'index']);
     Route::get('/partner/jobs/{job}', [PartnerJobController::class, 'show']);
     Route::post('/partner/jobs/{job}/apply', [PartnerJobController::class, 'apply']);
