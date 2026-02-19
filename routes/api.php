@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\CandidateApplicationController;
 use App\Http\Controllers\Api\CandidateProfileApiController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login/google', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
