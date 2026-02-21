@@ -19,14 +19,17 @@ use App\Notifications\CandidateDidNotJoin;
 use App\Notifications\CandidateLeft;
 use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
+use App\Services\SuperadminActivityService;
 
 class ClientController extends Controller
 {
     /**
      * Show the client dashboard.
      */
-    public function index()
+    public function index(SuperadminActivityService $activityService)
     {
+        $activityService->checkBillingDueAlerts();
+
         $client = Auth::user();
         
         $jobs = Job::where('user_id', $client->id)

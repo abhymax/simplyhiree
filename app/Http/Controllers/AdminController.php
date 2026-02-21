@@ -21,14 +21,17 @@ use App\Notifications\JobRejected;
 use App\Notifications\ApplicationApprovedByAdmin;
 use App\Notifications\ApplicationRejectedByAdmin;
 use App\Notifications\ClientJobApprovedForAdmin;
+use App\Services\SuperadminActivityService;
 
 class AdminController extends Controller
 {
     /**
      * Show the admin dashboard with stats.
      */
-    public function index()
+    public function index(SuperadminActivityService $activityService)
     {
+        $activityService->checkBillingDueAlerts();
+
         $totalUsers = User::count();
         $totalClients = User::role('client')->count();
         $totalPartners = User::role('partner')->count();

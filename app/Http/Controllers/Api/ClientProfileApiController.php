@@ -145,4 +145,24 @@ class ClientProfileApiController extends Controller
 
         return response()->json(['message' => 'Company profile updated successfully.']);
     }
+
+    public function deactivate(Request $request)
+    {
+        $client = $request->user();
+
+        if (!$client || !$client->hasRole('client')) {
+            return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
+        }
+
+        if ($client->status !== 'inactive') {
+            $client->status = 'inactive';
+            $client->save();
+        }
+
+        $client->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Your account has been deactivated successfully.',
+        ]);
+    }
 }

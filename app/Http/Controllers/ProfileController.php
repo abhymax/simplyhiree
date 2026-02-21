@@ -50,7 +50,12 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        if ($user->hasRole('client')) {
+            $user->status = 'inactive';
+            $user->save();
+        } else {
+            $user->delete();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

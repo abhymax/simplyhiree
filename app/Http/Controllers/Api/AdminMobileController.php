@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActivityLog;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Notifications\ApplicationRejectedByAdmin;
 use App\Notifications\ClientJobApprovedForAdmin;
 use App\Notifications\JobApproved;
 use App\Notifications\JobRejected;
+use App\Services\SuperadminActivityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -139,12 +141,14 @@ class AdminMobileController extends Controller
         }
     }
 
-    public function dashboard(Request $request)
+    public function dashboard(Request $request, SuperadminActivityService $activityService)
     {
         $admin = $this->adminUser($request);
         if (!$admin) {
             return $this->adminOnlyResponse();
         }
+
+        $activityService->checkBillingDueAlerts();
 
         $totalUsers = (int) User::count();
         $totalClients = (int) User::role('client')->count();
@@ -185,6 +189,123 @@ class AdminMobileController extends Controller
                 'pending_applications' => $pendingApplications,
                 'today_interviews' => $todayInterviews,
                 'due_invoices' => $dueInvoicesCount,
+            ],
+        ]);
+    }
+
+    public function clients(Request $request)
+    {
+        $admin = $this->adminUser($request);
+        if (!$admin) {
+            return $this->adminOnlyResponse();
+        }
+
+        $perPage = max(min((int) $request->input('per_page', 10), 100), 1);
+        $query = User::role('client')
+            ->with(['clientProfile', 'profile'])
+            ->latest();
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('clientProfile', function ($profileQuery) use ($search) {
+                        $profileQuery
+                            ->where('company_name', 'like', "%{$search}%")
+                            ->orWhere('contact_person_name', 'like', "%{$search}%")
+                            ->orWhere('contact_phone', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $clients = $query->paginate($perPage)->appends($request->query());
+
+        $rows = $clients->getCollection()->map(function (User $client) {
+            $profile = $client->clientProfile;
+
+            return [
+                'id' => $client->id,
+                'name' => $client->name,
+                'email' => $client->email,
+                'status' => $client->status,
+                'company_name' => $profile?->company_name ?: $client->name,
+                'industry' => $profile?->industry,
+                'company_size' => $profile?->company_size,
+                'contact_person_name' => $profile?->contact_person_name,
+                'phone' => $profile?->contact_phone ?: $client->profile?->phone_number,
+                'city' => $profile?->city,
+                'state' => $profile?->state,
+                'created_at' => optional($client->created_at)->toIso8601String(),
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'current_page' => $clients->currentPage(),
+                'last_page' => $clients->lastPage(),
+                'per_page' => $clients->perPage(),
+                'total' => $clients->total(),
+            ],
+        ]);
+    }
+
+    public function activityLogs(Request $request)
+    {
+        $admin = $this->adminUser($request);
+        if (!$admin) {
+            return $this->adminOnlyResponse();
+        }
+
+        $perPage = max(min((int) $request->input('per_page', 20), 100), 1);
+
+        $query = AdminActivityLog::query()->latest('occurred_at');
+
+        if ($request->filled('event_key')) {
+            $query->where('event_key', 'like', '%' . $request->input('event_key') . '%');
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%")
+                    ->orWhere('actor_name', 'like', "%{$search}%");
+            });
+        }
+
+        $logs = $query->paginate($perPage)->appends($request->query());
+
+        $data = $logs->getCollection()->map(function (AdminActivityLog $log) {
+            return [
+                'id' => $log->id,
+                'event_key' => $log->event_key,
+                'title' => $log->title,
+                'message' => $log->message,
+                'icon' => $log->icon,
+                'actor_id' => $log->actor_id,
+                'actor_name' => $log->actor_name,
+                'subject_type' => $log->subject_type,
+                'subject_id' => $log->subject_id,
+                'metadata' => $log->metadata,
+                'whatsapp_status' => $log->whatsapp_status,
+                'whatsapp_last_error' => $log->whatsapp_last_error,
+                'occurred_at' => optional($log->occurred_at)->toIso8601String(),
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $logs->currentPage(),
+                'last_page' => $logs->lastPage(),
+                'per_page' => $logs->perPage(),
+                'total' => $logs->total(),
             ],
         ]);
     }

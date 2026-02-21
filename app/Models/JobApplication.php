@@ -24,6 +24,7 @@ class JobApplication extends Model
         // New Billing Fields
         'payment_status',
         'paid_at',
+        'billing_due_alerted_at',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class JobApplication extends Model
         'joining_date' => 'datetime',
         'left_at' => 'datetime',
         'paid_at' => 'datetime', // <-- Add this
+        'billing_due_alerted_at' => 'datetime',
     ];
 
     /**

@@ -47,6 +47,8 @@
                             <i class="fa-solid fa-user-xmark w-5 h-5 text-red-500"></i>
                         @elseif($notification->data['icon'] == 'user-clock')
                             <i class="fa-solid fa-user-clock w-5 h-5 text-gray-500"></i>
+                        @else
+                            <i class="fa-solid fa-circle-info w-5 h-5 text-indigo-500"></i>
                         @endif
                     </div>
                     

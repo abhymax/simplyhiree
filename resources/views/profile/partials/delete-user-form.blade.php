@@ -1,11 +1,14 @@
 <section class="space-y-6">
+    @php($isClient = auth()->user()?->hasRole('client'))
     <header>
         <h2 class="text-xl font-bold text-rose-200">
-            {{ __('Delete Account') }}
+            {{ $isClient ? __('Deactivate Account') : __('Delete Account') }}
         </h2>
 
         <p class="mt-1 text-sm text-slate-300">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+            {{ $isClient
+                ? __('Your client account will be marked inactive and you can request reactivation from support later.')
+                : __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
         </p>
     </header>
 
@@ -14,7 +17,7 @@
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
         class="inline-flex items-center px-5 py-2.5 rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white transition shadow-lg"
     >
-        {{ __('Delete Account') }}
+        {{ $isClient ? __('Deactivate Account') : __('Delete Account') }}
     </button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
@@ -23,11 +26,13 @@
             @method('delete')
 
             <h2 class="text-lg font-bold text-slate-900">
-                {{ __('Are you sure you want to delete your account?') }}
+                {{ $isClient ? __('Are you sure you want to deactivate your account?') : __('Are you sure you want to delete your account?') }}
             </h2>
 
             <p class="mt-2 text-sm text-slate-600">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm.') }}
+                {{ $isClient
+                    ? __('Your account will be marked inactive and logged out immediately. Please enter your password to confirm.')
+                    : __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm.') }}
             </p>
 
             <div class="mt-5">
@@ -48,7 +53,7 @@
                 </button>
 
                 <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold">
-                    {{ __('Delete Account') }}
+                    {{ $isClient ? __('Deactivate Account') : __('Delete Account') }}
                 </button>
             </div>
         </form>

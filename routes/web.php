@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\AdminActivityLogController;
 use App\Http\Controllers\SubAdminController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\CandidateController;
@@ -90,6 +91,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     Route::middleware(['role:Superadmin|Manager'])->prefix('admin')->name('admin.')->group(function () {
         
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
 
         // --- IMPERSONATION ---
         Route::get('/impersonate/stop', [SubAdminController::class, 'stopImpersonating'])->name('impersonate.stop');

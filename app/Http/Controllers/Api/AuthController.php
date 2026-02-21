@@ -7,6 +7,7 @@ use App\Models\ClientProfile;
 use App\Models\PartnerProfile;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\SuperadminActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,29 +18,60 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request, SuperadminActivityService $activityService)
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['nullable', 'in:candidate,partner,client'],
+            'company_type' => ['nullable', 'in:Placement Agency,Freelancer,Recruiter'],
         ]);
+
+        $role = $validated['role'] ?? 'candidate';
+        $isPendingRole = in_array($role, ['partner', 'client'], true);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'status' => 'active',
+            'status' => $isPendingRole ? 'pending' : 'active',
+            'billable_period_days' => $role === 'client' ? 30 : null,
         ]);
 
-        // Mobile self-registration is candidate-only.
-        $user->assignRole('candidate');
+        $user->assignRole($role);
 
         UserProfile::create([
             'user_id' => $user->id,
             'phone_number' => $validated['phone_number'],
         ]);
+
+        if ($role === 'partner') {
+            PartnerProfile::create([
+                'user_id' => $user->id,
+                'company_type' => $validated['company_type'] ?? 'Freelancer',
+            ]);
+        } elseif ($role === 'client') {
+            ClientProfile::create([
+                'user_id' => $user->id,
+            ]);
+        }
+
+        $activityService->logUserSignup($user, $role, 'mobile');
+
+        if ($isPendingRole) {
+            return response()->json([
+                'message' => 'Registration successful! Your account is pending Admin approval.',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $role,
+                    'status' => $user->status,
+                ],
+            ], 201);
+        }
 
         $token = $user->createToken('mobile-token')->plainTextToken;
 
@@ -77,6 +109,13 @@ class AuthController extends Controller
 
         $user = $request->user();
 
+        if (in_array($user->status, ['pending', 'restricted', 'on_hold', 'inactive'], true)) {
+            Auth::logout();
+            return response()->json([
+                'message' => "Your account status is '{$user->status}'. Please contact support.",
+            ], 403);
+        }
+
         // Only admin/partner/client/candidate can use mobile app
         if (!($user->hasRole('Superadmin') || $user->hasRole('Manager') || $user->hasRole('partner') || $user->hasRole('client') || $user->hasRole('candidate'))) {
             Auth::logout();
@@ -96,7 +135,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function googleLogin(Request $request)
+    public function googleLogin(Request $request, SuperadminActivityService $activityService)
     {
         $validated = $request->validate([
             'access_token' => ['required', 'string'],
@@ -136,7 +175,7 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            if (in_array($user->status, ['pending', 'restricted', 'on_hold'], true)) {
+            if (in_array($user->status, ['pending', 'restricted', 'on_hold', 'inactive'], true)) {
                 return response()->json([
                     'message' => "Your account status is '{$user->status}'. Please contact support.",
                 ], 403);
@@ -172,6 +211,7 @@ class AuthController extends Controller
 
         $newUser->assignRole($newRole);
         $this->ensureProfileForRole($newUser, $newRole);
+        $activityService->logUserSignup($newUser, $newRole, 'google_mobile');
 
         if (in_array($newRole, ['partner', 'client'], true) && $newUser->status === 'pending') {
             return response()->json([
@@ -212,13 +252,57 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
-        $request->validate([
-            'email' => ['required', 'email'],
+        $validated = $request->validate([
+            'email' => ['nullable', 'string'],
+            'phone_number' => ['nullable', 'string'],
+            'identifier' => ['nullable', 'string'],
         ]);
 
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $identifier = trim((string) ($validated['phone_number'] ?? $validated['identifier'] ?? $validated['email'] ?? ''));
+
+        if ($identifier === '') {
+            return response()->json(['message' => 'Please provide email or phone number.'], 422);
+        }
+
+        // Mobile-number based recovery via WhatsApp temporary password.
+        if (!str_contains($identifier, '@')) {
+            $digits = preg_replace('/\D+/', '', $identifier) ?: '';
+            if (strlen($digits) === 11 && str_starts_with($digits, '0')) {
+                $digits = substr($digits, 1);
+            }
+            if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
+                $digits = substr($digits, 2);
+            }
+
+            if (!preg_match('/^[6-9][0-9]{9}$/', $digits)) {
+                return response()->json(['message' => 'Invalid Indian mobile number.'], 422);
+            }
+
+            $profile = UserProfile::query()->with('user')->where('phone_number', $digits)->first();
+            if (!$profile || !$profile->user) {
+                return response()->json(['message' => 'No account found for this mobile number.'], 404);
+            }
+
+            $temporaryPassword = strtoupper(substr(str_replace(['/', '+', '='], '', base64_encode(random_bytes(9))), 0, 10));
+
+            $profile->user->forceFill([
+                'password' => Hash::make($temporaryPassword),
+                'remember_token' => Str::random(60),
+            ])->save();
+
+            app(SuperadminActivityService::class)->sendForgotPasswordTemporaryPassword(
+                user: $profile->user,
+                phoneNumber: $digits,
+                temporaryPassword: $temporaryPassword
+            );
+
+            return response()->json([
+                'message' => 'A temporary password has been sent to your WhatsApp number.',
+            ]);
+        }
+
+        // Email fallback (existing flow).
+        $status = Password::sendResetLink(['email' => $identifier]);
 
         if ($status !== Password::RESET_LINK_SENT) {
             return response()->json([

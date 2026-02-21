@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/admin/dashboard', [AdminMobileController::class, 'dashboard']);
+    Route::get('/admin/clients', [AdminMobileController::class, 'clients']);
     Route::get('/admin/applications', [AdminMobileController::class, 'applications']);
     Route::get('/admin/jobs/pending', [AdminMobileController::class, 'pendingJobs']);
     Route::post('/admin/jobs/{job}/approve', [AdminMobileController::class, 'approveJob']);
@@ -40,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/applications/{application}/reject', [AdminMobileController::class, 'rejectApplication']);
     Route::patch('/admin/applications/{application}/mark-paid', [AdminMobileController::class, 'markApplicationPaid']);
     Route::get('/admin/billing', [AdminMobileController::class, 'billing']);
+    Route::get('/admin/activity-logs', [AdminMobileController::class, 'activityLogs']);
     Route::get('/admin/reports/jobs', [AdminMobileController::class, 'jobReports']);
     Route::get('/admin/reports/jobs/{job}/applicants', [AdminMobileController::class, 'jobApplicants']);
     Route::get('/admin/managers', [AdminMobileController::class, 'managers']);
@@ -76,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/client/profile', [ClientProfileApiController::class, 'show']);
     Route::post('/client/profile', [ClientProfileApiController::class, 'update']);
     Route::put('/client/profile', [ClientProfileApiController::class, 'update']);
+    Route::post('/client/account/deactivate', [ClientProfileApiController::class, 'deactivate']);
     Route::get('/candidate/dashboard', [CandidateDashboardController::class, 'index']);
     Route::get('/candidate/jobs', [CandidateJobController::class, 'index']);
     Route::get('/candidate/jobs/{job}', [CandidateJobController::class, 'show']);

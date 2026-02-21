@@ -7,6 +7,7 @@ use App\Models\ClientProfile;
 use App\Models\PartnerProfile;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\SuperadminActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -70,6 +71,7 @@ class SocialController extends Controller
 
             $newUser->assignRole($newRole);
             $this->ensureProfileForRole($newUser, $newRole);
+            app(SuperadminActivityService::class)->logUserSignup($newUser, $newRole, 'google_web');
 
             Auth::login($newUser);
 

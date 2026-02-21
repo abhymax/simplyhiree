@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Services\SuperadminActivityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ClientDashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, SuperadminActivityService $activityService)
     {
+        $activityService->checkBillingDueAlerts();
+
         $client = $request->user();
 
         if (!$client || !$client->hasRole('client')) {
@@ -92,4 +95,3 @@ class ClientDashboardController extends Controller
         ]);
     }
 }
-

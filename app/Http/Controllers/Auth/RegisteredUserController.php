@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Models\PartnerProfile; // <--- ADDED IMPORT
+use App\Models\PartnerProfile;
+use App\Services\SuperadminActivityService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,13 +29,13 @@ class RegisteredUserController extends Controller
      * Handle partner registration.
      * Partners are created as 'pending' and require approval.
      */
-    public function registerPartner(Request $request): RedirectResponse
+    public function registerPartner(Request $request, SuperadminActivityService $activityService): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            // UPDATE: Validation for mandatory type
             'company_type' => ['required', 'string', 'in:Placement Agency,Freelancer,Recruiter'],
         ]);
 
@@ -47,13 +48,18 @@ class RegisteredUserController extends Controller
         
         $user->assignRole('partner');
 
-        // UPDATE: Create the profile with the selected type immediately
+        UserProfile::create([
+            'user_id' => $user->id,
+            'phone_number' => $request->phone_number,
+        ]);
+
         PartnerProfile::create([
             'user_id' => $user->id,
             'company_type' => $request->company_type,
         ]);
 
         event(new Registered($user));
+        $activityService->logUserSignup($user, 'partner', 'web');
 
         // Do NOT login automatically. Redirect to login with a message.
         return redirect()->route('login')->with('status', 'Registration successful! Your account is pending Admin approval.');
@@ -66,7 +72,7 @@ class RegisteredUserController extends Controller
         return view('auth.register_candidate');
     }
 
-    public function registerCandidate(Request $request): RedirectResponse
+    public function registerCandidate(Request $request, SuperadminActivityService $activityService): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -90,6 +96,7 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+        $activityService->logUserSignup($user, 'candidate', 'web');
 
         Auth::login($user);
 
@@ -101,10 +108,11 @@ class RegisteredUserController extends Controller
         return view('auth.register_client');
     }
 
-    public function registerClient(Request $request): RedirectResponse
+    public function registerClient(Request $request, SuperadminActivityService $activityService): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -118,8 +126,13 @@ class RegisteredUserController extends Controller
         ]);
 
         $user->assignRole('client');
+        UserProfile::create([
+            'user_id' => $user->id,
+            'phone_number' => $request->phone_number,
+        ]);
 
         event(new Registered($user));
+        $activityService->logUserSignup($user, 'client', 'web');
 
         return redirect()->route('login')->with('status', 'Registration successful! Your account is pending Admin approval.');
     }

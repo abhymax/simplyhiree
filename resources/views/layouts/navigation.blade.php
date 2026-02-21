@@ -46,6 +46,10 @@
                                 Managers
                             </x-nav-link>
                         @endcan
+
+                        <x-nav-link :href="route('admin.activity-logs.index')" :active="request()->routeIs('admin.activity-logs.index')" class="text-slate-600 hover:text-indigo-600">
+                            Activity Logs
+                        </x-nav-link>
                     @endif
 
                     {{-- CLIENT LINKS --}}
@@ -184,6 +188,10 @@
                         Managers
                     </x-responsive-nav-link>
                 @endcan
+
+                <x-responsive-nav-link :href="route('admin.activity-logs.index')" :active="request()->routeIs('admin.activity-logs.index')">
+                    Activity Logs
+                </x-responsive-nav-link>
             @endif
 
             @role('client')
