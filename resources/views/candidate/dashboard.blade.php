@@ -39,18 +39,18 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
+                            <a href="{{ route('candidate.applications') }}" class="block rounded-xl px-2 py-1 hover:bg-white/10 transition">
                                 <span class="text-5xl font-black text-white tracking-tighter">{{ $todayInterviews ?? 0 }}</span>
                                 <p class="text-blue-200 font-medium mt-1">Interviews Today</p>
-                            </div>
-                            <div>
+                            </a>
+                            <a href="{{ route('candidate.applications') }}" class="block rounded-xl px-2 py-1 hover:bg-white/10 transition">
                                 <span class="text-5xl font-black text-white tracking-tighter">{{ $totalApplications ?? 0 }}</span>
                                 <p class="text-blue-200 font-medium mt-1">Total Applications</p>
-                            </div>
-                            <div>
+                            </a>
+                            <a href="{{ route('candidate.applications') }}" class="block rounded-xl px-2 py-1 hover:bg-white/10 transition">
                                 <span class="text-5xl font-black text-white tracking-tighter">{{ $pendingApplications ?? 0 }}</span>
                                 <p class="text-blue-200 font-medium mt-1">In Process</p>
-                            </div>
+                            </a>
                         </div>
 
                         <div class="mt-8 flex flex-wrap gap-3">

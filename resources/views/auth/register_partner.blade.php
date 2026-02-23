@@ -14,6 +14,19 @@
             <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
         </div>
 
+        <input type="hidden" name="otp_verification_token" id="otp_verification_token" value="{{ old('otp_verification_token') }}">
+
+        <div class="mt-3">
+            <x-input-label for="phone_otp" :value="__('WhatsApp OTP Verification')" />
+            <div class="flex gap-2">
+                <x-text-input id="phone_otp" class="block mt-1 w-full" type="text" maxlength="6" placeholder="Enter 6-digit OTP" />
+                <button type="button" id="send_partner_otp_btn" class="mt-1 px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500">Send OTP</button>
+                <button type="button" id="verify_partner_otp_btn" class="mt-1 px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500">Verify</button>
+            </div>
+            <p id="partner_otp_status" class="mt-2 text-sm text-gray-500"></p>
+            <x-input-error :messages="$errors->get('otp_verification_token')" class="mt-2" />
+        </div>
+
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
@@ -71,11 +84,16 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="mt-6">
+        <p class="mt-6 text-xs text-gray-500">
+            Partner signup requires WhatsApp OTP verification above.
+        </p>
+
+        <div class="mt-4">
             <a href="{{ route('google.login', ['role' => 'partner']) }}" class="w-full flex justify-center items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="h-5 w-5 mr-2" alt="Google Logo">
-                Sign up as Partner with Google
+                Continue with Google (Partner)
             </a>
+            <p class="mt-2 text-xs text-gray-500">After Google login, phone verification via WhatsApp OTP is required.</p>
         </div>
 
         <div class="flex items-center justify-end mt-4">
@@ -111,4 +129,115 @@
     
     // Setup for the confirmation password field
     setupPasswordToggle('togglePasswordConfirmation', 'password_confirmation', 'eyeIconConfirm', 'eyeSlashIconConfirm');
+
+    const partnerForm = document.querySelector('form[action="{{ route('register.partner') }}"]');
+    const partnerPhone = document.getElementById('phone_number');
+    const partnerOtp = document.getElementById('phone_otp');
+    const partnerOtpToken = document.getElementById('otp_verification_token');
+    const partnerSendBtn = document.getElementById('send_partner_otp_btn');
+    const partnerVerifyBtn = document.getElementById('verify_partner_otp_btn');
+    const partnerStatus = document.getElementById('partner_otp_status');
+
+    function setPartnerOtpStatus(message, ok = false) {
+        partnerStatus.textContent = message;
+        partnerStatus.className = ok ? 'mt-2 text-sm text-emerald-600' : 'mt-2 text-sm text-rose-600';
+    }
+
+    function resetPartnerOtpVerification() {
+        partnerOtpToken.value = '';
+        if (partnerOtp.value.trim() !== '') {
+            partnerOtp.value = '';
+        }
+    }
+
+    partnerPhone.addEventListener('input', resetPartnerOtpVerification);
+
+    partnerSendBtn.addEventListener('click', async function () {
+        const phone = partnerPhone.value.trim();
+        if (!/^[6-9][0-9]{9}$/.test(phone)) {
+            setPartnerOtpStatus('Enter a valid 10-digit Indian mobile number.');
+            return;
+        }
+
+        partnerSendBtn.disabled = true;
+        setPartnerOtpStatus('Sending OTP...', true);
+
+        try {
+            const response = await fetch('/api/otp/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    phone_number: phone,
+                    purpose: 'registration',
+                    role: 'partner',
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                setPartnerOtpStatus(data.message || 'Could not send OTP.');
+                return;
+            }
+            setPartnerOtpStatus(data.message || 'OTP sent to WhatsApp.', true);
+        } catch (error) {
+            setPartnerOtpStatus('Could not send OTP. Please try again.');
+        } finally {
+            partnerSendBtn.disabled = false;
+        }
+    });
+
+    partnerVerifyBtn.addEventListener('click', async function () {
+        const phone = partnerPhone.value.trim();
+        const otp = partnerOtp.value.trim();
+
+        if (!/^[6-9][0-9]{9}$/.test(phone)) {
+            setPartnerOtpStatus('Enter a valid 10-digit Indian mobile number.');
+            return;
+        }
+        if (!/^[0-9]{6}$/.test(otp)) {
+            setPartnerOtpStatus('Enter valid 6-digit OTP.');
+            return;
+        }
+
+        partnerVerifyBtn.disabled = true;
+        setPartnerOtpStatus('Verifying OTP...', true);
+
+        try {
+            const response = await fetch('/api/otp/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    phone_number: phone,
+                    otp: otp,
+                    purpose: 'registration',
+                    role: 'partner',
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                partnerOtpToken.value = '';
+                setPartnerOtpStatus(data.message || 'OTP verification failed.');
+                return;
+            }
+            partnerOtpToken.value = (data.verification_token || '').toString();
+            setPartnerOtpStatus('Phone verified successfully.', true);
+        } catch (error) {
+            partnerOtpToken.value = '';
+            setPartnerOtpStatus('OTP verification failed.');
+        } finally {
+            partnerVerifyBtn.disabled = false;
+        }
+    });
+
+    partnerForm.addEventListener('submit', function (event) {
+        if (!partnerOtpToken.value) {
+            event.preventDefault();
+            setPartnerOtpStatus('Please verify your phone with OTP before registration.');
+        }
+    });
 </script>

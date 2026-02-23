@@ -47,6 +47,7 @@ return [
         'default_template' => env('AISENSY_TEMPLATE_DEFAULT'),
         'superadmin_phones' => env('AISENSY_SUPERADMIN_PHONES', ''),
         'templates' => [
+            'auth.phone_otp' => env('AISENSY_TEMPLATE_PHONE_OTP', 'simplyhiree_auth_otp_v1'),
             'auth.forgot_password' => env('AISENSY_TEMPLATE_FORGOT_PASSWORD'),
             'candidate.interview_scheduled' => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_SCHEDULED'),
             'candidate.selected' => env('AISENSY_TEMPLATE_CANDIDATE_SELECTED'),

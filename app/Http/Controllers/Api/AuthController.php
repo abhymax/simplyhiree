@@ -7,6 +7,7 @@ use App\Models\ClientProfile;
 use App\Models\PartnerProfile;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\PhoneOtpService;
 use App\Services\SuperadminActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,11 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
-    public function register(Request $request, SuperadminActivityService $activityService)
+    public function register(
+        Request $request,
+        SuperadminActivityService $activityService,
+        PhoneOtpService $otpService
+    )
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -27,10 +32,40 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['nullable', 'in:candidate,partner,client'],
             'company_type' => ['nullable', 'in:Placement Agency,Freelancer,Recruiter'],
+            'otp_verification_token' => ['nullable', 'string'],
         ]);
 
         $role = $validated['role'] ?? 'candidate';
         $isPendingRole = in_array($role, ['partner', 'client'], true);
+        $normalizedPhone = $otpService->normalizePhone($validated['phone_number']);
+
+        if (!$normalizedPhone) {
+            return response()->json([
+                'message' => 'Enter a valid 10-digit Indian mobile number.',
+            ], 422);
+        }
+
+        if (in_array($role, ['partner', 'client'], true)) {
+            $verificationToken = trim((string) ($validated['otp_verification_token'] ?? ''));
+            if ($verificationToken === '') {
+                return response()->json([
+                    'message' => 'Phone verification is required. Please verify OTP first.',
+                ], 422);
+            }
+
+            $isVerified = $otpService->consumeVerificationToken(
+                phoneNumber: $normalizedPhone,
+                verificationToken: $verificationToken,
+                purpose: 'registration',
+                role: $role
+            );
+
+            if (!$isVerified) {
+                return response()->json([
+                    'message' => 'OTP verification expired or invalid. Please verify again.',
+                ], 422);
+            }
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -44,7 +79,7 @@ class AuthController extends Controller
 
         UserProfile::create([
             'user_id' => $user->id,
-            'phone_number' => $validated['phone_number'],
+            'phone_number' => $normalizedPhone,
         ]);
 
         if ($role === 'partner') {
@@ -135,11 +170,101 @@ class AuthController extends Controller
         ]);
     }
 
-    public function googleLogin(Request $request, SuperadminActivityService $activityService)
+    public function sendPhoneOtp(Request $request, PhoneOtpService $otpService)
+    {
+        $validated = $request->validate([
+            'phone_number' => ['required', 'string'],
+            'purpose' => ['required', 'in:registration,google_login,google_candidate_login'],
+            'role' => ['nullable', 'in:candidate,partner,client,admin'],
+        ]);
+
+        $purpose = (string) $validated['purpose'];
+        $role = $validated['role'] ?? null;
+
+        if ($purpose === 'registration' && !in_array($role, ['partner', 'client', 'candidate'], true)) {
+            return response()->json([
+                'message' => 'Role is required for registration OTP.',
+            ], 422);
+        }
+
+        if ($purpose === 'google_candidate_login') {
+            $purpose = 'google_login';
+            $role = 'candidate';
+        }
+
+        if ($purpose === 'google_login' && !in_array($role, ['candidate', 'partner', 'client', 'admin'], true)) {
+            return response()->json([
+                'message' => 'Role is required for Google OTP verification.',
+            ], 422);
+        }
+
+        $result = $otpService->sendOtp(
+            phoneNumber: (string) $validated['phone_number'],
+            purpose: $purpose,
+            role: $role
+        );
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json([
+                'message' => $result['message'] ?? 'Unable to send OTP.',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => $result['message'],
+            'phone_number' => $result['phone_number'] ?? null,
+            'expires_in_seconds' => $result['expires_in_seconds'] ?? null,
+        ]);
+    }
+
+    public function verifyPhoneOtp(Request $request, PhoneOtpService $otpService)
+    {
+        $validated = $request->validate([
+            'phone_number' => ['required', 'string'],
+            'purpose' => ['required', 'in:registration,google_login,google_candidate_login'],
+            'role' => ['nullable', 'in:candidate,partner,client,admin'],
+            'otp' => ['required', 'digits:6'],
+        ]);
+
+        $purpose = (string) $validated['purpose'];
+        $role = $validated['role'] ?? null;
+
+        if ($purpose === 'google_candidate_login') {
+            $purpose = 'google_login';
+            $role = 'candidate';
+        }
+
+        $result = $otpService->verifyOtp(
+            phoneNumber: (string) $validated['phone_number'],
+            otp: (string) $validated['otp'],
+            purpose: $purpose,
+            role: $role
+        );
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json([
+                'message' => $result['message'] ?? 'Invalid OTP.',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => $result['message'],
+            'phone_number' => $result['phone_number'] ?? null,
+            'verification_token' => $result['verification_token'],
+        ]);
+    }
+
+    public function googleLogin(
+        Request $request,
+        SuperadminActivityService $activityService,
+        PhoneOtpService $otpService
+    )
     {
         $validated = $request->validate([
             'access_token' => ['required', 'string'],
             'role' => ['nullable', 'in:candidate,partner,client,admin'],
+            'phone_number' => ['nullable', 'string'],
+            'otp_verification_token' => ['nullable', 'string'],
         ]);
 
         try {
@@ -153,6 +278,8 @@ class AuthController extends Controller
         }
 
         $requestedRole = $validated['role'] ?? null;
+        $inputPhone = $otpService->normalizePhone($validated['phone_number'] ?? null);
+        $otpVerificationToken = trim((string) ($validated['otp_verification_token'] ?? ''));
 
         $user = User::where('google_id', $googleUser->id)
             ->orWhere('email', $googleUser->email)
@@ -182,6 +309,46 @@ class AuthController extends Controller
             }
 
             $this->ensureProfileForRole($user, $existingRole);
+
+            $loginPhone = $otpService->normalizePhone(
+                $user->profile?->phone_number ?: ($validated['phone_number'] ?? null)
+            );
+
+            $verified = false;
+            if ($loginPhone && $otpVerificationToken !== '') {
+                $verified = $otpService->consumeVerificationToken(
+                    phoneNumber: $loginPhone,
+                    verificationToken: $otpVerificationToken,
+                    purpose: 'google_login',
+                    role: $existingRole
+                );
+
+                if (!$verified && $existingRole === 'candidate') {
+                    // Backward compatibility with older candidate purpose key.
+                    $verified = $otpService->consumeVerificationToken(
+                        phoneNumber: $loginPhone,
+                        verificationToken: $otpVerificationToken,
+                        purpose: 'google_candidate_login',
+                        role: 'candidate'
+                    );
+                }
+            }
+
+            if (!$verified) {
+                return response()->json([
+                    'requires_phone_otp' => true,
+                    'message' => 'Google login requires WhatsApp OTP phone verification.',
+                    'phone_number' => $loginPhone,
+                    'purpose' => 'google_login',
+                    'role' => $existingRole,
+                ]);
+            }
+
+            $user->profile()->updateOrCreate(
+                ['user_id' => $user->id],
+                ['phone_number' => $loginPhone]
+            );
+
             $token = $user->createToken('mobile-token')->plainTextToken;
 
             return response()->json([
@@ -200,6 +367,36 @@ class AuthController extends Controller
         }
 
         $newRole = $requestedRole ?: 'candidate';
+
+        $verified = false;
+        if ($inputPhone && $otpVerificationToken !== '') {
+            $verified = $otpService->consumeVerificationToken(
+                phoneNumber: $inputPhone,
+                verificationToken: $otpVerificationToken,
+                purpose: 'google_login',
+                role: $newRole
+            );
+
+            if (!$verified && $newRole === 'candidate') {
+                $verified = $otpService->consumeVerificationToken(
+                    phoneNumber: $inputPhone,
+                    verificationToken: $otpVerificationToken,
+                    purpose: 'google_candidate_login',
+                    role: 'candidate'
+                );
+            }
+        }
+
+        if (!$verified) {
+            return response()->json([
+                'requires_phone_otp' => true,
+                'message' => 'Enter your phone number and verify OTP to continue Google signup/login.',
+                'phone_number' => $inputPhone,
+                'purpose' => 'google_login',
+                'role' => $newRole,
+            ]);
+        }
+
         $newUser = User::create([
             'name' => $googleUser->name ?? 'Google User',
             'email' => $googleUser->email,
@@ -211,6 +408,14 @@ class AuthController extends Controller
 
         $newUser->assignRole($newRole);
         $this->ensureProfileForRole($newUser, $newRole);
+
+        if ($inputPhone) {
+            $newUser->profile()->updateOrCreate(
+                ['user_id' => $newUser->id],
+                ['phone_number' => $inputPhone]
+            );
+        }
+
         $activityService->logUserSignup($newUser, $newRole, 'google_mobile');
 
         if (in_array($newRole, ['partner', 'client'], true) && $newUser->status === 'pending') {

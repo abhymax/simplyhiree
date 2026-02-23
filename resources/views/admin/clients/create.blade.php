@@ -57,6 +57,24 @@
                             </div>
                         </div>
 
+                        {{-- Phone --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Phone Number (India) <span class="text-rose-400">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-slate-400"><i class="fa-solid fa-phone"></i></span>
+                                <input type="tel" name="phone_number" value="{{ old('phone_number') }}" placeholder="9876543210" pattern="[6-9][0-9]{9}" class="w-full pl-10 bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-12" required>
+                            </div>
+                        </div>
+
+                        {{-- Billable Days --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Billable Period Days</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-slate-400"><i class="fa-regular fa-calendar"></i></span>
+                                <input type="number" name="billable_period_days" value="{{ old('billable_period_days', 30) }}" min="1" max="365" class="w-full pl-10 bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-12">
+                            </div>
+                        </div>
+
                         {{-- Password --}}
                         <div>
                             <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Password <span class="text-rose-400">*</span></label>

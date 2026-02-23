@@ -38,6 +38,8 @@ Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show');
 // --- GOOGLE AUTH ROUTES ---
 Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
+Route::get('auth/google/verify-phone', [SocialController::class, 'showGooglePhoneVerificationForm'])->name('google.phone.verify');
+Route::post('auth/google/verify-phone', [SocialController::class, 'completeGooglePhoneVerification'])->name('google.phone.verify.submit');
 
 // Guest-only registration routes
 Route::middleware('guest')->group(function () {
@@ -117,7 +119,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         });
 
         // --- CLIENT MANAGEMENT ---
-        Route::middleware(['can:manage_clients'])->group(function() {
+        Route::middleware(['role_or_permission:Superadmin|manage_clients'])->group(function() {
             Route::get('/clients', [AdminController::class, 'listClients'])->name('clients.index');
             Route::get('/clients/create', [AdminController::class, 'createClient'])->name('clients.create');
             Route::post('/clients', [AdminController::class, 'storeClient'])->name('clients.store');

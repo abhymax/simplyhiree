@@ -11,6 +11,7 @@ use App\Models\EducationLevel;
 use App\Models\Candidate;
 use App\Models\PartnerProfile;
 use App\Models\ClientProfile;
+use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
@@ -204,24 +205,33 @@ class AdminController extends Controller
 
     public function storeClient(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'billable_period_days' => ['required', 'integer', 'min:1'],
+            'billable_period_days' => ['nullable', 'integer', 'min:1', 'max:365'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'billable_period_days' => $request->billable_period_days,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'billable_period_days' => (int) ($validated['billable_period_days'] ?? 30),
             'status' => 'active',
         ]);
 
         $user->assignRole('client');
-        
-        ClientProfile::create(['user_id' => $user->id]);
+
+        UserProfile::create([
+            'user_id' => $user->id,
+            'phone_number' => $validated['phone_number'],
+        ]);
+
+        ClientProfile::create([
+            'user_id' => $user->id,
+            'company_name' => $validated['name'],
+        ]);
 
         return redirect()->route('admin.clients.index')->with('success', 'Client created successfully.');
     }

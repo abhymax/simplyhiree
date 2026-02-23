@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\CandidateProfileApiController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/google', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/otp/send', [AuthController::class, 'sendPhoneOtp']);
+Route::post('/otp/verify', [AuthController::class, 'verifyPhoneOtp']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
@@ -30,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/admin/dashboard', [AdminMobileController::class, 'dashboard']);
     Route::get('/admin/clients', [AdminMobileController::class, 'clients']);
+    Route::post('/admin/clients', [AdminMobileController::class, 'storeClient']);
     Route::get('/admin/applications', [AdminMobileController::class, 'applications']);
     Route::get('/admin/jobs/pending', [AdminMobileController::class, 'pendingJobs']);
     Route::post('/admin/jobs/{job}/approve', [AdminMobileController::class, 'approveJob']);

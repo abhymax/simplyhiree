@@ -7,6 +7,7 @@ use App\Models\AdminActivityLog;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\User;
+use App\Models\UserProfile;
 use App\Notifications\ApplicationApprovedByAdmin;
 use App\Notifications\ApplicationRejectedByAdmin;
 use App\Notifications\ClientJobApprovedForAdmin;
@@ -253,6 +254,59 @@ class AdminMobileController extends Controller
                 'total' => $clients->total(),
             ],
         ]);
+    }
+
+    public function storeClient(Request $request)
+    {
+        $admin = $this->adminUser($request);
+        if (!$admin) {
+            return $this->adminOnlyResponse();
+        }
+
+        if (!($admin->hasRole('Superadmin') || $admin->can('manage_clients'))) {
+            return response()->json(['message' => 'You are not allowed to create client accounts.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+            'billable_period_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $client = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'billable_period_days' => (int) ($validated['billable_period_days'] ?? 30),
+            'status' => 'active',
+        ]);
+
+        $client->assignRole('client');
+
+        UserProfile::create([
+            'user_id' => $client->id,
+            'phone_number' => $validated['phone_number'],
+        ]);
+
+        $client->clientProfile()->create([
+            'company_name' => $validated['company_name'] ?? $validated['name'],
+        ]);
+
+        return response()->json([
+            'message' => 'Client created successfully.',
+            'data' => [
+                'id' => $client->id,
+                'name' => $client->name,
+                'email' => $client->email,
+                'status' => $client->status,
+                'company_name' => $client->clientProfile?->company_name ?? $client->name,
+                'phone' => $validated['phone_number'],
+                'billable_period_days' => $client->billable_period_days,
+            ],
+        ], 201);
     }
 
     public function activityLogs(Request $request)

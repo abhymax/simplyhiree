@@ -33,17 +33,22 @@ class AiSensyWhatsAppService
             return ['ok' => false, 'status' => 'skipped', 'error' => 'AISENSY_CONFIG_MISSING'];
         }
 
+        $templateParams = $metadata['template_params'] ?? [
+            $title,
+            $message,
+            now()->format('Y-m-d H:i:s'),
+        ];
+        if (!is_array($templateParams)) {
+            $templateParams = [(string) $templateParams];
+        }
+
         $payload = [
             'apiKey' => $apiKey,
             'campaignName' => $template,
             'destination' => $destination,
             'userName' => (string) ($metadata['user_name'] ?? 'Superadmin'),
             'source' => 'simplyhiree-system',
-            'templateParams' => [
-                $title,
-                $message,
-                now()->format('Y-m-d H:i:s'),
-            ],
+            'templateParams' => array_values($templateParams),
             'media' => (object) [],
             'buttons' => (object) [],
             'carouselCards' => [],

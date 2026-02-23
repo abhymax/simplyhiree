@@ -74,10 +74,10 @@
                             <h3 class="font-bold text-xl text-white">Daily Pulse</h3>
                         </div>
 
-                        <div class="flex items-baseline gap-4">
+                        <a href="{{ route('partner.applications') }}" class="inline-flex items-baseline gap-4 rounded-xl px-2 py-1 hover:bg-white/10 transition">
                             <span class="text-6xl font-black text-white tracking-tighter">{{ $todayInterviews ?? 0 }}</span>
                             <span class="text-blue-200 font-medium">Interviews Today</span>
-                        </div>
+                        </a>
 
                         <div class="mt-8">
                             <a href="{{ route('partner.applications') }}" class="fx-btn inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg">

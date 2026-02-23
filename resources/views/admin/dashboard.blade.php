@@ -61,15 +61,9 @@
                             </div>
 
                             <div class="mt-8">
-                                @if($todayInterviews > 0)
-                                    <a href="{{ route('admin.interviews.today') }}" class="inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg hover:shadow-white/20">
-                                        View Schedule <i class="fa-solid fa-arrow-right"></i>
-                                    </a>
-                                @else
-                                    <span class="inline-block px-4 py-2 rounded-lg bg-white/10 text-sm text-blue-200 border border-white/10">
-                                        No interviews scheduled today.
-                                    </span>
-                                @endif
+                                <a href="{{ route('admin.interviews.today') }}" class="inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg hover:shadow-white/20">
+                                    {{ $todayInterviews > 0 ? 'View Schedule' : 'Open Interview Board' }} <i class="fa-solid fa-arrow-right"></i>
+                                </a>
                             </div>
                         </div>
                     </div>
