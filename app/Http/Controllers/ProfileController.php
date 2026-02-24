@@ -14,8 +14,20 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request)
     {
+        if ($request->user()->hasRole('candidate')) {
+            return Redirect::route('candidate.profile.edit');
+        }
+
+        if ($request->user()->hasRole('partner')) {
+            return Redirect::route('partner.profile.business');
+        }
+
+        if ($request->user()->hasRole('client')) {
+            return Redirect::route('client.profile.company');
+        }
+
         return view('profile.edit', [
             'user' => $request->user(),
         ]);
