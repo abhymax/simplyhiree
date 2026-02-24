@@ -404,6 +404,65 @@ class SuperadminActivityService
         return $count;
     }
 
+    public function sendBillingReminderForSingleApplication(JobApplication $application): array
+    {
+        $application->loadMissing(['job.user', 'candidate', 'candidateUser']);
+
+        if (!$application->job || !$application->job->user) {
+            return ['ok' => false, 'error' => 'APPLICATION_RELATION_MISSING'];
+        }
+
+        $phones = $this->resolveSuperadminPhones();
+        if (empty($phones)) {
+            return ['ok' => false, 'error' => 'NO_SUPERADMIN_PHONE'];
+        }
+
+        $billableDays = (int) ($application->job->user->billable_period_days ?? 30);
+        $invoiceDate = $application->joining_date
+            ? Carbon::parse($application->joining_date)->addDays($billableDays)
+            : Carbon::today();
+
+        $candidateName = $this->candidateName($application);
+        $jobTitle = (string) ($application->job?->title ?? 'Unknown Job');
+        $clientName = (string) ($application->job?->user?->name ?? 'Unknown Client');
+
+        $message = "Raise invoice now: {$candidateName}, {$jobTitle}, {$clientName}. Billing date: {$invoiceDate->format('d M Y')} ({$billableDays} days).";
+
+        $sent = 0;
+        $failed = 0;
+        $last = null;
+
+        foreach ($phones as $phone) {
+            $result = $this->whatsApp->sendEventAlert(
+                destination: $phone,
+                eventKey: 'billing.period_hit',
+                title: 'Invoice Reminder',
+                message: $message,
+                metadata: [
+                    'application_id' => $application->id,
+                    'job_id' => $application->job_id,
+                    'client_id' => $application->job?->user_id,
+                    'candidate_user_id' => $application->candidate_user_id,
+                ]
+            );
+
+            $last = $result;
+            if (($result['ok'] ?? false) === true) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        return [
+            'ok' => $failed === 0,
+            'sent' => $sent,
+            'failed' => $failed,
+            'phones' => $phones,
+            'last' => $last,
+        ];
+    }
+
     private function sendBillingReminderToSuperadmins(JobApplication $application, Carbon $invoiceDate, int $billableDays): void
     {
         $application->loadMissing(['job.user', 'candidate', 'candidateUser']);

@@ -80,32 +80,40 @@ class AiSensyWhatsAppService
         }
 
         try {
-            $response = Http::timeout(20)
-                ->acceptJson()
-                ->asJson()
-                ->post($endpoint, $payload);
-
-            if ($response->successful()) {
-                return [
-                    'ok' => true,
-                    'status' => 'sent',
-                    'response' => $response->json() ?: $response->body(),
-                ];
+            $result = $this->dispatchPayload($endpoint, $payload, $eventKey);
+            if (($result['ok'] ?? false) === true) {
+                return $result;
             }
 
-            Log::warning('AiSensy request failed', [
-                'event_key' => $eventKey,
-                'status' => $response->status(),
-                'body' => $response->body(),
-                'payload' => $payload,
-            ]);
+            // For non-OTP campaigns, retry with common template parameter shapes
+            // when campaign expects params but metadata did not provide any.
+            if ($eventKey !== 'auth.phone_otp' && empty($templateParams)) {
+                $responseText = strtolower((string) ($result['response'] ?? ''));
+                if (str_contains($responseText, 'template params does not match the campaign')) {
+                    $fallbackSets = [
+                        [trim($message)],
+                        [trim($title), trim($message)],
+                        [trim($title), trim($message), now()->format('d M Y, h:i A')],
+                    ];
 
-            return [
-                'ok' => false,
-                'status' => 'failed',
-                'error' => 'HTTP_' . $response->status(),
-                'response' => $response->body(),
-            ];
+                    foreach ($fallbackSets as $fallbackParams) {
+                        $retryPayload = $payload;
+                        $retryPayload['templateParams'] = $fallbackParams;
+
+                        $retry = $this->dispatchPayload($endpoint, $retryPayload, $eventKey);
+                        if (($retry['ok'] ?? false) === true) {
+                            return $retry;
+                        }
+
+                        $retryText = strtolower((string) ($retry['response'] ?? ''));
+                        if (!str_contains($retryText, 'template params does not match the campaign')) {
+                            return $retry;
+                        }
+                    }
+                }
+            }
+
+            return $result;
         } catch (\Throwable $e) {
             Log::error('AiSensy exception', [
                 'event_key' => $eventKey,
@@ -118,6 +126,36 @@ class AiSensyWhatsAppService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    private function dispatchPayload(string $endpoint, array $payload, string $eventKey): array
+    {
+        $response = Http::timeout(20)
+            ->acceptJson()
+            ->asJson()
+            ->post($endpoint, $payload);
+
+        if ($response->successful()) {
+            return [
+                'ok' => true,
+                'status' => 'sent',
+                'response' => $response->json() ?: $response->body(),
+            ];
+        }
+
+        Log::warning('AiSensy request failed', [
+            'event_key' => $eventKey,
+            'status' => $response->status(),
+            'body' => $response->body(),
+            'payload' => $payload,
+        ]);
+
+        return [
+            'ok' => false,
+            'status' => 'failed',
+            'error' => 'HTTP_' . $response->status(),
+            'response' => $response->body(),
+        ];
     }
 
     public function normalizeIndianPhone(?string $phone): ?string
