@@ -51,7 +51,16 @@ class AiSensyWhatsAppService
             'source' => 'simplyhiree-system',
             'templateParams' => $templateParams,
             'media' => [],
-            'buttons' => [
+            'carouselCards' => [],
+            'location' => [],
+            'attributes' => [],
+            'paramsFallbackValue' => [],
+            'buttons' => [],
+        ];
+
+        // OTP auth campaign uses a URL button parameter in your AiSensy setup.
+        if ($eventKey === 'auth.phone_otp') {
+            $payload['buttons'] = [
                 [
                     'type' => 'button',
                     'sub_type' => 'url',
@@ -63,12 +72,8 @@ class AiSensyWhatsAppService
                         ]
                     ]
                 ]
-            ],
-            'carouselCards' => [],
-            'location' => [],
-            'attributes' => [],
-            'paramsFallbackValue' => []
-        ];
+            ];
+        }
 
         if (isset($metadata['attributes']) && is_array($metadata['attributes']) && $metadata['attributes'] !== []) {
             $payload['attributes'] = $metadata['attributes'];

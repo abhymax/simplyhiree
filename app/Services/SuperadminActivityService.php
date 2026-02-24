@@ -162,23 +162,57 @@ class SuperadminActivityService
         );
     }
 
-    public function sendForgotPasswordTemporaryPassword(User $user, string $phoneNumber, string $temporaryPassword): void
+    public function sendForgotPasswordTemporaryPassword(User $user, string $phoneNumber, string $temporaryPassword): array
     {
         $normalized = $this->whatsApp->normalizeIndianPhone($phoneNumber);
         if (!$normalized) {
-            return;
+            return ['ok' => false, 'error' => 'INVALID_PHONE'];
         }
 
-        $this->sendWhatsAppToPhones(
-            [$normalized],
-            'auth.forgot_password',
-            'SimplyHiree Password Reset',
-            "Your temporary password is {$temporaryPassword}. Please login and change it immediately.",
-            [
-                'user_id' => $user->id,
-                'role' => $user->getRoleNames()->first(),
-            ]
-        );
+        $message = "Your temporary password is {$temporaryPassword}. Please login and change it immediately.";
+        $baseMeta = [
+            'user_name' => $user->name ?: 'SimplyHiree User',
+            'user_id' => $user->id,
+            'role' => $user->getRoleNames()->first(),
+        ];
+
+        // Try common template parameter shapes to avoid campaign/template mismatch.
+        $paramAttempts = [
+            [$temporaryPassword],
+            [$user->name ?: 'User', $temporaryPassword],
+            [$temporaryPassword, now()->format('d M Y, h:i A')],
+            [$user->name ?: 'User', $temporaryPassword, now()->format('d M Y, h:i A')],
+            [],
+        ];
+
+        $last = ['ok' => false, 'error' => 'SEND_FAILED'];
+        foreach ($paramAttempts as $params) {
+            $meta = $baseMeta;
+            if (!empty($params)) {
+                $meta['template_params'] = $params;
+            }
+
+            $last = $this->whatsApp->sendEventAlert(
+                destination: $normalized,
+                eventKey: 'auth.forgot_password',
+                title: 'SimplyHiree Password Reset',
+                message: $message,
+                metadata: $meta
+            );
+
+            if (($last['ok'] ?? false) === true) {
+                return $last;
+            }
+
+            $response = strtolower((string) ($last['response'] ?? ''));
+            $isParamMismatch = str_contains($response, 'template params does not match the campaign');
+            if (!$isParamMismatch) {
+                // For non-parameter errors, stop retrying and return immediately.
+                return $last;
+            }
+        }
+
+        return $last;
     }
 
     public function sendCandidateInterviewScheduledWhatsApp(JobApplication $application): void

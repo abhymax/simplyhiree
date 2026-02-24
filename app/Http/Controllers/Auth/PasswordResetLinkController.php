@@ -66,11 +66,17 @@ class PasswordResetLinkController extends Controller
                 'remember_token' => Str::random(60),
             ])->save();
 
-            app(SuperadminActivityService::class)->sendForgotPasswordTemporaryPassword(
+            $waResult = app(SuperadminActivityService::class)->sendForgotPasswordTemporaryPassword(
                 user: $profile->user,
                 phoneNumber: $digits,
                 temporaryPassword: $temporaryPassword
             );
+
+            if (!($waResult['ok'] ?? false)) {
+                return back()->withErrors([
+                    'identifier' => 'Could not send temporary password on WhatsApp right now. Please try again.',
+                ]);
+            }
 
             return back()->with('status', 'Temporary password sent on your WhatsApp number.');
         }

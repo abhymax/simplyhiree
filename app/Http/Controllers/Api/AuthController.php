@@ -493,11 +493,18 @@ class AuthController extends Controller
                 'remember_token' => Str::random(60),
             ])->save();
 
-            app(SuperadminActivityService::class)->sendForgotPasswordTemporaryPassword(
+            $waResult = app(SuperadminActivityService::class)->sendForgotPasswordTemporaryPassword(
                 user: $profile->user,
                 phoneNumber: $digits,
                 temporaryPassword: $temporaryPassword
             );
+
+            if (!($waResult['ok'] ?? false)) {
+                return response()->json([
+                    'message' => 'Could not send temporary password on WhatsApp right now. Please try again.',
+                    'details' => $waResult,
+                ], 422);
+            }
 
             return response()->json([
                 'message' => 'A temporary password has been sent to your WhatsApp number.',
