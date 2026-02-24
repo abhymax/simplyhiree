@@ -131,6 +131,16 @@
                 </button>
             </div>
         </form>
+
+        <div class="mt-10 grid grid-cols-1 gap-6">
+            <div class="fx-card bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6">
+                @include('profile.partials.update-password-form')
+            </div>
+
+            <div class="fx-card bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6">
+                @include('profile.partials.delete-user-form')
+            </div>
+        </div>
     </div>
 </div>
 @endsection
