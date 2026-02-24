@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class CandidateProfileApiController extends Controller
 {
@@ -24,6 +26,12 @@ class CandidateProfileApiController extends Controller
             $resumeUrl = url(Storage::disk('public')->url($profile->resume_path));
         }
 
+        $isProfileComplete = $profile
+            && !empty($profile->phone_number)
+            && !empty($profile->location)
+            && !empty($profile->experience_status)
+            && !empty($profile->skills);
+
         return response()->json([
             'data' => [
                 'name' => $candidate->name,
@@ -40,6 +48,7 @@ class CandidateProfileApiController extends Controller
                 'resume_path' => $profile?->resume_path,
                 'resume_url' => $resumeUrl,
             ],
+            'profile_complete' => $isProfileComplete,
         ]);
     }
 
@@ -49,6 +58,13 @@ class CandidateProfileApiController extends Controller
 
         if (!$candidate || !$candidate->hasRole('candidate')) {
             return response()->json(['message' => 'Only candidate users can access this endpoint.'], 403);
+        }
+
+        $expectedCtc = $request->input('expected_ctc');
+        if (is_string($expectedCtc)) {
+            $request->merge([
+                'expected_ctc' => trim(str_replace(',', '', $expectedCtc)),
+            ]);
         }
 
         $validated = $request->validate([
@@ -64,29 +80,48 @@ class CandidateProfileApiController extends Controller
             'resume' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
         ]);
 
-        $profile = UserProfile::query()->firstOrNew(['user_id' => $candidate->id]);
-
-        if ($request->hasFile('resume')) {
-            if ($profile->resume_path && Storage::disk('public')->exists($profile->resume_path)) {
-                Storage::disk('public')->delete($profile->resume_path);
-            }
-
-            $profile->resume_path = $request->file('resume')->store('resumes', 'public');
+        if (!preg_match('/^[6-9][0-9]{9}$/', preg_replace('/\D+/', '', $validated['phone_number']))) {
+            throw ValidationException::withMessages([
+                'phone_number' => 'Enter a valid 10-digit Indian mobile number.',
+            ]);
         }
 
-        $profile->phone_number = $validated['phone_number'];
-        $profile->location = $validated['location'];
-        $profile->date_of_birth = $validated['date_of_birth'] ?? null;
-        $profile->gender = $validated['gender'] ?? null;
-        $profile->experience_status = $validated['experience_status'];
-        $profile->current_role = $validated['current_role'] ?? null;
-        $profile->expected_ctc = $validated['expected_ctc'] ?? null;
-        $profile->notice_period = $validated['notice_period'] ?? null;
-        $profile->skills = $validated['skills'];
-        $profile->save();
+        $profile = DB::transaction(function () use ($candidate, $request, $validated) {
+            $profile = UserProfile::query()->firstOrNew(['user_id' => $candidate->id]);
+
+            if ($request->hasFile('resume')) {
+                if ($profile->resume_path && Storage::disk('public')->exists($profile->resume_path)) {
+                    Storage::disk('public')->delete($profile->resume_path);
+                }
+
+                $profile->resume_path = $request->file('resume')->store('resumes', 'public');
+            }
+
+            $profile->phone_number = $validated['phone_number'];
+            $profile->location = $validated['location'];
+            $profile->date_of_birth = $validated['date_of_birth'] ?? null;
+            $profile->gender = $validated['gender'] ?? null;
+            $profile->experience_status = $validated['experience_status'];
+            $profile->current_role = $validated['current_role'] ?? null;
+            $profile->expected_ctc = $validated['expected_ctc'] ?? null;
+            $profile->notice_period = $validated['notice_period'] ?? null;
+            $profile->skills = $validated['skills'];
+            $profile->save();
+
+            return $profile;
+        });
 
         return response()->json([
             'message' => 'Profile updated successfully.',
+            'profile_complete' => true,
+            'data' => [
+                'phone_number' => $profile->phone_number,
+                'location' => $profile->location,
+                'experience_status' => $profile->experience_status,
+                'skills' => $profile->skills,
+                'resume_path' => $profile->resume_path,
+                'resume_url' => $profile->resume_path ? url(Storage::disk('public')->url($profile->resume_path)) : null,
+            ],
         ]);
     }
 }

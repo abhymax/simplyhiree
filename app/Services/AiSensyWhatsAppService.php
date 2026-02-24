@@ -23,38 +23,56 @@ class AiSensyWhatsAppService
             return ['ok' => false, 'status' => 'skipped', 'error' => 'AISENSY_DISABLED'];
         }
 
-        $apiKey = (string) config('services.aisensy.api_key', '');
-        $endpoint = (string) config('services.aisensy.endpoint', 'https://backend.aisensy.com/campaign/t1/api/v2');
-
-        $template = (string) (config("services.aisensy.templates.{$eventKey}")
-            ?: config('services.aisensy.default_template', ''));
+        $apiKey = trim((string) config('services.aisensy.api_key', ''));
+        $endpoint = trim((string) config('services.aisensy.endpoint', ''));
+        $templates = (array) config('services.aisensy.templates', []);
+        $defaultTemplate = (string) config('services.aisensy.default_template', '');
+        $template = (string) ($templates[$eventKey] ?? $defaultTemplate);
 
         if ($apiKey === '' || $template === '') {
             return ['ok' => false, 'status' => 'skipped', 'error' => 'AISENSY_CONFIG_MISSING'];
         }
 
-        $templateParams = $metadata['template_params'] ?? [
-            $title,
-            $message,
-            now()->format('Y-m-d H:i:s'),
-        ];
+        $templateParams = $metadata['template_params'] ?? [];
+
         if (!is_array($templateParams)) {
             $templateParams = [(string) $templateParams];
         }
+
+        $templateParams = array_values(array_map(static function ($v): string {
+            return (string) $v;
+        }, $templateParams));
 
         $payload = [
             'apiKey' => $apiKey,
             'campaignName' => $template,
             'destination' => $destination,
-            'userName' => (string) ($metadata['user_name'] ?? 'Superadmin'),
+            'userName' => (string) ($metadata['user_name'] ?? 'SimplyHiree User'),
             'source' => 'simplyhiree-system',
-            'templateParams' => array_values($templateParams),
-            'media' => (object) [],
-            'buttons' => (object) [],
+            'templateParams' => $templateParams,
+            'media' => [],
+            'buttons' => [
+                [
+                    'type' => 'button',
+                    'sub_type' => 'url',
+                    'index' => 0,
+                    'parameters' => [
+                        [
+                            'type' => 'text',
+                            'text' => $templateParams[0] ?? ''
+                        ]
+                    ]
+                ]
+            ],
             'carouselCards' => [],
-            'location' => (object) [],
-            'attributes' => (object) [],
+            'location' => [],
+            'attributes' => [],
+            'paramsFallbackValue' => []
         ];
+
+        if (isset($metadata['attributes']) && is_array($metadata['attributes']) && $metadata['attributes'] !== []) {
+            $payload['attributes'] = $metadata['attributes'];
+        }
 
         try {
             $response = Http::timeout(20)
@@ -74,6 +92,7 @@ class AiSensyWhatsAppService
                 'event_key' => $eventKey,
                 'status' => $response->status(),
                 'body' => $response->body(),
+                'payload' => $payload,
             ]);
 
             return [

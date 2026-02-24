@@ -52,6 +52,13 @@ class CandidateDashboardController extends Controller
             })
             ->values();
 
+        $profile = $candidate->profile;
+        $isProfileComplete = $profile
+            && !empty($profile->phone_number)
+            && !empty($profile->location)
+            && !empty($profile->experience_status)
+            && !empty($profile->skills);
+
         return response()->json([
             'summary' => [
                 'today_interviews' => $todayInterviews,
@@ -59,6 +66,7 @@ class CandidateDashboardController extends Controller
                 'in_process' => $inProcess,
             ],
             'upcoming_interviews' => $upcomingInterviews,
+            'profile_complete' => $isProfileComplete,
         ]);
     }
 }

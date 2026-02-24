@@ -11,9 +11,12 @@ class PhoneOtpService
     private const VERIFY_TTL_MINUTES = 20;
     private const RESEND_COOLDOWN_SECONDS = 30;
 
-    public function __construct(
-        private readonly AiSensyWhatsAppService $whatsApp
-    ) {
+    /** @var \App\Services\AiSensyWhatsAppService */
+    private $whatsApp;
+
+    public function __construct(AiSensyWhatsAppService $whatsApp)
+    {
+        $this->whatsApp = $whatsApp;
     }
 
     public function sendOtp(string $phoneNumber, string $purpose, ?string $role = null): array
@@ -35,6 +38,7 @@ class PhoneOtpService
         }
 
         $otp = (string) random_int(100000, 999999);
+
         Cache::put(
             $this->otpKey($phone, $purpose, $role),
             [
@@ -45,6 +49,7 @@ class PhoneOtpService
             ],
             now()->addMinutes(self::OTP_TTL_MINUTES)
         );
+
         Cache::put($throttleKey, true, now()->addSeconds(self::RESEND_COOLDOWN_SECONDS));
 
         $normalizedForWa = $this->whatsApp->normalizeIndianPhone($phone);
@@ -56,14 +61,15 @@ class PhoneOtpService
         }
 
         $message = "Use OTP {$otp} to verify your mobile number for SimplyHiree. This OTP is valid for 10 minutes. Do not share it with anyone.";
+
         $result = $this->whatsApp->sendEventAlert(
-            destination: $normalizedForWa,
-            eventKey: 'auth.phone_otp',
-            title: 'SimplyHiree OTP Verification',
-            message: $message,
-            metadata: [
+            $normalizedForWa,
+            'auth.phone_otp',
+            'SimplyHiree OTP Verification',
+            $message,
+            [
                 'user_name' => 'SimplyHiree User',
-                // AUTH category template should receive only OTP code as variable.
+                // Your current AiSensy campaign "otp" accepts exactly one param.
                 'template_params' => [$otp],
             ]
         );
@@ -103,6 +109,7 @@ class PhoneOtpService
         Cache::forget($this->otpKey($phone, $purpose, $role));
 
         $verificationToken = hash('sha256', Str::uuid()->toString() . '|' . $phone . '|' . $purpose);
+
         Cache::put(
             $this->verificationTokenKey($verificationToken),
             [
@@ -150,6 +157,7 @@ class PhoneOtpService
         }
 
         Cache::forget($this->verificationTokenKey($verificationToken));
+
         return true;
     }
 
