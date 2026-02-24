@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class CandidateProfileApiController extends Controller
 {
@@ -68,6 +69,8 @@ class CandidateProfileApiController extends Controller
         }
 
         $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($candidate->id)],
             'phone_number' => ['required', 'string', 'max:20'],
             'location' => ['required', 'string', 'max:255'],
             'date_of_birth' => ['nullable', 'date'],
@@ -87,6 +90,10 @@ class CandidateProfileApiController extends Controller
         }
 
         $profile = DB::transaction(function () use ($candidate, $request, $validated) {
+            $candidate->name = $validated['name'];
+            $candidate->email = $validated['email'];
+            $candidate->save();
+
             $profile = UserProfile::query()->firstOrNew(['user_id' => $candidate->id]);
 
             if ($request->hasFile('resume')) {
@@ -115,6 +122,8 @@ class CandidateProfileApiController extends Controller
             'message' => 'Profile updated successfully.',
             'profile_complete' => true,
             'data' => [
+                'name' => $candidate->name,
+                'email' => $candidate->email,
                 'phone_number' => $profile->phone_number,
                 'location' => $profile->location,
                 'experience_status' => $profile->experience_status,
