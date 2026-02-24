@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use App\Models\UserProfile;
 
 class CandidateProfileController extends Controller
@@ -28,8 +30,17 @@ class CandidateProfileController extends Controller
     {
         $user = Auth::user();
 
+        $expectedCtc = $request->input('expected_ctc');
+        if (is_string($expectedCtc)) {
+            $request->merge([
+                'expected_ctc' => trim(str_replace(',', '', $expectedCtc)),
+            ]);
+        }
+
         $validated = $request->validate([
-            'phone_number' => 'required|string|max:20',
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/'],
             'location' => 'required|string|max:255',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:Male,Female,Other',
@@ -38,35 +49,41 @@ class CandidateProfileController extends Controller
             'expected_ctc' => 'nullable|numeric|min:0',
             'notice_period' => 'nullable|string|max:100',
             'skills' => 'required|string',
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048', // Max 2MB
+            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
-        // Handle Resume Upload
-        $resumePath = $user->profile->resume_path ?? null;
-        if ($request->hasFile('resume')) {
-            // Delete old resume if exists
-            if ($resumePath && Storage::disk('public')->exists($resumePath)) {
-                Storage::disk('public')->delete($resumePath);
-            }
-            $resumePath = $request->file('resume')->store('resumes', 'public');
-        }
+        DB::transaction(function () use ($request, $user, $validated) {
+            $user->name = $validated['name'];
+            $user->email = $validated['email'];
+            $user->save();
 
-        // Update or Create Profile
-        UserProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'phone_number' => $validated['phone_number'],
-                'location' => $validated['location'],
-                'date_of_birth' => $validated['date_of_birth'],
-                'gender' => $validated['gender'],
-                'experience_status' => $validated['experience_status'],
-                'current_role' => $validated['current_role'],
-                'expected_ctc' => $validated['expected_ctc'],
-                'notice_period' => $validated['notice_period'],
-                'skills' => $validated['skills'],
-                'resume_path' => $resumePath,
-            ]
-        );
+            // Handle Resume Upload
+            $resumePath = $user->profile?->resume_path;
+            if ($request->hasFile('resume')) {
+                // Delete old resume if exists
+                if ($resumePath && Storage::disk('public')->exists($resumePath)) {
+                    Storage::disk('public')->delete($resumePath);
+                }
+                $resumePath = $request->file('resume')->store('resumes', 'public');
+            }
+
+            // Update or Create Profile
+            UserProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'phone_number' => $validated['phone_number'],
+                    'location' => $validated['location'],
+                    'date_of_birth' => $validated['date_of_birth'] ?? null,
+                    'gender' => $validated['gender'] ?? null,
+                    'experience_status' => $validated['experience_status'],
+                    'current_role' => $validated['current_role'] ?? null,
+                    'expected_ctc' => $validated['expected_ctc'] ?? null,
+                    'notice_period' => $validated['notice_period'] ?? null,
+                    'skills' => $validated['skills'],
+                    'resume_path' => $resumePath,
+                ]
+            );
+        });
 
         return redirect()->back()->with('success', 'Profile updated successfully!');
     }
