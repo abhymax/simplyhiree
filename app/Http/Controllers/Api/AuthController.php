@@ -45,26 +45,24 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (in_array($role, ['partner', 'client'], true)) {
-            $verificationToken = trim((string) ($validated['otp_verification_token'] ?? ''));
-            if ($verificationToken === '') {
-                return response()->json([
-                    'message' => 'Phone verification is required. Please verify OTP first.',
-                ], 422);
-            }
+        $verificationToken = trim((string) ($validated['otp_verification_token'] ?? ''));
+        if ($verificationToken === '') {
+            return response()->json([
+                'message' => 'Phone verification is required. Please verify OTP first.',
+            ], 422);
+        }
 
-            $isVerified = $otpService->consumeVerificationToken(
-                phoneNumber: $normalizedPhone,
-                verificationToken: $verificationToken,
-                purpose: 'registration',
-                role: $role
-            );
+        $isVerified = $otpService->consumeVerificationToken(
+            phoneNumber: $normalizedPhone,
+            verificationToken: $verificationToken,
+            purpose: 'registration',
+            role: $role
+        );
 
-            if (!$isVerified) {
-                return response()->json([
-                    'message' => 'OTP verification expired or invalid. Please verify again.',
-                ], 422);
-            }
+        if (!$isVerified) {
+            return response()->json([
+                'message' => 'OTP verification expired or invalid. Please verify again.',
+            ], 422);
         }
 
         $user = User::create([

@@ -90,14 +90,31 @@ class RegisteredUserController extends Controller
         return view('auth.register_candidate');
     }
 
-    public function registerCandidate(Request $request, SuperadminActivityService $activityService): RedirectResponse
+    public function registerCandidate(
+        Request $request,
+        SuperadminActivityService $activityService,
+        PhoneOtpService $otpService
+    ): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'otp_verification_token' => ['nullable', 'string'],
         ]);
+
+        $phone = $otpService->normalizePhone($request->phone_number);
+        $verificationToken = trim((string) $request->input('otp_verification_token', ''));
+        $verified = $phone && $verificationToken !== ''
+            ? $otpService->consumeVerificationToken($phone, $verificationToken, 'registration', 'candidate')
+            : false;
+
+        if (!$verified) {
+            return back()
+                ->withInput()
+                ->withErrors(['phone_number' => 'Please verify your mobile number with OTP before registering.']);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -110,7 +127,7 @@ class RegisteredUserController extends Controller
 
         UserProfile::create([
             'user_id' => $user->id,
-            'phone_number' => $request->phone_number,
+            'phone_number' => $phone,
         ]);
 
         event(new Registered($user));

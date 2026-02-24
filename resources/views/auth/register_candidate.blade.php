@@ -24,6 +24,19 @@
             <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
         </div>
 
+        <input type="hidden" name="otp_verification_token" id="otp_verification_token" value="{{ old('otp_verification_token') }}">
+
+        <div class="mt-3">
+            <x-input-label for="phone_otp" :value="__('WhatsApp OTP Verification')" />
+            <div class="flex gap-2">
+                <x-text-input id="phone_otp" class="block mt-1 w-full" type="text" maxlength="6" placeholder="Enter 6-digit OTP" />
+                <button type="button" id="send_candidate_otp_btn" class="mt-1 px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500">Send OTP</button>
+                <button type="button" id="verify_candidate_otp_btn" class="mt-1 px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500">Verify</button>
+            </div>
+            <p id="candidate_otp_status" class="mt-2 text-sm text-gray-500"></p>
+            <x-input-error :messages="$errors->get('otp_verification_token')" class="mt-2" />
+        </div>
+
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
@@ -90,6 +103,117 @@
     </form>
 
     <script>
+        const candidateForm = document.querySelector('form[action="{{ route('register.candidate') }}"]');
+        const candidatePhone = document.getElementById('phone_number');
+        const candidateOtp = document.getElementById('phone_otp');
+        const candidateOtpToken = document.getElementById('otp_verification_token');
+        const candidateSendBtn = document.getElementById('send_candidate_otp_btn');
+        const candidateVerifyBtn = document.getElementById('verify_candidate_otp_btn');
+        const candidateStatus = document.getElementById('candidate_otp_status');
+
+        function setCandidateOtpStatus(message, ok = false) {
+            candidateStatus.textContent = message;
+            candidateStatus.className = ok ? 'mt-2 text-sm text-emerald-600' : 'mt-2 text-sm text-rose-600';
+        }
+
+        function resetCandidateOtpVerification() {
+            candidateOtpToken.value = '';
+            if (candidateOtp.value.trim() !== '') {
+                candidateOtp.value = '';
+            }
+        }
+
+        candidatePhone.addEventListener('input', resetCandidateOtpVerification);
+
+        candidateSendBtn.addEventListener('click', async function () {
+            const phone = candidatePhone.value.trim();
+            if (!/^[6-9][0-9]{9}$/.test(phone)) {
+                setCandidateOtpStatus('Enter a valid 10-digit Indian mobile number.');
+                return;
+            }
+
+            candidateSendBtn.disabled = true;
+            setCandidateOtpStatus('Sending OTP...', true);
+
+            try {
+                const response = await fetch('/api/otp/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone_number: phone,
+                        purpose: 'registration',
+                        role: 'candidate',
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    setCandidateOtpStatus(data.message || 'Could not send OTP.');
+                    return;
+                }
+                setCandidateOtpStatus(data.message || 'OTP sent to WhatsApp.', true);
+            } catch (error) {
+                setCandidateOtpStatus('Could not send OTP. Please try again.');
+            } finally {
+                candidateSendBtn.disabled = false;
+            }
+        });
+
+        candidateVerifyBtn.addEventListener('click', async function () {
+            const phone = candidatePhone.value.trim();
+            const otp = candidateOtp.value.trim();
+
+            if (!/^[6-9][0-9]{9}$/.test(phone)) {
+                setCandidateOtpStatus('Enter a valid 10-digit Indian mobile number.');
+                return;
+            }
+            if (!/^[0-9]{6}$/.test(otp)) {
+                setCandidateOtpStatus('Enter valid 6-digit OTP.');
+                return;
+            }
+
+            candidateVerifyBtn.disabled = true;
+            setCandidateOtpStatus('Verifying OTP...', true);
+
+            try {
+                const response = await fetch('/api/otp/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone_number: phone,
+                        otp: otp,
+                        purpose: 'registration',
+                        role: 'candidate',
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    candidateOtpToken.value = '';
+                    setCandidateOtpStatus(data.message || 'OTP verification failed.');
+                    return;
+                }
+                candidateOtpToken.value = (data.verification_token || '').toString();
+                setCandidateOtpStatus('Phone verified successfully.', true);
+            } catch (error) {
+                candidateOtpToken.value = '';
+                setCandidateOtpStatus('OTP verification failed.');
+            } finally {
+                candidateVerifyBtn.disabled = false;
+            }
+        });
+
+        candidateForm.addEventListener('submit', function (event) {
+            if (!candidateOtpToken.value) {
+                event.preventDefault();
+                setCandidateOtpStatus('Please verify your phone with OTP before registration.');
+            }
+        });
+
         function togglePassword(inputId, eyeId, slashId) {
             const input = document.getElementById(inputId);
             const eye = document.getElementById(eyeId);
