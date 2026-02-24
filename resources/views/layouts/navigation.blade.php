@@ -109,11 +109,22 @@
                             </x-slot>
 
                             <x-slot name="content">
+                                @php
+                                    $profileRoute = route('profile.edit');
+                                    if (auth()->user()->hasRole('candidate')) {
+                                        $profileRoute = route('candidate.profile.edit');
+                                    } elseif (auth()->user()->hasRole('partner')) {
+                                        $profileRoute = route('partner.profile.business');
+                                    } elseif (auth()->user()->hasRole('client')) {
+                                        $profileRoute = route('client.profile.company');
+                                    }
+                                @endphp
+
                                 <div class="block px-4 py-2 text-xs text-slate-400">
                                     {{ __('Manage Account') }}
                                 </div>
 
-                                <x-dropdown-link :href="route('profile.edit')" class="hover:bg-indigo-50 hover:text-indigo-600">
+                                <x-dropdown-link :href="$profileRoute" class="hover:bg-indigo-50 hover:text-indigo-600">
                                     {{ __('Profile') }}
                                 </x-dropdown-link>
 
@@ -241,7 +252,18 @@
                 </div>
 
                 <div class="mt-3 space-y-1">
-                    <x-responsive-nav-link :href="route('profile.edit')" class="hover:text-indigo-600 hover:bg-indigo-50">
+                    @php
+                        $responsiveProfileRoute = route('profile.edit');
+                        if (auth()->user()->hasRole('candidate')) {
+                            $responsiveProfileRoute = route('candidate.profile.edit');
+                        } elseif (auth()->user()->hasRole('partner')) {
+                            $responsiveProfileRoute = route('partner.profile.business');
+                        } elseif (auth()->user()->hasRole('client')) {
+                            $responsiveProfileRoute = route('client.profile.company');
+                        }
+                    @endphp
+
+                    <x-responsive-nav-link :href="$responsiveProfileRoute" class="hover:text-indigo-600 hover:bg-indigo-50">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
 

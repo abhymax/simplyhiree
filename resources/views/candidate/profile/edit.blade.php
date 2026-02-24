@@ -38,37 +38,37 @@
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Full Name</label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <input type="text" name="name" required value="{{ old('name', $user->name) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('name') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Email Address</label>
-                        <input type="email" name="email" value="{{ old('email', $user->email) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <input type="email" name="email" required value="{{ old('email', $user->email) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('email') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Phone Number</label>
-                        <input type="text" name="phone_number" value="{{ old('phone_number', $profile->phone_number) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <input type="text" name="phone_number" required value="{{ old('phone_number', $profile->phone_number) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('phone_number') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Current Location</label>
-                        <input type="text" name="location" value="{{ old('location', $profile->location) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <input type="text" name="location" required value="{{ old('location', $profile->location) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('location') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Date of Birth</label>
-                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth', optional($profile->date_of_birth)->format('Y-m-d')) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <input type="date" name="date_of_birth" required value="{{ old('date_of_birth', optional($profile->date_of_birth)->format('Y-m-d')) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('date_of_birth') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Gender</label>
-                        <select name="gender" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <select name="gender" required class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                             <option value="" class="text-slate-900">Select</option>
                             <option value="Male" {{ (old('gender', $profile->gender) == 'Male') ? 'selected' : '' }} class="text-slate-900">Male</option>
                             <option value="Female" {{ (old('gender', $profile->gender) == 'Female') ? 'selected' : '' }} class="text-slate-900">Female</option>
@@ -79,7 +79,7 @@
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Experience Status</label>
-                        <select name="experience_status" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <select name="experience_status" required class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                             <option value="Fresher" {{ (old('experience_status', $profile->experience_status) == 'Fresher') ? 'selected' : '' }} class="text-slate-900">Fresher</option>
                             <option value="Experienced" {{ (old('experience_status', $profile->experience_status) == 'Experienced') ? 'selected' : '' }} class="text-slate-900">Experienced</option>
                         </select>
@@ -87,7 +87,7 @@
 
                     <div class="mb-2">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Skills (Comma Separated)</label>
-                        <textarea name="skills" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white h-24" placeholder="PHP, Laravel, React, SQL...">{{ old('skills', $profile->skills) }}</textarea>
+                        <textarea name="skills" required class="w-full rounded-xl border border-white/20 bg-slate-800 text-white h-24" placeholder="PHP, Laravel, React, SQL...">{{ old('skills', $profile->skills) }}</textarea>
                         @error('skills') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>

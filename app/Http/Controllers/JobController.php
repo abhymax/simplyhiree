@@ -154,8 +154,12 @@ class JobController extends Controller
 
         $profile = auth()->user()->profile;
         $isProfileComplete = $profile
+            && !empty(auth()->user()->name)
+            && !empty(auth()->user()->email)
             && !empty($profile->phone_number)
             && !empty($profile->location)
+            && !empty($profile->date_of_birth)
+            && !empty($profile->gender)
             && !empty($profile->experience_status)
             && !empty($profile->skills);
 

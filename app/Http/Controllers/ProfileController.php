@@ -50,7 +50,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        if ($user->hasRole('client')) {
+        if ($user->hasRole('client') || $user->hasRole('candidate')) {
             $user->status = 'inactive';
             $user->save();
         } else {

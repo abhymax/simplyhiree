@@ -28,8 +28,12 @@ class CandidateProfileApiController extends Controller
         }
 
         $isProfileComplete = $profile
+            && !empty($candidate->name)
+            && !empty($candidate->email)
             && !empty($profile->phone_number)
             && !empty($profile->location)
+            && !empty($profile->date_of_birth)
+            && !empty($profile->gender)
             && !empty($profile->experience_status)
             && !empty($profile->skills);
 
@@ -73,8 +77,8 @@ class CandidateProfileApiController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($candidate->id)],
             'phone_number' => ['required', 'string', 'max:20'],
             'location' => ['required', 'string', 'max:255'],
-            'date_of_birth' => ['nullable', 'date'],
-            'gender' => ['nullable', 'in:Male,Female,Other'],
+            'date_of_birth' => ['required', 'date'],
+            'gender' => ['required', 'in:Male,Female,Other'],
             'experience_status' => ['required', 'in:Fresher,Experienced'],
             'current_role' => ['nullable', 'string', 'max:255'],
             'expected_ctc' => ['nullable', 'numeric', 'min:0'],
@@ -106,8 +110,8 @@ class CandidateProfileApiController extends Controller
 
             $profile->phone_number = $validated['phone_number'];
             $profile->location = $validated['location'];
-            $profile->date_of_birth = $validated['date_of_birth'] ?? null;
-            $profile->gender = $validated['gender'] ?? null;
+            $profile->date_of_birth = $validated['date_of_birth'];
+            $profile->gender = $validated['gender'];
             $profile->experience_status = $validated['experience_status'];
             $profile->current_role = $validated['current_role'] ?? null;
             $profile->expected_ctc = $validated['expected_ctc'] ?? null;
