@@ -77,6 +77,11 @@
                             @endif
                         </div>
                     </form>
+                    <div class="mt-4 flex justify-end">
+                        <a href="{{ route('admin.users.export', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-200 border border-emerald-400/40 hover:bg-emerald-500 hover:text-white transition font-bold shadow-lg shadow-emerald-900/30 text-sm">
+                            <i class="fa-solid fa-file-arrow-down"></i> Download Excel (CSV)
+                        </a>
+                    </div>
                 </div>
 
                 {{-- DATA TABLE --}}

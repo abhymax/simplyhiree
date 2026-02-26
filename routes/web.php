@@ -107,6 +107,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             
             // User Management
             Route::get('/users', [AdminController::class, 'listUsers'])->name('users.index');
+            Route::get('/users/export', [AdminController::class, 'exportUsers'])->name('users.export');
             Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');
             Route::patch('/users/{user}/status', [AdminController::class, 'updateUserStatus'])->name('users.status.update');
             Route::patch('/users/{user}/credentials', [AdminController::class, 'updateUserCredentials'])->name('users.credentials.update');

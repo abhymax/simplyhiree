@@ -41,6 +41,23 @@ class AdminController extends Controller
         });
     }
 
+    private function applyCandidateListFilters($query, Request $request)
+    {
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        return $query;
+    }
+
     /**
      * Show the admin dashboard with stats.
      */
@@ -102,19 +119,7 @@ class AdminController extends Controller
         // Load candidate users with their real profile relation (user_profiles table)
         $query = $this->candidateUsersQuery()->with(['profile']);
 
-        // 2. Search
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // 3. Status
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
+        $this->applyCandidateListFilters($query, $request);
 
         $users = $query->latest()->paginate(25)->withQueryString();
 
@@ -138,6 +143,50 @@ class AdminController extends Controller
         ];
 
         return view('admin.users.index', ['users' => $users, 'counts' => $counts]);
+    }
+
+    public function exportUsers(Request $request)
+    {
+        $query = $this->candidateUsersQuery()->with(['profile']);
+        $this->applyCandidateListFilters($query, $request);
+        $users = $query->latest()->get();
+
+        $fileName = 'candidates_' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($users) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Candidate ID',
+                'Name',
+                'Email',
+                'Phone',
+                'Status',
+                'Resume Uploaded',
+                'Resume URL',
+                'Joined On',
+            ]);
+
+            foreach ($users as $user) {
+                $resumePath = $user->profile?->resume_path;
+                $resumeUrl = $resumePath ? asset('storage/' . $resumePath) : '';
+
+                fputcsv($handle, [
+                    $user->id,
+                    (string) $user->name,
+                    (string) $user->email,
+                    (string) ($user->profile?->phone_number ?? ''),
+                    (string) ($user->status ?? ''),
+                    $resumePath ? 'Yes' : 'No',
+                    $resumeUrl,
+                    optional($user->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function showUser(User $user)
