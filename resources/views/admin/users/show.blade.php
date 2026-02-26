@@ -1,6 +1,6 @@
 <x-app-layout>
     @php
-        $profile = $user->profile ?: $user->candidate;
+        $profile = $user->profile;
         $nameParts = preg_split('/\s+/', trim($user->name), 2);
         $firstName = $profile?->first_name ?? ($nameParts[0] ?? '-');
         $lastName = $profile?->last_name ?? ($nameParts[1] ?? '-');

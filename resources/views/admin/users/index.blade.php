@@ -95,7 +95,7 @@
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse($users as $user)
                                 @php
-                                    $resumePath = optional($user->profile)->resume_path ?? optional($user->candidate)->resume_path;
+                                    $resumePath = optional($user->profile)->resume_path;
                                 @endphp
                                 <tr class="hover:bg-white/5 transition duration-200 group">
                                     

@@ -100,7 +100,7 @@ class AdminController extends Controller
     public function listUsers(Request $request)
     {
         // Load candidate users with their real profile relation (user_profiles table)
-        $query = $this->candidateUsersQuery()->with(['profile', 'candidate']);
+        $query = $this->candidateUsersQuery()->with(['profile']);
 
         // 2. Search
         if ($request->filled('search')) {
@@ -118,7 +118,7 @@ class AdminController extends Controller
 
         $users = $query->latest()->paginate(25)->withQueryString();
 
-        // Backward compatibility for existing admin blade files that still read $user->candidate
+        // Backward compatibility alias so existing blades using $user->candidate do not break.
         $users->getCollection()->transform(function ($user) {
             $profile = $user->profile;
             if ($profile) {
@@ -148,16 +148,12 @@ class AdminController extends Controller
             abort(404);
         }
         
-        $user->load(['profile', 'candidate']);
+        $user->load(['profile']);
 
-        // Backward compatibility attributes for whichever profile source exists.
+        // Backward compatibility attributes for profile source.
         if ($user->profile) {
             $user->profile->setAttribute('mobile', $user->profile->phone_number);
             $user->profile->setAttribute('dob', $user->profile->date_of_birth);
-        }
-        if ($user->candidate) {
-            $user->candidate->setAttribute('mobile', $user->candidate->phone_number ?? $user->candidate->mobile ?? null);
-            $user->candidate->setAttribute('dob', $user->candidate->date_of_birth ?? $user->candidate->dob ?? null);
         }
 
         return view('admin.users.show', compact('user'));
