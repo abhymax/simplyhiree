@@ -23,9 +23,24 @@ use App\Notifications\ApplicationApprovedByAdmin;
 use App\Notifications\ApplicationRejectedByAdmin;
 use App\Notifications\ClientJobApprovedForAdmin;
 use App\Services\SuperadminActivityService;
+use Illuminate\Support\Facades\Schema;
 
 class AdminController extends Controller
 {
+    private function candidateUsersQuery()
+    {
+        return User::query()->where(function ($query) {
+            $query->whereHas('roles', function ($roleQuery) {
+                $roleQuery->where('name', 'candidate');
+            });
+
+            // Backward compatibility for legacy role column based users.
+            if (Schema::hasColumn('users', 'role')) {
+                $query->orWhere('role', 'candidate');
+            }
+        });
+    }
+
     /**
      * Show the admin dashboard with stats.
      */
@@ -85,7 +100,7 @@ class AdminController extends Controller
     public function listUsers(Request $request)
     {
         // Load candidate users with their real profile relation (user_profiles table)
-        $query = User::role('candidate')->with(['profile', 'candidate']);
+        $query = $this->candidateUsersQuery()->with(['profile', 'candidate']);
 
         // 2. Search
         if ($request->filled('search')) {
@@ -115,10 +130,11 @@ class AdminController extends Controller
         });
         
         // 4. Correct Stats for the View
+        $baseCountQuery = $this->candidateUsersQuery();
         $counts = [
-            'total' => User::role('candidate')->count(),
-            'active' => User::role('candidate')->where('status', 'active')->count(),
-            'restricted' => User::role('candidate')->where('status', 'restricted')->count(),
+            'total' => (clone $baseCountQuery)->count(),
+            'active' => (clone $baseCountQuery)->where('status', 'active')->count(),
+            'restricted' => (clone $baseCountQuery)->where('status', 'restricted')->count(),
         ];
 
         return view('admin.users.index', ['users' => $users, 'counts' => $counts]);
@@ -126,7 +142,11 @@ class AdminController extends Controller
 
     public function showUser(User $user)
     {
-        if (!$user->hasRole('candidate')) abort(404);
+        $isLegacyCandidate = Schema::hasColumn('users', 'role')
+            && strtolower((string) $user->getAttribute('role')) === 'candidate';
+        if (!$user->hasRole('candidate') && !$isLegacyCandidate) {
+            abort(404);
+        }
         
         $user->load(['profile', 'candidate']);
 
