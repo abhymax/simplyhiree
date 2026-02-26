@@ -54,27 +54,40 @@
                         </thead>
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse($applications as $application)
+                                @php
+                                    $agencyCandidate = $application->candidate;
+                                    $directCandidate = $application->candidateUser;
+                                    $directProfile = $directCandidate?->profile;
+                                    $candidateName = trim(($agencyCandidate?->first_name ?? '') . ' ' . ($agencyCandidate?->last_name ?? ''));
+                                    if ($candidateName === '') {
+                                        $candidateName = $directCandidate?->name ?? 'Unknown Candidate';
+                                    }
+                                    $candidateEmail = $agencyCandidate?->email ?? $directCandidate?->email ?? 'N/A';
+                                    $candidatePhone = $agencyCandidate?->phone_number ?? $directProfile?->phone_number ?? 'N/A';
+                                    $sourcePartner = $agencyCandidate?->partner;
+                                    $initial = strtoupper(substr($candidateName, 0, 1));
+                                @endphp
                                 <tr class="hover:bg-white/5 transition duration-200 cursor-default group">
                                     
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-3">
                                             <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-1 ring-white/20">
-                                                {{ substr($application->candidate->first_name ?? 'C', 0, 1) }}
+                                                {{ $initial !== '' ? $initial : 'C' }}
                                             </div>
                                             <div>
-                                                <div class="font-bold text-white text-base">{{ $application->candidate->first_name }} {{ $application->candidate->last_name }}</div>
-                                                <div class="text-xs text-cyan-200 mt-0.5 flex items-center gap-1"><i class="fa-regular fa-envelope"></i> {{ $application->candidate->email }}</div>
-                                                <div class="text-xs text-blue-300 mt-0.5 flex items-center gap-1"><i class="fa-solid fa-phone"></i> {{ $application->candidate->phone_number }}</div>
+                                                <div class="font-bold text-white text-base">{{ $candidateName }}</div>
+                                                <div class="text-xs text-cyan-200 mt-0.5 flex items-center gap-1"><i class="fa-regular fa-envelope"></i> {{ $candidateEmail }}</div>
+                                                <div class="text-xs text-blue-300 mt-0.5 flex items-center gap-1"><i class="fa-solid fa-phone"></i> {{ $candidatePhone }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     
                                     {{-- Source --}}
                                     <td class="px-6 py-5">
-                                        @if($application->candidate->partner)
+                                        @if($sourcePartner)
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/30 text-xs font-bold shadow-sm">
-                                                <i class="fa-solid fa-handshake"></i> {{ $application->candidate->partner->name }}
+                                                <i class="fa-solid fa-handshake"></i> {{ $sourcePartner->name }}
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/10 text-xs font-bold">

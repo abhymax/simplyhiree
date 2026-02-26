@@ -37,8 +37,11 @@
                                     </td>
                                     <td class="py-4 px-4">
                                         <div class="font-medium text-gray-900">{{ $app->candidate_name }}</div>
-                                        @if($app->candidate)
-                                            <div class="text-xs text-gray-500">{{ $app->candidate->phone_number }}</div>
+                                        @php
+                                            $phone = $app->candidate?->phone_number ?? $app->candidateUser?->profile?->phone_number;
+                                        @endphp
+                                        @if($phone)
+                                            <div class="text-xs text-gray-500">{{ $phone }}</div>
                                         @endif
                                     </td>
                                     <td class="py-4 px-4">

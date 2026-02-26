@@ -105,16 +105,27 @@
                         </thead>
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse($applications as $application)
+                                @php
+                                    $agencyCandidate = $application->candidate;
+                                    $directCandidate = $application->candidateUser;
+                                    $candidateName = trim(($agencyCandidate?->first_name ?? '') . ' ' . ($agencyCandidate?->last_name ?? ''));
+                                    if ($candidateName === '') {
+                                        $candidateName = $directCandidate?->name ?? 'N/A';
+                                    }
+                                    $candidateEmail = $agencyCandidate?->email ?? $directCandidate?->email ?? '';
+                                    $sourcePartner = $agencyCandidate?->partner;
+                                    $initial = strtoupper(substr($candidateName, 0, 1));
+                                @endphp
                                 <tr class="group hover:bg-white/10 transition-all duration-200 transform hover:scale-[1.005] cursor-default border-l-4 border-transparent hover:border-cyan-400">
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-4">
                                             <div class="h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/20">
-                                                {{ substr($application->candidate->first_name ?? 'U', 0, 1) }}
+                                                {{ $initial !== '' ? $initial : 'U' }}
                                             </div>
                                             <div>
-                                                <div class="font-bold text-white text-lg leading-tight">{{ $application->candidate->first_name ?? 'N/A' }} {{ $application->candidate->last_name ?? '' }}</div>
-                                                <div class="text-cyan-200 text-sm font-medium mt-0.5"><i class="fa-regular fa-envelope mr-1"></i> {{ $application->candidate->email ?? '' }}</div>
+                                                <div class="font-bold text-white text-lg leading-tight">{{ $candidateName }}</div>
+                                                <div class="text-cyan-200 text-sm font-medium mt-0.5"><i class="fa-regular fa-envelope mr-1"></i> {{ $candidateEmail }}</div>
                                                 <div class="text-blue-300 text-xs mt-1 opacity-80">{{ $application->created_at->format('M d, Y') }}</div>
                                             </div>
                                         </div>
@@ -133,9 +144,9 @@
 
                                     {{-- Source --}}
                                     <td class="px-6 py-5">
-                                        @if($application->candidate && $application->candidate->partner)
+                                        @if($sourcePartner)
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-bold shadow-md">
-                                                <i class="fa-solid fa-handshake"></i> {{ Str::limit($application->candidate->partner->name, 12) }}
+                                                <i class="fa-solid fa-handshake"></i> {{ Str::limit($sourcePartner->name, 12) }}
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-bold border border-slate-500">

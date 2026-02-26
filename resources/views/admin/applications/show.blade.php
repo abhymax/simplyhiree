@@ -1,4 +1,25 @@
 <x-app-layout>
+    @php
+        $agencyCandidate = $application->candidate;
+        $directCandidate = $application->candidateUser;
+        $directProfile = $directCandidate?->profile;
+
+        $candidateName = trim(($agencyCandidate?->first_name ?? '') . ' ' . ($agencyCandidate?->last_name ?? ''));
+        if ($candidateName === '') {
+            $candidateName = $directCandidate?->name ?? 'Unknown Candidate';
+        }
+
+        $candidateEmail = $agencyCandidate?->email ?? $directCandidate?->email ?? 'N/A';
+        $candidatePhone = $agencyCandidate?->phone_number ?? $directProfile?->phone_number ?? 'N/A';
+        $candidateLocation = $agencyCandidate?->location ?? $directProfile?->location ?? 'N/A';
+        $candidateGender = $agencyCandidate?->gender ?? $directProfile?->gender ?? 'N/A';
+        $candidateExperience = $agencyCandidate?->experience_status ?? $directProfile?->experience_status ?? 'N/A';
+        $candidateCtc = $agencyCandidate?->expected_ctc ?? $directProfile?->expected_ctc ?? 'N/A';
+        $skillsRaw = $agencyCandidate?->skills ?? $directProfile?->skills ?? '';
+        $skills = collect(explode(',', (string) $skillsRaw))->map(fn ($skill) => trim($skill))->filter();
+        $resumePath = $agencyCandidate?->resume_path ?? $directProfile?->resume_path;
+        $initial = strtoupper(substr($candidateName, 0, 1));
+    @endphp
     {{-- FULL PAGE BLUE BACKGROUND --}}
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
         
@@ -34,13 +55,13 @@
                             <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
                                 <div class="flex items-center gap-5">
                                     <div class="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg ring-4 ring-white/10">
-                                        {{ substr($application->candidate->first_name ?? 'U', 0, 1) }}
+                                        {{ $initial !== '' ? $initial : 'U' }}
                                     </div>
                                     <div>
-                                        <h2 class="text-3xl font-bold text-white">{{ $application->candidate->first_name }} {{ $application->candidate->last_name }}</h2>
+                                        <h2 class="text-3xl font-bold text-white">{{ $candidateName }}</h2>
                                         <div class="flex flex-wrap gap-4 mt-2 text-sm font-medium text-blue-200">
-                                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-envelope text-cyan-400"></i> {{ $application->candidate->email }}</span>
-                                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-phone text-cyan-400"></i> {{ $application->candidate->phone_number }}</span>
+                                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-envelope text-cyan-400"></i> {{ $candidateEmail }}</span>
+                                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-phone text-cyan-400"></i> {{ $candidatePhone }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -52,30 +73,30 @@
                             <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-white/10 pt-6">
                                 <div>
                                     <p class="text-xs text-blue-300 font-bold uppercase mb-1">Location</p>
-                                    <p class="text-white font-semibold text-lg">{{ $application->candidate->location ?? 'N/A' }}</p>
+                                    <p class="text-white font-semibold text-lg">{{ $candidateLocation }}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-blue-300 font-bold uppercase mb-1">Gender</p>
-                                    <p class="text-white font-semibold text-lg">{{ $application->candidate->gender ?? 'N/A' }}</p>
+                                    <p class="text-white font-semibold text-lg">{{ $candidateGender }}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-blue-300 font-bold uppercase mb-1">Experience</p>
-                                    <p class="text-white font-semibold text-lg">{{ $application->candidate->experience_status ?? 'N/A' }}</p>
+                                    <p class="text-white font-semibold text-lg">{{ $candidateExperience }}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-blue-300 font-bold uppercase mb-1">Expected CTC</p>
-                                    <p class="text-amber-300 font-bold text-lg">{{ $application->candidate->expected_ctc ?? 'N/A' }}</p>
+                                    <p class="text-amber-300 font-bold text-lg">{{ $candidateCtc }}</p>
                                 </div>
                             </div>
                             
                             <div class="mt-8">
                                 <p class="text-xs text-blue-300 font-bold uppercase mb-3">Key Skills</p>
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach(explode(',', $application->candidate->skills) as $skill)
-                                        <span class="bg-white/10 text-white px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 hover:bg-white/20 transition cursor-default">
-                                            {{ trim($skill) }}
-                                        </span>
-                                    @endforeach
+                                    @forelse($skills as $skill)
+                                        <span class="bg-white/10 text-white px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10 hover:bg-white/20 transition cursor-default">{{ $skill }}</span>
+                                    @empty
+                                        <span class="bg-white/10 text-white px-3 py-1.5 rounded-lg text-sm font-medium border border-white/10">N/A</span>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
@@ -86,7 +107,7 @@
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
                             <i class="fa-solid fa-file-lines text-rose-400"></i> Resume / CV
                         </h3>
-                        @if($application->candidate->resume_path)
+                        @if($resumePath)
                             <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 flex items-center justify-between group hover:border-blue-500/50 transition">
                                 <div class="flex items-center gap-4">
                                     <div class="h-12 w-12 bg-rose-500/20 rounded-xl flex items-center justify-center text-rose-400">
@@ -97,7 +118,7 @@
                                         <p class="text-xs text-slate-400">Click download to view</p>
                                     </div>
                                 </div>
-                                <a href="{{ asset('storage/' . $application->candidate->resume_path) }}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5">
+                                <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5">
                                     Download
                                 </a>
                             </div>

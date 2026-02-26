@@ -73,7 +73,7 @@ class AdminController extends Controller
     public function dailySchedule()
     {
         $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())
-            ->with(['job', 'candidate', 'candidateUser', 'job.user'])
+            ->with(['job', 'candidate', 'candidateUser.profile', 'job.user'])
             ->orderBy('interview_at', 'asc')
             ->get();
 
@@ -610,7 +610,7 @@ class AdminController extends Controller
 
     public function listApplications(Request $request)
     {
-        $query = JobApplication::with(['job', 'candidate', 'candidateUser', 'candidate.partner']);
+        $query = JobApplication::with(['job', 'candidate', 'candidate.partner', 'candidateUser.profile']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -619,6 +619,9 @@ class AdminController extends Controller
                     $subQ->where('first_name', 'like', "%{$search}%")
                          ->orWhere('last_name', 'like', "%{$search}%")
                          ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('candidateUser', function($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                 })->orWhereHas('job', function($subQ) use ($search) {
                     $subQ->where('title', 'like', "%{$search}%");
                 });
@@ -659,20 +662,20 @@ class AdminController extends Controller
 
     public function showApplication(JobApplication $application)
     {
-        $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser']);
+        $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser.profile']);
         return view('admin.applications.show', compact('application'));
     }
 
     public function jobApplicantsReport(\App\Models\Job $job)
     {
-        $applications = $job->jobApplications()->with(['candidate', 'candidate.partner'])->latest()->paginate(20);
+        $applications = $job->jobApplications()->with(['candidate', 'candidate.partner', 'candidateUser.profile'])->latest()->paginate(20);
         return view('admin.reports.job_applicants', compact('job', 'applications'));
     }
 
     public function exportJobApplicantsReport(\App\Models\Job $job)
     {
         $applications = $job->jobApplications()
-            ->with(['candidate', 'candidate.partner'])
+            ->with(['candidate', 'candidate.partner', 'candidateUser.profile'])
             ->latest()
             ->get();
 
@@ -696,12 +699,19 @@ class AdminController extends Controller
 
             foreach ($applications as $application) {
                 $candidate = $application->candidate;
+                $candidateUser = $application->candidateUser;
                 $partnerName = $candidate && $candidate->partner ? $candidate->partner->name : 'Direct';
+                $fullName = trim(($candidate->first_name ?? '') . ' ' . ($candidate->last_name ?? ''));
+                if ($fullName === '') {
+                    $fullName = $candidateUser?->name ?? 'Unknown Candidate';
+                }
+                $email = $candidate->email ?? $candidateUser?->email ?? '';
+                $phone = $candidate->phone_number ?? $candidateUser?->profile?->phone_number ?? '';
 
                 fputcsv($handle, [
-                    trim(($candidate->first_name ?? '') . ' ' . ($candidate->last_name ?? '')),
-                    $candidate->email ?? '',
-                    $candidate->phone_number ?? '',
+                    $fullName,
+                    $email,
+                    $phone,
                     $partnerName,
                     $application->status ?? '',
                     $application->hiring_status ?? '',
