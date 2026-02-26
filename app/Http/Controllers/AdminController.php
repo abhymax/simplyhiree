@@ -128,15 +128,17 @@ class AdminController extends Controller
     {
         if (!$user->hasRole('candidate')) abort(404);
         
-        $user->load('profile');
+        $user->load(['profile', 'candidate']);
 
-        // Backward compatibility for existing admin blade file that reads $user->candidate
-        $profile = $user->profile;
-        if ($profile) {
-            $profile->setAttribute('mobile', $profile->phone_number);
-            $profile->setAttribute('dob', $profile->date_of_birth);
+        // Backward compatibility attributes for whichever profile source exists.
+        if ($user->profile) {
+            $user->profile->setAttribute('mobile', $user->profile->phone_number);
+            $user->profile->setAttribute('dob', $user->profile->date_of_birth);
         }
-        $user->setRelation('candidate', $profile);
+        if ($user->candidate) {
+            $user->candidate->setAttribute('mobile', $user->candidate->phone_number ?? $user->candidate->mobile ?? null);
+            $user->candidate->setAttribute('dob', $user->candidate->date_of_birth ?? $user->candidate->dob ?? null);
+        }
 
         return view('admin.users.show', compact('user'));
     }

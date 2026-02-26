@@ -1,9 +1,14 @@
 <x-app-layout>
     @php
-        $profile = $user->profile ?? $user->candidate;
+        $profile = $user->profile ?: $user->candidate;
         $nameParts = preg_split('/\s+/', trim($user->name), 2);
-        $firstName = $profile->first_name ?? ($nameParts[0] ?? '-');
-        $lastName = $profile->last_name ?? ($nameParts[1] ?? '-');
+        $firstName = $profile?->first_name ?? ($nameParts[0] ?? '-');
+        $lastName = $profile?->last_name ?? ($nameParts[1] ?? '-');
+        $mobile = $profile?->phone_number ?? $profile?->mobile ?? 'N/A';
+        $dob = $profile?->date_of_birth ?? $profile?->dob ?? '-';
+        $gender = $profile?->gender ?? '-';
+        $skills = $profile?->skills ?? 'No skills listed';
+        $resumePath = $profile?->resume_path;
     @endphp
 
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
@@ -30,7 +35,7 @@
                         <div class="mt-6 pt-6 border-t border-white/10 text-left space-y-3">
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block">Mobile</span>
-                                <span class="text-white">{{ $profile->phone_number ?? $profile->mobile ?? 'N/A' }}</span>
+                                <span class="text-white">{{ $mobile }}</span>
                             </div>
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block">Joined</span>
@@ -61,12 +66,12 @@
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Date of Birth</span>
                                 <span class="text-white bg-white/5 px-3 py-2 rounded block">
-                                    {{ $profile->date_of_birth ?? $profile->dob ?? '-' }}
+                                    {{ $dob }}
                                 </span>
                             </div>
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Gender</span>
-                                <span class="text-white bg-white/5 px-3 py-2 rounded block">{{ $profile->gender ?? '-' }}</span>
+                                <span class="text-white bg-white/5 px-3 py-2 rounded block">{{ $gender }}</span>
                             </div>
                         </div>
                     </div>
@@ -78,12 +83,12 @@
                         <div class="grid grid-cols-1 gap-6">
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Skills</span>
-                                <span class="text-white bg-white/5 px-3 py-2 rounded block">{{ $profile->skills ?? 'No skills listed' }}</span>
+                                <span class="text-white bg-white/5 px-3 py-2 rounded block">{{ $skills }}</span>
                             </div>
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Resume</span>
-                                @if(!empty($profile->resume_path))
-                                    <a href="{{ asset('storage/' . $profile->resume_path) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-white underline">Download Resume</a>
+                                @if(!empty($resumePath))
+                                    <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-white underline">Download Resume</a>
                                 @else
                                     <span class="text-slate-500 italic">Not uploaded</span>
                                 @endif
