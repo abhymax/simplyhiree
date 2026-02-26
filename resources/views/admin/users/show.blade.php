@@ -83,7 +83,7 @@
                             <div>
                                 <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Resume</span>
                                 @if(!empty($profile->resume_path))
-                                    <a href="{{ asset('storage/' . $profile->resume_path) }}" target="_blank" class="text-emerald-400 hover:text-white underline">Download Resume</a>
+                                    <a href="{{ asset('storage/' . $profile->resume_path) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-white underline">Download Resume</a>
                                 @else
                                     <span class="text-slate-500 italic">Not uploaded</span>
                                 @endif

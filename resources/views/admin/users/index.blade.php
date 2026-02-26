@@ -106,7 +106,7 @@
                                                 {{ substr($user->name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <a href="{{ route('admin.users.show', $user->id) }}" class="font-bold text-white text-base hover:text-emerald-400 transition underline decoration-transparent hover:decoration-emerald-400">
+                                                <a href="{{ route('admin.users.show', $user->id) }}" target="_blank" rel="noopener noreferrer" class="font-bold text-white text-base hover:text-emerald-400 transition underline decoration-transparent hover:decoration-emerald-400">
                                                     {{ $user->name }}
                                                 </a>
                                                 <div class="text-xs text-slate-400 mt-0.5">{{ $user->email }}</div>
@@ -122,7 +122,7 @@
                                     {{-- Resume --}}
                                     <td class="px-6 py-5">
                                         @if(!empty($resumePath))
-                                            <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" class="inline-flex items-center gap-2 text-cyan-300 hover:text-white font-semibold underline underline-offset-2">
+                                            <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-cyan-300 hover:text-white font-semibold underline underline-offset-2">
                                                 <i class="fa-regular fa-file-lines"></i> View Resume
                                             </a>
                                         @else
@@ -153,7 +153,7 @@
                                         <div class="flex justify-end items-center gap-2">
                                             
                                             {{-- VIEW BUTTON (This is what you asked for) --}}
-                                            <a href="{{ route('admin.users.show', $user->id) }}" class="h-8 w-8 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition flex items-center justify-center border border-emerald-500/30 shadow-md" title="View Profile">
+                                            <a href="{{ route('admin.users.show', $user->id) }}" target="_blank" rel="noopener noreferrer" class="h-8 w-8 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition flex items-center justify-center border border-emerald-500/30 shadow-md" title="View Profile">
                                                 <i class="fa-solid fa-eye"></i>
                                             </a>
 
