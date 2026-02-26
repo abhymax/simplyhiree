@@ -86,6 +86,7 @@
                             <tr>
                                 <th class="px-6 py-5">Candidate Name</th>
                                 <th class="px-6 py-5">Mobile</th>
+                                <th class="px-6 py-5">Resume</th>
                                 <th class="px-6 py-5">Status</th>
                                 <th class="px-6 py-5">Joined On</th>
                                 <th class="px-6 py-5 text-right">Actions</th>
@@ -93,6 +94,9 @@
                         </thead>
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse($users as $user)
+                                @php
+                                    $resumePath = optional($user->profile)->resume_path ?? optional($user->candidate)->resume_path;
+                                @endphp
                                 <tr class="hover:bg-white/5 transition duration-200 group">
                                     
                                     {{-- Candidate Info (Clickable) --}}
@@ -113,6 +117,17 @@
                                     {{-- Mobile --}}
                                     <td class="px-6 py-5 text-slate-300 font-mono">
                                         {{ optional($user->profile)->phone_number ?? 'N/A' }}
+                                    </td>
+
+                                    {{-- Resume --}}
+                                    <td class="px-6 py-5">
+                                        @if(!empty($resumePath))
+                                            <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" class="inline-flex items-center gap-2 text-cyan-300 hover:text-white font-semibold underline underline-offset-2">
+                                                <i class="fa-regular fa-file-lines"></i> View Resume
+                                            </a>
+                                        @else
+                                            <span class="text-slate-400 text-xs font-semibold">Not Uploaded</span>
+                                        @endif
                                     </td>
 
                                     {{-- Status --}}
@@ -198,7 +213,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-20 text-center text-slate-400">
+                                    <td colspan="6" class="px-6 py-20 text-center text-slate-400">
                                         <div class="mb-2"><i class="fa-solid fa-users-slash text-4xl opacity-50"></i></div>
                                         No candidates found matching your filters.
                                     </td>

@@ -85,7 +85,7 @@ class AdminController extends Controller
     public function listUsers(Request $request)
     {
         // Load candidate users with their real profile relation (user_profiles table)
-        $query = User::role('candidate')->with('profile');
+        $query = User::role('candidate')->with(['profile', 'candidate']);
 
         // 2. Search
         if ($request->filled('search')) {
