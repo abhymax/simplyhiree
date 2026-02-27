@@ -537,12 +537,12 @@ class AdminMobileController extends Controller
 
         $partner = $application->candidate?->partner;
         if ($partner) {
-            $partner->notify($notification);
+            $partner->notifyNow($notification);
             return;
         }
 
         if ($application->candidateUser) {
-            $application->candidateUser->notify($notification);
+            $application->candidateUser->notifyNow($notification);
         }
     }
 

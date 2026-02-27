@@ -23,6 +23,7 @@
         $candidateCode = $agencyCandidate?->candidate_code ?? $directCandidate?->entity_code ?? 'SH-CND-NA';
         $jobCode = $application->job?->job_code ?? 'SH-JOB-NA';
         $sourceCode = $agencyCandidate?->partner?->entity_code ?? ($directCandidate?->entity_code ?? 'SH-DRT-NA');
+        $sourceName = $agencyCandidate?->partner?->name ?? 'Direct Application';
     @endphp
     {{-- FULL PAGE BLUE BACKGROUND --}}
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
@@ -96,7 +97,10 @@
                             <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] text-slate-200 font-semibold tracking-wide">
                                 <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">{{ $candidateCode }}</div>
                                 <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">{{ $jobCode }}</div>
-                                <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">{{ $sourceCode }}</div>
+                                <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">
+                                    <div class="text-cyan-300 text-[10px] uppercase tracking-wider mb-0.5">{{ $sourceName }}</div>
+                                    <div>{{ $sourceCode }}</div>
+                                </div>
                             </div>
                             
                             <div class="mt-8">
