@@ -25,14 +25,18 @@ class ApplicationApprovedByAdmin extends Notification implements ShouldQueue
 
     public function toDatabase(object $notifiable): array
     {
-        $candidateName = $this->application->candidate 
-            ? $this->application->candidate->first_name 
-            : 'Candidate';
+        $candidateName = trim(
+            (string) (($this->application->candidate?->first_name ?? '') . ' ' . ($this->application->candidate?->last_name ?? ''))
+        );
+        if ($candidateName === '') {
+            $candidateName = (string) ($this->application->candidateUser?->name ?? 'Candidate');
+        }
             
         $jobTitle = $this->application->job ? $this->application->job->title : 'Job';
+        $applicationCode = (string) ($this->application->application_code ?? ('#' . $this->application->id));
 
         return [
-            'message' => "Application Approved: {$candidateName} for '{$jobTitle}' forwarded to client.",
+            'message' => "SimplyHiree approved {$applicationCode}: {$candidateName} for '{$jobTitle}' and forwarded it to client.",
             'application_id' => $this->application->id,
             'icon' => 'check-circle',
         ];

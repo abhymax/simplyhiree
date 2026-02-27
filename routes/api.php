@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/jobs/{job}/status', [AdminMobileController::class, 'updateJobStatus']);
     Route::delete('/admin/jobs/{job}', [AdminMobileController::class, 'deleteJob']);
     Route::get('/admin/applications/pending', [AdminMobileController::class, 'pendingApplications']);
+    Route::get('/admin/applications/{application}', [AdminMobileController::class, 'showApplication']);
     Route::post('/admin/applications/{application}/approve', [AdminMobileController::class, 'approveApplication']);
     Route::post('/admin/applications/{application}/reject', [AdminMobileController::class, 'rejectApplication']);
     Route::patch('/admin/applications/{application}/mark-paid', [AdminMobileController::class, 'markApplicationPaid']);

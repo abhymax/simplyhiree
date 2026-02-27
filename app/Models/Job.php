@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 // Importing related models to avoid "Class not found" errors
 use App\Models\User;
 use App\Models\JobCategory;
@@ -134,5 +135,12 @@ class Job extends Model
     public function restrictedCandidates(): BelongsToMany
     {
         return $this->belongsToMany(Candidate::class, 'job_candidate_exclusions', 'job_id', 'candidate_id');
+    }
+
+    protected function jobCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->id ? sprintf('SH-JOB-%06d', (int) $this->id) : null,
+        );
     }
 }

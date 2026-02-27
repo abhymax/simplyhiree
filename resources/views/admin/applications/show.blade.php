@@ -19,6 +19,10 @@
         $skills = collect(explode(',', (string) $skillsRaw))->map(fn ($skill) => trim($skill))->filter();
         $resumePath = $agencyCandidate?->resume_path ?? $directProfile?->resume_path;
         $initial = strtoupper(substr($candidateName, 0, 1));
+        $applicationCode = $application->application_code ?? ('SH-APP-' . str_pad((string) $application->id, 6, '0', STR_PAD_LEFT));
+        $candidateCode = $agencyCandidate?->candidate_code ?? $directCandidate?->entity_code ?? 'SH-CND-NA';
+        $jobCode = $application->job?->job_code ?? 'SH-JOB-NA';
+        $sourceCode = $agencyCandidate?->partner?->entity_code ?? ($directCandidate?->entity_code ?? 'SH-DRT-NA');
     @endphp
     {{-- FULL PAGE BLUE BACKGROUND --}}
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
@@ -66,7 +70,7 @@
                                     </div>
                                 </div>
                                 <span class="bg-blue-600/50 border border-blue-400/50 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
-                                    ID: #{{ $application->id }}
+                                    {{ $applicationCode }}
                                 </span>
                             </div>
 
@@ -87,6 +91,12 @@
                                     <p class="text-xs text-blue-300 font-bold uppercase mb-1">Expected CTC</p>
                                     <p class="text-amber-300 font-bold text-lg">{{ $candidateCtc }}</p>
                                 </div>
+                            </div>
+
+                            <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] text-slate-200 font-semibold tracking-wide">
+                                <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">{{ $candidateCode }}</div>
+                                <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">{{ $jobCode }}</div>
+                                <div class="bg-slate-900/40 rounded-lg px-3 py-2 border border-white/10">{{ $sourceCode }}</div>
                             </div>
                             
                             <div class="mt-8">

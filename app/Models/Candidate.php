@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Candidate extends Model
@@ -40,5 +41,12 @@ class Candidate extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'partner_id');
+    }
+
+    protected function candidateCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->id ? sprintf('SH-CAN-%06d', (int) $this->id) : null,
+        );
     }
 }

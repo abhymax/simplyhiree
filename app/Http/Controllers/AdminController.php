@@ -711,26 +711,43 @@ class AdminController extends Controller
 
     public function approveApplication(JobApplication $application)
     {
+        $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Approved']);
-        if ($application->candidate && $application->candidate->partner) {
-            $application->candidate->partner->notify(new ApplicationApprovedByAdmin($application));
-        }
-        return redirect()->back()->with('success', 'Application approved.');
+        $this->notifyApplicationStakeholder($application, true);
+
+        return redirect()->back()->with('success', 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' approved.');
     }
 
     public function rejectApplication(JobApplication $application)
     {
+        $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Rejected']);
-        if ($application->candidate && $application->candidate->partner) {
-            $application->candidate->partner->notify(new ApplicationRejectedByAdmin($application));
-        }
-        return redirect()->back()->with('success', 'Application rejected.');
+        $this->notifyApplicationStakeholder($application, false);
+
+        return redirect()->back()->with('success', 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' rejected.');
     }
 
     public function showApplication(JobApplication $application)
     {
         $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser.profile']);
         return view('admin.applications.show', compact('application'));
+    }
+
+    private function notifyApplicationStakeholder(JobApplication $application, bool $approved): void
+    {
+        $notification = $approved
+            ? new ApplicationApprovedByAdmin($application)
+            : new ApplicationRejectedByAdmin($application);
+
+        $partner = $application->candidate?->partner;
+        if ($partner) {
+            $partner->notify($notification);
+            return;
+        }
+
+        if ($application->candidateUser) {
+            $application->candidateUser->notify($notification);
+        }
     }
 
     public function jobApplicantsReport(\App\Models\Job $job)

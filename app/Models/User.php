@@ -45,6 +45,29 @@ class User extends Authenticatable
         );
     }
 
+    protected function entityCode(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!$this->id) {
+                    return null;
+                }
+
+                $role = strtolower((string) $this->getRoleNames()->first());
+                $prefix = match ($role) {
+                    'client' => 'CLT',
+                    'partner' => 'PRT',
+                    'candidate' => 'CND',
+                    'superadmin' => 'ADM',
+                    'manager' => 'MGR',
+                    default => 'USR',
+                };
+
+                return sprintf('SH-%s-%06d', $prefix, (int) $this->id);
+            },
+        );
+    }
+
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);

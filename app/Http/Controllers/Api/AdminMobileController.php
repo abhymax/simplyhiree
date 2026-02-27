@@ -103,24 +103,38 @@ class AdminMobileController extends Controller
 
         return [
             'id' => $application->id,
+            'application_code' => (string) ($application->application_code ?? ''),
+            'hiring_code' => (string) ($application->hiring_code ?? ''),
             'status' => (string) ($application->status ?? ''),
             'hiring_status' => (string) ($application->hiring_status ?? ''),
             'joined_status' => (string) ($application->joined_status ?? ''),
             'candidate_name' => $candidateName,
+            'candidate_code' => (string) ($application->candidate?->candidate_code ?? $application->candidateUser?->entity_code ?? ''),
             'candidate_email' => $candidateEmail,
             'candidate_phone' => $candidatePhone,
             'candidate_skills' => $application->candidate?->skills
                 ?? $application->candidateUser?->profile?->skills,
             'candidate_experience' => $application->candidate?->experience_status
                 ?? $application->candidateUser?->profile?->experience_status,
-            'candidate_education' => $application->candidate?->education_level,
-            'candidate_ctc' => $application->candidate?->expected_ctc,
+            'candidate_education' => $application->candidate?->education_level
+                ?? $application->candidateUser?->profile?->education_level,
+            'candidate_ctc' => $application->candidate?->expected_ctc
+                ?? $application->candidateUser?->profile?->expected_ctc,
+            'candidate_location' => $application->candidate?->location
+                ?? $application->candidateUser?->profile?->location,
+            'candidate_gender' => $application->candidate?->gender
+                ?? $application->candidateUser?->profile?->gender,
+            'candidate_dob' => (string) ($application->candidate?->date_of_birth
+                ?? $application->candidateUser?->profile?->date_of_birth
+                ?? ''),
             'resume_url' => $this->publicFileUrl($resumePath),
             'job_id' => $application->job?->id,
+            'job_code' => (string) ($application->job?->job_code ?? ''),
             'job_title' => $application->job?->title,
             'company_name' => $application->job?->company_name,
             'source_type' => $partnerName ? 'partner' : 'direct',
             'partner_name' => $partnerName,
+            'partner_code' => (string) ($application->candidate?->partner?->entity_code ?? ''),
             'interview_at' => optional($application->interview_at)->toIso8601String(),
             'joining_date' => optional($application->joining_date)->toIso8601String(),
             'left_at' => optional($application->left_at)->toIso8601String(),
@@ -494,10 +508,9 @@ class AdminMobileController extends Controller
             return $this->adminOnlyResponse();
         }
 
+        $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Approved']);
-        if ($application->candidate && $application->candidate->partner) {
-            $application->candidate->partner->notify(new ApplicationApprovedByAdmin($application));
-        }
+        $this->notifyApplicationStakeholder($application, true);
 
         return response()->json(['message' => 'Application approved successfully.']);
     }
@@ -509,12 +522,42 @@ class AdminMobileController extends Controller
             return $this->adminOnlyResponse();
         }
 
+        $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Rejected']);
-        if ($application->candidate && $application->candidate->partner) {
-            $application->candidate->partner->notify(new ApplicationRejectedByAdmin($application));
-        }
+        $this->notifyApplicationStakeholder($application, false);
 
         return response()->json(['message' => 'Application rejected successfully.']);
+    }
+
+    private function notifyApplicationStakeholder(JobApplication $application, bool $approved): void
+    {
+        $notification = $approved
+            ? new ApplicationApprovedByAdmin($application)
+            : new ApplicationRejectedByAdmin($application);
+
+        $partner = $application->candidate?->partner;
+        if ($partner) {
+            $partner->notify($notification);
+            return;
+        }
+
+        if ($application->candidateUser) {
+            $application->candidateUser->notify($notification);
+        }
+    }
+
+    public function showApplication(Request $request, JobApplication $application)
+    {
+        $admin = $this->adminUser($request);
+        if (!$admin) {
+            return $this->adminOnlyResponse();
+        }
+
+        $application->load(['job', 'candidate', 'candidate.partner', 'candidateUser', 'candidateUser.profile']);
+
+        return response()->json([
+            'data' => $this->mapApplication($application),
+        ]);
     }
 
     public function applications(Request $request)

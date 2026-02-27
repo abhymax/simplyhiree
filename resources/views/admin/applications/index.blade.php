@@ -115,6 +115,9 @@
                                     $candidateEmail = $agencyCandidate?->email ?? $directCandidate?->email ?? '';
                                     $sourcePartner = $agencyCandidate?->partner;
                                     $initial = strtoupper(substr($candidateName, 0, 1));
+                                    $applicationCode = $application->application_code ?? ('SH-APP-' . str_pad((string) $application->id, 6, '0', STR_PAD_LEFT));
+                                    $candidateCode = $agencyCandidate?->candidate_code ?? $directCandidate?->entity_code ?? 'SH-CND-NA';
+                                    $jobCode = $application->job?->job_code ?? 'SH-JOB-NA';
                                 @endphp
                                 <tr class="group hover:bg-white/10 transition-all duration-200 transform hover:scale-[1.005] cursor-default border-l-4 border-transparent hover:border-cyan-400">
                                     {{-- Candidate --}}
@@ -127,6 +130,9 @@
                                                 <div class="font-bold text-white text-lg leading-tight">{{ $candidateName }}</div>
                                                 <div class="text-cyan-200 text-sm font-medium mt-0.5"><i class="fa-regular fa-envelope mr-1"></i> {{ $candidateEmail }}</div>
                                                 <div class="text-blue-300 text-xs mt-1 opacity-80">{{ $application->created_at->format('M d, Y') }}</div>
+                                                <div class="mt-1 text-[11px] text-slate-300 font-semibold tracking-wide">
+                                                    {{ $applicationCode }} | {{ $candidateCode }}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -134,6 +140,7 @@
                                     {{-- Job Details (Fixed High Visibility) --}}
                                     <td class="px-6 py-5">
                                         <div class="font-bold text-white text-lg">{{ $application->job->title ?? 'Deleted Job' }}</div>
+                                        <div class="text-[11px] text-slate-300 font-semibold tracking-wide mt-0.5">{{ $jobCode }}</div>
                                         
                                         {{-- COMPANY NAME: BRIGHT AMBER --}}
                                         <div class="text-amber-300 font-bold text-sm mt-1 flex items-center gap-1.5" style="color: #fcd34d !important;">
@@ -148,6 +155,9 @@
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-bold shadow-md">
                                                 <i class="fa-solid fa-handshake"></i> {{ Str::limit($sourcePartner->name, 12) }}
                                             </span>
+                                            <div class="text-[11px] text-slate-300 font-semibold tracking-wide mt-1">
+                                                {{ $sourcePartner->entity_code ?? ('SH-PRT-' . str_pad((string) $sourcePartner->id, 6, '0', STR_PAD_LEFT)) }}
+                                            </div>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-bold border border-slate-500">
                                                 <i class="fa-solid fa-globe"></i> Direct
@@ -180,28 +190,13 @@
 
                                     {{-- Actions (Bright Icons) --}}
                                     <td class="px-6 py-5 text-right">
-                                        @if(strtolower($application->status) === 'pending review')
-                                            <div class="flex justify-end gap-3">
-                                                {{-- APPROVE BUTTON --}}
-                                                <form action="{{ route('admin.applications.approve', $application->id) }}" method="POST">
-                                                    @csrf
-                                                    <button class="h-11 w-11 rounded-xl bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-500/40 hover:scale-110 hover:shadow-green-400/60 transition-all flex items-center justify-center border border-green-300" title="Approve">
-                                                        <i class="fa-solid fa-check text-xl font-bold drop-shadow-md"></i>
-                                                    </button>
-                                                </form>
-                                                {{-- REJECT BUTTON --}}
-                                                <form action="{{ route('admin.applications.reject', $application->id) }}" method="POST">
-                                                    @csrf
-                                                    <button class="h-11 w-11 rounded-xl bg-gradient-to-br from-red-500 to-red-700 text-white shadow-lg shadow-red-500/40 hover:scale-110 hover:shadow-red-400/60 transition-all flex items-center justify-center border border-red-400" title="Reject">
-                                                        <i class="fa-solid fa-xmark text-xl font-bold drop-shadow-md"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        @else
-                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition border border-indigo-400">
+                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition border border-indigo-400">
+                                            @if(strtolower($application->status) === 'pending review')
+                                                Review &amp; Decide
+                                            @else
                                                 View Details
-                                            </a>
-                                        @endif
+                                            @endif
+                                        </a>
                                     </td>
                                 </tr>
                             @empty

@@ -112,9 +112,6 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::patch('/users/{user}/status', [AdminController::class, 'updateUserStatus'])->name('users.status.update');
             Route::patch('/users/{user}/credentials', [AdminController::class, 'updateUserCredentials'])->name('users.credentials.update');
             
-            // View Single Application Details
-            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
-            
             Route::get('/interviews/today', [AdminController::class, 'dailySchedule'])->name('interviews.today');
             Route::delete('/jobs/{job}', [AdminController::class, 'destroyJob'])->name('jobs.destroy'); 
         });
@@ -147,6 +144,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- APPLICATION DATA ---
         Route::middleware(['can:view_application_data'])->group(function() {
             Route::get('/applications', [AdminController::class, 'listApplications'])->name('applications.index');
+            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
             Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
             Route::post('/applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('applications.reject');
         });
