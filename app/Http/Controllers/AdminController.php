@@ -382,7 +382,7 @@ class AdminController extends Controller
 
     public function listPartners(Request $request)
     {
-        $query = User::role('partner')->with('partnerProfile');
+        $query = User::role('partner')->with(['partnerProfile', 'profile']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -501,7 +501,7 @@ class AdminController extends Controller
     public function showPartner(User $user)
     {
         if (!$user->hasRole('partner')) abort(404);
-        $user->load('partnerProfile');
+        $user->load(['partnerProfile', 'profile']);
         return view('admin.partners.show', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
 

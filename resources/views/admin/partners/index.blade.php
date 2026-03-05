@@ -75,6 +75,7 @@
                         <thead class="bg-blue-950/50 text-purple-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
                                 <th class="px-6 py-5">Partner Name</th>
+                                <th class="px-6 py-5">Mobile</th>
                                 <th class="px-6 py-5">Type</th>
                                 <th class="px-6 py-5">Status</th>
                                 <th class="px-6 py-5">Joined On</th>
@@ -96,6 +97,12 @@
                                                 <div class="text-xs text-slate-400 mt-0.5">{{ $user->email }}</div>
                                             </div>
                                         </div>
+                                    </td>
+
+                                    <td class="px-6 py-5">
+                                        <span class="text-white font-semibold">
+                                            {{ $user->profile?->phone_number ?? 'N/A' }}
+                                        </span>
                                     </td>
 
                                     <td class="px-6 py-5">
@@ -143,7 +150,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="px-6 py-20 text-center text-slate-400">No partners found.</td></tr>
+                                <tr><td colspan="6" class="px-6 py-20 text-center text-slate-400">No partners found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

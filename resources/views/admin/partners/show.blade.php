@@ -58,6 +58,9 @@
 
                         <h2 class="text-xl font-bold text-white">{{ $user->name }}</h2>
                         <p class="text-purple-300 text-sm mt-1">{{ $user->email }}</p>
+                        <p class="text-cyan-300 text-sm mt-1 font-semibold">
+                            <i class="fa-solid fa-phone mr-1"></i>{{ $user->profile?->phone_number ?? 'N/A' }}
+                        </p>
 
                         {{-- SOCIAL ICONS --}}
                         <div class="flex justify-center gap-4 mt-6 pt-6 border-t border-white/10">
