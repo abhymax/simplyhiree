@@ -33,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/dashboard', [AdminMobileController::class, 'dashboard']);
     Route::get('/admin/clients', [AdminMobileController::class, 'clients']);
     Route::post('/admin/clients', [AdminMobileController::class, 'storeClient']);
+    Route::get('/admin/candidates', [AdminMobileController::class, 'candidates']);
+    Route::get('/admin/candidates/{candidate}', [AdminMobileController::class, 'showCandidate']);
     Route::get('/admin/applications', [AdminMobileController::class, 'applications']);
     Route::get('/admin/jobs/pending', [AdminMobileController::class, 'pendingJobs']);
     Route::post('/admin/jobs/{job}/approve', [AdminMobileController::class, 'approveJob']);

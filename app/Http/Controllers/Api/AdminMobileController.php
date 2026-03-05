@@ -19,12 +19,77 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Permission;
 
 class AdminMobileController extends Controller
 {
+    private function candidateUsersQuery()
+    {
+        $query = User::query()->where(function ($inner) {
+            $inner->whereHas('roles', function ($roleQuery) {
+                $roleQuery->whereRaw('LOWER(name) = ?', ['candidate']);
+            });
+
+            if (Schema::hasColumn('users', 'role')) {
+                $inner->orWhereRaw('LOWER(role) = ?', ['candidate']);
+            }
+        });
+
+        $query->whereDoesntHave('roles', function ($roleQuery) {
+            $roleQuery->whereIn('name', ['partner', 'client', 'Superadmin', 'Manager', 'superadmin', 'manager']);
+        });
+
+        if (Schema::hasColumn('users', 'role')) {
+            $query->where(function ($subQuery) {
+                $subQuery->whereNull('role')
+                    ->orWhereRaw('LOWER(role) = ?', ['candidate']);
+            });
+        }
+
+        return $query;
+    }
+
+    private function isStrictCandidateUser(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $roleNames = $user->getRoleNames()->map(fn ($role) => strtolower((string) $role));
+        $hasCandidateRole = $roleNames->contains('candidate');
+        $hasBlockedRole = $roleNames->intersect(['partner', 'client', 'superadmin', 'manager'])->isNotEmpty();
+
+        $isLegacyCandidate = Schema::hasColumn('users', 'role')
+            && strtolower((string) $user->getAttribute('role')) === 'candidate';
+
+        return ($hasCandidateRole || $isLegacyCandidate) && !$hasBlockedRole;
+    }
+
+    private function mapCandidateUser(User $user): array
+    {
+        $profile = $user->profile;
+        $resumePath = $profile?->resume_path;
+
+        return [
+            'id' => $user->id,
+            'candidate_code' => (string) ($user->entity_code ?? ''),
+            'name' => (string) $user->name,
+            'email' => (string) $user->email,
+            'phone_number' => (string) ($profile?->phone_number ?? ''),
+            'status' => (string) ($user->status ?? ''),
+            'location' => (string) ($profile?->location ?? ''),
+            'experience_status' => (string) ($profile?->experience_status ?? ''),
+            'current_role' => (string) ($profile?->current_role ?? ''),
+            'expected_ctc' => (string) ($profile?->expected_ctc ?? ''),
+            'skills' => (string) ($profile?->skills ?? ''),
+            'resume_url' => $this->publicFileUrl($resumePath),
+            'created_at' => optional($user->created_at)->toIso8601String(),
+        ];
+    }
+
     private function adminUser(Request $request): ?User
     {
         $user = $request->user();
@@ -80,6 +145,10 @@ class AdminMobileController extends Controller
 
     private function mapApplication(JobApplication $application): array
     {
+        $directCandidateUser = $this->isStrictCandidateUser($application->candidateUser)
+            ? $application->candidateUser
+            : null;
+
         $agencyCandidateName = null;
         if ($application->candidate) {
             $first = trim((string) $application->candidate->first_name);
@@ -91,15 +160,15 @@ class AdminMobileController extends Controller
         }
 
         $candidateName = $agencyCandidateName
-            ?? $application->candidateUser?->name
+            ?? $directCandidateUser?->name
             ?? 'Unknown Candidate';
         $candidateEmail = $application->candidate?->email
-            ?? $application->candidateUser?->email;
+            ?? $directCandidateUser?->email;
         $candidatePhone = $application->candidate?->phone_number
-            ?? $application->candidateUser?->profile?->phone_number;
+            ?? $directCandidateUser?->profile?->phone_number;
         $partnerName = $application->candidate?->partner?->name;
         $resumePath = $application->candidate?->resume_path
-            ?? $application->candidateUser?->profile?->resume_path;
+            ?? $directCandidateUser?->profile?->resume_path;
 
         return [
             'id' => $application->id,
@@ -109,23 +178,23 @@ class AdminMobileController extends Controller
             'hiring_status' => (string) ($application->hiring_status ?? ''),
             'joined_status' => (string) ($application->joined_status ?? ''),
             'candidate_name' => $candidateName,
-            'candidate_code' => (string) ($application->candidate?->candidate_code ?? $application->candidateUser?->entity_code ?? ''),
+            'candidate_code' => (string) ($application->candidate?->candidate_code ?? $directCandidateUser?->entity_code ?? ''),
             'candidate_email' => $candidateEmail,
             'candidate_phone' => $candidatePhone,
             'candidate_skills' => $application->candidate?->skills
-                ?? $application->candidateUser?->profile?->skills,
+                ?? $directCandidateUser?->profile?->skills,
             'candidate_experience' => $application->candidate?->experience_status
-                ?? $application->candidateUser?->profile?->experience_status,
+                ?? $directCandidateUser?->profile?->experience_status,
             'candidate_education' => $application->candidate?->education_level
-                ?? $application->candidateUser?->profile?->education_level,
+                ?? $directCandidateUser?->profile?->education_level,
             'candidate_ctc' => $application->candidate?->expected_ctc
-                ?? $application->candidateUser?->profile?->expected_ctc,
+                ?? $directCandidateUser?->profile?->expected_ctc,
             'candidate_location' => $application->candidate?->location
-                ?? $application->candidateUser?->profile?->location,
+                ?? $directCandidateUser?->profile?->location,
             'candidate_gender' => $application->candidate?->gender
-                ?? $application->candidateUser?->profile?->gender,
+                ?? $directCandidateUser?->profile?->gender,
             'candidate_dob' => (string) ($application->candidate?->date_of_birth
-                ?? $application->candidateUser?->profile?->date_of_birth
+                ?? $directCandidateUser?->profile?->date_of_birth
                 ?? ''),
             'resume_url' => $this->publicFileUrl($resumePath),
             'job_id' => $application->job?->id,
@@ -169,6 +238,7 @@ class AdminMobileController extends Controller
         $totalClients = (int) User::role('client')->count();
         $totalPartners = (int) User::role('partner')->count();
         $totalManagers = (int) User::role('Manager')->count();
+        $totalCandidates = (int) $this->candidateUsersQuery()->count();
         $totalJobs = (int) Job::count();
         $pendingJobs = (int) Job::where('status', 'pending_approval')->count();
         $pendingApplications = (int) JobApplication::where('status', 'Pending Review')->count();
@@ -199,12 +269,69 @@ class AdminMobileController extends Controller
                 'total_clients' => $totalClients,
                 'total_partners' => $totalPartners,
                 'total_managers' => $totalManagers,
+                'total_candidates' => $totalCandidates,
                 'total_jobs' => $totalJobs,
                 'pending_jobs' => $pendingJobs,
                 'pending_applications' => $pendingApplications,
                 'today_interviews' => $todayInterviews,
                 'due_invoices' => $dueInvoicesCount,
             ],
+        ]);
+    }
+
+    public function candidates(Request $request)
+    {
+        $admin = $this->adminUser($request);
+        if (!$admin) {
+            return $this->adminOnlyResponse();
+        }
+
+        $perPage = max(min((int) $request->input('per_page', 10), 100), 1);
+        $query = $this->candidateUsersQuery()->with('profile')->latest();
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($inner) use ($search) {
+                $inner->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', (string) $request->input('status'));
+        }
+
+        $candidates = $query->paginate($perPage)->appends($request->query());
+        $rows = $candidates->getCollection()
+            ->map(fn (User $candidate) => $this->mapCandidateUser($candidate))
+            ->values();
+
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'current_page' => $candidates->currentPage(),
+                'last_page' => $candidates->lastPage(),
+                'per_page' => $candidates->perPage(),
+                'total' => $candidates->total(),
+            ],
+        ]);
+    }
+
+    public function showCandidate(Request $request, User $candidate)
+    {
+        $admin = $this->adminUser($request);
+        if (!$admin) {
+            return $this->adminOnlyResponse();
+        }
+
+        if (!$this->isStrictCandidateUser($candidate)) {
+            return response()->json(['message' => 'Candidate not found.'], 404);
+        }
+
+        $candidate->load('profile');
+
+        return response()->json([
+            'data' => $this->mapCandidateUser($candidate),
         ]);
     }
 
