@@ -215,7 +215,7 @@
                         <span class="text-slate-400 text-xs font-bold uppercase">Candidates</span>
                         <i class="fa-solid fa-users text-blue-400"></i>
                     </div>
-                    <div class="text-2xl font-extrabold text-white">{{ $totalUsers - ($totalClients + $totalPartners) }}</div>
+                    <div class="text-2xl font-extrabold text-white">{{ $totalCandidates }}</div>
                 </a>
                 @endcan
             </div>
@@ -246,7 +246,7 @@
                     <div class="mt-6 space-y-3">
                         <div class="flex justify-between text-sm border-b border-white/10 pb-2">
                             <span class="flex items-center text-slate-300"><span class="w-2 h-2 rounded-full bg-blue-400 mr-2"></span> Candidates</span>
-                            <span class="font-bold text-white">{{ $totalUsers - ($totalClients + $totalPartners) }}</span>
+                            <span class="font-bold text-white">{{ $totalCandidates }}</span>
                         </div>
                         <div class="flex justify-between text-sm border-b border-white/10 pb-2">
                             <span class="flex items-center text-slate-300"><span class="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span> Clients</span>
@@ -274,7 +274,7 @@
 
             const totalClients = {{ $totalClients }};
             const totalPartners = {{ $totalPartners }};
-            const totalCandidates = {{ $totalUsers }} - (totalClients + totalPartners);
+            const totalCandidates = {{ $totalCandidates }};
 
             // User Distribution
             const ctxDist = document.getElementById('userDistChart');

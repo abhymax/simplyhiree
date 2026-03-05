@@ -94,6 +94,7 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $totalClients = User::role('client')->count();
         $totalPartners = User::role('partner')->count();
+        $totalCandidates = $this->candidateUsersQuery()->count();
         $pendingJobs = Job::where('status', 'pending_approval')->count();
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
@@ -121,6 +122,7 @@ class AdminController extends Controller
             'totalUsers' => $totalUsers,
             'totalClients' => $totalClients,
             'totalPartners' => $totalPartners,
+            'totalCandidates' => $totalCandidates,
             'pendingJobs' => $pendingJobs,
             'pendingApplications' => $pendingApplications,
             'todayInterviews' => $todayInterviews,
@@ -147,7 +149,7 @@ class AdminController extends Controller
 
         $this->applyCandidateListFilters($query, $request);
 
-        $users = $query->latest()->paginate(25)->withQueryString();
+        $users = $query->latest()->paginate(10)->withQueryString();
 
         // Backward compatibility alias so existing blades using $user->candidate do not break.
         $users->getCollection()->transform(function ($user) {
@@ -285,7 +287,7 @@ class AdminController extends Controller
             default: $query->latest(); break;
         }
 
-        $clients = $query->paginate(25)->withQueryString();
+        $clients = $query->paginate(10)->withQueryString();
         return view('admin.clients.index', ['users' => $clients]);
     }
 
@@ -424,7 +426,7 @@ class AdminController extends Controller
             });
         }
 
-        $partners = $query->latest()->paginate(25)->withQueryString();
+        $partners = $query->latest()->paginate(10)->withQueryString();
         return view('admin.partners.index', ['users' => $partners]);
     }
 
