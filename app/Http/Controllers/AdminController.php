@@ -29,16 +29,42 @@ class AdminController extends Controller
 {
     private function candidateUsersQuery()
     {
-        return User::query()->where(function ($query) {
+        $query = User::query()->where(function ($query) {
             $query->whereHas('roles', function ($roleQuery) {
-                $roleQuery->where('name', 'candidate');
+                $roleQuery->whereRaw('LOWER(name) = ?', ['candidate']);
             });
 
             // Backward compatibility for legacy role column based users.
             if (Schema::hasColumn('users', 'role')) {
-                $query->orWhere('role', 'candidate');
+                $query->orWhereRaw('LOWER(role) = ?', ['candidate']);
             }
         });
+
+        // Exclude non-candidate role records even if data is mixed in legacy DB.
+        $query->whereDoesntHave('roles', function ($roleQuery) {
+            $roleQuery->whereIn('name', ['partner', 'client', 'Superadmin', 'Manager', 'superadmin', 'manager']);
+        });
+
+        if (Schema::hasColumn('users', 'role')) {
+            $query->where(function ($subQuery) {
+                $subQuery->whereNull('role')
+                    ->orWhereRaw('LOWER(role) = ?', ['candidate']);
+            });
+        }
+
+        return $query;
+    }
+
+    private function isStrictCandidateUser(User $user): bool
+    {
+        $roleNames = $user->getRoleNames()->map(fn ($role) => strtolower((string) $role));
+        $hasCandidateRole = $roleNames->contains('candidate');
+        $hasBlockedRole = $roleNames->intersect(['partner', 'client', 'superadmin', 'manager'])->isNotEmpty();
+
+        $isLegacyCandidate = Schema::hasColumn('users', 'role')
+            && strtolower((string) $user->getAttribute('role')) === 'candidate';
+
+        return ($hasCandidateRole || $isLegacyCandidate) && !$hasBlockedRole;
     }
 
     private function applyCandidateListFilters($query, Request $request)
@@ -191,9 +217,7 @@ class AdminController extends Controller
 
     public function showUser(User $user)
     {
-        $isLegacyCandidate = Schema::hasColumn('users', 'role')
-            && strtolower((string) $user->getAttribute('role')) === 'candidate';
-        if (!$user->hasRole('candidate') && !$isLegacyCandidate) {
+        if (!$this->isStrictCandidateUser($user)) {
             abort(404);
         }
         
