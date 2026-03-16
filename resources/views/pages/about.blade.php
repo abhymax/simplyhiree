@@ -56,21 +56,21 @@
                     <div class="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 overflow-hidden">
                         <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all">
                     </div>
-                    <h3 class="font-bold text-xl">Amit Sharma</h3>
+                    <h3 class="font-bold text-xl">Aman Yadav</h3>
                     <p class="text-primary text-sm font-medium">CEO & Founder</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm text-center group hover:shadow-xl transition-all">
                     <div class="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 overflow-hidden">
                         <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all">
                     </div>
-                    <h3 class="font-bold text-xl">Sarah Jenkins</h3>
+                    <h3 class="font-bold text-xl">Surbhi S</h3>
                     <p class="text-primary text-sm font-medium">Head of Product</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm text-center group hover:shadow-xl transition-all">
                     <div class="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 overflow-hidden">
                         <img src="https://randomuser.me/api/portraits/men/85.jpg" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all">
                     </div>
-                    <h3 class="font-bold text-xl">Rajiv Mehta</h3>
+                    <h3 class="font-bold text-xl">Abhinab Roy</h3>
                     <p class="text-primary text-sm font-medium">CTO</p>
                 </div>
             </div>
