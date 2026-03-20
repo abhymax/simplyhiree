@@ -30,7 +30,7 @@
                         <div>
                             <h3 class="font-bold text-lg">Phone</h3>
                             <p class="text-slate-500 text-sm mt-1">Mon-Fri from 9am to 6pm IST.</p>
-                            <a href="tel:+919876543210" class="text-primary font-medium mt-2 block">+91 98765 43210</a>
+                            <a href="tel:+918888353984" class="text-primary font-medium mt-2 block">8888353984</a>
                         </div>
                     </div>
 
@@ -40,7 +40,7 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-lg">Office</h3>
-                            <p class="text-slate-500 text-sm mt-1">Salt Lake Sector V,<br>Kolkata, West Bengal, India</p>
+                            <p class="text-slate-500 text-sm mt-1">B-23, Sector 62, Industrial Area,<br>Noida, Uttar Pradesh 201309</p>
                         </div>
                     </div>
                 </div>
