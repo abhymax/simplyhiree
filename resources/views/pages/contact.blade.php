@@ -46,26 +46,51 @@
                 </div>
 
                 <div class="md:col-span-2 bg-slate-50 p-8 rounded-3xl border border-slate-200">
-                    <form>
+                    @if (session('success'))
+                        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->has('contact'))
+                        <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800">
+                            {{ $errors->first('contact') }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('contact.submit') }}">
+                        @csrf
                         <div class="grid md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-2">First Name</label>
-                                <input type="text" class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="John">
+                                <input type="text" name="first_name" value="{{ old('first_name') }}" class="w-full px-4 py-3 rounded-xl bg-white border {{ $errors->has('first_name') ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200' }} focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="John">
+                                @error('first_name')
+                                    <p class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-2">Last Name</label>
-                                <input type="text" class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Doe">
+                                <input type="text" name="last_name" value="{{ old('last_name') }}" class="w-full px-4 py-3 rounded-xl bg-white border {{ $errors->has('last_name') ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200' }} focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Doe">
+                                @error('last_name')
+                                    <p class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
                         <div class="mb-6">
                             <label class="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
-                            <input type="email" class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="john@example.com">
+                            <input type="email" name="email" value="{{ old('email') }}" class="w-full px-4 py-3 rounded-xl bg-white border {{ $errors->has('email') ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200' }} focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="john@example.com">
+                            @error('email')
+                                <p class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="mb-6">
                             <label class="block text-sm font-bold text-slate-700 mb-2">Message</label>
-                            <textarea rows="5" class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="How can we help you?"></textarea>
+                            <textarea rows="5" name="message" class="w-full px-4 py-3 rounded-xl bg-white border {{ $errors->has('message') ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200' }} focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="How can we help you?">{{ old('message') }}</textarea>
+                            @error('message')
+                                <p class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                            @enderror
                         </div>
-                        <button type="button" class="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl">Send Message</button>
+                        <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl">Send Message</button>
                     </form>
                 </div>
             </div>
