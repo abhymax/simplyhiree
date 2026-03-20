@@ -28,8 +28,8 @@
                         <hr class="my-6 border-white/10">
 
                         <h3 class="text-lg font-bold text-white mb-3">Job Description</h3>
-                        <div class="text-slate-100 mb-6 whitespace-pre-line text-sm">
-                            {!! nl2br(e($job->description)) !!}
+                        <div class="text-slate-100 mb-6 whitespace-pre-line text-sm leading-7">
+                            {{ preg_replace("/(\r\n|\r|\n){3,}/", "\n\n", trim((string) $job->description)) }}
                         </div>
 
                         <h3 class="text-lg font-bold text-white mb-3">Requirements</h3>

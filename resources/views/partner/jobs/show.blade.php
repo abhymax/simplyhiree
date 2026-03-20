@@ -112,8 +112,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 bg-white/10 border border-white/10 p-6 rounded-2xl">
                     <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Job Description</h3>
-                    <div class="text-slate-100 text-sm leading-relaxed whitespace-pre-line">
-                        {{ $job->description }}
+                    <div class="text-slate-100 text-sm leading-7 whitespace-pre-line">
+                        {{ preg_replace("/(\r\n|\r|\n){3,}/", "\n\n", trim((string) $job->description)) }}
                     </div>
                 </div>
 
