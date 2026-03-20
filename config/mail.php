@@ -115,6 +115,6 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
-    'contact_recipient' => env('CONTACT_FORM_RECIPIENT', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+    'contact_recipient' => env('CONTACT_FORM_RECIPIENT', 'Support@simplyhiree.com'),
 
 ];
