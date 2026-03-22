@@ -26,7 +26,7 @@
                 <h1 class="text-3xl md:text-4xl font-extrabold mt-3">Post a New Job</h1>
             </div>
 
-            <div class="p-6" x-data="clientJobCreateForm()">
+            <div class="p-6">
                 <form action="{{ route('client.jobs.store') }}" method="POST">
                     @csrf
 
@@ -65,11 +65,7 @@
                             <input
                                 type="text"
                                 name="location"
-                                x-model="location"
-                                @input="updateLocationSuggestions()"
-                                @focus="updateLocationSuggestions()"
-                                @click.away="hideLocationSuggestions()"
-                                @keydown.escape.window="hideLocationSuggestions()"
+                                id="job-location"
                                 value="{{ old('location') }}"
                                 autocomplete="off"
                                 required
@@ -77,19 +73,9 @@
                                 placeholder="Start typing city name"
                             >
                             <div
-                                x-show="showLocationSuggestions"
-                                x-transition
-                                class="absolute z-20 mt-2 w-full rounded-xl border border-white/10 bg-slate-950/95 shadow-2xl overflow-hidden"
-                            >
-                                <template x-for="city in filteredCities" :key="city">
-                                    <button
-                                        type="button"
-                                        @click="selectLocation(city)"
-                                        class="block w-full px-4 py-3 text-left text-sm text-slate-100 hover:bg-blue-500/20 transition"
-                                        x-text="city"
-                                    ></button>
-                                </template>
-                            </div>
+                                id="job-location-suggestions"
+                                class="absolute z-20 mt-2 hidden w-full rounded-xl border border-white/10 bg-slate-950/95 shadow-2xl overflow-hidden"
+                            ></div>
                             <p class="mt-1 text-xs text-blue-200/80">Type at least 2 letters to see matching Indian cities.</p>
                             @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
@@ -173,42 +159,70 @@
     </div>
 </div>
 <script>
-    function clientJobCreateForm() {
+    document.addEventListener('DOMContentLoaded', function () {
         const cities = @json($indianCities ?? []);
+        const input = document.getElementById('job-location');
+        const suggestions = document.getElementById('job-location-suggestions');
 
-        return {
-            cities,
-            location: @js(old('location', '')),
-            filteredCities: [],
-            showLocationSuggestions: false,
+        if (!input || !suggestions || !Array.isArray(cities)) {
+            return;
+        }
 
-            updateLocationSuggestions() {
-                const query = (this.location || '').trim().toLowerCase();
-
-                if (query.length < 2) {
-                    this.filteredCities = [];
-                    this.showLocationSuggestions = false;
-                    return;
-                }
-
-                this.filteredCities = this.cities
-                    .filter((city) => city.toLowerCase().includes(query))
-                    .slice(0, 12);
-
-                this.showLocationSuggestions = this.filteredCities.length > 0;
-            },
-
-            selectLocation(city) {
-                this.location = city;
-                this.showLocationSuggestions = false;
-            },
-
-            hideLocationSuggestions() {
-                setTimeout(() => {
-                    this.showLocationSuggestions = false;
-                }, 120);
-            },
+        const hideSuggestions = function () {
+            suggestions.classList.add('hidden');
+            suggestions.innerHTML = '';
         };
-    }
+
+        const showSuggestions = function (matches) {
+            if (!matches.length) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestions.innerHTML = matches.map(function (city) {
+                return '<button type="button" class="job-location-option block w-full px-4 py-3 text-left text-sm text-slate-100 hover:bg-blue-500/20 transition">' + city + '</button>';
+            }).join('');
+
+            suggestions.classList.remove('hidden');
+
+            suggestions.querySelectorAll('.job-location-option').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    input.value = button.textContent.trim();
+                    hideSuggestions();
+                });
+            });
+        };
+
+        const updateSuggestions = function () {
+            const query = input.value.trim().toLowerCase();
+
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            const matches = cities
+                .filter(function (city) {
+                    return city.toLowerCase().includes(query);
+                })
+                .slice(0, 12);
+
+            showSuggestions(matches);
+        };
+
+        input.addEventListener('input', updateSuggestions);
+        input.addEventListener('focus', updateSuggestions);
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                hideSuggestions();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!suggestions.contains(event.target) && event.target !== input) {
+                hideSuggestions();
+            }
+        });
+    });
 </script>
 @endsection
