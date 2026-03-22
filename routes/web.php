@@ -194,6 +194,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         
         // --- Job Management ---
+        Route::get('/jobs', function () {
+            return redirect()->route('client.jobs.create');
+        })->name('jobs.index');
         Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
         Route::post('/jobs', [ClientController::class, 'storeJob'])->name('jobs.store');
         

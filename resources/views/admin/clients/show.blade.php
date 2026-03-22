@@ -24,6 +24,39 @@
                 </div>
                 
                 <div class="mt-4 md:mt-0 flex gap-3">
+                    @if($user->status !== 'active')
+                        <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="active">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-check"></i> Approve Client
+                            </button>
+                        </form>
+                    @endif
+
+                    @if($user->status !== 'on_hold')
+                        <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="on_hold">
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-pause"></i> Put On Hold
+                            </button>
+                        </form>
+                    @endif
+
+                    @if($user->status !== 'restricted')
+                        <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="restricted">
+                            <button type="submit" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-ban"></i> Restrict
+                            </button>
+                        </form>
+                    @endif
+
                     <a href="{{ route('admin.clients.edit', $user->id) }}" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
                         <i class="fa-solid fa-pen"></i> Edit Profile
                     </a>

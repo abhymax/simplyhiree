@@ -116,8 +116,17 @@
                                         <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30"><i class="fa-regular fa-calendar-check mr-2"></i> {{ $user->billable_period_days }} Days</span>
                                     </td>
                                     <td class="px-6 py-5">
-                                        @if($user->status === 'active') <span class="text-emerald-400 font-bold text-xs uppercase">Active</span>
-                                        @else <span class="text-red-400 font-bold text-xs uppercase">{{ $user->status }}</span> @endif
+                                        @php
+                                            $clientStatusClasses = [
+                                                'active' => 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+                                                'pending' => 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+                                                'on_hold' => 'bg-orange-500/20 text-orange-300 border border-orange-500/40',
+                                                'restricted' => 'bg-rose-500/20 text-rose-300 border border-rose-500/40',
+                                            ];
+                                        @endphp
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase {{ $clientStatusClasses[$user->status] ?? 'bg-slate-500/20 text-slate-200 border border-slate-500/40' }}">
+                                            {{ str_replace('_', ' ', $user->status) }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-5 text-slate-300">{{ $user->created_at->format('M d, Y') }}</td>
 
@@ -136,7 +145,38 @@
                                             
                                             <a href="{{ route('admin.clients.edit', $user->id) }}" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-pen"></i></a>
                                             
-                                            {{-- [Status Forms logic same as before...] --}}
+                                            @if($user->status !== 'active')
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="active">
+                                                    <button class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-emerald-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Approve / Activate">
+                                                        <i class="fa-solid fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if($user->status !== 'on_hold')
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="on_hold">
+                                                    <button class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-amber-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Put On Hold">
+                                                        <i class="fa-solid fa-pause"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if($user->status !== 'restricted')
+                                                <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="restricted">
+                                                    <button class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-rose-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10" title="Restrict">
+                                                        <i class="fa-solid fa-ban"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                         {{-- [Password Modal logic same as before...] --}}
                                         <x-modal name="pwd-{{ $user->id }}">
