@@ -97,7 +97,7 @@
                 </div>
                 <div class="bg-white/10 border border-white/10 p-4 rounded-2xl">
                     <p class="text-xs text-blue-200 font-bold uppercase mb-1">Experience</p>
-                    <p class="text-sm font-semibold text-white">{{ $job->experienceLevel->name ?? 'Any' }}</p>
+                    <p class="text-sm font-semibold text-white">{{ $job->formatted_experience }}</p>
                 </div>
                 <div class="bg-white/10 border border-white/10 p-4 rounded-2xl">
                     <p class="text-xs text-blue-200 font-bold uppercase mb-1">Education</p>

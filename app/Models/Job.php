@@ -143,4 +143,32 @@ class Job extends Model
             get: fn () => $this->id ? sprintf('SH-JOB-%06d', (int) $this->id) : null,
         );
     }
+
+    protected function formattedExperience(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $min = $this->min_experience;
+                $max = $this->max_experience;
+
+                if ($min !== null || $max !== null) {
+                    if ($min !== null && $max !== null) {
+                        if ((int) $min === (int) $max) {
+                            return $min . ' Year' . ((int) $min === 1 ? '' : 's');
+                        }
+
+                        return $min . '-' . $max . ' Years';
+                    }
+
+                    if ($min !== null) {
+                        return $min . '+ Years';
+                    }
+
+                    return 'Up to ' . $max . ' Years';
+                }
+
+                return $this->experienceLevel?->name ?? 'Any';
+            },
+        );
+    }
 }

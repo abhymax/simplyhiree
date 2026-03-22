@@ -46,6 +46,11 @@
                             <input id="company_name" name="company_name" type="text" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" value="{{ old('company_name', $profile->company_name ?? $user->name) }}" required />
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm text-blue-100">Email Address</label>
+                            <input id="email" name="email" type="email" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" value="{{ old('email', $user->email) }}" required />
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label class="block text-sm text-blue-100">Industry / Sector</label>

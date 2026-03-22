@@ -62,13 +62,28 @@
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Location <span class="text-rose-300">*</span></label>
-                            <input type="text" name="location" value="{{ old('location') }}" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <input type="text" name="location" list="indian-city-list" value="{{ old('location') }}" autocomplete="off" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" placeholder="Start typing city name">
+                            <datalist id="indian-city-list">
+                                @foreach($indianCities ?? [] as $city)
+                                    <option value="{{ $city }}"></option>
+                                @endforeach
+                            </datalist>
+                            <p class="mt-1 text-xs text-blue-200/80">Type at least 2 letters to see matching Indian cities.</p>
                             @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-blue-100">Salary / CTC</label>
-                            <input type="text" name="salary" value="{{ old('salary') }}" placeholder="e.g. 5-7 LPA" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <label class="block text-sm font-medium text-blue-100">Salary Range (INR)</label>
+                            <div class="flex space-x-2">
+                                <div class="w-1/2">
+                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                    @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                    @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
 
                         <div>

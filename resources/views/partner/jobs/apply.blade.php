@@ -34,7 +34,7 @@
 
                         <h3 class="text-lg font-bold text-white mb-3">Requirements</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-200">
-                            <div><span class="font-semibold text-blue-100">Experience:</span> {{ $job->experienceLevel->name ?? 'N/A' }}</div>
+                            <div><span class="font-semibold text-blue-100">Experience:</span> {{ $job->formatted_experience }}</div>
                             <div><span class="font-semibold text-blue-100">Education:</span> {{ $job->educationLevel->name ?? 'N/A' }}</div>
                             <div class="sm:col-span-2"><span class="font-semibold text-blue-100">Skills:</span> {{ $job->skills_required ?? 'N/A' }}</div>
                         </div>

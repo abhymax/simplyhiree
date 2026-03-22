@@ -87,9 +87,21 @@ class ClientController extends Controller
     {
         $categories = JobCategory::all();
         $educationLevels = EducationLevel::all();
-        // Note: ExperienceLevels are no longer needed for the form
-        
-        return view('client.jobs.create', compact('categories', 'educationLevels'));
+        $indianCities = [];
+        $citiesPath = resource_path('data/indian-cities.json');
+
+        if (is_file($citiesPath)) {
+            $decoded = json_decode((string) file_get_contents($citiesPath), true);
+            $indianCities = collect(is_array($decoded) ? $decoded : [])
+                ->filter(fn ($city) => is_string($city) && trim($city) !== '')
+                ->map(fn ($city) => trim($city))
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+        }
+
+        return view('client.jobs.create', compact('categories', 'educationLevels', 'indianCities'));
     }
 
     /**
@@ -101,9 +113,10 @@ class ClientController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:job_categories,id',
             'location' => 'required|string',
-            'salary' => 'nullable|string',
             'job_type' => 'required|string',
             'description' => 'required|string',
+            'min_salary' => 'nullable|integer|min:0|required_with:max_salary',
+            'max_salary' => 'nullable|integer|min:0|gte:min_salary|required_with:min_salary',
             
             // FIX: Validating manual experience range
             'min_experience' => 'required|integer|min:0',
@@ -116,6 +129,11 @@ class ClientController extends Controller
             'openings' => 'nullable|integer|min:1',
         ]);
 
+        $salary = $this->formatSalaryRange(
+            $validated['min_salary'] ?? null,
+            $validated['max_salary'] ?? null
+        );
+
         Job::create([
             'user_id' => Auth::id(), // Automatically assign to logged-in client
             'company_name' => Auth::user()->name, // Default to client name
@@ -123,7 +141,7 @@ class ClientController extends Controller
             'title' => $validated['title'],
             'category_id' => $validated['category_id'],
             'location' => $validated['location'],
-            'salary' => $validated['salary'],
+            'salary' => $salary,
             'job_type' => $validated['job_type'],
             'description' => $validated['description'],
             
@@ -141,6 +159,27 @@ class ClientController extends Controller
         ]);
 
         return redirect()->route('client.dashboard')->with('success', 'Job posted successfully! Waiting for admin approval.');
+    }
+
+    private function formatSalaryRange(?int $minSalary, ?int $maxSalary): ?string
+    {
+        if ($minSalary === null && $maxSalary === null) {
+            return null;
+        }
+
+        if ($minSalary !== null && $maxSalary !== null) {
+            if ($minSalary === $maxSalary) {
+                return 'Rs. ' . number_format($minSalary);
+            }
+
+            return 'Rs. ' . number_format($minSalary) . ' - Rs. ' . number_format($maxSalary);
+        }
+
+        if ($minSalary !== null) {
+            return 'Rs. ' . number_format($minSalary) . '+';
+        }
+
+        return 'Up to Rs. ' . number_format((int) $maxSalary);
     }
 
     // ---------------------------------

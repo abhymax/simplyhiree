@@ -207,7 +207,7 @@
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Experience</span>
-                                    <span class="font-semibold text-white">{{ $job->experienceLevel->name ?? $job->experience_required ?? 'Any' }}</span>
+                                    <span class="font-semibold text-white">{{ $job->formatted_experience }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Education</span>

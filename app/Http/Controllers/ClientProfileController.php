@@ -31,6 +31,7 @@ class ClientProfileController extends Controller
 
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'website' => 'nullable|url|max:255',
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|string|max:50',
@@ -104,7 +105,10 @@ class ClientProfileController extends Controller
             $validated
         );
 
-        $user->update(['name' => $validated['company_name']]);
+        $user->update([
+            'name' => $validated['company_name'],
+            'email' => $validated['email'],
+        ]);
 
         return redirect()->back()->with('success', 'Company profile updated successfully.');
     }
