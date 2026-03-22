@@ -160,13 +160,15 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const cities = @json($indianCities ?? []);
         const input = document.getElementById('job-location');
         const suggestions = document.getElementById('job-location-suggestions');
+        const embeddedCities = @json($indianCities ?? []);
 
-        if (!input || !suggestions || !Array.isArray(cities)) {
+        if (!input || !suggestions) {
             return;
         }
+
+        let cities = Array.isArray(embeddedCities) ? embeddedCities : [];
 
         const hideSuggestions = function () {
             suggestions.classList.add('hidden');
@@ -223,6 +225,25 @@
                 hideSuggestions();
             }
         });
+
+        if (!cities.length) {
+            fetch(@js(asset('data/indian-cities.json')))
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to load city list');
+                    }
+
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (Array.isArray(data)) {
+                        cities = data;
+                    }
+                })
+                .catch(function () {
+                    cities = [];
+                });
+        }
     });
 </script>
 @endsection
