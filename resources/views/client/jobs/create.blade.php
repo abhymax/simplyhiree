@@ -26,7 +26,7 @@
                 <h1 class="text-3xl md:text-4xl font-extrabold mt-3">Post a New Job</h1>
             </div>
 
-            <div class="p-6">
+            <div class="p-6" x-data="clientJobCreateForm()">
                 <form action="{{ route('client.jobs.store') }}" method="POST">
                     @csrf
 
@@ -60,14 +60,36 @@
                             @error('job_type') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
-                        <div>
+                        <div class="relative">
                             <label class="block text-sm font-medium text-blue-100">Location <span class="text-rose-300">*</span></label>
-                            <input type="text" name="location" list="indian-city-list" value="{{ old('location') }}" autocomplete="off" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" placeholder="Start typing city name">
-                            <datalist id="indian-city-list">
-                                @foreach($indianCities ?? [] as $city)
-                                    <option value="{{ $city }}"></option>
-                                @endforeach
-                            </datalist>
+                            <input
+                                type="text"
+                                name="location"
+                                x-model="location"
+                                @input="updateLocationSuggestions()"
+                                @focus="updateLocationSuggestions()"
+                                @click.away="hideLocationSuggestions()"
+                                @keydown.escape.window="hideLocationSuggestions()"
+                                value="{{ old('location') }}"
+                                autocomplete="off"
+                                required
+                                class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white"
+                                placeholder="Start typing city name"
+                            >
+                            <div
+                                x-show="showLocationSuggestions"
+                                x-transition
+                                class="absolute z-20 mt-2 w-full rounded-xl border border-white/10 bg-slate-950/95 shadow-2xl overflow-hidden"
+                            >
+                                <template x-for="city in filteredCities" :key="city">
+                                    <button
+                                        type="button"
+                                        @click="selectLocation(city)"
+                                        class="block w-full px-4 py-3 text-left text-sm text-slate-100 hover:bg-blue-500/20 transition"
+                                        x-text="city"
+                                    ></button>
+                                </template>
+                            </div>
                             <p class="mt-1 text-xs text-blue-200/80">Type at least 2 letters to see matching Indian cities.</p>
                             @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
@@ -150,4 +172,43 @@
 
     </div>
 </div>
+<script>
+    function clientJobCreateForm() {
+        const cities = @json($indianCities ?? []);
+
+        return {
+            cities,
+            location: @js(old('location', '')),
+            filteredCities: [],
+            showLocationSuggestions: false,
+
+            updateLocationSuggestions() {
+                const query = (this.location || '').trim().toLowerCase();
+
+                if (query.length < 2) {
+                    this.filteredCities = [];
+                    this.showLocationSuggestions = false;
+                    return;
+                }
+
+                this.filteredCities = this.cities
+                    .filter((city) => city.toLowerCase().includes(query))
+                    .slice(0, 12);
+
+                this.showLocationSuggestions = this.filteredCities.length > 0;
+            },
+
+            selectLocation(city) {
+                this.location = city;
+                this.showLocationSuggestions = false;
+            },
+
+            hideLocationSuggestions() {
+                setTimeout(() => {
+                    this.showLocationSuggestions = false;
+                }, 120);
+            },
+        };
+    }
+</script>
 @endsection
