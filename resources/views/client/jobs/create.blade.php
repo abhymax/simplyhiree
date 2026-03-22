@@ -74,7 +74,7 @@
                             >
                             <div
                                 id="job-location-suggestions"
-                                class="absolute z-20 mt-2 hidden w-full rounded-xl border border-white/10 bg-slate-950/95 shadow-2xl overflow-hidden"
+                                class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"
                             ></div>
                             <p class="mt-1 text-xs text-blue-200/80">Type at least 2 letters to see matching Indian cities.</p>
                             @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
@@ -182,7 +182,7 @@
             }
 
             suggestions.innerHTML = matches.map(function (city) {
-                return '<button type="button" class="job-location-option block w-full px-4 py-3 text-left text-sm text-slate-100 hover:bg-blue-500/20 transition">' + city + '</button>';
+                return '<button type="button" class="job-location-option block w-full border-b border-slate-700 px-4 py-3 text-left text-sm font-medium text-white hover:bg-blue-600 hover:text-white transition last:border-b-0">' + city + '</button>';
             }).join('');
 
             suggestions.classList.remove('hidden');
