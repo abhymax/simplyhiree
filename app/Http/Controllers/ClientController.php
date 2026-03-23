@@ -101,7 +101,42 @@ class ClientController extends Controller
                 ->all();
         }
 
-        return view('client.jobs.create', compact('categories', 'educationLevels', 'indianCities'));
+        return view('client.jobs.create', [
+            'categories' => $categories,
+            'educationLevels' => $educationLevels,
+            'indianCities' => $indianCities,
+            'job' => null,
+            'formMode' => 'create',
+        ]);
+    }
+
+    public function editJob(Job $job)
+    {
+        $this->ensureClientCanEditJob($job);
+
+        $categories = JobCategory::all();
+        $educationLevels = EducationLevel::all();
+        $indianCities = [];
+        $citiesPath = resource_path('data/indian-cities.json');
+
+        if (is_file($citiesPath)) {
+            $decoded = json_decode((string) file_get_contents($citiesPath), true);
+            $indianCities = collect(is_array($decoded) ? $decoded : [])
+                ->filter(fn ($city) => is_string($city) && trim($city) !== '')
+                ->map(fn ($city) => trim($city))
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+        }
+
+        return view('client.jobs.create', [
+            'categories' => $categories,
+            'educationLevels' => $educationLevels,
+            'indianCities' => $indianCities,
+            'job' => $job,
+            'formMode' => 'edit',
+        ]);
     }
 
     /**
@@ -109,25 +144,7 @@ class ClientController extends Controller
      */
     public function storeJob(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'required|exists:job_categories,id',
-            'location' => 'required|string',
-            'job_type' => 'required|string',
-            'description' => 'required|string',
-            'min_salary' => 'nullable|integer|min:0|required_with:max_salary',
-            'max_salary' => 'nullable|integer|min:0|gte:min_salary|required_with:min_salary',
-            
-            // FIX: Validating manual experience range
-            'min_experience' => 'required|integer|min:0',
-            'max_experience' => 'required|integer|gte:min_experience|max:50',
-            
-            'education_level_id' => 'required|exists:education_levels,id',
-            'application_deadline' => 'nullable|date',
-            'skills_required' => 'nullable|string',
-            'company_website' => 'nullable|url',
-            'openings' => 'nullable|integer|min:1',
-        ]);
+        $validated = $this->validateClientJob($request);
 
         $salary = $this->formatSalaryRange(
             $validated['min_salary'] ?? null,
@@ -144,11 +161,11 @@ class ClientController extends Controller
             'salary' => $salary,
             'job_type' => $validated['job_type'],
             'description' => $validated['description'],
+            'gender_preference' => $validated['gender_preference'],
             
-            // FIX: Saving manual experience
             'min_experience' => $validated['min_experience'],
             'max_experience' => $validated['max_experience'],
-            'experience_level_id' => null, // No longer used
+            'experience_level_id' => null,
             
             'education_level_id' => $validated['education_level_id'],
             'application_deadline' => $validated['application_deadline'],
@@ -159,6 +176,39 @@ class ClientController extends Controller
         ]);
 
         return redirect()->route('client.dashboard')->with('success', 'Job posted successfully! Waiting for admin approval.');
+    }
+
+    public function updateJob(Request $request, Job $job)
+    {
+        $this->ensureClientCanEditJob($job);
+
+        $validated = $this->validateClientJob($request);
+
+        $salary = $this->formatSalaryRange(
+            $validated['min_salary'] ?? null,
+            $validated['max_salary'] ?? null
+        );
+
+        $job->update([
+            'title' => $validated['title'],
+            'category_id' => $validated['category_id'],
+            'location' => $validated['location'],
+            'salary' => $salary,
+            'job_type' => $validated['job_type'],
+            'description' => $validated['description'],
+            'gender_preference' => $validated['gender_preference'],
+            'min_experience' => $validated['min_experience'],
+            'max_experience' => $validated['max_experience'],
+            'experience_level_id' => null,
+            'education_level_id' => $validated['education_level_id'],
+            'application_deadline' => $validated['application_deadline'],
+            'skills_required' => $validated['skills_required'] ?? null,
+            'company_website' => $validated['company_website'] ?? null,
+            'openings' => $validated['openings'] ?? 1,
+            'status' => 'pending_approval',
+        ]);
+
+        return redirect()->route('client.dashboard')->with('success', 'Pending job updated successfully.');
     }
 
     private function formatSalaryRange(?int $minSalary, ?int $maxSalary): ?string
@@ -180,6 +230,38 @@ class ClientController extends Controller
         }
 
         return 'Up to Rs. ' . number_format((int) $maxSalary);
+    }
+
+    private function validateClientJob(Request $request): array
+    {
+        return $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|exists:job_categories,id',
+            'location' => 'required|string|max:255',
+            'job_type' => 'required|string|max:100',
+            'description' => 'required|string',
+            'min_salary' => 'nullable|integer|min:0|required_with:max_salary',
+            'max_salary' => 'nullable|integer|min:0|gte:min_salary|required_with:min_salary',
+            'min_experience' => 'required|integer|min:0',
+            'max_experience' => 'required|integer|gte:min_experience|max:50',
+            'education_level_id' => 'required|exists:education_levels,id',
+            'application_deadline' => 'nullable|date',
+            'skills_required' => 'nullable|string',
+            'company_website' => 'nullable|url',
+            'openings' => 'nullable|integer|min:1',
+            'gender_preference' => 'required|string|in:Any,Male,Female,Other',
+        ]);
+    }
+
+    private function ensureClientCanEditJob(Job $job): void
+    {
+        if ((int) $job->user_id !== (int) Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ((string) $job->status !== 'pending_approval') {
+            abort(403, 'Only pending jobs can be edited.');
+        }
     }
 
     // ---------------------------------

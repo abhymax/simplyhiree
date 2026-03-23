@@ -137,6 +137,7 @@
                                 <td class="px-6 py-4 text-blue-100">
                                     <div><span class="text-cyan-300 text-xs uppercase font-bold">Openings:</span> {{ $job->openings ?? 'N/A' }}</div>
                                     <div><span class="text-cyan-300 text-xs uppercase font-bold">Exp:</span> {{ $job->formatted_experience }}</div>
+                                    <div><span class="text-cyan-300 text-xs uppercase font-bold">Gender:</span> {{ $job->gender_preference ?? 'Any' }}</div>
                                 </td>
 
                                 <td class="px-6 py-4">
@@ -158,6 +159,10 @@
                                     @if($job->status == 'approved')
                                         <a href="{{ route('client.jobs.applicants', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-bold text-xs text-white">
                                             View Applicants ({{ $job->jobApplications->where('status', 'Approved')->count() }})
+                                        </a>
+                                    @elseif($job->status === 'pending_approval')
+                                        <a href="{{ route('client.jobs.edit', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 px-3 py-2 rounded-lg font-bold text-xs text-slate-900">
+                                            <i class="fa-solid fa-pen-to-square"></i> Edit Pending Job
                                         </a>
                                     @else
                                         <span class="text-slate-400 text-xs italic">Not available</span>

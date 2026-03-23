@@ -199,6 +199,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         })->name('jobs.index');
         Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
         Route::post('/jobs', [ClientController::class, 'storeJob'])->name('jobs.store');
+        Route::get('/jobs/{job}/edit', [ClientController::class, 'editJob'])->name('jobs.edit');
+        Route::patch('/jobs/{job}', [ClientController::class, 'updateJob'])->name('jobs.update');
         
         Route::patch('/jobs/{job}/status', [JobController::class, 'updateStatus'])->name('jobs.status.update'); 
         Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy'); 

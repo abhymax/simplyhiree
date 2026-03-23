@@ -29,6 +29,7 @@ class ClientJobController extends Controller
                     ->orderBy('name')
                     ->get(),
                 'job_types' => ['Full-Time', 'Part-Time', 'Contract', 'Internship', 'Remote'],
+                'gender_preferences' => ['Any', 'Male', 'Female', 'Other'],
             ],
         ]);
     }
@@ -60,6 +61,7 @@ class ClientJobController extends Controller
                 'salary' => $job->salary,
                 'status' => $job->status,
                 'job_type' => $job->job_type,
+                'gender_preference' => $job->gender_preference ?? 'Any',
                 'description' => $job->description,
                 'openings' => $job->openings,
                 'category' => [
@@ -105,6 +107,7 @@ class ClientJobController extends Controller
             'min_experience' => ['required', 'integer', 'min:0', 'max:50'],
             'max_experience' => ['required', 'integer', 'gte:min_experience', 'max:50'],
             'education_level_id' => ['required', 'exists:education_levels,id'],
+            'gender_preference' => ['required', 'string', 'in:Any,Male,Female,Other'],
             'application_deadline' => ['nullable', 'date'],
             'skills_required' => ['nullable', 'string'],
             'company_website' => ['nullable', 'url'],
@@ -120,6 +123,7 @@ class ClientJobController extends Controller
             'location' => $validated['location'],
             'salary' => $validated['salary'] ?? null,
             'job_type' => $validated['job_type'],
+            'gender_preference' => $validated['gender_preference'],
             'description' => $validated['description'],
             'min_experience' => $validated['min_experience'],
             'max_experience' => $validated['max_experience'],
@@ -142,10 +146,10 @@ class ClientJobController extends Controller
                 'status' => $job->status,
                 'location' => $job->location,
                 'job_type' => $job->job_type,
+                'gender_preference' => $job->gender_preference ?? 'Any',
                 'category' => $job->jobCategory?->name,
                 'education' => $job->educationLevel?->name,
             ],
         ], 201);
     }
 }
-

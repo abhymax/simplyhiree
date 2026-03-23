@@ -70,6 +70,12 @@
                     @endphp
 
                     <div class="flex flex-wrap gap-3 items-center">
+                        @if((isset($isOwner) && $isOwner) && $job->status === 'pending_approval')
+                            <a href="{{ route('client.jobs.edit', $job->id) }}" class="fx-btn px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-md text-sm font-bold">
+                                Edit Pending Job
+                            </a>
+                        @endif
+
                         @if($job->status !== 'approved')
                             <form action="{{ route($prefix . '.jobs.status.update', $job->id) }}" method="POST">
                                 @csrf
@@ -212,6 +218,10 @@
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Education</span>
                                     <span class="font-semibold text-white">{{ $job->educationLevel->name ?? $job->education_level ?? 'Any' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-white/10">
+                                    <span class="text-blue-200">Gender</span>
+                                    <span class="font-semibold text-white">{{ $job->gender_preference ?? 'Any' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Posted On</span>
