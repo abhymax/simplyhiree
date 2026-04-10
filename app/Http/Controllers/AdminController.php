@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rules;
 use App\Notifications\JobApproved;
 use App\Notifications\JobRejected;
@@ -540,12 +541,12 @@ class AdminController extends Controller
         $partners = User::role('partner')->where('status', 'active')->get();
         $candidates = Candidate::select('id', 'first_name', 'last_name', 'email')->latest()->get(); 
         
-        $categories = JobCategory::all();
-        $experienceLevels = ExperienceLevel::all();
-        $educationLevels = EducationLevel::all();
+        $categories = Cache::remember('job_categories', 3600, fn () => JobCategory::orderBy('name')->get());
+        $experienceLevels = Cache::remember('experience_levels', 3600, fn () => ExperienceLevel::orderBy('name')->get());
+        $educationLevels = Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get());
 
         return view('admin.jobs.create', compact(
-            'clients', 'partners', 'candidates', 
+            'clients', 'partners', 'candidates',
             'categories', 'experienceLevels', 'educationLevels'
         ));
     }

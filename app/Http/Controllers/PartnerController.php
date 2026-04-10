@@ -10,6 +10,7 @@ use App\Models\JobApplication;
 use App\Models\ExperienceLevel;
 use App\Models\EducationLevel;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -146,8 +147,8 @@ class PartnerController extends Controller
             ->values();
 
         $job_types = Job::select('job_type')->distinct()->orderBy('job_type')->pluck('job_type');
-        $experienceLevels = ExperienceLevel::all();
-        $educationLevels = EducationLevel::all();
+        $experienceLevels = Cache::remember('experience_levels', 3600, fn () => ExperienceLevel::orderBy('name')->get());
+        $educationLevels = Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get());
 
         return view('partner.jobs', [
             'jobs' => $jobs,

@@ -18,6 +18,7 @@ use App\Notifications\CandidateJoined;
 use App\Notifications\CandidateDidNotJoin;
 use App\Notifications\CandidateLeft;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Services\SuperadminActivityService;
 
@@ -85,58 +86,39 @@ class ClientController extends Controller
      */
     public function createJob()
     {
-        $categories = JobCategory::all();
-        $educationLevels = EducationLevel::all();
-        $indianCities = [];
-        $citiesPath = resource_path('data/indian-cities.json');
-
-        if (is_file($citiesPath)) {
-            $decoded = json_decode((string) file_get_contents($citiesPath), true);
-            $indianCities = collect(is_array($decoded) ? $decoded : [])
-                ->filter(fn ($city) => is_string($city) && trim($city) !== '')
-                ->map(fn ($city) => trim($city))
-                ->unique()
-                ->sort()
-                ->values()
-                ->all();
-        }
-
-        return view('client.jobs.create', [
-            'categories' => $categories,
-            'educationLevels' => $educationLevels,
-            'indianCities' => $indianCities,
+        return view('client.jobs.create', array_merge($this->jobFormDropdowns(), [
             'job' => null,
             'formMode' => 'create',
-        ]);
+        ]));
     }
 
     public function editJob(Job $job)
     {
         $this->ensureClientCanEditJob($job);
 
-        $categories = JobCategory::all();
-        $educationLevels = EducationLevel::all();
-        $indianCities = [];
-        $citiesPath = resource_path('data/indian-cities.json');
-
-        if (is_file($citiesPath)) {
-            $decoded = json_decode((string) file_get_contents($citiesPath), true);
-            $indianCities = collect(is_array($decoded) ? $decoded : [])
-                ->filter(fn ($city) => is_string($city) && trim($city) !== '')
-                ->map(fn ($city) => trim($city))
-                ->unique()
-                ->sort()
-                ->values()
-                ->all();
-        }
-
-        return view('client.jobs.create', [
-            'categories' => $categories,
-            'educationLevels' => $educationLevels,
-            'indianCities' => $indianCities,
+        return view('client.jobs.create', array_merge($this->jobFormDropdowns(), [
             'job' => $job,
             'formMode' => 'edit',
-        ]);
+        ]));
+    }
+
+    private function jobFormDropdowns(): array
+    {
+        $categories = Cache::remember('job_categories', 3600, fn () => JobCategory::orderBy('name')->get());
+        $educationLevels = Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get());
+        $indianCities = Cache::remember('indian_cities', 86400, function () {
+            $citiesPath = resource_path('data/indian-cities.json');
+            if (!is_file($citiesPath)) {
+                return [];
+            }
+            $decoded = json_decode((string) file_get_contents($citiesPath), true);
+            return collect(is_array($decoded) ? $decoded : [])
+                ->filter(fn ($city) => is_string($city) && trim($city) !== '')
+                ->map(fn ($city) => trim($city))
+                ->unique()->sort()->values()->all();
+        });
+
+        return compact('categories', 'educationLevels', 'indianCities');
     }
 
     /**
@@ -485,7 +467,7 @@ class ClientController extends Controller
         }
 
         $validated = $request->validate([
-            'left_at' => 'required|date|after_or_equal:joining_date',
+            'left_at' => 'required|date|after_or_equal:' . $application->joining_date,
             'client_notes' => 'nullable|string|max:1000',
         ]);
 
