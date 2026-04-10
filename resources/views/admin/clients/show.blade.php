@@ -165,14 +165,14 @@
                                 </div>
                             </div>
 
-                            @if($user->phone)
+                            @if($user->profile?->phone_number)
                             <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
                                 <div class="bg-purple-500/20 h-10 w-10 rounded-lg flex items-center justify-center text-purple-400">
                                     <i class="fa-solid fa-phone"></i>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-400 uppercase font-bold">Phone Number</p>
-                                    <p class="text-white text-sm font-medium">{{ $user->phone }}</p>
+                                    <p class="text-white text-sm font-medium">{{ $user->profile->phone_number }}</p>
                                 </div>
                             </div>
                             @endif

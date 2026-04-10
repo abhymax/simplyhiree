@@ -258,7 +258,7 @@ class AdminController extends Controller
 
     public function listClients(Request $request)
     {
-        $query = User::role('client')->with('roles')->withCount('jobs');
+        $query = User::role('client')->with(['roles', 'profile'])->withCount('jobs');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -394,6 +394,7 @@ class AdminController extends Controller
     public function showClient(User $user)
     {
         if (!$user->hasRole('client')) abort(404);
+        $user->load(['profile', 'clientProfile']);
         $jobs = \App\Models\Job::where('user_id', $user->id)->with(['category'])->latest()->paginate(10);
         $totalJobs = \App\Models\Job::where('user_id', $user->id)->count();
         $activeJobs = \App\Models\Job::where('user_id', $user->id)->where('status', 'approved')->count();
