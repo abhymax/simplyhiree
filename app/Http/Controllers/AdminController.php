@@ -691,7 +691,7 @@ class AdminController extends Controller
     {
         $job->load(['educationLevel']);
         $partners = User::role('partner')->get();
-        $excludedPartnerIds = $job->excludedPartners()->pluck('users.id')->toArray();
+        $excludedPartnerIds = $job->excludedPartners()->pluck('id')->toArray();
         return view('admin.jobs.manage', ['job' => $job, 'allPartners' => $partners, 'excludedPartnerIds' => $excludedPartnerIds]);
     }
 
@@ -813,12 +813,14 @@ class AdminController extends Controller
                 $candidate = $application->candidate;
                 $candidateUser = $application->candidateUser;
                 $partnerName = $candidate && $candidate->partner ? $candidate->partner->name : 'Direct';
-                $fullName = trim(($candidate->first_name ?? '') . ' ' . ($candidate->last_name ?? ''));
+                $fullName = $candidate
+                    ? trim(($candidate->first_name ?? '') . ' ' . ($candidate->last_name ?? ''))
+                    : '';
                 if ($fullName === '') {
                     $fullName = $candidateUser?->name ?? 'Unknown Candidate';
                 }
-                $email = $candidate->email ?? $candidateUser?->email ?? '';
-                $phone = $candidate->phone_number ?? $candidateUser?->profile?->phone_number ?? '';
+                $email = $candidate?->email ?? $candidateUser?->email ?? '';
+                $phone = $candidate?->phone_number ?? $candidateUser?->profile?->phone_number ?? '';
 
                 fputcsv($handle, [
                     $fullName,
@@ -848,7 +850,7 @@ class AdminController extends Controller
                                     ->get();
         $reportData = [];
         foreach ($placements as $app) {
-            if (empty($app->joining_date) || empty($app->job->user)) continue;
+            if (empty($app->joining_date) || !$app->job || !$app->job->user) continue;
 
             $client = $app->job->user;
             $joiningDate = Carbon::parse($app->joining_date);

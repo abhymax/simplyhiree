@@ -11,7 +11,7 @@ class CandidateDidNotJoin extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $application;
+    public JobApplication $application;
 
     public function __construct(JobApplication $application)
     {
@@ -25,15 +25,15 @@ class CandidateDidNotJoin extends Notification implements ShouldQueue
 
     public function toDatabase(object $notifiable): array
     {
-        $jobTitle = $this->application->job->title;
-        $candidateName = $this->application->candidate 
-                         ? $this->application->candidate->first_name . ' ' . $this->application->candidate->last_name 
-                         : $this->application->candidateUser->name;
+        $jobTitle      = $this->application->job?->title ?? 'Unknown Job';
+        $candidateName = $this->application->candidate
+                         ? trim(($this->application->candidate->first_name ?? '') . ' ' . ($this->application->candidate->last_name ?? ''))
+                         : ($this->application->candidateUser?->name ?? 'Unknown Candidate');
 
         return [
-            'message' => "Update: {$candidateName} (selected for {$jobTitle}) Did Not Join.",
+            'message'        => "Update: {$candidateName} (selected for {$jobTitle}) Did Not Join.",
             'application_id' => $this->application->id,
-            'icon' => 'user-xmark', // New Icon
+            'icon'           => 'user-xmark',
         ];
     }
 }

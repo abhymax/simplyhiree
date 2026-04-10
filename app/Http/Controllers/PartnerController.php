@@ -223,7 +223,7 @@ class PartnerController extends Controller
         $earningsData = [];
 
         foreach ($placements as $app) {
-            if (empty($app->joining_date) || empty($app->job->payout_amount) || empty($app->job->minimum_stay_days)) {
+            if (!$app->joining_date || !$app->job || empty($app->job->payout_amount) || empty($app->job->minimum_stay_days)) {
                 continue;
             }
 
@@ -234,7 +234,9 @@ class PartnerController extends Controller
             $status = $isEligible ? 'Eligible' : 'Pending';
 
             $earningsData[] = (object) [
-                'candidate_name' => $app->candidate->first_name . ' ' . $app->candidate->last_name,
+                'candidate_name' => $app->candidate
+                    ? trim(($app->candidate->first_name ?? '') . ' ' . ($app->candidate->last_name ?? ''))
+                    : ($app->candidateUser?->name ?? 'Unknown Candidate'),
                 'job_title' => $app->job->title,
                 'joining_date' => $app->joining_date->format('M d, Y'),
                 'payout_amount' => '₹' . number_format($app->job->payout_amount, 0),

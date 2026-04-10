@@ -11,7 +11,7 @@ class CandidateLeft extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $application;
+    public JobApplication $application;
 
     public function __construct(JobApplication $application)
     {
@@ -25,16 +25,18 @@ class CandidateLeft extends Notification implements ShouldQueue
 
     public function toDatabase(object $notifiable): array
     {
-        $jobTitle = $this->application->job->title;
-        $candidateName = $this->application->candidate 
-                         ? $this->application->candidate->first_name . ' ' . $this->application->candidate->last_name 
-                         : $this->application->candidateUser->name;
-        $leftDate = $this->application->left_at->format('M d, Y');
+        $jobTitle      = $this->application->job?->title ?? 'Unknown Job';
+        $candidateName = $this->application->candidate
+                         ? trim(($this->application->candidate->first_name ?? '') . ' ' . ($this->application->candidate->last_name ?? ''))
+                         : ($this->application->candidateUser?->name ?? 'Unknown Candidate');
+        $leftDate      = $this->application->left_at
+                         ? $this->application->left_at->format('M d, Y')
+                         : 'Unknown Date';
 
         return [
-            'message' => "Update: {$candidateName} (hired for {$jobTitle}) left on {$leftDate}.",
+            'message'        => "Update: {$candidateName} (hired for {$jobTitle}) left on {$leftDate}.",
             'application_id' => $this->application->id,
-            'icon' => 'user-clock', // New Icon
+            'icon'           => 'user-clock',
         ];
     }
 }
