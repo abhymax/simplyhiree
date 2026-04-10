@@ -14,10 +14,8 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string $role = null): Response
     {
         if ($role) {
-            // --- CORRECTED LOGIC ---
-            // We now use the hasRole() method from the Spatie package,
-            // which is the correct way to check for roles.
-            if (!auth()->check() || !auth()->user()->hasRole($role)) {
+            $roles = explode('|', $role);
+            if (!auth()->check() || !auth()->user()->hasAnyRole($roles)) {
                 abort(403, 'UNAUTHORIZED ACTION.');
             }
         }
