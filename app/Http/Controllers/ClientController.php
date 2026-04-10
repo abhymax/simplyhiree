@@ -484,51 +484,47 @@ class ClientController extends Controller
     public function billing()
     {
         $client = Auth::user();
+        $billableDays = (int) ($client->billable_period_days ?? 30);
 
         $hires = JobApplication::where('hiring_status', 'Selected')
-            ->whereHas('job', function($q) use ($client) {
+            ->whereNotNull('joining_date')
+            ->whereHas('job', function ($q) use ($client) {
                 $q->where('user_id', $client->id);
             })
             ->with(['job', 'candidate', 'candidateUser'])
-            ->get();
+            ->selectRaw("*, DATE_ADD(joining_date, INTERVAL ? DAY) as invoice_date", [$billableDays])
+            ->orderByRaw('invoice_date DESC')
+            ->paginate(25);
 
-        $billingData = [];
+        $statusColors = [
+            'Paid'            => 'text-green-600 bg-green-100',
+            'Due for Payment' => 'text-red-600 bg-red-100',
+            'Maturing'        => 'text-yellow-600 bg-yellow-100',
+        ];
 
-        foreach ($hires as $hire) {
-            if (empty($hire->joining_date)) {
-                continue;
-            }
+        $billingData = $hires->through(function ($hire) use ($statusColors) {
+            $invoiceDate = Carbon::parse($hire->invoice_date);
 
-            $joiningDate = Carbon::parse($hire->joining_date);
-            $billableDays = $client->billable_period_days ?? 30; 
-            $invoiceDate = $joiningDate->copy()->addDays($billableDays);
-            
-            $isDue = $invoiceDate->isPast();
-            
             if ($hire->payment_status === 'paid') {
                 $status = 'Paid';
-                $color = 'text-green-600 bg-green-100';
-            } elseif ($isDue) {
+            } elseif ($invoiceDate->isPast() || $invoiceDate->isToday()) {
                 $status = 'Due for Payment';
-                $color = 'text-red-600 bg-red-100';
             } else {
                 $status = 'Maturing';
-                $color = 'text-yellow-600 bg-yellow-100';
             }
 
-            $billingData[] = (object) [
+            return (object) [
                 'candidate_name' => $hire->candidate_name,
-                'job_title' => $hire->job->title,
-                'joining_date' => $joiningDate->format('M d, Y'),
-                'amount' => $hire->job->payout_amount ? '₹' . number_format($hire->job->payout_amount) : 'N/A',
-                'invoice_date' => $invoiceDate->format('M d, Y'),
-                'status' => $status,
-                'status_color' => $color,
-                'paid_at' => $hire->paid_at ? Carbon::parse($hire->paid_at)->format('M d, Y') : null,
+                'job_title'      => $hire->job->title,
+                'joining_date'   => Carbon::parse($hire->joining_date)->format('M d, Y'),
+                'amount'         => $hire->job->payout_amount ? '₹' . number_format($hire->job->payout_amount) : 'N/A',
+                'invoice_date'   => $invoiceDate->format('M d, Y'),
+                'status'         => $status,
+                'status_color'   => $statusColors[$status],
+                'paid_at'        => $hire->paid_at ? Carbon::parse($hire->paid_at)->format('M d, Y') : null,
             ];
-        }
+        });
 
-        $billingData = collect($billingData)->sortByDesc('invoice_date');
         return view('client.billing.index', compact('billingData'));
     }
 

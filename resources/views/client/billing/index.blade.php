@@ -57,6 +57,12 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if($billingData->hasPages())
+                <div class="mt-4 px-2">
+                    {{ $billingData->links() }}
+                </div>
+                @endif
             @endif
         </div>
     </div>

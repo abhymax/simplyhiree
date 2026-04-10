@@ -306,27 +306,32 @@ class SuperadminActivityService
     public function sendPartnerDailyPulseForAllActivePartners(): int
     {
         $partners = User::role('partner')->where('status', 'active')->get();
-        $today = Carbon::today();
+        if ($partners->isEmpty()) {
+            return 0;
+        }
+
+        $today = Carbon::today()->toDateString();
+        $partnerIds = $partners->pluck('id');
+
+        // Single aggregation query instead of 3 queries per partner
+        $stats = JobApplication::query()
+            ->join('candidates', 'job_applications.candidate_id', '=', 'candidates.id')
+            ->whereIn('candidates.partner_id', $partnerIds)
+            ->whereDate('job_applications.updated_at', $today)
+            ->whereIn('job_applications.hiring_status', ['Selected', 'Interview Scheduled', 'Interviewed'])
+            ->selectRaw('candidates.partner_id, job_applications.hiring_status, COUNT(*) as total')
+            ->groupBy('candidates.partner_id', 'job_applications.hiring_status')
+            ->get()
+            ->groupBy('partner_id')
+            ->map(fn ($rows) => $rows->keyBy('hiring_status'));
 
         foreach ($partners as $partner) {
-            $base = JobApplication::query()
-                ->whereHas('candidate', function ($q) use ($partner) {
-                    $q->where('partner_id', $partner->id);
-                });
+            $partnerStats = $stats->get($partner->id, collect());
 
             $pulse = [
-                'selected' => (clone $base)
-                    ->where('hiring_status', 'Selected')
-                    ->whereDate('updated_at', $today)
-                    ->count(),
-                'interview_scheduled' => (clone $base)
-                    ->where('hiring_status', 'Interview Scheduled')
-                    ->whereDate('updated_at', $today)
-                    ->count(),
-                'turned_up' => (clone $base)
-                    ->where('hiring_status', 'Interviewed')
-                    ->whereDate('updated_at', $today)
-                    ->count(),
+                'selected'             => (int) ($partnerStats->get('Selected')?->total ?? 0),
+                'interview_scheduled'  => (int) ($partnerStats->get('Interview Scheduled')?->total ?? 0),
+                'turned_up'            => (int) ($partnerStats->get('Interviewed')?->total ?? 0),
             ];
 
             $this->sendPartnerDailyPulseWhatsApp($partner, $pulse);
