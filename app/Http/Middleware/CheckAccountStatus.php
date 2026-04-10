@@ -13,7 +13,7 @@ class CheckAccountStatus
     {
         if (Auth::check()) {
             $user = Auth::user();
-            
+
             // Superadmins are always allowed
             if ($user->hasRole('Superadmin')) {
                 return $next($request);
@@ -21,16 +21,20 @@ class CheckAccountStatus
 
             // Check Status
             if ($user->status !== 'active') {
+                $message = match ($user->status) {
+                    'pending'    => 'Your account is pending Admin approval.',
+                    'on_hold'    => 'Your account has been put on hold. Please contact support.',
+                    'restricted' => 'Your access has been restricted by the Administrator.',
+                    default      => 'Access denied.',
+                };
+
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message], 403);
+                }
+
                 Auth::guard('web')->logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-
-                $message = match ($user->status) {
-                    'pending' => 'Your account is pending Admin approval.',
-                    'on_hold' => 'Your account has been put on hold. Please contact support.',
-                    'restricted' => 'Your access has been restricted by the Administrator.',
-                    default => 'Access denied.',
-                };
 
                 return redirect()->route('login')->withErrors(['email' => $message]);
             }

@@ -27,7 +27,7 @@ Route::post('/otp/verify', [AuthController::class, 'verifyPhoneOtp']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'status.check'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/admin/dashboard', [AdminMobileController::class, 'dashboard']);
