@@ -39,16 +39,16 @@ class CandidateRejectedByClient extends Notification implements ShouldQueue
      */
     public function toDatabase(object $notifiable): array
     {
-        $clientName = $this->application->job->user->name;
-        $jobTitle = $this->application->job->title; // <-- THIS LINE HAD A TYPO (was $this.application)
-        $candidateName = $this->application->candidate 
-                         ? $this->application->candidate->first_name . ' ' . $this->application->candidate->last_name 
-                         : $this->application->candidateUser->name;
+        $clientName = $this->application->job?->user?->name ?? 'Unknown Client';
+        $jobTitle   = $this->application->job?->title ?? 'Unknown Job';
+        $candidateName = $this->application->candidate
+                         ? trim(($this->application->candidate->first_name ?? '') . ' ' . ($this->application->candidate->last_name ?? ''))
+                         : ($this->application->candidateUser?->name ?? 'Unknown Candidate');
 
         return [
             'message' => "Update: {$candidateName} was rejected by {$clientName} for the job {$jobTitle}.",
             'application_id' => $this->application->id,
-            'icon' => 'x-circle', // Icon for the UI
+            'icon' => 'x-circle',
         ];
     }
 }
