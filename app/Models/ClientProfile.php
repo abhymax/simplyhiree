@@ -13,6 +13,8 @@ class ClientProfile extends Model
     protected $fillable = [
         'user_id',
         'company_name',
+        'official_email',
+        'service_required',
         'website',
         'industry',
         'company_size',

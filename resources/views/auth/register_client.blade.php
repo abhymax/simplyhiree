@@ -9,6 +9,30 @@
         </div>
 
         <div class="mt-4">
+            <x-input-label for="company_name" :value="__('Company Name')" />
+            <x-text-input id="company_name" class="block mt-1 w-full" type="text" name="company_name" :value="old('company_name')" required autocomplete="organization" />
+            <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
+        </div>
+
+        <div class="mt-4">
+            <x-input-label for="official_email" :value="__('Official Email ID')" />
+            <x-text-input id="official_email" class="block mt-1 w-full" type="email" name="official_email" :value="old('official_email')" required autocomplete="email" />
+            <x-input-error :messages="$errors->get('official_email')" class="mt-2" />
+        </div>
+
+        <div class="mt-4">
+            <x-input-label for="service_required" :value="__('Service Required')" />
+            <select id="service_required" name="service_required" class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                <option value="">-- Select Service --</option>
+                <option value="Profession Staffing" {{ old('service_required') == 'Profession Staffing' ? 'selected' : '' }}>Profession Staffing</option>
+                <option value="Contract Staffing" {{ old('service_required') == 'Contract Staffing' ? 'selected' : '' }}>Contract Staffing</option>
+                <option value="RPO" {{ old('service_required') == 'RPO' ? 'selected' : '' }}>RPO</option>
+                <option value="Others" {{ old('service_required') == 'Others' ? 'selected' : '' }}>Others</option>
+            </select>
+            <x-input-error :messages="$errors->get('service_required')" class="mt-2" />
+        </div>
+
+        <div class="mt-4">
             <x-input-label for="phone_number" :value="__('Phone Number (India)')" />
             <x-text-input id="phone_number" class="block mt-1 w-full" type="tel" name="phone_number" :value="old('phone_number')" required autocomplete="tel" />
             <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />

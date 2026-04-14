@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\ClientProfile;
 use App\Models\PartnerProfile;
 use App\Services\PhoneOtpService;
 use App\Services\SuperadminActivityService;
@@ -151,6 +152,9 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255'],
+            'official_email' => ['required', 'string', 'email', 'max:255'],
+            'service_required' => ['required', 'string', 'in:Profession Staffing,Contract Staffing,RPO,Others'],
             'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -181,6 +185,12 @@ class RegisteredUserController extends Controller
         UserProfile::create([
             'user_id' => $user->id,
             'phone_number' => $phone,
+        ]);
+        ClientProfile::create([
+            'user_id' => $user->id,
+            'company_name' => $request->company_name,
+            'official_email' => $request->official_email,
+            'service_required' => $request->service_required,
         ]);
 
         event(new Registered($user));
