@@ -15,6 +15,8 @@ use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\ClientProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SocialController;
+use App\Http\Controllers\Admin\LandingPageController;
+use App\Http\Controllers\PublicLandingPageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -113,6 +115,10 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 
         // --- SUPERADMIN ONLY ACTIONS ---
         Route::middleware(['role:Superadmin'])->group(function() {
+            // Landing Page Manager
+            Route::resource('landing-pages', LandingPageController::class);
+            Route::get('/landing-pages/{landingPage}/export', [LandingPageController::class, 'exportRegistrations'])->name('landing-pages.export');
+
             // Manage Sub-Admins
             Route::resource('sub_admins', SubAdminController::class);
             
@@ -289,9 +295,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     Route::middleware('role:candidate')->prefix('candidate')->name('candidate.')->group(function () {
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');
-        
+
         // Profile
         Route::get('/profile/edit', [CandidateProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile/update', [CandidateProfileController::class, 'update'])->name('profile.update');
     });
 });
+
+// ==========================================
+//       PUBLIC LANDING PAGES
+// ==========================================
+Route::get('/l/{slug}', [PublicLandingPageController::class, 'show'])->name('landing.show');
+Route::post('/l/{slug}/register', [PublicLandingPageController::class, 'register'])->name('landing.register');
