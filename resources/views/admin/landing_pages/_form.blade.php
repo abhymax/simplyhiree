@@ -91,6 +91,43 @@
         </div>
     </div>
 
+    {{-- ── SECTION: Video ───────────────────────────────────────────────────── --}}
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Video Section (optional)
+        </h2>
+        <p class="text-xs text-blue-300 mb-5">Either paste a YouTube/Vimeo link <strong>or</strong> upload a video file. If both are provided, the uploaded file takes priority.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+                <label class="lp-label">Section Heading</label>
+                <input type="text" name="video_section_title" value="{{ old('video_section_title', $landingPage->video_section_title ?? '') }}" class="lp-input" placeholder="e.g. Watch a Quick Preview">
+            </div>
+            <div class="md:col-span-2">
+                <label class="lp-label">Section Description</label>
+                <textarea name="video_section_description" rows="2" class="lp-input" placeholder="Short intro shown above the video">{{ old('video_section_description', $landingPage->video_section_description ?? '') }}</textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label class="lp-label">YouTube / Vimeo URL</label>
+                <input type="url" name="video_url" value="{{ old('video_url', $landingPage->video_url ?? '') }}" class="lp-input" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                <p class="text-xs text-blue-300/60 mt-1">Supports youtube.com, youtu.be, and vimeo.com links. They are automatically converted to embed format.</p>
+            </div>
+            <div class="md:col-span-2">
+                <label class="lp-label">OR Upload Video File (max 50MB)</label>
+                <input type="file" name="video_file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="lp-file">
+                @if(!empty($landingPage->video_file_path))
+                    <div class="mt-3 p-3 bg-emerald-500/10 border border-emerald-400/30 rounded-lg flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-emerald-300 text-sm">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Video uploaded
+                        </div>
+                        <a href="{{ Storage::url($landingPage->video_file_path) }}" target="_blank" class="text-xs text-blue-300 hover:text-white underline">Preview</a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     {{-- ── SECTION: Event Details ───────────────────────────────────────────── --}}
     <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
         <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">

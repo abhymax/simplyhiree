@@ -105,6 +105,10 @@
         .lp-faq-a { display: none; padding: 0 20px 18px; font-size: 14px; color: #475569; line-height: 1.7; }
         .lp-faq-a.open { display: block; }
 
+        /* Video */
+        .lp-video-wrap { position: relative; width: 100%; max-width: 820px; margin: 0 auto; padding-top: 56.25%; /* 16:9 */ border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.25); background: #000; }
+        .lp-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: block; }
+
         /* CTA Section */
         .lp-cta-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 72px 20px; text-align: center; }
         .lp-cta-section h2 { font-size: clamp(24px, 4vw, 40px); font-weight: 800; color: #fff; margin-bottom: 16px; }
@@ -247,6 +251,35 @@
         </div>
     </div>
 </section>
+
+{{-- ══ VIDEO SECTION ═══════════════════════════════════════════════════════════ --}}
+@if($page->video_file_path || $page->embed_url)
+<section class="lp-section">
+    <div class="lp-container">
+        @if($page->video_section_title)
+        <h2 class="lp-section-title">{{ $page->video_section_title }}</h2>
+        @endif
+        @if($page->video_section_description)
+        <p class="lp-section-sub">{{ $page->video_section_description }}</p>
+        @endif
+        <div class="lp-video-wrap">
+            @if($page->video_file_path)
+                <video controls preload="metadata" playsinline class="lp-video">
+                    <source src="{{ Storage::url($page->video_file_path) }}" type="video/mp4">
+                    Your browser does not support HTML5 video.
+                </video>
+            @else
+                <iframe src="{{ $page->embed_url }}"
+                        title="Video"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                        class="lp-video"></iframe>
+            @endif
+        </div>
+    </div>
+</section>
+@endif
 
 {{-- ══ ABOUT THE EVENT ═════════════════════════════════════════════════════════ --}}
 @if($page->about_title || $page->about_description)

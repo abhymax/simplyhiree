@@ -25,6 +25,7 @@ class LandingPageController extends Controller
     {
         $data = $this->validateData($request);
         $data = $this->handleUploads($request, $data);
+        $data = $this->handleVideoUpload($request, $data);
         $data = $this->buildJsonSections($request, $data);
         $data['form_fields'] = $this->buildFormFields($request);
         $data['slug'] = $this->uniqueSlug($request->slug ?: $request->title);
@@ -44,6 +45,7 @@ class LandingPageController extends Controller
     {
         $data = $this->validateData($request, $landingPage->id);
         $data = $this->handleUploads($request, $data, $landingPage);
+        $data = $this->handleVideoUpload($request, $data, $landingPage);
         $data = $this->buildJsonSections($request, $data);
         $data['form_fields'] = $this->buildFormFields($request);
 
@@ -93,6 +95,7 @@ class LandingPageController extends Controller
         if ($landingPage->logo_path) Storage::disk('public')->delete($landingPage->logo_path);
         if ($landingPage->hero_image_path) Storage::disk('public')->delete($landingPage->hero_image_path);
         if ($landingPage->host_photo_path) Storage::disk('public')->delete($landingPage->host_photo_path);
+        if ($landingPage->video_file_path) Storage::disk('public')->delete($landingPage->video_file_path);
         $landingPage->delete();
 
         return redirect()->route('admin.landing-pages.index')
@@ -114,6 +117,10 @@ class LandingPageController extends Controller
             'hero_headline'         => 'required|string|max:255',
             'hero_subheadline'      => 'nullable|string|max:500',
             'cta_text'              => 'nullable|string|max:100',
+            'video_url'             => 'nullable|string|max:500',
+            'video_section_title'   => 'nullable|string|max:255',
+            'video_section_description' => 'nullable|string|max:500',
+            'video_file'            => 'nullable|file|mimetypes:video/mp4,video/webm,video/ogg,video/quicktime|max:51200',
             'event_date'            => 'nullable|date',
             'event_time'            => 'nullable|string|max:50',
             'event_platform'        => 'nullable|string|max:100',
@@ -130,6 +137,18 @@ class LandingPageController extends Controller
             'hero_image'            => 'nullable|image|max:4096',
             'host_photo'            => 'nullable|image|max:2048',
         ]);
+    }
+
+    private function handleVideoUpload(Request $request, array $data, ?LandingPage $page = null): array
+    {
+        if ($request->hasFile('video_file')) {
+            if ($page && $page->video_file_path) {
+                Storage::disk('public')->delete($page->video_file_path);
+            }
+            $data['video_file_path'] = $request->file('video_file')->store('landing_pages/videos', 'public');
+        }
+        unset($data['video_file']);
+        return $data;
     }
 
     private function handleUploads(Request $request, array $data, ?LandingPage $page = null): array
