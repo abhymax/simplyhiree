@@ -8,293 +8,273 @@
     <meta name="description" content="{{ $page->meta_description }}">
     @endif
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: {{ $page->primary_color ?: '#0ea5a4' }};
-            --secondary: {{ $page->secondary_color ?: '#14b8a6' }};
-            --accent: #0d9488;
-            --ink: #0f172a;
-            --muted: #64748b;
-            --line: #e5e7eb;
-            --bg: #ffffff;
-            --soft: #f8fafc;
-            --warn: #dc2626;
+            --primary: {{ $page->primary_color ?: '#10b981' }};
+            --secondary: {{ $page->secondary_color ?: '#84cc16' }};
+            --bg: #000000;
+            --bg-2: #0a0f0d;
+            --card: #0f1614;
+            --card-2: #111a17;
+            --line: rgba(255,255,255,0.08);
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #22c55e;
+            --warn: #ef4444;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'Poppins', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; font-size: 16px; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; font-size: 16px; padding-bottom: 88px; }
         img { max-width: 100%; display: block; }
-        a { color: var(--primary); }
+        a { color: var(--primary); text-decoration: none; }
 
-        /* Top urgency bar */
-        .topbar { background: var(--ink); color: #fff; padding: 10px 16px; font-size: 13px; text-align: center; letter-spacing: 0.3px; }
-        .topbar b { color: #fcd34d; }
+        /* Top countdown bar */
+        .topbar { background: #000; border-bottom: 1px solid var(--line); padding: 14px 20px; display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; position: sticky; top: 0; z-index: 40; }
+        .live-dot { width: 14px; height: 14px; border-radius: 50%; background: #ef4444; position: relative; flex-shrink: 0; }
+        .live-dot::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: rgba(239,68,68,0.35); animation: pulse 1.6s ease-out infinite; }
+        @keyframes pulse { 0%{transform:scale(0.6);opacity:0.9} 100%{transform:scale(1.6);opacity:0} }
+        .topbar-text { font-size: 14px; font-weight: 700; color: #ef4444; letter-spacing: 0.5px; text-transform: uppercase; }
+        .cd-row { display: inline-flex; gap: 6px; }
+        .cd-cell { background: #111; border: 1px solid rgba(239,68,68,0.35); color: #ef4444; padding: 6px 10px; border-radius: 8px; min-width: 42px; text-align: center; font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; }
 
-        /* Container */
-        .wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+        /* Background ambience */
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(800px 400px at 20% 10%, rgba(16,185,129,0.08), transparent 60%), radial-gradient(700px 400px at 80% 30%, rgba(132,204,22,0.05), transparent 60%); pointer-events: none; z-index: 0; }
 
-        /* HERO */
-        .hero { background: var(--soft); padding: 32px 0 20px; }
-        .hero-logo { max-height: 52px; margin-bottom: 18px; }
-        .hero-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 36px; align-items: start; }
-        .kicker { display: inline-block; background: #fff5d6; color: #92400e; font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 6px; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 14px; }
-        .hero h1 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.2; font-weight: 800; color: var(--ink); margin-bottom: 14px; }
+        .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* Hero */
+        .hero { padding: 48px 0 24px; text-align: center; }
+        .hero-logo { max-height: 52px; margin: 0 auto 24px; }
+        .hero h1 { font-size: clamp(28px, 4vw, 48px); font-weight: 800; line-height: 1.15; max-width: 960px; margin: 0 auto 18px; color: #fff; letter-spacing: -0.5px; }
         .hero h1 em { color: var(--primary); font-style: normal; }
-        .hero .sub { font-size: 16px; color: #334155; margin-bottom: 18px; }
-        .meta-list { list-style: none; margin: 18px 0 8px; padding: 0; }
-        .meta-list li { display: flex; gap: 10px; align-items: center; padding: 6px 0; font-size: 15px; color: #1f2937; }
-        .meta-list li .ic { width: 22px; height: 22px; color: var(--primary); flex-shrink: 0; }
+        .hero .sub { font-size: 17px; color: var(--muted); max-width: 840px; margin: 0 auto; line-height: 1.7; }
+        .hero .sub strong { color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
 
-        /* Registration Card */
-        .regcard { background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 20px 50px -20px rgba(15,23,42,0.18); overflow: hidden; }
-        .regcard .rc-head { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 18px 22px; text-align: center; }
-        .regcard .rc-head h3 { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
-        .regcard .rc-head p { font-size: 13px; opacity: 0.9; }
-        .regcard form { padding: 22px; }
-        .fld { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 14px; color: var(--ink); margin-bottom: 12px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
-        .fld:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,164,0.12); }
-        .btn-main { display: block; width: 100%; background: #ea580c; color: #fff; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; letter-spacing: 0.3px; transition: background 0.2s, transform 0.1s; text-transform: uppercase; }
-        .btn-main:hover { background: #c2410c; }
-        .btn-main:active { transform: translateY(1px); }
-        .seats-tag { text-align: center; font-size: 13px; color: var(--warn); font-weight: 600; margin-top: 10px; }
-        .safe { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 10px; letter-spacing: 0.3px; }
-        .success-box { background: #ecfdf5; border: 1px solid #6ee7b7; padding: 20px; border-radius: 10px; text-align: center; }
-        .success-box h4 { color: #047857; font-size: 18px; margin-bottom: 4px; }
-        .success-box p { color: #065f46; font-size: 14px; }
-        .err-box { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
-
-        /* Countdown bar */
-        .cd-wrap { background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 22px 20px; text-align: center; }
-        .cd-label { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--warn); font-weight: 700; margin-bottom: 10px; }
-        .cd-row { display: inline-flex; gap: 10px; align-items: flex-end; justify-content: center; flex-wrap: wrap; }
-        .cd-cell { background: var(--ink); color: #fff; padding: 14px 16px; border-radius: 10px; min-width: 78px; text-align: center; }
-        .cd-num { font-size: 30px; font-weight: 800; line-height: 1; display: block; }
-        .cd-tag { font-size: 11px; opacity: 0.7; letter-spacing: 1px; text-transform: uppercase; margin-top: 6px; display: block; }
-
-        /* Section */
-        section.s { padding: 60px 0; }
-        section.s.alt { background: var(--soft); }
-        section.s.dark { background: #0b1220; color: #e2e8f0; }
-        section.s.dark h2, section.s.dark h3 { color: #fff; }
-        .eyebrow { display: inline-block; background: rgba(14,165,164,0.12); color: var(--primary); font-weight: 700; font-size: 12px; padding: 5px 12px; border-radius: 999px; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 12px; }
-        h2.sec-title { font-size: clamp(24px, 2.6vw, 34px); font-weight: 800; line-height: 1.25; text-align: center; margin-bottom: 10px; color: var(--ink); }
-        h2.sec-title em { color: var(--primary); font-style: normal; }
-        .sec-sub { text-align: center; font-size: 15px; color: var(--muted); max-width: 680px; margin: 0 auto 36px; }
-        section.s.dark .sec-sub { color: #94a3b8; }
+        /* Main content grid */
+        .main-grid { padding: 40px 0 20px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
 
         /* Video */
-        .video-wrap { position: relative; max-width: 900px; margin: 0 auto; padding-top: 56.25%; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 20px 60px -20px rgba(15,23,42,0.35); }
+        .video-wrap { position: relative; padding-top: 56.25%; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid var(--line); box-shadow: 0 30px 80px -30px rgba(16,185,129,0.2); }
         .video-wrap iframe, .video-wrap video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+        /* Right panel */
+        .panel-title { text-align: center; font-size: 18px; font-weight: 600; color: var(--primary); margin-bottom: 20px; position: relative; padding: 0 20px; }
+        .panel-title::before, .panel-title::after { content: ''; position: absolute; top: 50%; width: 60px; height: 2px; background: linear-gradient(90deg, transparent, rgba(16,185,129,0.4)); }
+        .panel-title::before { left: -40px; }
+        .panel-title::after { right: -40px; transform: rotate(180deg); }
+
+        .event-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+        .event-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 14px; }
+        .event-ic { width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .event-ic svg { width: 22px; height: 22px; color: var(--text); }
+        .event-lbl { font-size: 11px; color: var(--primary); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+        .event-val { font-size: 15px; font-weight: 700; color: #fff; }
+
+        /* CTA button (gradient) */
+        .btn-grad { display: block; width: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%); color: #052e1a; border: none; padding: 16px 22px; border-radius: 12px; font-size: 17px; font-weight: 800; text-align: center; text-decoration: none; cursor: pointer; font-family: inherit; letter-spacing: 0.3px; transition: transform 0.15s, box-shadow 0.2s, filter 0.2s; box-shadow: 0 10px 30px -10px rgba(16,185,129,0.5); }
+        .btn-grad:hover { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 18px 40px -10px rgba(16,185,129,0.55); }
+        .btn-grad:active { transform: translateY(0); }
+        .btn-sm { padding: 10px 20px; font-size: 14px; border-radius: 10px; }
+
+        .seats-note { text-align: center; margin-top: 12px; font-size: 13px; color: var(--warn); font-weight: 600; }
+
+        /* Registration form modal/inline */
+        .reg-section { padding: 60px 0; }
+        .reg-box { max-width: 520px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .reg-head { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(132,204,22,0.05)); border-bottom: 1px solid var(--line); padding: 22px; text-align: center; }
+        .reg-head h3 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        .reg-head p { font-size: 14px; color: var(--muted); }
+        .reg-body { padding: 24px; }
+        .fld { width: 100%; padding: 13px 15px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; color: #fff; margin-bottom: 12px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+        .fld::placeholder { color: #6b7280; }
+        .fld:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+        .safe { text-align: center; font-size: 12px; color: var(--muted); margin-top: 12px; }
+        .success-box { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 22px; border-radius: 12px; text-align: center; }
+        .success-box h4 { color: var(--primary); font-size: 18px; margin-bottom: 4px; }
+        .success-box p { color: var(--text); font-size: 14px; }
+        .err-box { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+
+        /* Sections */
+        section.s { padding: 64px 0; border-top: 1px solid var(--line); }
+        .eyebrow { display: inline-block; color: var(--primary); font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+        h2.sec-title { font-size: clamp(26px, 3vw, 38px); font-weight: 800; line-height: 1.25; text-align: center; margin-bottom: 12px; color: #fff; letter-spacing: -0.3px; }
+        h2.sec-title em { color: var(--primary); font-style: normal; }
+        .sec-sub { text-align: center; font-size: 15px; color: var(--muted); max-width: 700px; margin: 0 auto 44px; }
+
         /* Learn grid */
-        .learn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; }
-        .learn-card { text-align: center; padding: 24px 16px; }
-        .learn-ic { width: 64px; height: 64px; border-radius: 14px; background: rgba(14,165,164,0.1); color: var(--primary); margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
-        .learn-ic svg { width: 32px; height: 32px; }
-        .learn-card h4 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-        .learn-card p { font-size: 14px; color: var(--muted); line-height: 1.55; }
+        .learn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+        .learn-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 26px 22px; text-align: left; transition: transform 0.2s, border-color 0.2s; }
+        .learn-card:hover { transform: translateY(-3px); border-color: rgba(16,185,129,0.35); }
+        .learn-ic { width: 48px; height: 48px; border-radius: 10px; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(132,204,22,0.1)); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .learn-ic svg { width: 24px; height: 24px; }
+        .learn-card h4 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .learn-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
         /* For-you list */
-        .for-list { max-width: 780px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
-        .for-row { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: #1f2937; }
-        .for-row .tick { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: rgba(16,185,129,0.12); color: #059669; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-        .for-row .tick svg { width: 15px; height: 15px; }
+        .for-list { max-width: 840px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+        .for-row { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+        .for-row .tick { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: rgba(16,185,129,0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+        .for-row .tick svg { width: 14px; height: 14px; }
 
         /* Benefits */
-        .ben-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px; }
-        .ben-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px 20px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; }
-        .ben-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -15px rgba(15,23,42,0.15); }
-        .ben-ic { width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; display: flex; align-items: center; justify-content: center; }
-        .ben-ic svg { width: 26px; height: 26px; }
-        .ben-card h4 { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+        .ben-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+        .ben-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 26px 22px; text-align: center; transition: transform 0.2s, border-color 0.2s; }
+        .ben-card:hover { transform: translateY(-3px); border-color: rgba(16,185,129,0.35); }
+        .ben-ic { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #052e1a; display: flex; align-items: center; justify-content: center; }
+        .ben-ic svg { width: 28px; height: 28px; }
+        .ben-card h4 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
         .ben-card p { font-size: 13px; color: var(--muted); }
 
         /* Host */
-        .host-box { max-width: 920px; margin: 0 auto; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 36px; display: grid; grid-template-columns: 200px 1fr; gap: 32px; align-items: center; }
-        .host-img { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); }
-        .host-ph { width: 180px; height: 180px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 800; border: 4px solid rgba(255,255,255,0.14); }
-        .host-name { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-        .host-title { font-size: 15px; color: var(--primary); margin-bottom: 14px; font-weight: 600; }
-        .host-bio { font-size: 15px; color: #cbd5e1; line-height: 1.8; }
+        .host-box { max-width: 960px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 40px; display: grid; grid-template-columns: 220px 1fr; gap: 36px; align-items: center; }
+        .host-img { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+        .host-ph { width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #052e1a; display: flex; align-items: center; justify-content: center; font-size: 72px; font-weight: 800; }
+        .host-name { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .host-title { font-size: 15px; color: var(--primary); margin-bottom: 16px; font-weight: 600; }
+        .host-bio { font-size: 15px; color: var(--muted); line-height: 1.8; }
 
         /* FAQ */
-        .faq-list { max-width: 780px; margin: 0 auto; }
-        .faq-item { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; background: #fff; overflow: hidden; }
-        .faq-q { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--ink); gap: 14px; user-select: none; }
-        .faq-q:hover { background: #f8fafc; }
-        .faq-q .emo { margin-right: 4px; }
+        .faq-list { max-width: 820px; margin: 0 auto; }
+        .faq-item { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; background: var(--card); overflow: hidden; }
+        .faq-q { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; cursor: pointer; font-size: 15px; font-weight: 600; color: #fff; gap: 14px; user-select: none; transition: background 0.2s; }
+        .faq-q:hover { background: var(--card-2); }
         .faq-q .chev { width: 18px; height: 18px; color: var(--primary); transition: transform 0.25s; flex-shrink: 0; }
         .faq-q.open .chev { transform: rotate(180deg); }
-        .faq-a { display: none; padding: 0 20px 18px; font-size: 14px; color: #475569; line-height: 1.7; }
+        .faq-a { display: none; padding: 0 22px 20px; font-size: 14px; color: var(--muted); line-height: 1.7; }
         .faq-a.open { display: block; }
 
-        /* CTA final */
-        .cta-final { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 56px 20px; text-align: center; color: #fff; }
-        .cta-final h2 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 800; margin-bottom: 10px; color: #fff; }
-        .cta-final p { font-size: 16px; opacity: 0.92; margin-bottom: 20px; }
-        .cta-final .scar { display: inline-block; background: rgba(0,0,0,0.2); padding: 6px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; margin-bottom: 22px; }
-        .cta-btn { display: inline-block; background: #fff; color: var(--primary); padding: 14px 36px; border-radius: 999px; font-size: 16px; font-weight: 800; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0,0,0,0.25); }
-
         /* Footer */
-        footer.lp { background: #0b1220; color: #94a3b8; padding: 34px 20px; text-align: center; }
-        footer.lp p { font-size: 12px; line-height: 1.8; max-width: 780px; margin: 0 auto; }
-        footer.lp a { color: #cbd5e1; }
+        footer.lp { padding: 34px 20px; text-align: center; border-top: 1px solid var(--line); color: var(--muted); }
+        footer.lp p { font-size: 12px; line-height: 1.8; max-width: 820px; margin: 0 auto; }
+
+        /* ── FIXED BOTTOM BAR ────────────────────────────────────────────── */
+        .fixed-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 1px solid var(--line); padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; gap: 20px; z-index: 50; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        .fixed-bar-left { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+        .fixed-bar-deadline { font-size: 14px; color: var(--text); font-weight: 500; }
+        .fixed-bar-deadline strong { color: #fff; font-weight: 700; }
+        .fixed-bar-right a { white-space: nowrap; }
 
         /* Responsive */
-        @media (max-width: 860px) {
-            .hero-grid { grid-template-columns: 1fr; }
+        @media (max-width: 880px) {
+            .main-grid { grid-template-columns: 1fr; gap: 28px; }
             .for-list { grid-template-columns: 1fr; }
             .host-box { grid-template-columns: 1fr; text-align: center; padding: 28px 22px; }
             .host-img, .host-ph { margin: 0 auto; }
-            .cd-cell { min-width: 64px; padding: 10px 12px; }
-            .cd-num { font-size: 22px; }
+            .panel-title::before, .panel-title::after { display: none; }
+            .fixed-bar { padding: 12px 16px; }
+            .fixed-bar-deadline { font-size: 12px; }
+            .fixed-bar-right .btn-grad { padding: 11px 18px; font-size: 14px; }
+        }
+        @media (max-width: 520px) {
+            .event-grid { grid-template-columns: 1fr; }
+            body { padding-bottom: 74px; }
+            .fixed-bar-left { flex: 1; min-width: 0; }
+            .fixed-bar-deadline { font-size: 11px; }
         }
     </style>
 </head>
 <body>
 
-{{-- ══ TOP URGENCY BAR ═══════════════════════════════════════════════════ --}}
+{{-- ══ TOP COUNTDOWN BAR ══════════════════════════════════════════════════ --}}
 <div class="topbar">
-    @if($page->seats_total > 0)
-        🔥 <b>Only {{ $seatsLeft }} Seats Left</b> — Register Before It's Too Late!
+    <span class="live-dot"></span>
+    @if($page->registration_deadline)
+        <span class="topbar-text">Free Registration Ends In:</span>
+        <div class="cd-row" id="countdown">
+            <div class="cd-cell" id="cd-days">00</div>
+            <div class="cd-cell" id="cd-hours">00</div>
+            <div class="cd-cell" id="cd-mins">00</div>
+            <div class="cd-cell" id="cd-secs">00</div>
+        </div>
     @else
-        🎯 <b>LIVE Online Session</b> — Limited Seats Available. Register Now!
+        <span class="topbar-text">Live Online — Limited Seats Available</span>
     @endif
 </div>
 
-{{-- ══ HERO ═════════════════════════════════════════════════════════════ --}}
+{{-- ══ HERO ═══════════════════════════════════════════════════════════════ --}}
 <section class="hero">
     <div class="wrap">
         @if($page->logo_path)
             <img src="{{ Storage::url($page->logo_path) }}" alt="Logo" class="hero-logo">
         @endif
-        <div class="hero-grid">
-            {{-- Left content --}}
+        <h1>{!! preg_replace('/(\S+\s+\S+\s+\S+\s+\S+)$/', '<em>$1</em>', e($page->hero_headline)) !!}</h1>
+        @if($page->hero_subheadline)
+        <p class="sub">{{ $page->hero_subheadline }}</p>
+        @endif
+    </div>
+</section>
+
+{{-- ══ VIDEO + EVENT DETAILS ══════════════════════════════════════════════ --}}
+<section>
+    <div class="wrap">
+        <div class="main-grid">
+            {{-- Left: Video --}}
             <div>
-                <span class="kicker">🎓 Free Online Masterclass</span>
-                <h1>{!! preg_replace('/(\S+\s+\S+)$/', '<em>$1</em>', e($page->hero_headline)) !!}</h1>
-                @if($page->hero_subheadline)
-                <p class="sub">{{ $page->hero_subheadline }}</p>
-                @endif
-
-                <ul class="meta-list">
-                    @if($page->event_date)
-                    <li><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <strong>Date:</strong>&nbsp;{{ $page->event_date->format('d M Y') }}@if($page->event_time) &nbsp;·&nbsp; {{ $page->event_time }}@endif</li>
-                    @endif
-                    @if($page->event_platform)
-                    <li><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    <strong>Platform:</strong>&nbsp;{{ $page->event_platform }}</li>
-                    @endif
-                    @if($page->event_language)
-                    <li><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                    <strong>Language:</strong>&nbsp;{{ $page->event_language }}</li>
-                    @endif
-                    @if($page->seats_total > 0)
-                    <li><svg class="ic" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    <strong>Seats:</strong>&nbsp;Only {{ $seatsLeft }} left of {{ $page->seats_total }}</li>
-                    @endif
-                </ul>
-            </div>
-
-            {{-- Right: Registration Form --}}
-            <div id="register">
-                <div class="regcard">
-                    <div class="rc-head">
-                        <h3>Reserve Your FREE Seat</h3>
-                        <p>Join {{ $page->registrations()->count() + 120 }}+ people already registered</p>
-                    </div>
-                    @if(session('registered'))
-                        <div style="padding:22px;">
-                            <div class="success-box">
-                                <h4>🎉 You're Registered!</h4>
-                                <p>We'll send you the event details shortly. See you there!</p>
-                            </div>
-                        </div>
+                @if($page->video_file_path || $page->embed_url)
+                <div class="video-wrap">
+                    @if($page->video_file_path)
+                        <video controls preload="metadata" playsinline>
+                            <source src="{{ Storage::url($page->video_file_path) }}" type="video/mp4">
+                        </video>
                     @else
-                    <form method="POST" action="{{ route('landing.register', $page->slug) }}">
-                        @csrf
-                        @if(session('error'))<div class="err-box">{{ session('error') }}</div>@endif
-                        @php $ff = $page->form_fields ?? ['name'=>true,'email'=>true,'phone'=>true,'city'=>false]; @endphp
-                        @if(!empty($ff['name']))
-                        <input type="text" name="name" class="fld" placeholder="Your Full Name" value="{{ old('name') }}" required>
-                        @error('name')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
-                        @endif
-                        @if(!empty($ff['email']))
-                        <input type="email" name="email" class="fld" placeholder="Email Address" value="{{ old('email') }}" required>
-                        @error('email')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
-                        @endif
-                        @if(!empty($ff['phone']))
-                        <input type="tel" name="phone" class="fld" placeholder="Phone Number (WhatsApp)" value="{{ old('phone') }}" required>
-                        @error('phone')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
-                        @endif
-                        @if(!empty($ff['city']))
-                        <input type="text" name="city" class="fld" placeholder="Your City" value="{{ old('city') }}">
-                        @error('city')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
-                        @endif
-                        <button type="submit" class="btn-main">{{ $page->cta_text ?: 'Reserve My FREE Seat!' }}</button>
-                        @if($page->seats_total > 0)
-                            <p class="seats-tag">⚠ Only {{ $seatsLeft }} Seats Left</p>
-                        @endif
-                        <p class="safe">🔒 Your details are 100% safe. No spam.</p>
-                    </form>
+                        <iframe src="{{ $page->embed_url }}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     @endif
                 </div>
+                @elseif($page->hero_image_path)
+                <img src="{{ Storage::url($page->hero_image_path) }}" alt="" style="width:100%;border-radius:16px;border:1px solid var(--line);">
+                @endif
+            </div>
+
+            {{-- Right: Event grid + CTA --}}
+            <div>
+                <div class="panel-title">{{ $page->video_section_title ?: '90 Minutes Webinar' }}</div>
+                <div class="event-grid">
+                    @if($page->event_date)
+                    <div class="event-card">
+                        <div class="event-ic"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                        <div><div class="event-lbl">Date</div><div class="event-val">{{ $page->event_date->format('jS F Y') }}</div></div>
+                    </div>
+                    @endif
+                    @if($page->event_time)
+                    <div class="event-card">
+                        <div class="event-ic"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                        <div><div class="event-lbl">Time</div><div class="event-val">{{ $page->event_time }}</div></div>
+                    </div>
+                    @endif
+                    @if($page->event_platform)
+                    <div class="event-card">
+                        <div class="event-ic"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div>
+                        <div><div class="event-lbl">Platform</div><div class="event-val">{{ $page->event_platform }}</div></div>
+                    </div>
+                    @endif
+                    @if($page->event_language)
+                    <div class="event-card">
+                        <div class="event-ic"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                        <div><div class="event-lbl">Language</div><div class="event-val">{{ $page->event_language }}</div></div>
+                    </div>
+                    @endif
+                </div>
+                <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+                @if($page->seats_total > 0)
+                <p class="seats-note">⚠ Only {{ $seatsLeft }} Seats Left Of {{ $page->seats_total }}</p>
+                @endif
             </div>
         </div>
     </div>
 </section>
-
-{{-- ══ COUNTDOWN ═════════════════════════════════════════════════════════ --}}
-@if($page->registration_deadline)
-<div class="cd-wrap">
-    <div class="cd-label">⏰ This Offer Ends In</div>
-    <div class="cd-row" id="countdown">
-        <div class="cd-cell"><span class="cd-num" id="cd-days">00</span><span class="cd-tag">Days</span></div>
-        <div class="cd-cell"><span class="cd-num" id="cd-hours">00</span><span class="cd-tag">Hours</span></div>
-        <div class="cd-cell"><span class="cd-num" id="cd-mins">00</span><span class="cd-tag">Minutes</span></div>
-        <div class="cd-cell"><span class="cd-num" id="cd-secs">00</span><span class="cd-tag">Seconds</span></div>
-    </div>
-</div>
-@endif
-
-{{-- ══ VIDEO ═════════════════════════════════════════════════════════════ --}}
-@if($page->video_file_path || $page->embed_url)
-<section class="s alt">
-    <div class="wrap" style="text-align:center;">
-        @if($page->video_section_title)
-        <span class="eyebrow">🎬 Watch This First</span>
-        <h2 class="sec-title">{{ $page->video_section_title }}</h2>
-        @endif
-        @if($page->video_section_description)
-        <p class="sec-sub">{{ $page->video_section_description }}</p>
-        @endif
-        <div class="video-wrap">
-            @if($page->video_file_path)
-                <video controls preload="metadata" playsinline>
-                    <source src="{{ Storage::url($page->video_file_path) }}" type="video/mp4">
-                </video>
-            @else
-                <iframe src="{{ $page->embed_url }}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            @endif
-        </div>
-    </div>
-</section>
-@endif
 
 {{-- ══ ABOUT ═════════════════════════════════════════════════════════════ --}}
 @if($page->about_title || $page->about_description)
 <section class="s">
-    <div class="wrap" style="text-align:center;max-width:820px;">
+    <div class="wrap" style="text-align:center;max-width:860px;">
         @if($page->about_title)
-        <span class="eyebrow">🎯 About This Session</span>
+        <span class="eyebrow">About This Session</span>
         <h2 class="sec-title">{{ $page->about_title }}</h2>
         @endif
         @if($page->about_description)
-        <p style="font-size:16px;color:#334155;line-height:1.8;">{{ $page->about_description }}</p>
+        <p style="font-size:16px;color:var(--muted);line-height:1.9;">{{ $page->about_description }}</p>
         @endif
     </div>
 </section>
@@ -302,10 +282,10 @@
 
 {{-- ══ WHAT YOU'LL LEARN ═════════════════════════════════════════════════ --}}
 @if($page->learnings && count($page->learnings))
-<section class="s alt">
+<section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">🧠 What You'll Learn</span>
+            <span class="eyebrow">What You'll Learn</span>
             <h2 class="sec-title">Key Takeaways From This <em>Masterclass</em></h2>
             <p class="sec-sub">Practical, actionable insights you can apply from Day 1</p>
         </div>
@@ -339,7 +319,7 @@
 <section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">👤 Who Should Attend</span>
+            <span class="eyebrow">Who Should Attend</span>
             <h2 class="sec-title">This Masterclass Is <em>For You If...</em></h2>
             <p class="sec-sub">Check if you match the profile of our ideal attendee</p>
         </div>
@@ -357,22 +337,12 @@
 </section>
 @endif
 
-{{-- ══ INTERSTITIAL CTA ══════════════════════════════════════════════════ --}}
-<section class="s alt" style="padding:40px 0;">
-    <div class="wrap" style="text-align:center;">
-        <a href="#register" class="btn-main" style="display:inline-block;width:auto;padding:14px 44px;text-decoration:none;">🔥 Reserve My FREE Seat Now</a>
-        @if($page->seats_total > 0)
-        <p style="margin-top:12px;font-size:13px;color:var(--warn);font-weight:600;">⚠ Only {{ $seatsLeft }} Seats Left!</p>
-        @endif
-    </div>
-</section>
-
 {{-- ══ BENEFITS ══════════════════════════════════════════════════════════ --}}
 @if($page->benefits && count($page->benefits))
 <section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">💰 Program Benefits</span>
+            <span class="eyebrow">Program Benefits</span>
             <h2 class="sec-title">What You'll <em>Walk Away With</em></h2>
             <p class="sec-sub">Everything you gain from attending this session</p>
         </div>
@@ -403,10 +373,10 @@
 
 {{-- ══ HOST ═════════════════════════════════════════════════════════════ --}}
 @if($page->host_name)
-<section class="s dark">
+<section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">👨‍🏫 Meet Your Host</span>
+            <span class="eyebrow">Meet Your Host</span>
             <h2 class="sec-title">Learn From An <em>Industry Expert</em></h2>
         </div>
         <div class="host-box">
@@ -425,12 +395,56 @@
 </section>
 @endif
 
+{{-- ══ REGISTRATION FORM ═════════════════════════════════════════════════ --}}
+<section class="s reg-section" id="register">
+    <div class="wrap">
+        <div class="reg-box">
+            <div class="reg-head">
+                <h3>Reserve Your FREE Seat</h3>
+                <p>Join {{ $page->registrations()->count() + 120 }}+ people already registered</p>
+            </div>
+            <div class="reg-body">
+                @if(session('registered'))
+                    <div class="success-box">
+                        <h4>🎉 You're Registered!</h4>
+                        <p>We'll send you the event details shortly. See you there!</p>
+                    </div>
+                @else
+                <form method="POST" action="{{ route('landing.register', $page->slug) }}">
+                    @csrf
+                    @if(session('error'))<div class="err-box">{{ session('error') }}</div>@endif
+                    @php $ff = $page->form_fields ?? ['name'=>true,'email'=>true,'phone'=>true,'city'=>false]; @endphp
+                    @if(!empty($ff['name']))
+                    <input type="text" name="name" class="fld" placeholder="Your Full Name" value="{{ old('name') }}" required>
+                    @error('name')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
+                    @endif
+                    @if(!empty($ff['email']))
+                    <input type="email" name="email" class="fld" placeholder="Email Address" value="{{ old('email') }}" required>
+                    @error('email')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
+                    @endif
+                    @if(!empty($ff['phone']))
+                    <input type="tel" name="phone" class="fld" placeholder="Phone Number (WhatsApp)" value="{{ old('phone') }}" required>
+                    @error('phone')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
+                    @endif
+                    @if(!empty($ff['city']))
+                    <input type="text" name="city" class="fld" placeholder="Your City" value="{{ old('city') }}">
+                    @error('city')<p style="font-size:12px;color:#ef4444;margin-top:-8px;margin-bottom:10px;">{{ $message }}</p>@enderror
+                    @endif
+                    <button type="submit" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</button>
+                    <p class="safe">🔒 Your details are 100% safe. No spam.</p>
+                </form>
+                @endif
+            </div>
+        </div>
+    </div>
+</section>
+
 {{-- ══ FAQ ══════════════════════════════════════════════════════════════ --}}
 @if($page->faqs && count($page->faqs))
-<section class="s alt">
+<section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">💬 FAQs</span>
+            <span class="eyebrow">FAQs</span>
             <h2 class="sec-title">Frequently Asked <em>Questions</em></h2>
             <p class="sec-sub">Everything you need to know before registering</p>
         </div>
@@ -438,7 +452,7 @@
             @foreach($page->faqs as $i => $faq)
             <div class="faq-item">
                 <div class="faq-q" onclick="toggleFaq(this)">
-                    <span><span class="emo">❓</span> {{ $faq['question'] }}</span>
+                    <span>{{ $faq['question'] }}</span>
                     <svg class="chev" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </div>
                 <div class="faq-a">{{ $faq['answer'] }}</div>
@@ -448,18 +462,6 @@
     </div>
 </section>
 @endif
-
-{{-- ══ FINAL CTA ═════════════════════════════════════════════════════════ --}}
-<section class="cta-final">
-    <div style="max-width:720px;margin:0 auto;">
-        <h2>Ready To Transform Your Hiring?</h2>
-        <p>Seats are filling up fast. Grab yours before registration closes.</p>
-        @if($page->seats_total > 0)
-            <span class="scar">🔥 Only {{ $seatsLeft }} Seats Remaining</span><br>
-        @endif
-        <a href="#register" class="cta-btn">{{ $page->cta_text ?: 'Reserve My FREE Seat!' }}</a>
-    </div>
-</section>
 
 {{-- ══ FOOTER ════════════════════════════════════════════════════════════ --}}
 <footer class="lp">
@@ -471,6 +473,22 @@
     <p style="margin-top:10px;">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
 </footer>
 
+{{-- ══ FIXED BOTTOM BAR ═════════════════════════════════════════════════ --}}
+<div class="fixed-bar">
+    <div class="fixed-bar-left">
+        @if($page->registration_deadline)
+            <div class="fixed-bar-deadline">Deadline: <strong>{{ $page->registration_deadline->format('jS F Y') }}</strong></div>
+        @elseif($page->event_date)
+            <div class="fixed-bar-deadline">Event: <strong>{{ $page->event_date->format('jS F Y') }}</strong></div>
+        @else
+            <div class="fixed-bar-deadline">Limited seats — register now</div>
+        @endif
+    </div>
+    <div class="fixed-bar-right">
+        <a href="#register" class="btn-grad btn-sm">{{ $page->cta_text ?: 'Reserve Your FREE Seat' }}</a>
+    </div>
+</div>
+
 <script>
 @if($page->registration_deadline)
 (function() {
@@ -479,7 +497,7 @@
         const diff = deadline - Date.now();
         if (diff <= 0) {
             const c = document.getElementById('countdown');
-            if (c) c.innerHTML = '<div style="color:var(--warn);font-weight:700;font-size:16px;">Registration Closed</div>';
+            if (c) c.innerHTML = '<span style="color:#ef4444;font-weight:700;">Registration Closed</span>';
             return;
         }
         const d = Math.floor(diff / 86400000);
