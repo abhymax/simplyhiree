@@ -31,7 +31,7 @@
         a { color: var(--primary); text-decoration: none; }
 
         /* Top countdown bar */
-        .topbar { background: #000; border-bottom: 1px solid var(--line); padding: 14px 20px; display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; position: sticky; top: 0; z-index: 40; }
+        .topbar { background: #141c1a; border-bottom: 1px solid rgba(16,185,129,0.15); padding: 14px 20px; display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; position: sticky; top: 0; z-index: 40; box-shadow: 0 4px 18px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.02); }
         .live-dot { width: 14px; height: 14px; border-radius: 50%; background: #ef4444; position: relative; flex-shrink: 0; }
         .live-dot::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; background: rgba(239,68,68,0.35); animation: pulse 1.6s ease-out infinite; }
         @keyframes pulse { 0%{transform:scale(0.6);opacity:0.9} 100%{transform:scale(1.6);opacity:0} }
