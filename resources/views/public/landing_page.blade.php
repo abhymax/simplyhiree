@@ -59,6 +59,11 @@
         .video-wrap { position: relative; padding-top: 56.25%; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid var(--line); box-shadow: 0 30px 80px -30px rgba(16,185,129,0.2); }
         .video-wrap iframe, .video-wrap video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+        /* Host caption below video */
+        .host-caption { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; text-align: center; margin-top: 14px; }
+        .host-caption-name { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 2px; letter-spacing: -0.2px; }
+        .host-caption-title { font-size: 14px; color: var(--text); font-weight: 500; }
+
         /* Right panel */
         .panel-title { text-align: center; font-size: 18px; font-weight: 600; color: var(--primary); margin-bottom: 20px; position: relative; padding: 0 20px; }
         .panel-title::before, .panel-title::after { content: ''; position: absolute; top: 50%; width: 60px; height: 2px; background: linear-gradient(90deg, transparent, rgba(16,185,129,0.4)); }
@@ -224,6 +229,14 @@
                 </div>
                 @elseif($page->hero_image_path)
                 <img src="{{ Storage::url($page->hero_image_path) }}" alt="" style="width:100%;border-radius:16px;border:1px solid var(--line);">
+                @endif
+                @if($page->host_name)
+                <div class="host-caption">
+                    <div class="host-caption-name">{{ $page->host_name }}</div>
+                    @if($page->host_title)
+                    <div class="host-caption-title">{{ $page->host_title }}</div>
+                    @endif
+                </div>
                 @endif
             </div>
 
