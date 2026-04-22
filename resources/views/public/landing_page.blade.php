@@ -160,6 +160,23 @@
         .faq-a { display: none; padding: 0 22px 20px; font-size: 14px; color: var(--muted); line-height: 1.7; }
         .faq-a.open { display: block; }
 
+        /* Final IMPORTANT CTA card */
+        .final-cta { padding: 40px 20px 80px; }
+        .final-cta-card { max-width: 1060px; margin: 0 auto; border-radius: 24px; padding: 64px 32px 56px; text-align: center; position: relative; overflow: hidden; background: radial-gradient(1200px 500px at 50% 10%, rgba(16,185,129,0.12), transparent 60%), radial-gradient(900px 500px at 80% 90%, rgba(88,28,135,0.45), transparent 55%), linear-gradient(135deg, #0a1a15 0%, #0d1020 55%, #1a0b2e 100%); border: 1px solid rgba(255,255,255,0.06); }
+        .final-cta-card::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 22px 22px; background-position: 0 0; opacity: 0.35; pointer-events: none; mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 20%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 20%, transparent 75%); }
+        .final-cta-card > * { position: relative; z-index: 1; }
+        .final-badge { display: inline-block; background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #052e1a; font-weight: 800; font-size: 13px; letter-spacing: 2px; padding: 9px 22px; border-radius: 999px; margin-bottom: 26px; text-transform: uppercase; }
+        .final-title { font-size: clamp(32px, 5vw, 54px); font-weight: 800; color: #fff; line-height: 1.12; letter-spacing: -0.5px; margin-bottom: 22px; }
+        .final-sub { font-size: 18px; color: #cbd5e1; max-width: 680px; margin: 0 auto 34px; line-height: 1.7; }
+        .final-sub em { color: #fbbf24; font-style: normal; font-weight: 600; }
+        .final-cta-card .btn-grad { display: inline-block; width: auto; min-width: 520px; max-width: 100%; padding: 22px 56px; font-size: 22px; border-radius: 14px; text-decoration: none; letter-spacing: 0.4px; }
+        .final-cta-card .seats-note { font-size: 22px; margin-top: 18px; }
+        @media (max-width: 640px) {
+            .final-cta-card { padding: 44px 22px 40px; border-radius: 18px; }
+            .final-cta-card .btn-grad { min-width: 0; width: 100%; padding: 16px 22px; font-size: 17px; }
+            .final-cta-card .seats-note { font-size: 18px; }
+        }
+
         /* Footer */
         footer.lp { padding: 34px 20px; text-align: center; border-top: 1px solid var(--line); color: var(--muted); }
         footer.lp p { font-size: 12px; line-height: 1.8; max-width: 820px; margin: 0 auto; }
@@ -517,6 +534,19 @@
     </div>
 </section>
 @endif
+
+{{-- ══ FINAL IMPORTANT CTA ═══════════════════════════════════════════════ --}}
+<section class="final-cta">
+    <div class="final-cta-card">
+        <span class="final-badge">Important</span>
+        <h2 class="final-title">Register Below to Save<br>Your FREE Seat.</h2>
+        <p class="final-sub">You can keep wishing... Or you can take {{ $page->event_time ? '90 minutes' : 'action now' }} and <em>secure your spot</em> — once and for all.</p>
+        <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve Your FREE Seat' }}</a>
+        @if($page->seats_total > 0)
+        <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+        @endif
+    </div>
+</section>
 
 {{-- ══ FOOTER ════════════════════════════════════════════════════════════ --}}
 <footer class="lp">
