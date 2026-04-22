@@ -83,9 +83,17 @@
         .btn-grad:active { transform: translateY(0); }
         .btn-sm { padding: 10px 20px; font-size: 14px; border-radius: 10px; }
 
-        .seats-note { text-align: center; margin-top: 12px; font-size: 14px; color: #fff; font-weight: 600; }
+        .seats-note { text-align: center; margin-top: 16px; font-size: 20px; color: #fff; font-weight: 600; }
         .seats-note span { color: var(--warn); font-weight: 800; display: inline-block; animation: seatPulse 1.2s ease-in-out infinite; }
-        @keyframes seatPulse { 0%,100% { opacity: 1; transform: scale(1); text-shadow: 0 0 0 rgba(239,68,68,0); } 50% { opacity: 0.85; transform: scale(1.06); text-shadow: 0 0 14px rgba(239,68,68,0.55); } }
+        @keyframes seatPulse { 0%,100% { opacity: 1; transform: scale(1); text-shadow: 0 0 0 rgba(239,68,68,0); } 50% { opacity: 0.85; transform: scale(1.1); text-shadow: 0 0 16px rgba(239,68,68,0.6); } }
+
+        /* Inline CTA block between sections */
+        .cta-block { text-align: center; padding: 20px 0 10px; }
+        .cta-block .btn-grad { display: inline-block; width: auto; min-width: 340px; padding: 20px 56px; font-size: 20px; border-radius: 14px; text-decoration: none; letter-spacing: 0.4px; }
+        @media (max-width: 520px) {
+            .cta-block .btn-grad { min-width: 0; width: 100%; padding: 16px 22px; font-size: 17px; }
+            .seats-note { font-size: 17px; }
+        }
 
         /* Registration form modal/inline */
         .reg-section { padding: 60px 0; }
@@ -308,10 +316,10 @@
             </div>
             @endforeach
         </div>
-        <div style="text-align:center;margin-top:36px;">
-            <a href="#register" class="btn-grad" style="display:inline-block;width:auto;padding:14px 44px;text-decoration:none;">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
             @if($page->seats_total > 0)
-            <p class="seats-note pulse-note" style="margin-top:12px;">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
             @endif
         </div>
     </div>
@@ -329,6 +337,12 @@
         @if($page->about_description)
         <p style="font-size:16px;color:var(--muted);line-height:1.9;">{{ $page->about_description }}</p>
         @endif
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
+        </div>
     </div>
 </section>
 @endif
@@ -338,9 +352,7 @@
 <section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">Who Should Attend</span>
-            <h2 class="sec-title">This Masterclass Is <em>For You If...</em></h2>
-            <p class="sec-sub">Check if you match the profile of our ideal attendee</p>
+            <h2 class="sec-title">🧠 This Masterclass is <em>for you if...</em></h2>
         </div>
         <div class="for-list">
             @foreach($page->qualifications as $item)
@@ -351,6 +363,12 @@
                 <span>{{ $item['text'] }}</span>
             </div>
             @endforeach
+        </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
         </div>
     </div>
 </section>
@@ -386,6 +404,12 @@
             </div>
             @endforeach
         </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
+        </div>
     </div>
 </section>
 @endif
@@ -409,6 +433,12 @@
                 @if($page->host_title)<div class="host-title">{{ $page->host_title }}</div>@endif
                 @if($page->host_bio)<div class="host-bio">{{ $page->host_bio }}</div>@endif
             </div>
+        </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
         </div>
     </div>
 </section>
@@ -477,6 +507,12 @@
                 <div class="faq-a">{{ $faq['answer'] }}</div>
             </div>
             @endforeach
+        </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
         </div>
     </div>
 </section>
