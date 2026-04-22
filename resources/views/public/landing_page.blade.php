@@ -83,7 +83,9 @@
         .btn-grad:active { transform: translateY(0); }
         .btn-sm { padding: 10px 20px; font-size: 14px; border-radius: 10px; }
 
-        .seats-note { text-align: center; margin-top: 12px; font-size: 13px; color: var(--warn); font-weight: 600; }
+        .seats-note { text-align: center; margin-top: 12px; font-size: 14px; color: #fff; font-weight: 600; }
+        .seats-note span { color: var(--warn); font-weight: 800; display: inline-block; animation: seatPulse 1.2s ease-in-out infinite; }
+        @keyframes seatPulse { 0%,100% { opacity: 1; transform: scale(1); text-shadow: 0 0 0 rgba(239,68,68,0); } 50% { opacity: 0.85; transform: scale(1.06); text-shadow: 0 0 14px rgba(239,68,68,0.55); } }
 
         /* Registration form modal/inline */
         .reg-section { padding: 60px 0; }
@@ -271,36 +273,19 @@
                 </div>
                 <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
                 @if($page->seats_total > 0)
-                <p class="seats-note">⚠ Only {{ $seatsLeft }} Seats Left Of {{ $page->seats_total }}</p>
+                <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span> Of {{ $page->seats_total }}</p>
                 @endif
             </div>
         </div>
     </div>
 </section>
 
-{{-- ══ ABOUT ═════════════════════════════════════════════════════════════ --}}
-@if($page->about_title || $page->about_description)
-<section class="s">
-    <div class="wrap" style="text-align:center;max-width:860px;">
-        @if($page->about_title)
-        <span class="eyebrow">About This Session</span>
-        <h2 class="sec-title">{{ $page->about_title }}</h2>
-        @endif
-        @if($page->about_description)
-        <p style="font-size:16px;color:var(--muted);line-height:1.9;">{{ $page->about_description }}</p>
-        @endif
-    </div>
-</section>
-@endif
-
 {{-- ══ WHAT YOU'LL LEARN ═════════════════════════════════════════════════ --}}
 @if($page->learnings && count($page->learnings))
 <section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">What You'll Learn</span>
-            <h2 class="sec-title">Key Takeaways From This <em>Masterclass</em></h2>
-            <p class="sec-sub">Practical, actionable insights you can apply from Day 1</p>
+            <h2 class="sec-title">🎯 What You Will Learn In This <em>Webinar</em></h2>
         </div>
         <div class="learn-grid">
             @php
@@ -323,6 +308,27 @@
             </div>
             @endforeach
         </div>
+        <div style="text-align:center;margin-top:36px;">
+            <a href="#register" class="btn-grad" style="display:inline-block;width:auto;padding:14px 44px;text-decoration:none;">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note pulse-note" style="margin-top:12px;">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- ══ ABOUT ═════════════════════════════════════════════════════════════ --}}
+@if($page->about_title || $page->about_description)
+<section class="s">
+    <div class="wrap" style="text-align:center;max-width:860px;">
+        @if($page->about_title)
+        <span class="eyebrow">About This Session</span>
+        <h2 class="sec-title">{{ $page->about_title }}</h2>
+        @endif
+        @if($page->about_description)
+        <p style="font-size:16px;color:var(--muted);line-height:1.9;">{{ $page->about_description }}</p>
+        @endif
     </div>
 </section>
 @endif
