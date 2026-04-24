@@ -96,7 +96,7 @@
 
                                 <td class="px-6 py-5 align-top text-blue-100 text-sm">
                                     <div><span class="text-cyan-300 text-xs uppercase font-bold">Openings:</span> {{ $job->openings ?? 'N/A' }}</div>
-                                    <div><span class="text-cyan-300 text-xs uppercase font-bold">Exp:</span> {{ $job->experienceLevel->name ?? 'N/A' }}</div>
+                                    <div><span class="text-cyan-300 text-xs uppercase font-bold">Exp:</span> {{ $job->formatted_experience }}</div>
                                     <div><span class="text-cyan-300 text-xs uppercase font-bold">Edu:</span> {{ $job->educationLevel->name ?? 'N/A' }}</div>
                                     <div><span class="text-cyan-300 text-xs uppercase font-bold">Salary:</span> {{ $job->salary ?? 'N/A' }}</div>
                                 </td>
