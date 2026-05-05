@@ -705,11 +705,64 @@ class AdminController extends Controller
 
         $job->update([
             'status'                    => 'closed',
+            'archived_at'               => now(),
             'deactivation_requested_at' => null,
             'deactivation_reason'       => null,
         ]);
 
-        return back()->with('success', 'Deactivation approved. Job has been closed.');
+        return back()->with('success', 'Deactivation approved. Job has been archived.');
+    }
+
+    /**
+     * List archived jobs (deactivated via Superadmin approval).
+     */
+    public function archivedJobs()
+    {
+        $jobs = Job::whereNotNull('archived_at')
+            ->with(['user', 'category'])
+            ->withCount('jobApplications')
+            ->latest('archived_at')
+            ->paginate(20);
+
+        return view('admin.jobs.archived', compact('jobs'));
+    }
+
+    /**
+     * Show full archive detail for one job — every application with full lifecycle.
+     */
+    public function showArchivedJob(Job $job)
+    {
+        if (!$job->archived_at) {
+            abort(404);
+        }
+
+        $job->load([
+            'user',
+            'category',
+            'experienceLevel',
+            'educationLevel',
+            'jobApplications.candidate.partner',
+            'jobApplications.candidateUser',
+        ]);
+
+        return view('admin.jobs.archived_show', compact('job'));
+    }
+
+    /**
+     * Permanently restore an archived job back to approved state.
+     */
+    public function restoreArchivedJob(Job $job)
+    {
+        if (!$job->archived_at) {
+            return back()->with('error', 'This job is not archived.');
+        }
+
+        $job->update([
+            'status'      => 'approved',
+            'archived_at' => null,
+        ]);
+
+        return back()->with('success', 'Job restored and set back to approved.');
     }
 
     /**

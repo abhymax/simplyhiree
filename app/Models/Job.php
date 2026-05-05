@@ -37,6 +37,7 @@ class Job extends Model
         'status',
         'deactivation_requested_at',
         'deactivation_reason',
+        'archived_at',
         // Admin / Billing fields
         'payout_amount',
         'minimum_stay_days',
@@ -59,6 +60,7 @@ class Job extends Model
         'job_type_tags' => 'array',
         'interview_slot' => 'datetime',
         'deactivation_requested_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     /**

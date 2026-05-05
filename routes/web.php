@@ -170,6 +170,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- JOB MANAGEMENT ---
         Route::middleware(['can:view_pending_jobs'])->group(function() {
             Route::get('/jobs/pending', [AdminController::class, 'pendingJobs'])->name('jobs.pending');
+            Route::get('/jobs/archived', [AdminController::class, 'archivedJobs'])->name('jobs.archived');
+            Route::get('/jobs/archived/{job}', [AdminController::class, 'showArchivedJob'])->name('jobs.archived.show');
+            Route::post('/jobs/archived/{job}/restore', [AdminController::class, 'restoreArchivedJob'])->name('jobs.archived.restore');
             Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
             Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
             Route::get('/jobs/{job}', [AdminController::class, 'showJob'])->name('jobs.show');

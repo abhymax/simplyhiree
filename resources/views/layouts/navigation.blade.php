@@ -30,6 +30,9 @@
                             <x-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')" class="text-slate-600 hover:text-indigo-600">
                                 Pending Jobs
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.jobs.archived')" :active="request()->routeIs('admin.jobs.archived*')" class="text-slate-600 hover:text-indigo-600">
+                                Archived Jobs
+                            </x-nav-link>
                         @endcan
 
                         @can('view_billing_data')
@@ -186,6 +189,9 @@
                 @endcan
 
                 @can('view_pending_jobs')
+                    <x-responsive-nav-link :href="route('admin.jobs.archived')" :active="request()->routeIs('admin.jobs.archived*')">
+                        Archived Jobs
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.jobs.pending')" :active="request()->routeIs('admin.jobs.pending')">
                         Pending Jobs
                     </x-responsive-nav-link>
