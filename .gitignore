@@ -16,3 +16,6 @@ yarn-error.log
 .phpunit.cache
 .DS_Store
 Thumbs.db
+
+databse-abhy/
+deploy-last.log
