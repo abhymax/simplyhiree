@@ -37,6 +37,17 @@
                 </div>
             </div>
 
+            @if(session('success'))
+                <div class="mb-6 px-6 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 rounded-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="mb-6 px-6 py-3 bg-rose-500/20 border border-rose-500/50 text-rose-200 rounded-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ session('error') }}
+                </div>
+            @endif
+
             {{-- MAIN GLASS CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 
@@ -143,9 +154,43 @@
 
                                     {{-- Actions --}}
                                     <td class="px-6 py-5 text-right">
-                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition border border-blue-500 hover:shadow-blue-500/30">
-                                            View <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                                        </a>
+                                        @php
+                                            $resumePath = $application->candidate->resume_path
+                                                ?? $application->candidateUser->profile->resume_path
+                                                ?? null;
+                                        @endphp
+                                        <div class="flex flex-col items-end gap-2">
+                                            <div class="flex items-center gap-2 flex-wrap justify-end">
+                                                @if($resumePath)
+                                                    <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" rel="noopener"
+                                                        class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3 py-2 rounded-xl text-xs font-bold transition">
+                                                        <i class="fa-solid fa-file-pdf text-rose-300"></i> CV
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('admin.applications.show', $application->id) }}"
+                                                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition border border-blue-500">
+                                                    View <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                                </a>
+                                            </div>
+                                            @if($adminStatus === 'pending review')
+                                                <div class="flex gap-2">
+                                                    <form method="POST" action="{{ route('admin.applications.approve', $application->id) }}" onsubmit="return confirm('Approve this candidate\'s CV?');">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition">
+                                                            <i class="fa-solid fa-check"></i> Approve CV
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{{ route('admin.applications.reject', $application->id) }}" onsubmit="return confirm('Reject this candidate\'s CV?');">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-400 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition">
+                                                            <i class="fa-solid fa-xmark"></i> Reject CV
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
