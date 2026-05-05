@@ -36,11 +36,20 @@
             
             {{-- BREADCRUMB --}}
             <div class="mb-8">
-                <a href="{{ route('admin.applications.index') }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-4 transition-colors text-sm font-bold tracking-wide uppercase group">
+                @php
+                    $backUrl = url()->previous();
+                    $sameHost = $backUrl && parse_url($backUrl, PHP_URL_HOST) === request()->getHost();
+                    $selfPath = parse_url($backUrl ?: '', PHP_URL_PATH);
+                    $currentPath = '/' . ltrim(request()->path(), '/');
+                    if (!$sameHost || !$backUrl || $selfPath === $currentPath) {
+                        $backUrl = route('admin.applications.index');
+                    }
+                @endphp
+                <a href="{{ $backUrl }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-4 transition-colors text-sm font-bold tracking-wide uppercase group">
                     <div class="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center mr-2 group-hover:bg-cyan-500 transition">
                         <i class="fa-solid fa-arrow-left text-white"></i>
                     </div>
-                    Back to Applications
+                    Back
                 </a>
                 <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Application Details</h1>
             </div>
