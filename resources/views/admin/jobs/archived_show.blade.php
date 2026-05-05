@@ -82,7 +82,7 @@
             @if($job->description)
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
                 <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3">Job Description</h3>
-                <p class="text-blue-100 text-sm whitespace-pre-line leading-relaxed">{{ $job->description }}</p>
+                <div class="text-blue-100 text-sm leading-relaxed job-desc-html">{!! $job->formatted_description !!}</div>
             </div>
             @endif
 

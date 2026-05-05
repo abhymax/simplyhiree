@@ -78,8 +78,8 @@
                                 <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <i class="fa-solid fa-align-left text-blue-400"></i> Job Description
                                 </h3>
-                                <div class="text-blue-100 leading-relaxed text-sm whitespace-pre-wrap bg-slate-900/30 p-6 rounded-2xl border border-white/5">
-                                    {{ $job->description }}
+                                <div class="text-blue-100 leading-relaxed text-sm bg-slate-900/30 p-6 rounded-2xl border border-white/5 job-desc-html">
+                                    {!! $job->formatted_description !!}
                                 </div>
                             </div>
                         </div>

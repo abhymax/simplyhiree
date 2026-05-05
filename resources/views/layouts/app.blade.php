@@ -26,6 +26,19 @@
                 backdrop-filter: blur(12px);
                 border: 1px solid rgba(255, 255, 255, 0.2);
             }
+
+            /* Rich-text job description rendering */
+            .job-desc-html h2 { font-size: 1.25rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+            .job-desc-html h3 { font-size: 1.1rem; font-weight: 700; margin: 0.9rem 0 0.4rem; }
+            .job-desc-html p { margin: 0 0 0.75rem; }
+            .job-desc-html ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0 0.75rem; }
+            .job-desc-html ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0 0.75rem; }
+            .job-desc-html li { margin-bottom: 0.25rem; }
+            .job-desc-html strong, .job-desc-html b { font-weight: 700; }
+            .job-desc-html em, .job-desc-html i { font-style: italic; }
+            .job-desc-html u { text-decoration: underline; }
+            .job-desc-html a { color: #67e8f9; text-decoration: underline; }
+            .job-desc-html blockquote { border-left: 3px solid rgba(255,255,255,0.25); padding-left: 0.85rem; margin: 0.5rem 0; opacity: 0.9; }
         </style>
     </head>
     <body class="font-sans antialiased bg-slate-50 text-slate-900">

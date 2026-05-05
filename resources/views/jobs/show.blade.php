@@ -179,8 +179,8 @@
                     <div class="md:col-span-2 space-y-8">
                         <section class="fx-card bg-white/5 border border-white/10 rounded-2xl p-6">
                             <h3 class="text-lg font-bold text-white mb-4 border-l-4 border-cyan-400 pl-3">Job Description</h3>
-                            <div class="text-blue-100 leading-7 whitespace-pre-line">
-                                {{ preg_replace("/(\r\n|\r|\n){3,}/", "\n\n", trim((string) $job->description)) }}
+                            <div class="text-blue-100 leading-7 job-desc-html">
+                                {!! $job->formatted_description !!}
                             </div>
                         </section>
 

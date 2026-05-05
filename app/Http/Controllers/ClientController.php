@@ -142,7 +142,7 @@ class ClientController extends Controller
             'location' => $validated['location'],
             'salary' => $salary,
             'job_type' => $validated['job_type'],
-            'description' => $validated['description'],
+            'description' => $this->sanitizeJobDescription($validated['description']),
             'gender_preference' => $validated['gender_preference'],
             
             'min_experience' => $validated['min_experience'],
@@ -177,7 +177,7 @@ class ClientController extends Controller
             'location' => $validated['location'],
             'salary' => $salary,
             'job_type' => $validated['job_type'],
-            'description' => $validated['description'],
+            'description' => $this->sanitizeJobDescription($validated['description']),
             'gender_preference' => $validated['gender_preference'],
             'min_experience' => $validated['min_experience'],
             'max_experience' => $validated['max_experience'],
@@ -244,6 +244,23 @@ class ClientController extends Controller
         if ((string) $job->status !== 'pending_approval') {
             abort(403, 'Only pending jobs can be edited.');
         }
+    }
+
+    /**
+     * Sanitize Quill editor HTML — keep formatting tags, strip scripts and event handlers.
+     */
+    private function sanitizeJobDescription(?string $html): ?string
+    {
+        if (!$html) return $html;
+        $allowed = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h2><h3><blockquote><a><span>';
+        $clean = strip_tags($html, $allowed);
+        // Drop any on*="..." or on*='...' event handler attributes
+        $clean = preg_replace('/\s+on[a-z]+\s*=\s*"(?:[^"\\\\]|\\\\.)*"/i', '', $clean);
+        $clean = preg_replace("/\s+on[a-z]+\s*=\s*'(?:[^'\\\\]|\\\\.)*'/i", '', $clean);
+        // Strip javascript: in href
+        $clean = preg_replace('/href\s*=\s*"\s*javascript:[^"]*"/i', 'href="#"', $clean);
+        $clean = preg_replace("/href\s*=\s*'\s*javascript:[^']*'/i", "href='#'", $clean);
+        return $clean;
     }
 
     /**

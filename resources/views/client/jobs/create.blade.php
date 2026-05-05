@@ -1,6 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<style>
+    #job-description-editor { min-height: 220px; color: #fff; }
+    #job-description-editor .ql-editor { min-height: 200px; font-size: 15px; line-height: 1.6; }
+    #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, 0.55); font-style: normal; }
+    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
+    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
+    .ql-snow .ql-stroke { stroke: #cbd5e1; }
+    .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
+    .ql-snow .ql-picker { color: #cbd5e1; }
+    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.2); }
+    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #67e8f9; }
+    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #67e8f9; }
+</style>
 @php
     $isEditMode = ($formMode ?? 'create') === 'edit' && isset($job) && $job;
     $formAction = $isEditMode ? route('client.jobs.update', $job) : route('client.jobs.store');
@@ -152,7 +166,9 @@
 
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-blue-100">Job Description <span class="text-rose-300">*</span></label>
-                        <textarea name="description" rows="4" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">{{ old('description', $job->description ?? '') }}</textarea>
+                        <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
+                        <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/20 text-white min-h-[200px]"></div>
+                        <p class="mt-1 text-xs text-blue-200/80">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
                         @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                     </div>
 
@@ -180,8 +196,46 @@
 
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Job description rich-text editor
+        const descEditorEl = document.getElementById('job-description-editor');
+        const descHidden   = document.getElementById('job-description-input');
+        if (descEditorEl && descHidden && window.Quill) {
+            const quill = new Quill(descEditorEl, {
+                theme: 'snow',
+                placeholder: 'Describe the role, responsibilities, requirements...',
+                modules: {
+                    toolbar: [
+                        [{ header: [2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        [{ indent: '-1' }, { indent: '+1' }],
+                        [{ align: [] }],
+                        ['blockquote', 'link'],
+                        ['clean'],
+                    ],
+                },
+            });
+            // Pre-fill with existing/old value
+            const initialHtml = descHidden.value || '';
+            if (initialHtml) {
+                quill.clipboard.dangerouslyPasteHTML(initialHtml);
+            }
+            // Sync editor → hidden input on every change AND on submit
+            quill.on('text-change', () => {
+                const html = quill.root.innerHTML;
+                descHidden.value = (quill.getText().trim().length === 0) ? '' : html;
+            });
+            const descForm = descHidden.closest('form');
+            if (descForm) {
+                descForm.addEventListener('submit', () => {
+                    descHidden.value = (quill.getText().trim().length === 0) ? '' : quill.root.innerHTML;
+                });
+            }
+        }
+
         const hidden     = document.getElementById('job-location');
         const chipbox    = document.getElementById('job-location-chipbox');
         const search     = document.getElementById('job-location-search');

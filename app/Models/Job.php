@@ -113,6 +113,27 @@ class Job extends Model
         return $this->hasMany(JobApplication::class);
     }
 
+    /**
+     * Render description as safe HTML. New descriptions come from the rich
+     * editor as already-sanitized HTML; legacy plain-text descriptions get
+     * escaped and have newlines converted to <br>.
+     */
+    public function getFormattedDescriptionAttribute(): string
+    {
+        $raw = (string) ($this->description ?? '');
+        if ($raw === '') return '';
+        $hasHtml = preg_match('/<\/?(p|br|ul|ol|li|h[1-6]|strong|b|em|i|u|blockquote|a|span)\b/i', $raw) === 1;
+        if ($hasHtml) {
+            $allowed = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h2><h3><blockquote><a><span>';
+            $clean = strip_tags($raw, $allowed);
+            $clean = preg_replace('/\s+on[a-z]+\s*=\s*"(?:[^"\\\\]|\\\\.)*"/i', '', $clean);
+            $clean = preg_replace("/\s+on[a-z]+\s*=\s*'(?:[^'\\\\]|\\\\.)*'/i", '', $clean);
+            $clean = preg_replace('/href\s*=\s*"\s*javascript:[^"]*"/i', 'href="#"', $clean);
+            return $clean;
+        }
+        return nl2br(e($raw));
+    }
+
     // --- ACCESS CONTROL RELATIONSHIPS (FIXED TABLE NAMES) ---
 
     /**
