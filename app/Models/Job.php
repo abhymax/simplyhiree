@@ -35,6 +35,8 @@ class Job extends Model
         'education_level_id',
         'application_deadline',
         'status',
+        'deactivation_requested_at',
+        'deactivation_reason',
         // Admin / Billing fields
         'payout_amount',
         'minimum_stay_days',
@@ -56,6 +58,7 @@ class Job extends Model
         'application_deadline' => 'date',
         'job_type_tags' => 'array',
         'interview_slot' => 'datetime',
+        'deactivation_requested_at' => 'datetime',
     ];
 
     /**

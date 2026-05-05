@@ -25,6 +25,59 @@
                 @endif
             </div>
 
+            @if(session('error'))
+                <div class="mb-6 px-6 py-3 bg-rose-500/20 border border-rose-500/50 text-rose-200 rounded-xl font-semibold">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            {{-- DEACTIVATION REQUESTS --}}
+            @if(!empty($deactivationRequests) && $deactivationRequests->count())
+            <div class="mb-8 bg-rose-950/40 backdrop-blur-xl border border-rose-400/30 rounded-3xl shadow-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-rose-400/20 flex items-center justify-between">
+                    <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-power-off text-rose-300"></i>
+                        Deactivation Requests
+                        <span class="bg-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $deactivationRequests->count() }}</span>
+                    </h2>
+                    <p class="text-rose-200 text-xs">Clients have asked to deactivate these approved jobs.</p>
+                </div>
+                <div class="divide-y divide-rose-400/10">
+                    @foreach($deactivationRequests as $dj)
+                    <div class="px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="text-white font-bold text-base">{{ $dj->title }}</div>
+                            <div class="text-blue-200 text-xs mt-0.5">
+                                {{ $dj->user->name ?? '—' }} &middot; {{ $dj->company_name ?? '—' }} &middot; {{ $dj->location }}
+                            </div>
+                            <div class="text-rose-200 text-xs mt-1">
+                                Requested {{ $dj->deactivation_requested_at->diffForHumans() }}
+                            </div>
+                            @if($dj->deactivation_reason)
+                                <div class="mt-2 bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-blue-100 italic">
+                                    "{{ $dj->deactivation_reason }}"
+                                </div>
+                            @endif
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <a href="{{ route('admin.jobs.show', $dj) }}" class="px-3 py-2 bg-white/10 border border-white/20 text-white text-xs font-bold rounded-lg hover:bg-white/20">View</a>
+                            <form method="POST" action="{{ route('admin.jobs.deactivation.dismiss', $dj) }}">
+                                @csrf
+                                <button type="submit" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg">Dismiss</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.jobs.deactivation.approve', $dj) }}" onsubmit="return confirm('Close this job? It will become inactive.');">
+                                @csrf
+                                <button type="submit" class="px-3 py-2 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold rounded-lg">
+                                    <i class="fa-solid fa-power-off mr-1"></i> Approve & Close
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             {{-- MAIN CARD CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 

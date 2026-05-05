@@ -246,6 +246,56 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Client requests an approved job be deactivated. Awaits Superadmin action.
+     */
+    public function requestDeactivation(Request $request, Job $job)
+    {
+        if ((int) $job->user_id !== (int) Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ((string) $job->status !== 'approved') {
+            return back()->with('error', 'Only approved jobs can be requested for deactivation.');
+        }
+
+        if ($job->deactivation_requested_at) {
+            return back()->with('error', 'Deactivation has already been requested for this job.');
+        }
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $job->update([
+            'deactivation_requested_at' => now(),
+            'deactivation_reason'       => $data['reason'] ?? null,
+        ]);
+
+        return back()->with('success', 'Deactivation requested. A Superadmin will review it shortly.');
+    }
+
+    /**
+     * Client cancels their own pending deactivation request.
+     */
+    public function cancelDeactivationRequest(Job $job)
+    {
+        if ((int) $job->user_id !== (int) Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!$job->deactivation_requested_at) {
+            return back()->with('error', 'No deactivation request to cancel.');
+        }
+
+        $job->update([
+            'deactivation_requested_at' => null,
+            'deactivation_reason'       => null,
+        ]);
+
+        return back()->with('success', 'Deactivation request cancelled.');
+    }
+
     // ---------------------------------
     
     /**

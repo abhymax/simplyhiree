@@ -157,9 +157,35 @@
 
                                 <td class="px-6 py-4">
                                     @if($job->status == 'approved')
-                                        <a href="{{ route('client.jobs.applicants', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-bold text-xs text-white">
-                                            View Applicants ({{ $job->jobApplications->where('status', 'Approved')->count() }})
-                                        </a>
+                                        <div class="flex flex-col gap-2 items-start">
+                                            <a href="{{ route('client.jobs.applicants', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-bold text-xs text-white">
+                                                View Applicants ({{ $job->jobApplications->where('status', 'Approved')->count() }})
+                                            </a>
+                                            @if($job->deactivation_requested_at)
+                                                <span class="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2.5 py-1 rounded-md text-[11px] font-semibold">
+                                                    <i class="fa-solid fa-hourglass-half"></i> Deactivation Requested
+                                                </span>
+                                                <form method="POST" action="{{ route('client.jobs.cancel-deactivation', $job) }}">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-[11px] text-blue-200 hover:text-white underline">Cancel request</button>
+                                                </form>
+                                            @else
+                                                <button type="button" onclick="document.getElementById('deact-{{ $job->id }}').classList.toggle('hidden')"
+                                                    class="text-[11px] text-rose-200 hover:text-rose-100 underline">
+                                                    Request Deactivation
+                                                </button>
+                                                <form id="deact-{{ $job->id }}" method="POST" action="{{ route('client.jobs.request-deactivation', $job) }}"
+                                                      class="hidden mt-1 flex flex-col gap-2 w-64 bg-slate-900/60 border border-rose-400/30 p-3 rounded-lg">
+                                                    @csrf
+                                                    <textarea name="reason" rows="2" maxlength="1000" placeholder="Reason (optional)"
+                                                        class="w-full text-xs bg-slate-900 border border-white/20 rounded p-2 text-white"></textarea>
+                                                    <div class="flex gap-2">
+                                                        <button type="submit" class="bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold px-3 py-1.5 rounded">Submit</button>
+                                                        <button type="button" onclick="document.getElementById('deact-{{ $job->id }}').classList.add('hidden')" class="text-xs text-slate-300 hover:text-white">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            @endif
+                                        </div>
                                     @elseif($job->status === 'pending_approval')
                                         <a href="{{ route('client.jobs.edit', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 px-3 py-2 rounded-lg font-bold text-xs text-slate-900">
                                             <i class="fa-solid fa-pen-to-square"></i> Edit Pending Job

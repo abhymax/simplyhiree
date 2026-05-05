@@ -175,8 +175,10 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/jobs/{job}', [AdminController::class, 'showJob'])->name('jobs.show');
             Route::post('/jobs/{job}/approve', [AdminController::class, 'approveJob'])->name('jobs.approve');
             Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
-            Route::patch('/jobs/{job}/status', [AdminController::class, 'updateJobStatus'])->name('jobs.status.update'); 
-            
+            Route::patch('/jobs/{job}/status', [AdminController::class, 'updateJobStatus'])->name('jobs.status.update');
+            Route::post('/jobs/{job}/deactivation/approve', [AdminController::class, 'approveDeactivation'])->name('jobs.deactivation.approve');
+            Route::post('/jobs/{job}/deactivation/dismiss', [AdminController::class, 'dismissDeactivation'])->name('jobs.deactivation.dismiss');
+
             Route::get('/jobs/{job}/manage', [AdminController::class, 'manageJobExclusions'])->name('jobs.manage');
             Route::post('/jobs/{job}/exclusions', [AdminController::class, 'updateJobExclusions'])->name('jobs.exclusions.update');
         });
@@ -217,8 +219,10 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/jobs/{job}/edit', [ClientController::class, 'editJob'])->name('jobs.edit');
         Route::patch('/jobs/{job}', [ClientController::class, 'updateJob'])->name('jobs.update');
         
-        Route::patch('/jobs/{job}/status', [JobController::class, 'updateStatus'])->name('jobs.status.update'); 
-        Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy'); 
+        Route::patch('/jobs/{job}/status', [JobController::class, 'updateStatus'])->name('jobs.status.update');
+        Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy');
+        Route::post('/jobs/{job}/request-deactivation', [ClientController::class, 'requestDeactivation'])->name('jobs.request-deactivation');
+        Route::delete('/jobs/{job}/cancel-deactivation', [ClientController::class, 'cancelDeactivationRequest'])->name('jobs.cancel-deactivation');
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
         
         // Profile Management

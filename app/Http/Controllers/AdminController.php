@@ -630,7 +630,14 @@ class AdminController extends Controller
     public function pendingJobs()
     {
         $pendingJobs = Job::where('status', 'pending_approval')->with(['user', 'educationLevel'])->latest()->paginate(20);
-        return view('admin.jobs.pending', ['jobs' => $pendingJobs]);
+        $deactivationRequests = Job::whereNotNull('deactivation_requested_at')
+            ->with(['user'])
+            ->latest('deactivation_requested_at')
+            ->get();
+        return view('admin.jobs.pending', [
+            'jobs' => $pendingJobs,
+            'deactivationRequests' => $deactivationRequests,
+        ]);
     }
 
     public function approveJob(Request $request, Job $job)
@@ -685,6 +692,41 @@ class AdminController extends Controller
     {
         $job->delete();
         return redirect()->route('admin.jobs.pending')->with('success', 'Job deleted permanently.');
+    }
+
+    /**
+     * Approve a client's deactivation request — closes the job.
+     */
+    public function approveDeactivation(Job $job)
+    {
+        if (!$job->deactivation_requested_at) {
+            return back()->with('error', 'This job has no pending deactivation request.');
+        }
+
+        $job->update([
+            'status'                    => 'closed',
+            'deactivation_requested_at' => null,
+            'deactivation_reason'       => null,
+        ]);
+
+        return back()->with('success', 'Deactivation approved. Job has been closed.');
+    }
+
+    /**
+     * Dismiss a deactivation request without closing the job.
+     */
+    public function dismissDeactivation(Job $job)
+    {
+        if (!$job->deactivation_requested_at) {
+            return back()->with('error', 'This job has no pending deactivation request.');
+        }
+
+        $job->update([
+            'deactivation_requested_at' => null,
+            'deactivation_reason'       => null,
+        ]);
+
+        return back()->with('success', 'Deactivation request dismissed. Job remains active.');
     }
 
     public function manageJobExclusions(Job $job)
