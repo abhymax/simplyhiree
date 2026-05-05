@@ -78,22 +78,17 @@
                         </div>
 
                         <div class="relative">
-                            <label class="block text-sm font-medium text-blue-100">Location <span class="text-rose-300">*</span></label>
-                            <input
-                                type="text"
-                                name="location"
-                                id="job-location"
-                                value="{{ old('location', $job->location ?? '') }}"
-                                autocomplete="off"
-                                required
-                                class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white"
-                                placeholder="Start typing city name"
-                            >
-                            <div
-                                id="job-location-suggestions"
-                                class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"
-                            ></div>
-                            <p class="mt-1 text-xs text-blue-200/80">Type at least 2 letters to see matching Indian cities.</p>
+                            <label class="block text-sm font-medium text-blue-100">Location(s) <span class="text-rose-300">*</span></label>
+                            <input type="hidden" name="location" id="job-location" value="{{ old('location', $job->location ?? '') }}">
+                            <div id="job-location-chipbox"
+                                class="mt-1 flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 focus-within:border-blue-400">
+                                <input type="text" id="job-location-search" autocomplete="off"
+                                    class="flex-1 min-w-[160px] border-0 bg-transparent text-white placeholder-blue-200/60 focus:outline-none focus:ring-0 p-1"
+                                    placeholder="Type a city, press Enter to add">
+                            </div>
+                            <div id="job-location-suggestions"
+                                class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"></div>
+                            <p class="mt-1 text-xs text-blue-200/80">Pick one or more cities. You can also type any location not in the list and press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
                             @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
@@ -187,89 +182,94 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('job-location');
-        const suggestions = document.getElementById('job-location-suggestions');
+        const hidden     = document.getElementById('job-location');
+        const chipbox    = document.getElementById('job-location-chipbox');
+        const search     = document.getElementById('job-location-search');
+        const suggestions= document.getElementById('job-location-suggestions');
         const embeddedCities = @json($indianCities ?? []);
 
-        if (!input || !suggestions) {
-            return;
-        }
+        if (!hidden || !chipbox || !search || !suggestions) return;
 
         let cities = Array.isArray(embeddedCities) ? embeddedCities : [];
+        let selected = (hidden.value || '').split(',').map(s => s.trim()).filter(Boolean);
 
-        const hideSuggestions = function () {
-            suggestions.classList.add('hidden');
-            suggestions.innerHTML = '';
-        };
+        const hideSuggestions = () => { suggestions.classList.add('hidden'); suggestions.innerHTML = ''; };
 
-        const showSuggestions = function (matches) {
-            if (!matches.length) {
-                hideSuggestions();
-                return;
-            }
+        const syncHidden = () => { hidden.value = selected.join(', '); };
 
-            suggestions.innerHTML = matches.map(function (city) {
-                return '<button type="button" class="job-location-option block w-full border-b border-slate-700 px-4 py-3 text-left text-sm font-medium text-white hover:bg-blue-600 hover:text-white transition last:border-b-0">' + city + '</button>';
-            }).join('');
-
-            suggestions.classList.remove('hidden');
-
-            suggestions.querySelectorAll('.job-location-option').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    input.value = button.textContent.trim();
-                    hideSuggestions();
-                });
+        const renderChips = () => {
+            chipbox.querySelectorAll('.loc-chip').forEach(c => c.remove());
+            selected.forEach((city, idx) => {
+                const chip = document.createElement('span');
+                chip.className = 'loc-chip inline-flex items-center gap-1.5 rounded-full bg-blue-500/30 border border-blue-400/40 px-3 py-1 text-sm text-white';
+                chip.innerHTML = '<span>' + city.replace(/</g,'&lt;') + '</span><button type="button" aria-label="Remove" class="hover:text-rose-300 leading-none text-base">&times;</button>';
+                chip.querySelector('button').addEventListener('click', () => { selected.splice(idx, 1); syncHidden(); renderChips(); });
+                chipbox.insertBefore(chip, search);
             });
         };
 
-        const updateSuggestions = function () {
-            const query = input.value.trim().toLowerCase();
-
-            if (query.length < 2) {
-                hideSuggestions();
-                return;
+        const addCity = (raw) => {
+            const city = (raw || '').trim().replace(/,+$/, '');
+            if (!city) return;
+            if (!selected.some(s => s.toLowerCase() === city.toLowerCase())) {
+                selected.push(city);
+                syncHidden();
+                renderChips();
             }
+            search.value = '';
+            hideSuggestions();
+        };
 
+        const showSuggestions = (matches) => {
+            if (!matches.length) { hideSuggestions(); return; }
+            suggestions.innerHTML = matches.map(c =>
+                '<button type="button" class="job-location-option block w-full border-b border-slate-700 px-4 py-3 text-left text-sm font-medium text-white hover:bg-blue-600 transition last:border-b-0">' + c + '</button>'
+            ).join('');
+            suggestions.classList.remove('hidden');
+            suggestions.querySelectorAll('.job-location-option').forEach(btn => {
+                btn.addEventListener('click', () => addCity(btn.textContent));
+            });
+        };
+
+        const updateSuggestions = () => {
+            const q = search.value.trim().toLowerCase();
+            if (q.length < 2) { hideSuggestions(); return; }
             const matches = cities
-                .filter(function (city) {
-                    return city.toLowerCase().includes(query);
-                })
+                .filter(c => c.toLowerCase().includes(q) && !selected.some(s => s.toLowerCase() === c.toLowerCase()))
                 .slice(0, 12);
-
             showSuggestions(matches);
         };
 
-        input.addEventListener('input', updateSuggestions);
-        input.addEventListener('focus', updateSuggestions);
-        input.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                hideSuggestions();
+        search.addEventListener('input', updateSuggestions);
+        search.addEventListener('focus', updateSuggestions);
+        search.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); if (search.value.trim()) addCity(search.value); }
+            else if (e.key === 'Backspace' && !search.value && selected.length) { selected.pop(); syncHidden(); renderChips(); }
+            else if (e.key === 'Escape') hideSuggestions();
+        });
+        chipbox.addEventListener('click', (e) => { if (e.target === chipbox) search.focus(); });
+        document.addEventListener('click', (e) => {
+            if (!suggestions.contains(e.target) && e.target !== search) hideSuggestions();
+        });
+
+        // Block form submit if no locations chosen
+        const form = chipbox.closest('form');
+        if (form) form.addEventListener('submit', (e) => {
+            if (search.value.trim()) addCity(search.value);
+            if (!selected.length) {
+                e.preventDefault();
+                search.focus();
+                alert('Please add at least one location.');
             }
         });
 
-        document.addEventListener('click', function (event) {
-            if (!suggestions.contains(event.target) && event.target !== input) {
-                hideSuggestions();
-            }
-        });
+        renderChips();
 
         if (!cities.length) {
             fetch(@js(asset('data/indian-cities.json')))
-                .then(function (response) {
-                    if (!response.ok) {
-                        throw new Error('Failed to load city list');
-                    }
-
-                    return response.json();
-                })
-                .then(function (data) {
-                    if (Array.isArray(data)) {
-                        cities = data;
-                    }
-                })
-                .catch(function () {
-                    cities = [];
-                });
+                .then(r => r.ok ? r.json() : [])
+                .then(d => { if (Array.isArray(d)) cities = d; })
+                .catch(() => { cities = []; });
         }
     });
 </script>
