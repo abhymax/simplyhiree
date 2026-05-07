@@ -595,7 +595,7 @@ class AdminController extends Controller
             'location' => $validated['location'],
             'salary' => $validated['salary'],
             'job_type' => $validated['job_type'],
-            'description' => $validated['description'],
+            'description' => $this->sanitizeJobDescription($validated['description']),
             'min_experience' => $request->min_experience,
             'max_experience' => $request->max_experience,
             'education_level_id' => $validated['education_level_id'],
@@ -1079,5 +1079,20 @@ class AdminController extends Controller
         }, $fileName, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Sanitize Quill editor HTML — keep formatting tags, strip scripts and event handlers.
+     */
+    private function sanitizeJobDescription(?string $html): ?string
+    {
+        if (!$html) return $html;
+        $allowed = '<p><br><b><strong><i><em><u><s><strike><ul><ol><li><h2><h3><blockquote><a><span>';
+        $clean = strip_tags($html, $allowed);
+        $clean = preg_replace('/\s+on[a-z]+\s*=\s*"(?:[^"\\\\]|\\\\.)*"/i', '', $clean);
+        $clean = preg_replace("/\s+on[a-z]+\s*=\s*'(?:[^'\\\\]|\\\\.)*'/i", '', $clean);
+        $clean = preg_replace('/href\s*=\s*"\s*javascript:[^"]*"/i', 'href="#"', $clean);
+        $clean = preg_replace("/href\s*=\s*'\s*javascript:[^']*'/i", "href='#'", $clean);
+        return $clean;
     }
 }

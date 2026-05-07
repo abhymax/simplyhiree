@@ -96,9 +96,18 @@
                             </select>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Location <span class="text-rose-400">*</span></label>
-                            <input type="text" name="location" value="{{ old('location') }}" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12" required>
+                        <div class="relative">
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Location(s) <span class="text-rose-400">*</span></label>
+                            <input type="hidden" name="location" id="job-location" value="{{ old('location') }}">
+                            <div id="job-location-chipbox"
+                                class="flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-800/80 px-3 py-2 focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500">
+                                <input type="text" id="job-location-search" autocomplete="off"
+                                    class="flex-1 min-w-[160px] border-0 bg-transparent text-white placeholder-slate-500 focus:outline-none focus:ring-0 p-1"
+                                    placeholder="Type a city, press Enter to add">
+                            </div>
+                            <div id="job-location-suggestions"
+                                class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"></div>
+                            <p class="mt-1 text-xs text-blue-200/70">Pick one or more cities. Type any custom location and press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
                         </div>
 
                         <div>
@@ -145,7 +154,9 @@
 
                     <div class="mb-6">
                         <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Job Description <span class="text-rose-400">*</span></label>
-                        <textarea name="description" rows="5" required class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition">{{ old('description') }}</textarea>
+                        <input type="hidden" name="description" id="job-description-input" value="{{ old('description') }}">
+                        <div id="job-description-editor" class="bg-slate-800/80 rounded-xl border border-white/10 text-white"></div>
+                        <p class="mt-1 text-xs text-blue-200/70">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
                     </div>
 
                     <div>
@@ -245,4 +256,139 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
     </style>
+
+    {{-- Quill rich text editor --}}
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <style>
+        #job-description-editor { min-height: 220px; color: #fff; }
+        #job-description-editor .ql-editor { min-height: 200px; font-size: 15px; line-height: 1.6; }
+        #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, 0.55); font-style: normal; }
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
+        .ql-snow .ql-stroke { stroke: #cbd5e1; }
+        .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
+        .ql-snow .ql-picker { color: #cbd5e1; }
+        .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.2); }
+        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #a78bfa; }
+        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #a78bfa; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ── Rich-text description ──────────────────────────────────────────
+        const descEditorEl = document.getElementById('job-description-editor');
+        const descHidden   = document.getElementById('job-description-input');
+        if (descEditorEl && descHidden && window.Quill) {
+            const quill = new Quill(descEditorEl, {
+                theme: 'snow',
+                placeholder: 'Describe the role, responsibilities, requirements...',
+                modules: {
+                    toolbar: [
+                        [{ header: [2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        [{ indent: '-1' }, { indent: '+1' }],
+                        [{ align: [] }],
+                        ['blockquote', 'link'],
+                        ['clean'],
+                    ],
+                },
+            });
+            const initialHtml = descHidden.value || '';
+            if (initialHtml) quill.clipboard.dangerouslyPasteHTML(initialHtml);
+            quill.on('text-change', () => {
+                descHidden.value = (quill.getText().trim().length === 0) ? '' : quill.root.innerHTML;
+            });
+            const descForm = descHidden.closest('form');
+            if (descForm) descForm.addEventListener('submit', () => {
+                descHidden.value = (quill.getText().trim().length === 0) ? '' : quill.root.innerHTML;
+            });
+        }
+
+        // ── Multi-location chip input ──────────────────────────────────────
+        const hidden     = document.getElementById('job-location');
+        const chipbox    = document.getElementById('job-location-chipbox');
+        const search     = document.getElementById('job-location-search');
+        const suggestions= document.getElementById('job-location-suggestions');
+        if (!hidden || !chipbox || !search || !suggestions) return;
+
+        let cities = [];
+        let selected = (hidden.value || '').split(',').map(s => s.trim()).filter(Boolean);
+
+        const hideSuggestions = () => { suggestions.classList.add('hidden'); suggestions.innerHTML = ''; };
+        const syncHidden = () => { hidden.value = selected.join(', '); };
+
+        const renderChips = () => {
+            chipbox.querySelectorAll('.loc-chip').forEach(c => c.remove());
+            selected.forEach((city, idx) => {
+                const chip = document.createElement('span');
+                chip.className = 'loc-chip inline-flex items-center gap-1.5 rounded-full bg-purple-500/30 border border-purple-400/40 px-3 py-1 text-sm text-white';
+                chip.innerHTML = '<span>' + city.replace(/</g,'&lt;') + '</span><button type="button" aria-label="Remove" class="hover:text-rose-300 leading-none text-base">&times;</button>';
+                chip.querySelector('button').addEventListener('click', () => { selected.splice(idx, 1); syncHidden(); renderChips(); });
+                chipbox.insertBefore(chip, search);
+            });
+        };
+
+        const addCity = (raw) => {
+            const city = (raw || '').trim().replace(/,+$/, '');
+            if (!city) return;
+            if (!selected.some(s => s.toLowerCase() === city.toLowerCase())) {
+                selected.push(city);
+                syncHidden();
+                renderChips();
+            }
+            search.value = '';
+            hideSuggestions();
+        };
+
+        const showSuggestions = (matches) => {
+            if (!matches.length) { hideSuggestions(); return; }
+            suggestions.innerHTML = matches.map(c =>
+                '<button type="button" class="job-location-option block w-full border-b border-slate-700 px-4 py-3 text-left text-sm font-medium text-white hover:bg-purple-600 transition last:border-b-0">' + c + '</button>'
+            ).join('');
+            suggestions.classList.remove('hidden');
+            suggestions.querySelectorAll('.job-location-option').forEach(btn => {
+                btn.addEventListener('click', () => addCity(btn.textContent));
+            });
+        };
+
+        const updateSuggestions = () => {
+            const q = search.value.trim().toLowerCase();
+            if (q.length < 2) { hideSuggestions(); return; }
+            const matches = cities
+                .filter(c => c.toLowerCase().includes(q) && !selected.some(s => s.toLowerCase() === c.toLowerCase()))
+                .slice(0, 12);
+            showSuggestions(matches);
+        };
+
+        search.addEventListener('input', updateSuggestions);
+        search.addEventListener('focus', updateSuggestions);
+        search.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); if (search.value.trim()) addCity(search.value); }
+            else if (e.key === 'Backspace' && !search.value && selected.length) { selected.pop(); syncHidden(); renderChips(); }
+            else if (e.key === 'Escape') hideSuggestions();
+        });
+        chipbox.addEventListener('click', (e) => { if (e.target === chipbox) search.focus(); });
+        document.addEventListener('click', (e) => {
+            if (!suggestions.contains(e.target) && e.target !== search) hideSuggestions();
+        });
+
+        const form = chipbox.closest('form');
+        if (form) form.addEventListener('submit', (e) => {
+            if (search.value.trim()) addCity(search.value);
+            if (!selected.length) {
+                e.preventDefault();
+                search.focus();
+                alert('Please add at least one location.');
+            }
+        });
+
+        renderChips();
+
+        fetch(@js(asset('data/indian-cities.json')))
+            .then(r => r.ok ? r.json() : [])
+            .then(d => { if (Array.isArray(d)) cities = d; })
+            .catch(() => { cities = []; });
+    });
+    </script>
 </x-app-layout>
