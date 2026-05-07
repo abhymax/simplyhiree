@@ -135,7 +135,9 @@
         .for-row .tick svg { width: 14px; height: 14px; }
 
         /* Benefits */
-        .ben-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+        .ben-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; max-width: 1080px; margin: 0 auto; }
+        @media (max-width: 880px) { .ben-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 540px) { .ben-grid { grid-template-columns: 1fr; } }
         .ben-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 32px 26px; text-align: center; transition: transform 0.2s, border-color 0.2s; }
         .ben-card:hover { transform: translateY(-3px); border-color: rgba(16,185,129,0.35); }
         .ben-ic { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #052e1a; display: flex; align-items: center; justify-content: center; }
