@@ -161,6 +161,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- APPLICATION DATA ---
         Route::middleware(['can:view_application_data'])->group(function() {
             Route::get('/applications', [AdminController::class, 'listApplications'])->name('applications.index');
+            Route::post('/applications/tracker-export', [AdminController::class, 'applicationsTrackerExport'])->name('applications.tracker-export');
             Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
             Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
             Route::post('/applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('applications.reject');

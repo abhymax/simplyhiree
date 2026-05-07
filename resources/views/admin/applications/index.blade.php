@@ -77,12 +77,22 @@
                             </select>
                         </div>
 
+                        {{-- Per Page --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Per Page</label>
+                            <select name="per_page" onchange="this.form.submit()" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
+                                @foreach($allowedPerPage as $opt)
+                                    <option value="{{ $opt }}" class="bg-slate-900" {{ $perPage === $opt ? 'selected' : '' }}>{{ $opt }} per page</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         {{-- Filter Actions --}}
                         <div class="flex items-end gap-2">
                             <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 text-sm h-[42px] flex items-center justify-center">
                                 <i class="fa-solid fa-filter mr-2"></i> Filter
                             </button>
-                            @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id']))
+                            @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id', 'per_page']))
                                 <a href="{{ route('admin.applications.index') }}" class="bg-rose-500 hover:bg-rose-400 text-white p-2 rounded-xl transition h-[42px] w-[42px] flex items-center justify-center shadow-lg" title="Reset Filters">
                                     <i class="fa-solid fa-xmark text-lg"></i>
                                 </a>
@@ -91,11 +101,47 @@
                     </form>
                 </div>
 
+                {{-- Selection / Tracker Download bar --}}
+                @if(session('error'))
+                    <div class="mx-6 mt-4 px-4 py-3 bg-rose-500/20 border border-rose-500/40 text-rose-100 rounded-xl text-sm font-semibold">
+                        <i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ session('error') }}
+                    </div>
+                @endif
+                @if(session('success'))
+                    <div class="mx-6 mt-4 px-4 py-3 bg-emerald-500/20 border border-emerald-500/40 text-emerald-100 rounded-xl text-sm font-semibold">
+                        <i class="fa-solid fa-circle-check mr-2"></i> {{ session('success') }}
+                    </div>
+                @endif
+
+                {{-- TRACKER DOWNLOAD FORM (wraps table + action bar) --}}
+                <form method="POST" action="{{ route('admin.applications.tracker-export') }}" id="tracker-form">
+                    @csrf
+
+                    {{-- Action bar --}}
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-b border-white/10 bg-slate-900/40">
+                        <div class="flex items-center gap-3 text-sm">
+                            <label class="inline-flex items-center gap-2 cursor-pointer text-blue-100 font-semibold">
+                                <input type="checkbox" id="tracker-select-all" class="h-4 w-4 rounded border-white/30 bg-slate-800 text-cyan-500 focus:ring-cyan-400">
+                                Select All On This Page
+                            </label>
+                            <span class="text-slate-300">|</span>
+                            <span class="text-blue-100 font-semibold">Selected: <span id="tracker-count" class="text-cyan-300 font-bold">0</span></span>
+                            <span class="text-slate-400 text-xs hidden md:inline">(Max 500 per export)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="submit" id="tracker-submit" disabled
+                                class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition border border-emerald-400/40 disabled:border-white/10">
+                                <i class="fa-solid fa-file-arrow-down"></i> Tracker Download
+                            </button>
+                        </div>
+                    </div>
+
                 {{-- DATA TABLE --}}
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-left text-sm">
                         <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
+                                <th class="px-4 py-5 w-10"><span class="sr-only">Select</span></th>
                                 <th class="px-6 py-5">Candidate</th>
                                 <th class="px-6 py-5">Job Details</th>
                                 <th class="px-6 py-5">Source</th>
@@ -120,6 +166,9 @@
                                     $jobCode = $application->job?->job_code ?? 'SH-JOB-NA';
                                 @endphp
                                 <tr class="group hover:bg-white/10 transition-all duration-200 transform hover:scale-[1.005] cursor-default border-l-4 border-transparent hover:border-cyan-400">
+                                    <td class="px-4 py-5 align-top">
+                                        <input type="checkbox" name="ids[]" value="{{ $application->id }}" class="tracker-row-cb h-4 w-4 rounded border-white/30 bg-slate-800 text-cyan-500 focus:ring-cyan-400">
+                                    </td>
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-4">
@@ -201,7 +250,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-20 text-center">
+                                    <td colspan="6" class="px-6 py-20 text-center">
                                         <div class="bg-white/10 inline-block p-6 rounded-full mb-4 backdrop-blur-md border border-white/10">
                                             <i class="fa-regular fa-folder-open text-5xl text-blue-200"></i>
                                         </div>
@@ -213,6 +262,8 @@
                         </tbody>
                     </table>
                 </div>
+                </form>
+                {{-- /TRACKER DOWNLOAD FORM --}}
 
                 {{-- PAGINATION FIX (Forces White Text) --}}
                 <div class="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
@@ -242,4 +293,59 @@
             </div>
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const MAX = 500;
+        const selectAll = document.getElementById('tracker-select-all');
+        const submit    = document.getElementById('tracker-submit');
+        const counter   = document.getElementById('tracker-count');
+        const form      = document.getElementById('tracker-form');
+        if (!form) return;
+        const rowCbs    = () => Array.from(form.querySelectorAll('.tracker-row-cb'));
+
+        const updateState = () => {
+            const checked = rowCbs().filter(c => c.checked);
+            counter.textContent = checked.length;
+            submit.disabled = checked.length === 0;
+            if (checked.length > MAX) {
+                submit.disabled = true;
+                counter.classList.add('text-rose-300');
+                counter.classList.remove('text-cyan-300');
+            } else {
+                counter.classList.remove('text-rose-300');
+                counter.classList.add('text-cyan-300');
+            }
+            if (selectAll) {
+                const all = rowCbs();
+                selectAll.checked = all.length > 0 && checked.length === all.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+            }
+        };
+
+        if (selectAll) {
+            selectAll.addEventListener('change', () => {
+                rowCbs().forEach(c => c.checked = selectAll.checked);
+                updateState();
+            });
+        }
+        rowCbs().forEach(c => c.addEventListener('change', updateState));
+
+        form.addEventListener('submit', (e) => {
+            const checked = rowCbs().filter(c => c.checked);
+            if (checked.length === 0) {
+                e.preventDefault();
+                alert('Select at least one candidate.');
+                return;
+            }
+            if (checked.length > MAX) {
+                e.preventDefault();
+                alert('You can export at most ' + MAX + ' candidates at a time. You selected ' + checked.length + '.');
+                return;
+            }
+        });
+
+        updateState();
+    });
+    </script>
 </x-app-layout>

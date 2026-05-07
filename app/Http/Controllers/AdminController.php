@@ -825,11 +825,138 @@ class AdminController extends Controller
              });
         }
 
-        $applications = $query->latest()->paginate(20)->withQueryString();
+        $allowedPerPage = [20, 50, 100, 150, 200];
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 20;
+        }
+
+        $applications = $query->latest()->paginate($perPage)->withQueryString();
         $jobs = Job::select('id', 'title')->orderBy('title')->get();
         $partners = User::role('partner')->select('id', 'name')->orderBy('name')->get();
 
-        return view('admin.applications.index', ['applications' => $applications, 'jobs' => $jobs, 'partners' => $partners]);
+        return view('admin.applications.index', [
+            'applications'   => $applications,
+            'jobs'           => $jobs,
+            'partners'       => $partners,
+            'allowedPerPage' => $allowedPerPage,
+            'perPage'        => $perPage,
+        ]);
+    }
+
+    /**
+     * Tracker Download — stream a CSV of the 16-field candidate data
+     * format for the selected job applications. Capped at 500 ids per
+     * request so the server never has to hold an unbounded set in memory.
+     */
+    public function applicationsTrackerExport(Request $request)
+    {
+        $ids = collect((array) $request->input('ids', []))
+            ->map(fn ($v) => (int) $v)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'Select at least one candidate to download the tracker.');
+        }
+
+        $maxRows = 500;
+        if ($ids->count() > $maxRows) {
+            return back()->with('error', "You can export at most {$maxRows} candidates at a time. You selected {$ids->count()}. Please refine the selection.");
+        }
+
+        $applications = JobApplication::with(['job', 'candidate.partner', 'candidateUser.profile'])
+            ->whereIn('id', $ids)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $fileName = 'candidate_tracker_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma'              => 'no-cache',
+            'Expires'             => '0',
+        ];
+
+        return response()->streamDownload(function () use ($applications) {
+            $out = fopen('php://output', 'w');
+            // BOM for Excel UTF-8 friendliness
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'Date of Application',
+                'Name',
+                'Email ID',
+                'Phone Number',
+                'Current Location',
+                'Preferred Locations',
+                'Total Experience',
+                'Current Company Name',
+                'Current Designation',
+                'Annual Salary (Current)',
+                'Notice Period / Availability',
+                'Gender',
+                'Marital Status',
+                'Qualification',
+                'Job Title / Applied For',
+                'Expected Salary',
+                'Source (Partner)',
+                'Application Code',
+                'Status',
+            ]);
+
+            foreach ($applications as $app) {
+                $cand   = $app->candidate;
+                $prof   = $app->candidateUser?->profile;
+                $job    = $app->job;
+                $name   = $cand
+                    ? trim(($cand->first_name ?? '').' '.($cand->last_name ?? ''))
+                    : ($app->candidateUser?->name ?? '');
+                $expY   = $cand?->total_experience_years ?? $prof?->total_experience_years;
+                $expM   = $cand?->total_experience_months ?? $prof?->total_experience_months;
+                $totalExp = ($expY === null && $expM === null)
+                    ? ($cand?->experience_status ?? $prof?->experience_status ?? '')
+                    : ((int) ($expY ?? 0)).' Year(s) '.((int) ($expM ?? 0)).' Month(s)';
+
+                $prefRaw = $cand?->preferred_locations ?? $prof?->preferred_locations ?? null;
+                $prefLoc = is_array($prefRaw) ? implode(', ', $prefRaw) : ($prefRaw ?: '');
+
+                $qualLevel = $cand?->education_level ?? '';
+                $qualDeg   = $cand?->qualification_degree ?? $prof?->qualification_degree ?? '';
+                $spec      = $cand?->specialization ?? $prof?->specialization ?? '';
+                $qualParts = array_filter([$qualDeg, $spec], fn ($v) => $v !== '' && $v !== null);
+                $qual      = implode(' — ', $qualParts);
+                if ($qualLevel) $qual = trim(($qual ? $qual.' ' : '').'('.$qualLevel.')');
+
+                $partnerName = $cand?->partner?->name ?? 'Direct';
+
+                fputcsv($out, [
+                    optional($app->created_at)->format('d-M-Y'),
+                    $name ?: '',
+                    $cand?->email ?? $app->candidateUser?->email ?? '',
+                    $cand?->phone_number ?? $prof?->phone_number ?? '',
+                    $cand?->location ?? $prof?->location ?? '',
+                    $prefLoc,
+                    $totalExp,
+                    $cand?->current_company ?? $prof?->current_company ?? '',
+                    $cand?->current_designation ?? $prof?->current_role ?? '',
+                    $cand?->current_ctc ?? $prof?->current_ctc ?? '',
+                    $cand?->notice_period ?? $prof?->notice_period ?? '',
+                    $cand?->gender ?? $prof?->gender ?? '',
+                    $cand?->marital_status ?? $prof?->marital_status ?? '',
+                    $qual,
+                    $job?->title ?? '',
+                    $cand?->expected_ctc ?? $prof?->expected_ctc ?? '',
+                    $partnerName,
+                    $app->application_code ?? ('#'.$app->id),
+                    $app->status ?? '',
+                ]);
+            }
+
+            fclose($out);
+        }, $fileName, $headers);
     }
 
     public function approveApplication(JobApplication $application)
