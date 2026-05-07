@@ -209,10 +209,11 @@ class LandingPageController extends Controller
         }
         $data['trust_badges'] = $trust ?: null;
 
-        // Career outcomes (single text per row)
+        // Career outcomes (icon + text)
         $outcomes = [];
-        foreach ((array) $request->input('outcome_text', []) as $text) {
-            if (trim($text)) $outcomes[] = ['text' => $text];
+        foreach ((array) $request->input('outcome_text', []) as $i => $text) {
+            $icon = $request->input('outcome_icon', [])[$i] ?? '';
+            if (trim($text)) $outcomes[] = ['icon' => $icon, 'text' => $text];
         }
         $data['career_outcomes'] = $outcomes ?: null;
 

@@ -214,14 +214,16 @@
             <button type="button" onclick="addRow('outcomes-list', outcomeRowTpl)" class="lp-add-btn">+ Add Outcome</button>
         </div>
         <div id="outcomes-list" class="space-y-3">
-            @php $outcomes = old('outcome_text') ? array_map(fn($t)=>['text'=>$t], old('outcome_text',[])) : ($landingPage->career_outcomes ?? []) @endphp
+            @php $outcomes = old('outcome_text') ? array_map(fn($t,$i)=>['text'=>$t,'icon'=>$i], old('outcome_text',[]), old('outcome_icon',[])) : ($landingPage->career_outcomes ?? []) @endphp
             @forelse($outcomes as $item)
             <div class="lp-repeater-row">
+                <input type="text" name="outcome_icon[]" value="{{ $item['icon'] ?? '' }}" class="lp-input" style="max-width:80px;" placeholder="👤">
                 <input type="text" name="outcome_text[]" value="{{ $item['text'] ?? '' }}" class="lp-input flex-1" placeholder="e.g. HR Recruiter">
                 <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
             </div>
             @empty
             <div class="lp-repeater-row">
+                <input type="text" name="outcome_icon[]" class="lp-input" style="max-width:80px;" placeholder="👤">
                 <input type="text" name="outcome_text[]" class="lp-input flex-1" placeholder="e.g. HR Recruiter">
                 <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
             </div>
@@ -431,6 +433,7 @@ const trustRowTpl = `
 
 const outcomeRowTpl = `
 <div class="lp-repeater-row">
+    <input type="text" name="outcome_icon[]" class="lp-input" style="max-width:80px;" placeholder="👤">
     <input type="text" name="outcome_text[]" class="lp-input flex-1" placeholder="e.g. HR Recruiter">
     <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">✕</button>
 </div>`;

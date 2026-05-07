@@ -189,9 +189,12 @@
         .earnings-card { max-width: 920px; margin: 0 auto; background: linear-gradient(135deg, rgba(34,255,157,0.1), rgba(182,255,60,0.06)); border: 1px solid rgba(34,255,157,0.25); border-radius: 18px; padding: 36px 28px; text-align: center; }
         .earnings-card .lines { font-size: 22px; font-weight: 700; color: #fff; line-height: 1.7; white-space: pre-line; }
 
-        .outcome-grid { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-        .outcome-pill { background: var(--card); border: 1px solid rgba(34,255,157,0.25); border-radius: 999px; padding: 16px 22px; text-align: center; font-size: 17px; font-weight: 700; color: #fff; transition: transform 0.2s, box-shadow 0.2s; }
+        .outcome-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+        .outcome-pill { background: var(--card); border: 1px solid rgba(34,255,157,0.25); border-radius: 999px; padding: 18px 22px; text-align: center; font-size: 17px; font-weight: 700; color: #fff; transition: transform 0.2s, box-shadow 0.2s; min-height: 76px; display: flex; align-items: center; justify-content: center; gap: 10px; line-height: 1.25; }
         .outcome-pill:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -12px rgba(34,255,157,0.4); }
+        .outcome-pill .ic { font-size: 22px; flex-shrink: 0; }
+        @media (max-width: 980px) { .outcome-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 520px) { .outcome-grid { grid-template-columns: 1fr; } }
 
         .webinar-details { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .webinar-row { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; }
@@ -495,7 +498,10 @@
         </div>
         <div class="outcome-grid">
             @foreach($page->career_outcomes as $o)
-            <div class="outcome-pill">✔ {{ $o['text'] ?? $o }}</div>
+            <div class="outcome-pill">
+                <span class="ic">{{ $o['icon'] ?? '✔' }}</span>
+                <span>{{ $o['text'] ?? $o }}</span>
+            </div>
             @endforeach
         </div>
         <div class="cta-block">
