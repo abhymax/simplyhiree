@@ -107,7 +107,7 @@
                             </div>
                             <div id="job-location-suggestions"
                                 class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"></div>
-                            <p class="mt-1 text-xs text-blue-200/70">Pick one or more cities. Type any custom location and press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
+                            <p class="mt-2 text-xs text-white/85">Pick one or more cities. Type any custom location and press <kbd class="px-1 py-0.5 bg-white/15 text-white rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/15 text-white rounded text-[10px]">,</kbd> to add it.</p>
                         </div>
 
                         <div>
@@ -156,7 +156,7 @@
                         <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Job Description <span class="text-rose-400">*</span></label>
                         <input type="hidden" name="description" id="job-description-input" value="{{ old('description') }}">
                         <div id="job-description-editor" class="bg-slate-800/80 rounded-xl border border-white/10 text-white"></div>
-                        <p class="mt-1 text-xs text-blue-200/70">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
+                        <p class="mt-2 text-xs text-white/85">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
                     </div>
 
                     <div>
