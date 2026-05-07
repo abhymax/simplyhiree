@@ -861,15 +861,12 @@ class AdminController extends Controller
             return back()->with('error', 'Select at least one candidate to download the tracker.');
         }
 
-        $maxRows = 500;
+        $maxRows = 200;
         if ($ids->count() > $maxRows) {
             return back()->with('error', "You can export at most {$maxRows} candidates at a time. You selected {$ids->count()}. Please refine the selection.");
         }
 
-        $applications = JobApplication::with(['job', 'candidate.partner', 'candidateUser.profile'])
-            ->whereIn('id', $ids)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $idList = $ids->all();
 
         $fileName = 'candidate_tracker_' . now()->format('Ymd_His') . '.csv';
 
@@ -878,12 +875,17 @@ class AdminController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
             'Pragma'              => 'no-cache',
             'Expires'             => '0',
+            'X-Accel-Buffering'   => 'no',
         ];
 
-        return response()->streamDownload(function () use ($applications) {
+        return response()->streamDownload(function () use ($idList) {
+            // Give the export room to finish on shared hosts and stream as we write.
+            @set_time_limit(120);
+            @ignore_user_abort(false);
+            while (ob_get_level() > 0) { @ob_end_clean(); }
+
             $out = fopen('php://output', 'w');
-            // BOM for Excel UTF-8 friendliness
-            fwrite($out, "\xEF\xBB\xBF");
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
 
             fputcsv($out, [
                 'Date of Application',
@@ -907,7 +909,12 @@ class AdminController extends Controller
                 'Status',
             ]);
 
-            foreach ($applications as $app) {
+            // Stream in chunks of 50 to keep memory bounded.
+            JobApplication::with(['job', 'candidate.partner', 'candidateUser.profile'])
+                ->whereIn('id', $idList)
+                ->orderBy('created_at', 'desc')
+                ->chunkById(50, function ($applications) use ($out) {
+                    foreach ($applications as $app) {
                 $cand   = $app->candidate;
                 $prof   = $app->candidateUser?->profile;
                 $job    = $app->job;
@@ -932,28 +939,30 @@ class AdminController extends Controller
 
                 $partnerName = $cand?->partner?->name ?? 'Direct';
 
-                fputcsv($out, [
-                    optional($app->created_at)->format('d-M-Y'),
-                    $name ?: '',
-                    $cand?->email ?? $app->candidateUser?->email ?? '',
-                    $cand?->phone_number ?? $prof?->phone_number ?? '',
-                    $cand?->location ?? $prof?->location ?? '',
-                    $prefLoc,
-                    $totalExp,
-                    $cand?->current_company ?? $prof?->current_company ?? '',
-                    $cand?->current_designation ?? $prof?->current_role ?? '',
-                    $cand?->current_ctc ?? $prof?->current_ctc ?? '',
-                    $cand?->notice_period ?? $prof?->notice_period ?? '',
-                    $cand?->gender ?? $prof?->gender ?? '',
-                    $cand?->marital_status ?? $prof?->marital_status ?? '',
-                    $qual,
-                    $job?->title ?? '',
-                    $cand?->expected_ctc ?? $prof?->expected_ctc ?? '',
-                    $partnerName,
-                    $app->application_code ?? ('#'.$app->id),
-                    $app->status ?? '',
-                ]);
-            }
+                        fputcsv($out, [
+                            optional($app->created_at)->format('d-M-Y'),
+                            $name ?: '',
+                            $cand?->email ?? $app->candidateUser?->email ?? '',
+                            $cand?->phone_number ?? $prof?->phone_number ?? '',
+                            $cand?->location ?? $prof?->location ?? '',
+                            $prefLoc,
+                            $totalExp,
+                            $cand?->current_company ?? $prof?->current_company ?? '',
+                            $cand?->current_designation ?? $prof?->current_role ?? '',
+                            $cand?->current_ctc ?? $prof?->current_ctc ?? '',
+                            $cand?->notice_period ?? $prof?->notice_period ?? '',
+                            $cand?->gender ?? $prof?->gender ?? '',
+                            $cand?->marital_status ?? $prof?->marital_status ?? '',
+                            $qual,
+                            $job?->title ?? '',
+                            $cand?->expected_ctc ?? $prof?->expected_ctc ?? '',
+                            $partnerName,
+                            $app->application_code ?? ('#'.$app->id),
+                            $app->status ?? '',
+                        ]);
+                    }
+                    @flush();
+                });
 
             fclose($out);
         }, $fileName, $headers);

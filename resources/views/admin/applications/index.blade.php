@@ -126,7 +126,7 @@
                             </label>
                             <span class="text-slate-300">|</span>
                             <span class="text-blue-100 font-semibold">Selected: <span id="tracker-count" class="text-cyan-300 font-bold">0</span></span>
-                            <span class="text-slate-400 text-xs hidden md:inline">(Max 500 per export)</span>
+                            <span class="text-slate-400 text-xs hidden md:inline">(Max 200 per export)</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="submit" id="tracker-submit" disabled
@@ -296,7 +296,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const MAX = 500;
+        const MAX = 200;
         const selectAll = document.getElementById('tracker-select-all');
         const submit    = document.getElementById('tracker-submit');
         const counter   = document.getElementById('tracker-count');
