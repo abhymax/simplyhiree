@@ -70,10 +70,40 @@
                     </form>
                 </div>
 
+                {{-- Bulk action form (lives OUTSIDE the table so we don't nest forms with the per-row action forms inside <td>) --}}
+                <form method="POST" action="{{ route('admin.partners.bulk-status') }}" id="partner-bulk-form" onsubmit="return partnerBulkConfirm(event)" class="hidden">
+                    @csrf
+                    <input type="hidden" name="action" id="partner-bulk-action" value="">
+                </form>
+
+                {{-- Bulk action bar --}}
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-b border-white/10 bg-slate-900/40">
+                    <div class="flex items-center gap-3 text-sm">
+                        <label class="inline-flex items-center gap-2 cursor-pointer text-purple-100 font-semibold">
+                            <input type="checkbox" id="partner-select-all" class="h-4 w-4 rounded border-white/30 bg-slate-800 text-purple-500 focus:ring-purple-400">
+                            Select All On This Page
+                        </label>
+                        <span class="text-slate-400">|</span>
+                        <span class="text-purple-100 font-semibold">Selected: <span id="partner-count" class="text-purple-300 font-bold">0</span></span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" data-action="approve" class="partner-bulk-btn inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold shadow-md transition border border-emerald-400/40 disabled:border-white/10" disabled>
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button type="button" data-action="hold" class="partner-bulk-btn inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold shadow-md transition border border-amber-400/40 disabled:border-white/10" disabled>
+                            <i class="fa-regular fa-clock"></i> Hold
+                        </button>
+                        <button type="button" data-action="reject" class="partner-bulk-btn inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold shadow-md transition border border-rose-400/40 disabled:border-white/10" disabled>
+                            <i class="fa-solid fa-ban"></i> Reject
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-left text-sm">
                         <thead class="bg-blue-950/50 text-purple-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
+                                <th class="px-4 py-5 w-10"><span class="sr-only">Select</span></th>
                                 <th class="px-6 py-5">Partner Name</th>
                                 <th class="px-6 py-5">Mobile</th>
                                 <th class="px-6 py-5">Type</th>
@@ -85,6 +115,9 @@
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse($users as $user)
                                 <tr class="hover:bg-white/5 transition duration-200 cursor-default group">
+                                    <td class="px-4 py-5 align-top">
+                                        <input type="checkbox" form="partner-bulk-form" name="ids[]" value="{{ $user->id }}" class="partner-row-cb h-4 w-4 rounded border-white/30 bg-slate-800 text-purple-500 focus:ring-purple-400">
+                                    </td>
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-4">
                                             <div class="h-11 w-11 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/10">
@@ -150,13 +183,68 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-6 py-20 text-center text-slate-400">No partners found.</td></tr>
+                                <tr><td colspan="7" class="px-6 py-20 text-center text-slate-400">No partners found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+
                 <div class="p-6 border-t border-white/10">{{ $users->links() }}</div>
             </div>
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form     = document.getElementById('partner-bulk-form');
+        if (!form) return;
+        const selectAll = document.getElementById('partner-select-all');
+        const counter   = document.getElementById('partner-count');
+        const actionFld = document.getElementById('partner-bulk-action');
+        const buttons   = Array.from(document.querySelectorAll('.partner-bulk-btn'));
+        const rowCbs    = () => Array.from(document.querySelectorAll('.partner-row-cb'));
+
+        const updateState = () => {
+            const checked = rowCbs().filter(c => c.checked);
+            counter.textContent = checked.length;
+            buttons.forEach(b => b.disabled = checked.length === 0);
+            if (selectAll) {
+                const all = rowCbs();
+                selectAll.checked = all.length > 0 && checked.length === all.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+            }
+        };
+
+        if (selectAll) {
+            selectAll.addEventListener('change', () => {
+                rowCbs().forEach(c => c.checked = selectAll.checked);
+                updateState();
+            });
+        }
+        rowCbs().forEach(c => c.addEventListener('change', updateState));
+
+        buttons.forEach(btn => btn.addEventListener('click', () => {
+            actionFld.value = btn.dataset.action;
+            form.requestSubmit();
+        }));
+
+        updateState();
+    });
+
+    function partnerBulkConfirm(e) {
+        const checked = document.querySelectorAll('.partner-row-cb:checked').length;
+        if (checked === 0) {
+            e.preventDefault();
+            alert('Select at least one partner.');
+            return false;
+        }
+        const action = document.getElementById('partner-bulk-action').value;
+        const verb = { approve: 'APPROVE', hold: 'HOLD', reject: 'REJECT' }[action] || action;
+        if (!confirm(`Are you sure you want to ${verb} ${checked} partner(s)?`)) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+    </script>
 </x-app-layout>

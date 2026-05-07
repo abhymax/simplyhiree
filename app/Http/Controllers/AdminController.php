@@ -245,6 +245,45 @@ class AdminController extends Controller
         return redirect()->back()->with('success', "User status updated to {$validated['status']}.");
     }
 
+    /**
+     * Bulk-update partner statuses. Action maps:
+     *   approve → active, hold → on_hold, reject → restricted.
+     */
+    public function bulkUpdatePartnerStatus(Request $request)
+    {
+        $data = $request->validate([
+            'action' => 'required|in:approve,hold,reject',
+            'ids'    => 'required|array|min:1|max:200',
+            'ids.*'  => 'integer|exists:users,id',
+        ]);
+
+        $statusMap = [
+            'approve' => 'active',
+            'hold'    => 'on_hold',
+            'reject'  => 'restricted',
+        ];
+        $newStatus = $statusMap[$data['action']];
+
+        // Restrict to partner-role users; never touch Superadmins.
+        $partnerIds = User::role('partner')
+            ->whereIn('id', $data['ids'])
+            ->pluck('id');
+
+        if ($partnerIds->isEmpty()) {
+            return back()->with('error', 'No partner accounts matched the selection.');
+        }
+
+        $count = User::whereIn('id', $partnerIds)->update(['status' => $newStatus]);
+
+        $verb = match ($data['action']) {
+            'approve' => 'approved',
+            'hold'    => 'put on hold',
+            'reject'  => 'rejected (restricted)',
+        };
+
+        return back()->with('success', "{$count} partner(s) {$verb}.");
+    }
+
     public function updateUserCredentials(Request $request, User $user)
     {
         if ($user->hasRole('Superadmin') && auth()->id() !== $user->id) {

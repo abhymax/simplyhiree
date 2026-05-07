@@ -147,6 +147,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- PARTNER DATA ---
         Route::middleware(['can:view_partner_data'])->group(function() {
             Route::get('/partners', [AdminController::class, 'listPartners'])->name('partners.index');
+            Route::post('/partners/bulk-status', [AdminController::class, 'bulkUpdatePartnerStatus'])->name('partners.bulk-status');
             Route::get('/partners/create', [AdminController::class, 'createPartner'])->name('partners.create');
             Route::post('/partners', [AdminController::class, 'storePartner'])->name('partners.store');
             
