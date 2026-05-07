@@ -22,6 +22,8 @@ class LandingPage extends Model
         'host_name', 'host_title', 'host_bio', 'host_photo_path',
         'learnings', 'qualifications', 'benefits', 'faqs', 'form_fields',
         'footer_disclaimer',
+        'trust_badges', 'earnings_summary', 'career_outcomes', 'bonuses',
+        'contact_info', 'tagline',
     ];
 
     protected $casts = [
@@ -32,6 +34,9 @@ class LandingPage extends Model
         'benefits'              => 'array',
         'faqs'                  => 'array',
         'form_fields'           => 'array',
+        'trust_badges'          => 'array',
+        'career_outcomes'       => 'array',
+        'bonuses'               => 'array',
     ];
 
     public function registrations(): HasMany

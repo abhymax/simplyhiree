@@ -178,6 +178,36 @@
             .final-cta-card .seats-note { font-size: 18px; }
         }
 
+        /* ── New section styles ──────────────────────────────────────────── */
+        .trust-bar { padding: 28px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(34,255,157,0.03), transparent); }
+        .trust-grid { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 28px 56px; }
+        .trust-item { display: inline-flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; color: #fff; }
+        .trust-item .ic { font-size: 22px; line-height: 1; }
+
+        .earnings-card { max-width: 920px; margin: 0 auto; background: linear-gradient(135deg, rgba(34,255,157,0.1), rgba(182,255,60,0.06)); border: 1px solid rgba(34,255,157,0.25); border-radius: 18px; padding: 36px 28px; text-align: center; }
+        .earnings-card .lines { font-size: 22px; font-weight: 700; color: #fff; line-height: 1.7; white-space: pre-line; }
+
+        .outcome-grid { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .outcome-pill { background: var(--card); border: 1px solid rgba(34,255,157,0.25); border-radius: 999px; padding: 16px 22px; text-align: center; font-size: 17px; font-weight: 700; color: #fff; transition: transform 0.2s, box-shadow 0.2s; }
+        .outcome-pill:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -12px rgba(34,255,157,0.4); }
+
+        .webinar-details { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .webinar-row { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; }
+        .webinar-row .ic { font-size: 22px; }
+        .webinar-row .lbl { font-size: 11px; color: var(--primary); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .webinar-row .val { font-size: 16px; font-weight: 700; color: #fff; }
+
+        .bonus-list { max-width: 720px; margin: 0 auto; display: grid; gap: 12px; }
+        .bonus-row { background: var(--card); border: 1px solid rgba(34,255,157,0.2); border-radius: 12px; padding: 16px 22px; font-size: 17px; font-weight: 600; color: #fff; }
+
+        .protip { max-width: 720px; margin: 18px auto 0; text-align: center; font-size: 14px; color: var(--primary); font-weight: 700; letter-spacing: 0.3px; }
+
+        @media (max-width: 600px) {
+            .webinar-details { grid-template-columns: 1fr; }
+            .trust-grid { gap: 16px 28px; }
+            .trust-item { font-size: 15px; }
+        }
+
         /* Footer */
         footer.lp { padding: 34px 20px; text-align: center; border-top: 1px solid var(--line); color: var(--muted); }
         footer.lp p { font-size: 12px; line-height: 1.8; max-width: 820px; margin: 0 auto; }
@@ -240,6 +270,19 @@
     </div>
 </section>
 
+{{-- ══ TRUST / SOCIAL PROOF ══════════════════════════════════════════════ --}}
+@if($page->trust_badges && count($page->trust_badges))
+<div class="trust-bar">
+    <div class="wrap">
+        <div class="trust-grid">
+            @foreach($page->trust_badges as $b)
+            <div class="trust-item"><span class="ic">{{ $b['icon'] ?? '✔' }}</span> {{ $b['text'] }}</div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- ══ VIDEO + EVENT DETAILS ══════════════════════════════════════════════ --}}
 <section>
     <div class="wrap">
@@ -271,7 +314,7 @@
 
             {{-- Right: Event grid + CTA --}}
             <div>
-                <div class="panel-title">{{ $page->video_section_title ?: '90 Minutes Webinar' }}</div>
+                <div class="panel-title">{{ $page->video_section_title ?: 'Webinar Details' }}</div>
                 <div class="event-grid">
                     @if($page->event_date)
                     <div class="event-card">
@@ -298,7 +341,8 @@
                     </div>
                     @endif
                 </div>
-                <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
+                <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Register Now' }}</a>
+                <p class="protip" style="margin-top:10px;">Only serious candidates who want to learn &amp; earn should apply</p>
                 @if($page->seats_total > 0)
                 <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span> Of {{ $page->seats_total }}</p>
                 @endif
@@ -307,12 +351,41 @@
     </div>
 </section>
 
+{{-- ══ WHO SHOULD JOIN ═══════════════════════════════════════════════════ --}}
+@if($page->qualifications && count($page->qualifications))
+<section class="s">
+    <div class="wrap">
+        <div style="text-align:center;">
+            <h2 class="sec-title">🎯 Is This Webinar <em>For You?</em></h2>
+        </div>
+        <div class="for-list">
+            @foreach($page->qualifications as $item)
+            <div class="for-row">
+                <span class="tick">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </span>
+                <span>{{ $item['text'] }}</span>
+            </div>
+            @endforeach
+        </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Register Now' }}</a>
+            <p class="protip">Only serious candidates who want to learn &amp; earn should apply</p>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
+        </div>
+    </div>
+</section>
+@endif
+
 {{-- ══ WHAT YOU'LL LEARN ═════════════════════════════════════════════════ --}}
 @if($page->learnings && count($page->learnings))
 <section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <h2 class="sec-title">🎯 What You Will Learn In This <em>Webinar</em></h2>
+            <h2 class="sec-title">🚀 What You Will <em>Learn</em></h2>
+            <p class="sec-sub">100% Practical Training — No Theory</p>
         </div>
         <div class="learn-grid">
             @php
@@ -345,44 +418,22 @@
 </section>
 @endif
 
-{{-- ══ ABOUT ═════════════════════════════════════════════════════════════ --}}
-@if($page->about_title || $page->about_description)
+{{-- ══ LIVE WORK + EARNING ══════════════════════════════════════════════ --}}
+@if($page->about_title || $page->about_description || $page->earnings_summary)
 <section class="s">
-    <div class="wrap" style="text-align:center;max-width:860px;">
+    <div class="wrap" style="text-align:center;max-width:960px;">
         @if($page->about_title)
-        <span class="eyebrow">About This Session</span>
-        <h2 class="sec-title">{{ $page->about_title }}</h2>
+        <span class="eyebrow">💼 Live Work + Earning Opportunity</span>
+        <h2 class="sec-title">{!! preg_replace('/(\S+\s+\S+)$/', '<em>$1</em>', e($page->about_title)) !!}</h2>
         @endif
         @if($page->about_description)
-        <p style="font-size:16px;color:var(--muted);line-height:1.9;">{{ $page->about_description }}</p>
+        <p class="sec-sub" style="font-size:17px;color:var(--text);line-height:1.85;">{{ $page->about_description }}</p>
         @endif
-        <div class="cta-block">
-            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
-            @if($page->seats_total > 0)
-            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
-            @endif
+        @if($page->earnings_summary)
+        <div class="earnings-card">
+            <div class="lines">{{ $page->earnings_summary }}</div>
         </div>
-    </div>
-</section>
-@endif
-
-{{-- ══ WHO SHOULD ATTEND ═════════════════════════════════════════════════ --}}
-@if($page->qualifications && count($page->qualifications))
-<section class="s">
-    <div class="wrap">
-        <div style="text-align:center;">
-            <h2 class="sec-title">🧠 This Masterclass is <em>for you if...</em></h2>
-        </div>
-        <div class="for-list">
-            @foreach($page->qualifications as $item)
-            <div class="for-row">
-                <span class="tick">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                </span>
-                <span>{{ $item['text'] }}</span>
-            </div>
-            @endforeach
-        </div>
+        @endif
         <div class="cta-block">
             <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve My FREE Seat' }}</a>
             @if($page->seats_total > 0)
@@ -398,9 +449,8 @@
 <section class="s">
     <div class="wrap">
         <div style="text-align:center;">
-            <span class="eyebrow">Program Benefits</span>
-            <h2 class="sec-title">What You'll <em>Walk Away With</em></h2>
-            <p class="sec-sub">Everything you gain from attending this session</p>
+            <span class="eyebrow">🏆 Why Simply Hiree</span>
+            <h2 class="sec-title">Why Choose <em>Simply Hiree?</em></h2>
         </div>
         <div class="ben-grid">
             @php
@@ -428,6 +478,77 @@
             @if($page->seats_total > 0)
             <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
             @endif
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- ══ CAREER OUTCOMES ══════════════════════════════════════════════════ --}}
+@if($page->career_outcomes && count($page->career_outcomes))
+<section class="s">
+    <div class="wrap">
+        <div style="text-align:center;">
+            <span class="eyebrow">📈 Career Outcomes</span>
+            <h2 class="sec-title">After This, You Can <em>Become</em></h2>
+        </div>
+        <div class="outcome-grid">
+            @foreach($page->career_outcomes as $o)
+            <div class="outcome-pill">✔ {{ $o['text'] ?? $o }}</div>
+            @endforeach
+        </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Register Now' }}</a>
+            @if($page->seats_total > 0)
+            <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
+            @endif
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- ══ WEBINAR DETAILS ══════════════════════════════════════════════════ --}}
+@if($page->event_date || $page->event_time || $page->event_platform || $page->event_language)
+<section class="s">
+    <div class="wrap">
+        <div style="text-align:center;">
+            <span class="eyebrow">⏳ Webinar Details</span>
+            <h2 class="sec-title">Webinar <em>Details</em></h2>
+        </div>
+        <div class="webinar-details">
+            @if($page->event_date)
+            <div class="webinar-row"><span class="ic">📅</span><div><div class="lbl">Date</div><div class="val">{{ $page->event_date->format('jS F Y') }}</div></div></div>
+            @endif
+            @if($page->event_time)
+            <div class="webinar-row"><span class="ic">⏰</span><div><div class="lbl">Time</div><div class="val">{{ $page->event_time }}</div></div></div>
+            @endif
+            @if($page->event_platform)
+            <div class="webinar-row"><span class="ic">📍</span><div><div class="lbl">Mode</div><div class="val">Live Online ({{ $page->event_platform }})</div></div></div>
+            @endif
+            @if($page->event_language)
+            <div class="webinar-row"><span class="ic">🗣</span><div><div class="lbl">Language</div><div class="val">{{ $page->event_language }}</div></div></div>
+            @endif
+        </div>
+        <p class="protip" style="margin-top:24px;font-size:15px;">🎁 Bonus: Free HR Toolkit + Live Hiring Access</p>
+    </div>
+</section>
+@endif
+
+{{-- ══ BONUSES ══════════════════════════════════════════════════════════ --}}
+@if($page->bonuses && count($page->bonuses))
+<section class="s">
+    <div class="wrap">
+        <div style="text-align:center;">
+            <span class="eyebrow">🎁 Exclusive Bonuses</span>
+            <h2 class="sec-title">Exclusive <em>Bonuses</em></h2>
+        </div>
+        <div class="bonus-list">
+            @foreach($page->bonuses as $b)
+            <div class="bonus-row">{{ $b['text'] ?? $b }}</div>
+            @endforeach
+        </div>
+        <div class="cta-block">
+            <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Register Now' }}</a>
+            <p class="seats-note">🔥 Limited Seats — <span>Register Now</span></p>
         </div>
     </div>
 </section>
@@ -537,18 +658,28 @@
 </section>
 @endif
 
-{{-- ══ FINAL IMPORTANT CTA ═══════════════════════════════════════════════ --}}
+{{-- ══ FINAL CTA ════════════════════════════════════════════════════════ --}}
 <section class="final-cta">
     <div class="final-cta-card">
-        <span class="final-badge">Important</span>
-        <h2 class="final-title">Register Below to Save<br>Your FREE Seat.</h2>
-        <p class="final-sub">You can keep wishing... Or you can take {{ $page->event_time ? '90 minutes' : 'action now' }} and <em>secure your spot</em> — once and for all.</p>
-        <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Reserve Your FREE Seat' }}</a>
+        <span class="final-badge">📞 Final Call</span>
+        <h2 class="final-title">Start Your HR Career &amp;<br>Earning Journey <em style="color:var(--primary);font-style:normal;">Today</em></h2>
+        <p class="final-sub">Don't miss this opportunity to learn practical HR &amp; <em>start earning</em>.</p>
+        <a href="#register" class="btn-grad">{{ $page->cta_text ?: 'Register Now' }}</a>
         @if($page->seats_total > 0)
         <p class="seats-note">Only <span>{{ $seatsLeft }} Seats Left</span></p>
         @endif
+        @if($page->contact_info)
+        <p style="margin-top:22px;font-size:18px;color:#fff;font-weight:600;">{{ $page->contact_info }}</p>
+        @endif
     </div>
 </section>
+
+{{-- ══ TAGLINE STRIP ════════════════════════════════════════════════════ --}}
+@if($page->tagline)
+<div style="background:linear-gradient(90deg, var(--primary), var(--secondary));text-align:center;padding:18px 20px;color:#052e1a;font-size:18px;font-weight:800;letter-spacing:0.3px;">
+    {{ $page->tagline }}
+</div>
+@endif
 
 {{-- ══ FOOTER ════════════════════════════════════════════════════════════ --}}
 <footer class="lp">

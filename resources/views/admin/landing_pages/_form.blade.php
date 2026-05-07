@@ -176,6 +176,78 @@
                 <label class="lp-label">Description</label>
                 <textarea name="about_description" rows="4" class="lp-input" placeholder="Describe what this event is about...">{{ old('about_description', $landingPage->about_description ?? '') }}</textarea>
             </div>
+            <div>
+                <label class="lp-label">Earnings Summary (multi-line, supports line breaks)</label>
+                <textarea name="earnings_summary" rows="3" class="lp-input" placeholder="💰 Earn ₹2,000 – ₹30,000 per candidate&#10;💰 Monthly earning potential: ₹25,000 – ₹1,00,000+">{{ old('earnings_summary', $landingPage->earnings_summary ?? '') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── SECTION: Trust Badges (Social Proof) ─────────────────────────────── --}}
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-bold text-white">Trust / Social Proof Bar</h2>
+            <button type="button" onclick="addRow('trust-list', trustRowTpl)" class="lp-add-btn">+ Add Item</button>
+        </div>
+        <div id="trust-list" class="space-y-3">
+            @php $trust = old('trust_text') ? array_map(fn($t,$i)=>['icon'=>$i,'text'=>$t], old('trust_text',[]), old('trust_icon',[])) : ($landingPage->trust_badges ?? []) @endphp
+            @forelse($trust as $item)
+            <div class="lp-repeater-row">
+                <input type="text" name="trust_icon[]" value="{{ $item['icon'] ?? '' }}" class="lp-input" style="max-width:80px;" placeholder="⭐">
+                <input type="text" name="trust_text[]" value="{{ $item['text'] ?? '' }}" class="lp-input flex-1" placeholder="e.g. Trusted by 1000+ Job Seekers">
+                <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
+            </div>
+            @empty
+            <div class="lp-repeater-row">
+                <input type="text" name="trust_icon[]" class="lp-input" style="max-width:80px;" placeholder="⭐">
+                <input type="text" name="trust_text[]" class="lp-input flex-1" placeholder="e.g. Trusted by 1000+ Job Seekers">
+                <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- ── SECTION: Career Outcomes ─────────────────────────────────────────── --}}
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-bold text-white">Career Outcomes ("After This, You Can Become")</h2>
+            <button type="button" onclick="addRow('outcomes-list', outcomeRowTpl)" class="lp-add-btn">+ Add Outcome</button>
+        </div>
+        <div id="outcomes-list" class="space-y-3">
+            @php $outcomes = old('outcome_text') ? array_map(fn($t)=>['text'=>$t], old('outcome_text',[])) : ($landingPage->career_outcomes ?? []) @endphp
+            @forelse($outcomes as $item)
+            <div class="lp-repeater-row">
+                <input type="text" name="outcome_text[]" value="{{ $item['text'] ?? '' }}" class="lp-input flex-1" placeholder="e.g. HR Recruiter">
+                <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
+            </div>
+            @empty
+            <div class="lp-repeater-row">
+                <input type="text" name="outcome_text[]" class="lp-input flex-1" placeholder="e.g. HR Recruiter">
+                <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
+            </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- ── SECTION: Bonuses ─────────────────────────────────────────────────── --}}
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-bold text-white">Exclusive Bonuses</h2>
+            <button type="button" onclick="addRow('bonuses-list', bonusRowTpl)" class="lp-add-btn">+ Add Bonus</button>
+        </div>
+        <div id="bonuses-list" class="space-y-3">
+            @php $bonuses = old('bonus_text') ? array_map(fn($t)=>['text'=>$t], old('bonus_text',[])) : ($landingPage->bonuses ?? []) @endphp
+            @forelse($bonuses as $item)
+            <div class="lp-repeater-row">
+                <input type="text" name="bonus_text[]" value="{{ $item['text'] ?? '' }}" class="lp-input flex-1" placeholder="🎁 Free Mentorship Session">
+                <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
+            </div>
+            @empty
+            <div class="lp-repeater-row">
+                <input type="text" name="bonus_text[]" class="lp-input flex-1" placeholder="🎁 Free Mentorship Session">
+                <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">&times;</button>
+            </div>
+            @endforelse
         </div>
     </div>
 
@@ -327,16 +399,48 @@
         </div>
     </div>
 
-    {{-- ── SECTION: Footer Disclaimer ──────────────────────────────────────── --}}
+    {{-- ── SECTION: Footer + Contact ──────────────────────────────────────── --}}
     <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
-        <h2 class="text-lg font-bold text-white mb-5">Footer Disclaimer</h2>
-        <textarea name="footer_disclaimer" rows="3" class="lp-input" placeholder="Legal disclaimer or footer text...">{{ old('footer_disclaimer', $landingPage->footer_disclaimer ?? '') }}</textarea>
+        <h2 class="text-lg font-bold text-white mb-5">Footer, Tagline &amp; Contact</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="lp-label">Final CTA Contact Line (e.g. phone numbers)</label>
+                <input type="text" name="contact_info" value="{{ old('contact_info', $landingPage->contact_info ?? '') }}" class="lp-input" placeholder="📱 8889353984 / 8888353984">
+            </div>
+            <div>
+                <label class="lp-label">Tagline Strip (shown above footer)</label>
+                <input type="text" name="tagline" value="{{ old('tagline', $landingPage->tagline ?? '') }}" class="lp-input" placeholder="👉 Learn HR | Work on Live Projects | Earn from Home">
+            </div>
+            <div>
+                <label class="lp-label">Footer Disclaimer</label>
+                <textarea name="footer_disclaimer" rows="3" class="lp-input" placeholder="Legal disclaimer or footer text...">{{ old('footer_disclaimer', $landingPage->footer_disclaimer ?? '') }}</textarea>
+            </div>
+        </div>
     </div>
 
 </div>
 
 {{-- JS for dynamic rows --}}
 <script>
+const trustRowTpl = `
+<div class="lp-repeater-row">
+    <input type="text" name="trust_icon[]" class="lp-input" style="max-width:80px;" placeholder="⭐">
+    <input type="text" name="trust_text[]" class="lp-input flex-1" placeholder="e.g. Trusted by 1000+ Job Seekers">
+    <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">✕</button>
+</div>`;
+
+const outcomeRowTpl = `
+<div class="lp-repeater-row">
+    <input type="text" name="outcome_text[]" class="lp-input flex-1" placeholder="e.g. HR Recruiter">
+    <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">✕</button>
+</div>`;
+
+const bonusRowTpl = `
+<div class="lp-repeater-row">
+    <input type="text" name="bonus_text[]" class="lp-input flex-1" placeholder="🎁 Free Mentorship Session">
+    <button type="button" onclick="this.closest('.lp-repeater-row').remove()" class="lp-remove-btn">✕</button>
+</div>`;
+
 const learningRowTpl = `
 <div class="lp-repeater-row">
     <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">

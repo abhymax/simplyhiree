@@ -133,6 +133,9 @@ class LandingPageController extends Controller
             'host_title'            => 'nullable|string|max:255',
             'host_bio'              => 'nullable|string',
             'footer_disclaimer'     => 'nullable|string',
+            'earnings_summary'      => 'nullable|string',
+            'contact_info'          => 'nullable|string|max:255',
+            'tagline'               => 'nullable|string|max:255',
             'logo'                  => 'nullable|image|max:2048',
             'hero_image'            => 'nullable|image|max:4096',
             'host_photo'            => 'nullable|image|max:2048',
@@ -197,6 +200,28 @@ class LandingPageController extends Controller
             if (trim($q)) $faqs[] = ['question' => $q, 'answer' => $a];
         }
         $data['faqs'] = $faqs ?: null;
+
+        // Trust badges (icon + text)
+        $trust = [];
+        foreach ((array) $request->input('trust_text', []) as $i => $text) {
+            $icon = $request->input('trust_icon', [])[$i] ?? '';
+            if (trim($text)) $trust[] = ['icon' => $icon, 'text' => $text];
+        }
+        $data['trust_badges'] = $trust ?: null;
+
+        // Career outcomes (single text per row)
+        $outcomes = [];
+        foreach ((array) $request->input('outcome_text', []) as $text) {
+            if (trim($text)) $outcomes[] = ['text' => $text];
+        }
+        $data['career_outcomes'] = $outcomes ?: null;
+
+        // Bonuses (single text per row)
+        $bonuses = [];
+        foreach ((array) $request->input('bonus_text', []) as $text) {
+            if (trim($text)) $bonuses[] = ['text' => $text];
+        }
+        $data['bonuses'] = $bonuses ?: null;
 
         return $data;
     }
