@@ -125,6 +125,71 @@
                         </div>
                     </div>
 
+                    {{-- Full Candidate Profile (16 fields) --}}
+                    @php
+                        $cand    = $application->candidate;
+                        $prof    = $application->candidateUser?->profile;
+                        $job     = $application->job;
+                        $name    = $cand
+                                    ? trim(($cand->first_name ?? '').' '.($cand->last_name ?? ''))
+                                    : ($application->candidateUser?->name ?? '—');
+                        $email   = $cand?->email ?? $application->candidateUser?->email ?? '—';
+                        $phone   = $cand?->phone_number ?? $prof?->phone_number ?? '—';
+                        $curLoc  = $cand?->location ?? $prof?->location ?? '—';
+                        $prefLocRaw = $cand?->preferred_locations ?? $prof?->preferred_locations ?? null;
+                        $prefLoc = is_array($prefLocRaw) ? implode(', ', $prefLocRaw) : ($prefLocRaw ?: '—');
+                        $expY    = $cand?->total_experience_years ?? $prof?->total_experience_years;
+                        $expM    = $cand?->total_experience_months ?? $prof?->total_experience_months;
+                        $totalExp = ($expY === null && $expM === null)
+                                    ? ($cand?->experience_status ?? $prof?->experience_status ?? '—')
+                                    : ((int) ($expY ?? 0)).' Year(s) '.((int) ($expM ?? 0)).' Month(s)';
+                        $curCo   = $cand?->current_company ?? $prof?->current_company ?? '—';
+                        $curDes  = $cand?->current_designation ?? $prof?->current_role ?? '—';
+                        $curCtc  = $cand?->current_ctc ?? $prof?->current_ctc ?? '—';
+                        $expCtc  = $cand?->expected_ctc ?? $prof?->expected_ctc ?? '—';
+                        $notice  = $cand?->notice_period ?? $prof?->notice_period ?? '—';
+                        $gender  = $cand?->gender ?? $prof?->gender ?? '—';
+                        $marital = $cand?->marital_status ?? $prof?->marital_status ?? '—';
+                        $qualLevel = $cand?->education_level ?? '—';
+                        $qualDeg = $cand?->qualification_degree ?? $prof?->qualification_degree ?? '—';
+                        $spec    = $cand?->specialization ?? $prof?->specialization ?? '—';
+                        $qual    = trim(($qualDeg !== '—' ? $qualDeg : '').($spec && $spec !== '—' ? ' — '.$spec : '')).($qualLevel !== '—' ? ' ('.$qualLevel.')' : '');
+                        if (!$qual) $qual = '—';
+                    @endphp
+                    <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-id-badge text-cyan-300"></i> Full Candidate Profile
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                            @php
+                                $rows = [
+                                    ['Date of Application', $application->created_at?->format('d-M-Y')],
+                                    ['Name', $name],
+                                    ['Email ID', $email],
+                                    ['Phone Number', $phone],
+                                    ['Current Location', $curLoc],
+                                    ['Preferred Locations', $prefLoc],
+                                    ['Total Experience', $totalExp],
+                                    ['Current Company Name', $curCo],
+                                    ['Current Designation', $curDes],
+                                    ['Annual Salary (Current)', $curCtc],
+                                    ['Notice Period / Availability', $notice],
+                                    ['Gender', $gender],
+                                    ['Marital Status', $marital],
+                                    ['Qualification', $qual],
+                                    ['Job Title / Applied For', $job?->title ?? '—'],
+                                    ['Expected Salary', $expCtc],
+                                ];
+                            @endphp
+                            @foreach($rows as [$label, $value])
+                                <div class="border-b border-white/5 pb-3">
+                                    <p class="text-[11px] uppercase tracking-wider text-cyan-300 font-bold mb-1">{{ $label }}</p>
+                                    <p class="text-white text-sm font-medium break-words">{{ $value !== '' && $value !== null ? $value : '—' }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     {{-- 2. Resume Card --}}
                     <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-lg">
                         <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">

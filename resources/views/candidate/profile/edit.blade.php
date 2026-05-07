@@ -55,19 +55,25 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Current Location</label>
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Current Location *</label>
                         <input type="text" name="location" required value="{{ old('location', $profile->location) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('location') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Date of Birth</label>
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Preferred Locations * (comma-separated, or NA)</label>
+                        <input type="text" name="preferred_locations" required value="{{ old('preferred_locations', is_array($profile->preferred_locations) ? implode(', ', $profile->preferred_locations) : '') }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white" placeholder="e.g. Mumbai, Pune, NA">
+                        @error('preferred_locations') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Date of Birth *</label>
                         <input type="date" name="date_of_birth" required value="{{ old('date_of_birth', optional($profile->date_of_birth)->format('Y-m-d')) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                         @error('date_of_birth') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Gender</label>
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Gender *</label>
                         <select name="gender" required class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                             <option value="" class="text-slate-900">Select</option>
                             <option value="Male" {{ (old('gender', $profile->gender) == 'Male') ? 'selected' : '' }} class="text-slate-900">Male</option>
@@ -78,11 +84,42 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Experience Status</label>
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Marital Status *</label>
+                        <select name="marital_status" required class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                            <option value="" class="text-slate-900">Select</option>
+                            @foreach(['Single/Unmarried','Married','Divorced','Widowed','Other','NA'] as $ms)
+                                <option value="{{ $ms }}" {{ old('marital_status', $profile->marital_status) == $ms ? 'selected' : '' }} class="text-slate-900">{{ $ms }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Qualification / Degree *</label>
+                        <input type="text" name="qualification_degree" required value="{{ old('qualification_degree', $profile->qualification_degree) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white" placeholder="e.g. B.Sc, MBA, B.Tech, NA">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Specialization *</label>
+                        <input type="text" name="specialization" required value="{{ old('specialization', $profile->specialization) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white" placeholder="e.g. Computer Science, Marketing, NA">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Experience Status *</label>
                         <select name="experience_status" required class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                             <option value="Fresher" {{ (old('experience_status', $profile->experience_status) == 'Fresher') ? 'selected' : '' }} class="text-slate-900">Fresher</option>
                             <option value="Experienced" {{ (old('experience_status', $profile->experience_status) == 'Experienced') ? 'selected' : '' }} class="text-slate-900">Experienced</option>
                         </select>
+                    </div>
+
+                    <div class="mb-4 grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-blue-100 text-sm font-bold mb-2">Total Exp. Years *</label>
+                            <input type="number" name="total_experience_years" required min="0" max="60" value="{{ old('total_experience_years', $profile->total_experience_years) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-blue-100 text-sm font-bold mb-2">Months *</label>
+                            <input type="number" name="total_experience_months" required min="0" max="11" value="{{ old('total_experience_months', $profile->total_experience_months) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        </div>
                     </div>
 
                     <div class="mb-2">
@@ -96,18 +133,28 @@
                     <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Career & Resume</h3>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Current/Last Role</label>
-                        <input type="text" name="current_role" value="{{ old('current_role', $profile->current_role) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Current Company * (or NA)</label>
+                        <input type="text" name="current_company" required value="{{ old('current_company', $profile->current_company) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Expected CTC (Annual)</label>
-                        <input type="number" name="expected_ctc" value="{{ old('expected_ctc', $profile->expected_ctc) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Current/Last Designation * (or NA)</label>
+                        <input type="text" name="current_role" required value="{{ old('current_role', $profile->current_role) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-blue-100 text-sm font-bold mb-2">Notice Period</label>
-                        <input type="text" name="notice_period" value="{{ old('notice_period', $profile->notice_period) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white" placeholder="e.g. 30 Days">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Current Annual Salary * (e.g. ₹4 LPA, NA)</label>
+                        <input type="text" name="current_ctc" required value="{{ old('current_ctc', $profile->current_ctc) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Expected Annual Salary * (e.g. ₹6 LPA, NA)</label>
+                        <input type="text" name="expected_ctc" required value="{{ old('expected_ctc', $profile->expected_ctc) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-blue-100 text-sm font-bold mb-2">Notice Period / Availability *</label>
+                        <input type="text" name="notice_period" required value="{{ old('notice_period', $profile->notice_period) }}" class="w-full rounded-xl border border-white/20 bg-slate-800 text-white" placeholder="e.g. 30 Days, Immediate, NA">
                     </div>
 
                     <div class="mb-4">

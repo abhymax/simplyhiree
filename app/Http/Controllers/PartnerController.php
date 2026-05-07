@@ -302,15 +302,38 @@ class PartnerController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:candidates,email,NULL,id,partner_id,'.$partner->id,
             'phone_number' => 'required|string|max:20|unique:candidates,phone_number,NULL,id,partner_id,'.$partner->id,
+            'alternate_phone_number' => 'nullable|string|max:20',
+            'location' => 'required|string|max:255',
+            'preferred_locations' => 'required|string|max:500',
+            'date_of_birth' => 'required|date',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'marital_status' => 'required|string|max:30',
+            'job_interest' => 'required|string|max:255',
+            'education_level' => 'required|string|max:255',
+            'qualification_degree' => 'required|string|max:255',
+            'specialization' => 'required|string|max:255',
+            'experience_status' => 'required|string|in:Experienced,Fresher',
+            'total_experience_years' => 'required|integer|min:0|max:60',
+            'total_experience_months' => 'required|integer|min:0|max:11',
+            'current_company' => 'required|string|max:255',
+            'current_designation' => 'required|string|max:255',
+            'current_ctc' => 'required|string|max:100',
+            'expected_ctc' => 'required|string|max:100',
+            'notice_period' => 'required|string|max:100',
+            'job_role_preference' => 'nullable|string',
+            'languages_spoken' => 'nullable|string',
+            'skills' => 'nullable|string',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
         $validatedData['partner_id'] = $partner->id;
+        $validatedData['preferred_locations'] = array_values(array_filter(array_map('trim', explode(',', $validatedData['preferred_locations']))));
 
         if ($request->hasFile('resume')) {
             $path = $request->file('resume')->store('resumes', 'public');
             $validatedData['resume_path'] = $path;
         }
+        unset($validatedData['resume']);
 
         $candidate = Candidate::create($validatedData);
 
@@ -357,19 +380,30 @@ class PartnerController extends Controller
             'email' => 'nullable|email|max:255|unique:candidates,email,'.$candidate->id.',id,partner_id,'.$partner->id,
             'phone_number' => 'required|string|max:20|unique:candidates,phone_number,'.$candidate->id.',id,partner_id,'.$partner->id,
             'alternate_phone_number' => 'nullable|string|max:20',
-            'location' => 'nullable|string|max:255',
+            'location' => 'required|string|max:255',
+            'preferred_locations' => 'required|string|max:500',
             'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|string|in:Male,Female,Other',
+            'gender' => 'required|string|in:Male,Female,Other',
+            'marital_status' => 'required|string|max:30',
             'job_interest' => 'nullable|string|max:255',
-            'education_level' => 'nullable|string|max:255',
-            'experience_status' => 'nullable|string|in:Experienced,Fresher',
-            'expected_ctc' => 'nullable|numeric|min:0',
-            'notice_period' => 'nullable|string|max:100',
+            'education_level' => 'required|string|max:255',
+            'qualification_degree' => 'required|string|max:255',
+            'specialization' => 'required|string|max:255',
+            'experience_status' => 'required|string|in:Experienced,Fresher',
+            'total_experience_years' => 'required|integer|min:0|max:60',
+            'total_experience_months' => 'required|integer|min:0|max:11',
+            'current_company' => 'required|string|max:255',
+            'current_designation' => 'required|string|max:255',
+            'current_ctc' => 'required|string|max:100',
+            'expected_ctc' => 'required|string|max:100',
+            'notice_period' => 'required|string|max:100',
             'job_role_preference' => 'nullable|string',
             'languages_spoken' => 'nullable|string',
             'skills' => 'nullable|string',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
+
+        $validatedData['preferred_locations'] = array_values(array_filter(array_map('trim', explode(',', $validatedData['preferred_locations']))));
 
         if ($request->hasFile('resume')) {
             if ($candidate->resume_path && Storage::disk('public')->exists($candidate->resume_path)) {
@@ -378,6 +412,7 @@ class PartnerController extends Controller
             $path = $request->file('resume')->store('resumes', 'public');
             $validatedData['resume_path'] = $path;
         }
+        unset($validatedData['resume']);
 
         $candidate->update($validatedData);
 

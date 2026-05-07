@@ -43,7 +43,8 @@
                             <input type="tel" name="phone_number" value="{{ old('phone_number', $mobile ?? '') }}" readonly placeholder="Phone Number" class="w-full rounded-xl border border-dashed border-white/30 bg-slate-900/40 text-slate-300 px-4 py-3">
                             <input type="tel" name="alternate_phone_number" value="{{ old('alternate_phone_number') }}" placeholder="Alternate Phone (Optional)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
                             <input type="email" name="email" value="{{ old('email') }}" placeholder="Email (Optional)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            <input type="text" name="location" value="{{ old('location') }}" required placeholder="Candidate Location *" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="location" value="{{ old('location') }}" required placeholder="Current Location *" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="preferred_locations" value="{{ old('preferred_locations', is_array($candidate->preferred_locations ?? null) ? implode(', ', $candidate->preferred_locations) : '') }}" required placeholder="Preferred Locations * (comma-separated, or NA)" class="md:col-span-2 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
                             <div>
                                 <label class="block text-sm text-blue-100 mb-2">Date of Birth *</label>
                                 <input type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" required class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
@@ -56,6 +57,15 @@
                                     <label><input type="radio" name="gender" value="Other" {{ old('gender') == 'Other' ? 'checked' : '' }} class="mr-1"> Other</label>
                                 </div>
                             </div>
+                            <div>
+                                <label class="block text-sm text-blue-100 mb-2">Marital Status *</label>
+                                <select name="marital_status" required class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    <option value="" class="text-slate-900">Select *</option>
+                                    @foreach(['Single/Unmarried','Married','Divorced','Widowed','Other','NA'] as $ms)
+                                        <option value="{{ $ms }}" {{ old('marital_status') == $ms ? 'selected' : '' }} class="text-slate-900">{{ $ms }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -65,7 +75,7 @@
                             <input type="text" name="job_interest" value="{{ old('job_interest') }}" required placeholder="Job Interest *" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
 
                             <select name="education_level" required class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                <option value="" class="text-slate-900">Select Education *</option>
+                                <option value="" class="text-slate-900">Select Education Level *</option>
                                 <option value="Less than 10th" {{ old('education_level') == 'Less than 10th' ? 'selected' : '' }} class="text-slate-900">Less than 10th</option>
                                 <option value="10th Pass" {{ old('education_level') == '10th Pass' ? 'selected' : '' }} class="text-slate-900">10th Pass</option>
                                 <option value="12th Pass" {{ old('education_level') == '12th Pass' ? 'selected' : '' }} class="text-slate-900">12th Pass</option>
@@ -75,6 +85,9 @@
                                 <option value="Doctorate" {{ old('education_level') == 'Doctorate' ? 'selected' : '' }} class="text-slate-900">Doctorate</option>
                             </select>
 
+                            <input type="text" name="qualification_degree" value="{{ old('qualification_degree') }}" required placeholder="Qualification / Degree * (e.g. B.Sc, MBA, B.Tech, NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="specialization" value="{{ old('specialization') }}" required placeholder="Specialization * (e.g. Computer Science, Marketing, NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+
                             <div>
                                 <label class="block text-sm text-blue-100 mb-2">Experience Status *</label>
                                 <div class="flex gap-4 text-sm pt-2">
@@ -83,8 +96,16 @@
                                 </div>
                             </div>
 
-                            <input type="number" step="0.01" name="expected_ctc" value="{{ old('expected_ctc') }}" placeholder="Expected CTC (Annual, ₹)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            <input type="text" name="notice_period" value="{{ old('notice_period') }}" placeholder="Notice Period (Optional)" class="md:col-span-2 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" name="total_experience_years" value="{{ old('total_experience_years') }}" required min="0" max="50" placeholder="Total Exp. Years *" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                <input type="number" name="total_experience_months" value="{{ old('total_experience_months') }}" required min="0" max="11" placeholder="Months *" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            </div>
+
+                            <input type="text" name="current_company" value="{{ old('current_company') }}" required placeholder="Current Company * (or NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="current_designation" value="{{ old('current_designation') }}" required placeholder="Current Designation * (or NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="current_ctc" value="{{ old('current_ctc') }}" required placeholder="Current Annual Salary * (e.g. ₹4.5 LPA, NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="expected_ctc" value="{{ old('expected_ctc') }}" required placeholder="Expected Annual Salary * (e.g. ₹6 LPA, NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="text" name="notice_period" value="{{ old('notice_period') }}" required placeholder="Notice Period / Availability * (e.g. 30 Days, Immediate, NA)" class="md:col-span-2 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
                         </div>
 
                         <div class="mt-4 space-y-4">

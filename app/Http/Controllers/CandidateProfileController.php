@@ -42,45 +42,60 @@ class CandidateProfileController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/'],
             'location' => 'required|string|max:255',
+            'preferred_locations' => 'required|string|max:500',
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:Male,Female,Other',
+            'marital_status' => 'required|string|max:30',
+            'qualification_degree' => 'required|string|max:255',
+            'specialization' => 'required|string|max:255',
             'experience_status' => 'required|in:Fresher,Experienced',
-            'current_role' => 'nullable|string|max:255',
-            'expected_ctc' => 'nullable|numeric|min:0',
-            'notice_period' => 'nullable|string|max:100',
+            'total_experience_years' => 'required|integer|min:0|max:60',
+            'total_experience_months' => 'required|integer|min:0|max:11',
+            'current_company' => 'required|string|max:255',
+            'current_role' => 'required|string|max:255',
+            'current_ctc' => 'required|string|max:100',
+            'expected_ctc' => 'required|string|max:100',
+            'notice_period' => 'required|string|max:100',
             'skills' => 'required|string',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
-        DB::transaction(function () use ($request, $user, $validated) {
+        $preferred = array_values(array_filter(array_map('trim', explode(',', $validated['preferred_locations']))));
+
+        DB::transaction(function () use ($request, $user, $validated, $preferred) {
             $user->name = $validated['name'];
             $user->email = $validated['email'];
             $user->save();
 
-            // Handle Resume Upload
             $resumePath = $user->profile?->resume_path;
             if ($request->hasFile('resume')) {
-                // Delete old resume if exists
                 if ($resumePath && Storage::disk('public')->exists($resumePath)) {
                     Storage::disk('public')->delete($resumePath);
                 }
                 $resumePath = $request->file('resume')->store('resumes', 'public');
             }
 
-            // Update or Create Profile
             UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'phone_number' => $validated['phone_number'],
-                    'location' => $validated['location'],
-                    'date_of_birth' => $validated['date_of_birth'],
-                    'gender' => $validated['gender'],
-                    'experience_status' => $validated['experience_status'],
-                    'current_role' => $validated['current_role'] ?? null,
-                    'expected_ctc' => $validated['expected_ctc'] ?? null,
-                    'notice_period' => $validated['notice_period'] ?? null,
-                    'skills' => $validated['skills'],
-                    'resume_path' => $resumePath,
+                    'phone_number'            => $validated['phone_number'],
+                    'location'                => $validated['location'],
+                    'preferred_locations'     => $preferred,
+                    'date_of_birth'           => $validated['date_of_birth'],
+                    'gender'                  => $validated['gender'],
+                    'marital_status'          => $validated['marital_status'],
+                    'qualification_degree'    => $validated['qualification_degree'],
+                    'specialization'          => $validated['specialization'],
+                    'experience_status'       => $validated['experience_status'],
+                    'total_experience_years'  => $validated['total_experience_years'],
+                    'total_experience_months' => $validated['total_experience_months'],
+                    'current_company'         => $validated['current_company'],
+                    'current_role'            => $validated['current_role'],
+                    'current_ctc'             => $validated['current_ctc'],
+                    'expected_ctc'            => $validated['expected_ctc'],
+                    'notice_period'           => $validated['notice_period'],
+                    'skills'                  => $validated['skills'],
+                    'resume_path'             => $resumePath,
                 ]
             );
         });

@@ -23,17 +23,31 @@ class Candidate extends Model
         'phone_number',
         'alternate_phone_number',
         'location',
+        'preferred_locations',
         'date_of_birth',
         'gender',
+        'marital_status',
         'job_interest',
         'education_level',
+        'qualification_degree',
+        'specialization',
         'experience_status',
+        'total_experience_years',
+        'total_experience_months',
+        'current_company',
+        'current_designation',
+        'current_ctc',
         'expected_ctc',
         'notice_period',
         'job_role_preference',
         'languages_spoken',
         'skills',
         'resume_path',
+    ];
+
+    protected $casts = [
+        'preferred_locations' => 'array',
+        'date_of_birth'       => 'date',
     ];
 
     /**

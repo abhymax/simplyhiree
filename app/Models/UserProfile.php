@@ -14,18 +14,27 @@ class UserProfile extends Model
         'user_id',
         'phone_number',
         'location',
+        'preferred_locations',
         'date_of_birth',
         'gender',
+        'marital_status',
         'experience_status',
+        'total_experience_years',
+        'total_experience_months',
+        'current_company',
         'current_role',
+        'current_ctc',
         'expected_ctc',
         'notice_period',
+        'qualification_degree',
+        'specialization',
         'skills',
         'resume_path',
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
+        'date_of_birth'       => 'date',
+        'preferred_locations' => 'array',
     ];
 
     public function user(): BelongsTo
