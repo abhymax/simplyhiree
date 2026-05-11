@@ -28,87 +28,62 @@
             {{-- MAIN CARD CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 
-                {{-- FILTERS --}}
-                <div class="p-6 border-b border-white/10 bg-white/5">
-                    <form method="GET" action="{{ route('admin.applications.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                        
-                        {{-- Search --}}
-                        <div class="lg:col-span-1">
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Search</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fa-solid fa-magnifying-glass text-white"></i>
-                                </div>
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Email..." 
-                                    class="w-full pl-10 bg-slate-800 border border-blue-500/30 rounded-xl text-white placeholder-blue-200/50 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
-                            </div>
+                {{-- FILTERS (compact single-line on xl+) --}}
+                <div class="px-4 py-3 border-b border-white/10 bg-white/5">
+                    <form method="GET" action="{{ route('admin.applications.index') }}" class="flex flex-wrap items-center gap-2">
+                        @php
+                            $fldClass = 'h-10 bg-slate-800 border border-blue-500/30 rounded-lg text-white text-sm font-medium px-3 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400';
+                        @endphp
+
+                        <div class="relative grow min-w-[180px]">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none"></i>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email"
+                                class="{{ $fldClass }} w-full pl-9">
                         </div>
 
-                        {{-- Status --}}
-                        <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Status</label>
-                            <select name="status" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
-                                <option value="" class="text-gray-400">All Statuses</option>
-                                @foreach(['Pending Review', 'Approved', 'Rejected', 'Interview Scheduled', 'Selected', 'Joined'] as $status)
-                                    <option value="{{ $status }}" class="bg-slate-900" {{ request('status') == $status ? 'selected' : '' }}>{{ $status }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="status" title="Status" class="{{ $fldClass }} min-w-[130px]">
+                            <option value="" class="text-gray-400">All Statuses</option>
+                            @foreach(['Pending Review', 'Approved', 'Rejected', 'Interview Scheduled', 'Selected', 'Joined'] as $status)
+                                <option value="{{ $status }}" class="bg-slate-900" {{ request('status') == $status ? 'selected' : '' }}>{{ $status }}</option>
+                            @endforeach
+                        </select>
 
-                        {{-- Job Role --}}
-                        <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Job Role</label>
-                            <select name="job_id" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
-                                <option value="" class="text-gray-400">All Jobs</option>
-                                @foreach($jobs as $job)
-                                    <option value="{{ $job->id }}" class="bg-slate-900" {{ request('job_id') == $job->id ? 'selected' : '' }}>{{ Str::limit($job->title, 20) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="job_id" title="Job Role" class="{{ $fldClass }} min-w-[140px] max-w-[200px]">
+                            <option value="" class="text-gray-400">All Jobs</option>
+                            @foreach($jobs as $job)
+                                <option value="{{ $job->id }}" class="bg-slate-900" {{ request('job_id') == $job->id ? 'selected' : '' }}>{{ Str::limit($job->title, 22) }}</option>
+                            @endforeach
+                        </select>
 
-                        {{-- Partner --}}
-                        <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Partner</label>
-                            <select name="partner_id" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
-                                <option value="" class="text-gray-400">All Partners</option>
-                                @foreach($partners as $partner)
-                                    <option value="{{ $partner->id }}" class="bg-slate-900" {{ request('partner_id') == $partner->id ? 'selected' : '' }}>{{ Str::limit($partner->name, 20) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="partner_id" title="Partner" class="{{ $fldClass }} min-w-[140px] max-w-[200px]">
+                            <option value="" class="text-gray-400">All Partners</option>
+                            @foreach($partners as $partner)
+                                <option value="{{ $partner->id }}" class="bg-slate-900" {{ request('partner_id') == $partner->id ? 'selected' : '' }}>{{ Str::limit($partner->name, 18) }}</option>
+                            @endforeach
+                        </select>
 
-                        {{-- Date Range --}}
-                        <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Applied Date Range</label>
-                            <div class="flex gap-2">
-                                <input type="date" name="date_from" value="{{ request('date_from') }}" max="{{ date('Y-m-d') }}" placeholder="From" title="From"
-                                    class="w-1/2 bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium px-2 h-[42px]">
-                                <input type="date" name="date_to" value="{{ request('date_to') }}" max="{{ date('Y-m-d') }}" placeholder="To" title="To"
-                                    class="w-1/2 bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium px-2 h-[42px]">
-                            </div>
-                        </div>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" max="{{ date('Y-m-d') }}" title="Applied from"
+                            class="{{ $fldClass }} w-[150px]">
+                        <span class="text-blue-200/70 text-xs px-0.5">to</span>
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" max="{{ date('Y-m-d') }}" title="Applied to"
+                            class="{{ $fldClass }} w-[150px]">
 
-                        {{-- Per Page --}}
-                        <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Per Page</label>
-                            <select name="per_page" onchange="this.form.submit()" class="w-full bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium">
-                                @foreach($allowedPerPage as $opt)
-                                    <option value="{{ $opt }}" class="bg-slate-900" {{ $perPage === $opt ? 'selected' : '' }}>{{ $opt }} per page</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="per_page" onchange="this.form.submit()" title="Per page" class="{{ $fldClass }}">
+                            @foreach($allowedPerPage as $opt)
+                                <option value="{{ $opt }}" class="bg-slate-900" {{ $perPage === $opt ? 'selected' : '' }}>{{ $opt }}/page</option>
+                            @endforeach
+                        </select>
 
-                        {{-- Filter Actions --}}
-                        <div class="flex items-end gap-2">
-                            <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 text-sm h-[42px] flex items-center justify-center">
-                                <i class="fa-solid fa-filter mr-2"></i> Filter
-                            </button>
-                            @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id', 'per_page', 'date_from', 'date_to']))
-                                <a href="{{ route('admin.applications.index') }}" class="bg-rose-500 hover:bg-rose-400 text-white p-2 rounded-xl transition h-[42px] w-[42px] flex items-center justify-center shadow-lg" title="Reset Filters">
-                                    <i class="fa-solid fa-xmark text-lg"></i>
-                                </a>
-                            @endif
-                        </div>
+                        <button type="submit" title="Apply filters" class="h-10 px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm shadow-md shadow-cyan-500/20 transition flex items-center gap-2">
+                            <i class="fa-solid fa-filter"></i> Filter
+                        </button>
+
+                        @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id', 'per_page', 'date_from', 'date_to']))
+                            <a href="{{ route('admin.applications.index') }}" title="Reset filters"
+                                class="h-10 w-10 bg-rose-500 hover:bg-rose-400 text-white rounded-lg flex items-center justify-center shadow-md">
+                                <i class="fa-solid fa-xmark"></i>
+                            </a>
+                        @endif
                     </form>
                 </div>
 
