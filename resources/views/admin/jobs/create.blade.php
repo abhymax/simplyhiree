@@ -111,8 +111,20 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Salary / CTC</label>
-                            <input type="text" name="salary" value="{{ old('salary') }}" placeholder="e.g. 5-7 LPA" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Salary Range (INR / Annum)</label>
+                            <div class="flex space-x-3">
+                                <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary') }}" min="0" class="w-1/2 bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                                <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary') }}" min="0" class="w-1/2 bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Gender Preference <span class="text-rose-400">*</span></label>
+                            <select name="gender_preference" required class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                                @foreach(['Any','Male','Female','Other'] as $gp)
+                                    <option value="{{ $gp }}" {{ old('gender_preference', 'Any') === $gp ? 'selected' : '' }}>{{ $gp }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         {{-- Education Level --}}

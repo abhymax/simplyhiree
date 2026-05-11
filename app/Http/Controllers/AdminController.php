@@ -593,29 +593,36 @@ class AdminController extends Controller
     public function storeJob(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'client_id' => 'nullable|exists:users,id',
-            'partner_visibility' => 'required|in:all,selected',
-            'allowed_partners' => 'array|required_if:partner_visibility,selected',
+            // Posting context (admin-only)
+            'client_id'             => 'nullable|exists:users,id',
+            'partner_visibility'    => 'required|in:all,selected',
+            'allowed_partners'      => 'array|required_if:partner_visibility,selected',
             'restricted_candidates' => 'array|nullable',
-            'category_id' => 'required|exists:job_categories,id',
-            'location' => 'required|string',
-            'salary' => 'nullable|string',
-            'job_type' => 'required|string',
-            'description' => 'required|string',
-            'min_experience' => 'required|integer|min:0',
-            'max_experience' => 'required|integer|gte:min_experience|max:50',
-            'education_level_id' => 'required|exists:education_levels,id',
-            'application_deadline' => 'nullable|date',
-            'payout_amount' => 'nullable|numeric',
-            'minimum_stay_days' => 'nullable|integer',
-            'skills_required' => 'nullable|string',
-            'company_website' => 'nullable|url',
-            'openings' => 'nullable|integer',
-            'min_age' => 'nullable|integer',
-            'max_age' => 'nullable|integer',
-            'gender_preference' => 'nullable|string',
+            'payout_amount'         => 'nullable|numeric',
+            'minimum_stay_days'     => 'nullable|integer',
+
+            // Job specification (mirrors ClientController::validateClientJob)
+            'title'                 => 'required|string|max:255',
+            'category_id'           => 'required|exists:job_categories,id',
+            'location'              => 'required|string|max:255',
+            'job_type'              => 'required|string|max:100',
+            'description'           => 'required|string',
+            'min_salary'            => 'nullable|integer|min:0|required_with:max_salary',
+            'max_salary'            => 'nullable|integer|min:0|gte:min_salary|required_with:min_salary',
+            'min_experience'        => 'required|integer|min:0',
+            'max_experience'        => 'required|integer|gte:min_experience|max:50',
+            'education_level_id'    => 'required|exists:education_levels,id',
+            'application_deadline'  => 'nullable|date',
+            'skills_required'       => 'nullable|string',
+            'company_website'       => 'nullable|url',
+            'openings'              => 'nullable|integer|min:1',
+            'gender_preference'     => 'required|string|in:Any,Male,Female,Other',
         ]);
+
+        $salary = $this->formatSalaryRange(
+            $validated['min_salary'] ?? null,
+            $validated['max_salary'] ?? null
+        );
 
         $companyName = 'Simplyhiree';
         if ($request->filled('client_id')) {
@@ -626,28 +633,27 @@ class AdminController extends Controller
         }
 
         $job = Job::create([
-            'user_id' => $request->client_id,
-            'company_name' => $companyName,
-            'status' => 'approved',
-            'title' => $validated['title'],
-            'category_id' => $validated['category_id'],
-            'location' => $validated['location'],
-            'salary' => $validated['salary'],
-            'job_type' => $validated['job_type'],
-            'description' => $this->sanitizeJobDescription($validated['description']),
-            'min_experience' => $request->min_experience,
-            'max_experience' => $request->max_experience,
-            'education_level_id' => $validated['education_level_id'],
-            'application_deadline' => $validated['application_deadline'],
-            'payout_amount' => $validated['payout_amount'] ?? 0,
-            'minimum_stay_days' => $validated['minimum_stay_days'] ?? 0,
-            'partner_visibility' => $validated['partner_visibility'],
-            'skills_required' => $request->skills_required,
-            'company_website' => $request->company_website,
-            'openings' => $request->openings,
-            'min_age' => $request->min_age,
-            'max_age' => $request->max_age,
-            'gender_preference' => $request->gender_preference,
+            'user_id'              => $request->client_id,
+            'company_name'         => $companyName,
+            'status'               => 'approved',
+            'title'                => $validated['title'],
+            'category_id'          => $validated['category_id'],
+            'location'             => $validated['location'],
+            'salary'               => $salary,
+            'job_type'             => $validated['job_type'],
+            'description'          => $this->sanitizeJobDescription($validated['description']),
+            'gender_preference'    => $validated['gender_preference'],
+            'min_experience'       => $validated['min_experience'],
+            'max_experience'       => $validated['max_experience'],
+            'experience_level_id'  => null,
+            'education_level_id'   => $validated['education_level_id'],
+            'application_deadline' => $validated['application_deadline'] ?? null,
+            'payout_amount'        => $validated['payout_amount'] ?? 0,
+            'minimum_stay_days'    => $validated['minimum_stay_days'] ?? 0,
+            'partner_visibility'   => $validated['partner_visibility'],
+            'skills_required'      => $validated['skills_required'] ?? null,
+            'company_website'      => $validated['company_website'] ?? null,
+            'openings'             => $validated['openings'] ?? 1,
         ]);
 
         if ($validated['partner_visibility'] === 'selected' && $request->has('allowed_partners')) {
@@ -1254,6 +1260,26 @@ class AdminController extends Controller
         }, $fileName, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Format salary min/max into a readable string (mirrors ClientController).
+     */
+    private function formatSalaryRange(?int $minSalary, ?int $maxSalary): ?string
+    {
+        if ($minSalary === null && $maxSalary === null) {
+            return null;
+        }
+        if ($minSalary !== null && $maxSalary !== null) {
+            if ($minSalary === $maxSalary) {
+                return 'Rs. ' . number_format($minSalary);
+            }
+            return 'Rs. ' . number_format($minSalary) . ' - Rs. ' . number_format($maxSalary);
+        }
+        if ($minSalary !== null) {
+            return 'Rs. ' . number_format($minSalary) . '+';
+        }
+        return 'Up to Rs. ' . number_format((int) $maxSalary);
     }
 
     /**
