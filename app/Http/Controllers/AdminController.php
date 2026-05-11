@@ -893,6 +893,12 @@ class AdminController extends Controller
                 $q->where('partner_id', $request->input('partner_id'));
              });
         }
+        if ($request->filled('date_from')) {
+            try { $query->whereDate('created_at', '>=', \Carbon\Carbon::parse($request->input('date_from'))->toDateString()); } catch (\Throwable $e) {}
+        }
+        if ($request->filled('date_to')) {
+            try { $query->whereDate('created_at', '<=', \Carbon\Carbon::parse($request->input('date_to'))->toDateString()); } catch (\Throwable $e) {}
+        }
 
         $allowedPerPage = [20, 50, 100, 150, 200];
         $perPage = (int) $request->input('per_page', 20);

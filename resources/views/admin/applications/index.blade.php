@@ -30,7 +30,7 @@
                 
                 {{-- FILTERS --}}
                 <div class="p-6 border-b border-white/10 bg-white/5">
-                    <form method="GET" action="{{ route('admin.applications.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <form method="GET" action="{{ route('admin.applications.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                         
                         {{-- Search --}}
                         <div class="lg:col-span-1">
@@ -77,6 +77,17 @@
                             </select>
                         </div>
 
+                        {{-- Date Range --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Applied Date Range</label>
+                            <div class="flex gap-2">
+                                <input type="date" name="date_from" value="{{ request('date_from') }}" max="{{ date('Y-m-d') }}" placeholder="From" title="From"
+                                    class="w-1/2 bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium px-2 h-[42px]">
+                                <input type="date" name="date_to" value="{{ request('date_to') }}" max="{{ date('Y-m-d') }}" placeholder="To" title="To"
+                                    class="w-1/2 bg-slate-800 border border-blue-500/30 rounded-xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium px-2 h-[42px]">
+                            </div>
+                        </div>
+
                         {{-- Per Page --}}
                         <div>
                             <label class="block text-xs font-bold text-cyan-300 uppercase mb-1 ml-1">Per Page</label>
@@ -92,7 +103,7 @@
                             <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 px-4 rounded-xl font-bold shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 text-sm h-[42px] flex items-center justify-center">
                                 <i class="fa-solid fa-filter mr-2"></i> Filter
                             </button>
-                            @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id', 'per_page']))
+                            @if(request()->anyFilled(['search', 'status', 'job_id', 'partner_id', 'per_page', 'date_from', 'date_to']))
                                 <a href="{{ route('admin.applications.index') }}" class="bg-rose-500 hover:bg-rose-400 text-white p-2 rounded-xl transition h-[42px] w-[42px] flex items-center justify-center shadow-lg" title="Reset Filters">
                                     <i class="fa-solid fa-xmark text-lg"></i>
                                 </a>
