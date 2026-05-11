@@ -79,20 +79,20 @@
                         @if($job->status !== 'approved')
                             @if($isAdmin && $job->status === 'pending_approval')
                                 <form action="{{ route('admin.jobs.approve', $job->id) }}" method="POST"
-                                    class="bg-amber-500/10 border border-amber-400/30 rounded-xl p-3 space-y-2 w-full sm:w-72">
+                                    class="inline-flex flex-wrap items-center gap-2 bg-amber-500/10 border border-amber-400/30 rounded-lg px-2 py-2">
                                     @csrf
-                                    <div class="text-amber-200 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                        <i class="fa-solid fa-coins"></i> Set Payout to Make Live
-                                    </div>
+                                    <span class="text-amber-200 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap px-1">
+                                        <i class="fa-solid fa-coins mr-1"></i> Payout
+                                    </span>
                                     <input type="number" name="payout_amount" min="0" step="0.01" required
                                         value="{{ old('payout_amount', $job->payout_amount) }}"
-                                        placeholder="Payout Amount (₹) *"
-                                        class="w-full bg-slate-900/80 border border-amber-500/40 rounded-md text-white text-sm font-semibold px-3 h-10 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                        placeholder="₹ Amount *" title="Payout Amount"
+                                        class="w-32 bg-slate-900/80 border border-amber-500/40 rounded-md text-white text-sm font-semibold px-2 h-9 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
                                     <input type="number" name="minimum_stay_days" min="1" required
                                         value="{{ old('minimum_stay_days', $job->minimum_stay_days ?: 30) }}"
-                                        placeholder="Maturity Period (Days) *"
-                                        class="w-full bg-slate-900/80 border border-amber-500/40 rounded-md text-white text-sm font-semibold px-3 h-10 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                                    <button type="submit" class="w-full fx-btn px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-bold">
+                                        placeholder="Days *" title="Maturity Period (days)"
+                                        class="w-20 bg-slate-900/80 border border-amber-500/40 rounded-md text-white text-sm font-semibold px-2 h-9 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                    <button type="submit" class="fx-btn h-9 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-bold whitespace-nowrap">
                                         Approve &amp; Make Live
                                     </button>
                                 </form>
