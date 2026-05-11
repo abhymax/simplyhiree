@@ -182,14 +182,40 @@
                         <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
                     </div>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-blue-100">Replacement Guarantee (Days) <span class="text-rose-300">*</span></label>
-                        <input type="number" name="replacement_guarantee_days" min="0" max="365" required
-                            value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
-                            placeholder="e.g. 90"
-                            class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
-                        <p class="mt-1 text-xs text-blue-200/80">Minimum days a candidate must remain in the role. If they leave earlier, you can request one replacement.</p>
-                        @error('replacement_guarantee_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    {{-- Payout Settings --}}
+                    <div class="mb-6 bg-amber-500/10 border border-amber-400/30 rounded-2xl p-5">
+                        <h3 class="text-amber-200 font-bold text-sm uppercase tracking-wider mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-coins"></i> Payout Settings
+                        </h3>
+                        <p class="text-amber-100/80 text-xs mb-4">
+                            Payout amount per successful hire, the maturity period before release, and the replacement-guarantee window.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Payout Amount (₹) <span class="text-rose-300">*</span></label>
+                                <input type="number" name="payout_amount" min="0" step="0.01" required
+                                    value="{{ old('payout_amount', $job->payout_amount ?? '') }}"
+                                    placeholder="e.g. 25000"
+                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                @error('payout_amount') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Maturity Period (Days) <span class="text-rose-300">*</span></label>
+                                <input type="number" name="minimum_stay_days" min="0" max="365" required
+                                    value="{{ old('minimum_stay_days', $job->minimum_stay_days ?? 30) }}"
+                                    placeholder="e.g. 30"
+                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                @error('minimum_stay_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Replacement Guarantee (Days) <span class="text-rose-300">*</span></label>
+                                <input type="number" name="replacement_guarantee_days" min="0" max="365" required
+                                    value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
+                                    placeholder="e.g. 90"
+                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                @error('replacement_guarantee_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex justify-end">

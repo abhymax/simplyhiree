@@ -155,6 +155,8 @@ class ClientController extends Controller
             'company_website' => $request->company_website,
             'openings' => $request->openings ?? 1,
             'partner_visibility' => 'all', // Default visibility
+            'payout_amount' => $validated['payout_amount'],
+            'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
         ]);
 
@@ -188,6 +190,8 @@ class ClientController extends Controller
             'skills_required' => $validated['skills_required'] ?? null,
             'company_website' => $validated['company_website'] ?? null,
             'openings' => $validated['openings'] ?? 1,
+            'payout_amount' => $validated['payout_amount'],
+            'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
             'status' => 'pending_approval',
         ]);
@@ -234,6 +238,8 @@ class ClientController extends Controller
             'company_website' => 'nullable|url',
             'openings' => 'nullable|integer|min:1',
             'gender_preference' => 'required|string|in:Any,Male,Female,Other',
+            'payout_amount' => 'required|numeric|min:0',
+            'minimum_stay_days' => 'required|integer|min:0|max:365',
             'replacement_guarantee_days' => 'required|integer|min:0|max:365',
         ]);
     }
