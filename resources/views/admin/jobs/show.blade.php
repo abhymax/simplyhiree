@@ -173,18 +173,33 @@
                         
                         @if($job->status === 'pending_approval')
                             <div class="space-y-3">
-                                <form action="{{ route('admin.jobs.approve', $job->id) }}" method="POST">
+                                <form action="{{ route('admin.jobs.approve', $job->id) }}" method="POST" class="space-y-3 bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4">
                                     @csrf
-                                    {{-- Hidden inputs to preserve existing values if not editing --}}
-                                    <input type="hidden" name="payout_amount" value="{{ $job->payout_amount }}">
-                                    <input type="hidden" name="minimum_stay_days" value="{{ $job->minimum_stay_days }}">
-                                    
+                                    <h4 class="text-amber-200 text-xs font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-coins"></i> Set Payout Before Approving
+                                    </h4>
+                                    <div>
+                                        <label class="block text-[11px] text-amber-200 font-bold uppercase mb-1">Payout Amount (₹) <span class="text-rose-400">*</span></label>
+                                        <input type="number" name="payout_amount" min="0" step="0.01" required
+                                            value="{{ old('payout_amount', $job->payout_amount) }}"
+                                            placeholder="e.g. 5000"
+                                            class="w-full bg-slate-900/80 border border-amber-500/40 rounded-lg text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-11 px-3">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] text-amber-200 font-bold uppercase mb-1">Maturity Period (Days) <span class="text-rose-400">*</span></label>
+                                        <input type="number" name="minimum_stay_days" min="1" required
+                                            value="{{ old('minimum_stay_days', $job->minimum_stay_days ?: 30) }}"
+                                            placeholder="e.g. 30"
+                                            class="w-full bg-slate-900/80 border border-amber-500/40 rounded-lg text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-11 px-3">
+                                    </div>
+                                    @error('payout_amount') <p class="text-rose-300 text-xs">{{ $message }}</p> @enderror
+                                    @error('minimum_stay_days') <p class="text-rose-300 text-xs">{{ $message }}</p> @enderror
                                     <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
                                         <i class="fa-solid fa-check"></i> Approve Job
                                     </button>
                                 </form>
 
-                                <form action="{{ route('admin.jobs.reject', $job->id) }}" method="POST">
+                                <form action="{{ route('admin.jobs.reject', $job->id) }}" method="POST" onsubmit="return confirm('Reject this job posting?');">
                                     @csrf
                                     <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-600/30 transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
                                         <i class="fa-solid fa-xmark"></i> Reject Job
