@@ -34,6 +34,7 @@
                                 <th class="px-6 py-5">Job</th>
                                 <th class="px-6 py-5">Client</th>
                                 <th class="px-6 py-5">Applications</th>
+                                <th class="px-6 py-5">Archived By</th>
                                 <th class="px-6 py-5">Archived On</th>
                                 <th class="px-6 py-5 text-right">Actions</th>
                             </tr>
@@ -53,6 +54,25 @@
                                     <span class="bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 px-2.5 py-1 rounded-md text-xs font-bold">
                                         {{ $job->job_applications_count }} application{{ $job->job_applications_count == 1 ? '' : 's' }}
                                     </span>
+                                </td>
+                                <td class="px-6 py-5 align-top">
+                                    @php $by = $job->archived_by_role; @endphp
+                                    @if($by === 'Superadmin')
+                                        <span class="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-400/40 text-rose-200 px-2.5 py-1 rounded-md text-xs font-bold">
+                                            <i class="fa-solid fa-user-shield"></i> Deleted by Superadmin
+                                        </span>
+                                    @elseif($by === 'Client')
+                                        <span class="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2.5 py-1 rounded-md text-xs font-bold">
+                                            <i class="fa-solid fa-building-user"></i> Deactivated by Client
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 bg-slate-500/20 border border-slate-400/40 text-slate-200 px-2.5 py-1 rounded-md text-xs font-bold">
+                                            <i class="fa-solid fa-box-archive"></i> Archived
+                                        </span>
+                                    @endif
+                                    @if($job->archivedBy)
+                                        <div class="text-[11px] text-blue-300/70 mt-1">by {{ $job->archivedBy->name }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-5 align-top text-blue-200">
                                     {{ $job->archived_at->format('M d, Y') }}

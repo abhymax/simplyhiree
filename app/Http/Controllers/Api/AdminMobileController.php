@@ -1025,9 +1025,18 @@ class AdminMobileController extends Controller
             return response()->json(['message' => 'Only Superadmin can delete jobs.'], 403);
         }
 
-        $job->delete();
+        if (!$job->archived_at) {
+            $job->update([
+                'status'                    => 'closed',
+                'archived_at'               => now(),
+                'archived_by_role'          => 'Superadmin',
+                'archived_by_user_id'       => $admin->id,
+                'deactivation_requested_at' => null,
+                'deactivation_reason'       => null,
+            ]);
+        }
 
-        return response()->json(['message' => 'Job deleted successfully.']);
+        return response()->json(['message' => 'Job moved to archive. All related data preserved.']);
     }
 
     public function jobApplicants(Request $request, Job $job)

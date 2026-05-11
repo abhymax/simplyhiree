@@ -112,7 +112,7 @@
                         <div class="flex-grow"></div>
 
                         @if(isset($isAdmin) && $isAdmin)
-                            <form action="{{ route('admin.jobs.destroy', $job->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this job permanently? This action cannot be undone.');">
+                            <form action="{{ route('admin.jobs.destroy', $job->id) }}" method="POST" onsubmit="return confirm('Move this job to the Archive? All applications, candidate, and partner data will be preserved.');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="fx-btn px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-md text-sm font-bold">

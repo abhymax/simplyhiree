@@ -38,6 +38,8 @@ class Job extends Model
         'deactivation_requested_at',
         'deactivation_reason',
         'archived_at',
+        'archived_by_role',
+        'archived_by_user_id',
         // Admin / Billing fields
         'payout_amount',
         'minimum_stay_days',
@@ -111,6 +113,11 @@ class Job extends Model
     public function jobApplications(): HasMany
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function archivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'archived_by_user_id');
     }
 
     /**

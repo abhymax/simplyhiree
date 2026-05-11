@@ -14,9 +14,23 @@
                     <p class="text-blue-200 mt-1 font-medium">
                         {{ $job->company_name ?? '—' }} &middot; {{ $job->location }} &middot;
                         Archived {{ $job->archived_at->format('M d, Y') }}
-                        <span class="ml-2 inline-flex items-center gap-1 bg-rose-500/20 border border-rose-400/40 text-rose-200 px-2 py-0.5 rounded text-xs font-bold uppercase">
-                            <i class="fa-solid fa-box-archive"></i> Archived
-                        </span>
+                        @php $by = $job->archived_by_role; @endphp
+                        @if($by === 'Superadmin')
+                            <span class="ml-2 inline-flex items-center gap-1 bg-rose-500/20 border border-rose-400/40 text-rose-200 px-2 py-0.5 rounded text-xs font-bold uppercase">
+                                <i class="fa-solid fa-user-shield"></i> Deleted by Superadmin
+                            </span>
+                        @elseif($by === 'Client')
+                            <span class="ml-2 inline-flex items-center gap-1 bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2 py-0.5 rounded text-xs font-bold uppercase">
+                                <i class="fa-solid fa-building-user"></i> Deactivated by Client
+                            </span>
+                        @else
+                            <span class="ml-2 inline-flex items-center gap-1 bg-slate-500/20 border border-slate-400/40 text-slate-200 px-2 py-0.5 rounded text-xs font-bold uppercase">
+                                <i class="fa-solid fa-box-archive"></i> Archived
+                            </span>
+                        @endif
+                        @if($job->archivedBy)
+                            <span class="text-blue-300/80 ml-1 text-xs">({{ $job->archivedBy->name }})</span>
+                        @endif
                     </p>
                 </div>
                 <div class="flex gap-2">

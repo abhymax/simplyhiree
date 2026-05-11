@@ -186,10 +186,10 @@
                         @endif
 
                         <div class="mt-4 pt-4 border-t border-white/10">
-                            <form action="{{ route('admin.jobs.destroy', $job->id) }}" method="POST" onsubmit="return confirm('Delete permanently?');">
+                            <form action="{{ route('admin.jobs.destroy', $job->id) }}" method="POST" onsubmit="return confirm('Move this job to the Archive? All applications, candidate, and partner data will be preserved.');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="w-full text-rose-400 hover:text-rose-200 text-sm font-bold transition flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-trash"></i> Delete Job Permanently
+                                    <i class="fa-solid fa-box-archive"></i> Archive Job
                                 </button>
                             </form>
                         </div>

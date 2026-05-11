@@ -189,10 +189,10 @@
                                                 </form>
                                             @endif
 
-                                            <form action="{{ route('admin.jobs.destroy', $job->id) }}" method="POST" class="inline" onsubmit="return confirm('Delete this job permanently?');">
+                                            <form action="{{ route('admin.jobs.destroy', $job->id) }}" method="POST" class="inline" onsubmit="return confirm('Move this job to the Archive? All applications and related data will be preserved.');">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="h-9 w-9 rounded-lg bg-rose-600/20 text-rose-400 border border-rose-500/30 flex items-center justify-center hover:bg-rose-600 hover:text-white transition shadow-md" title="Delete Job">
-                                                    <i class="fa-solid fa-trash"></i>
+                                                <button type="submit" class="h-9 w-9 rounded-lg bg-rose-600/20 text-rose-400 border border-rose-500/30 flex items-center justify-center hover:bg-rose-600 hover:text-white transition shadow-md" title="Archive Job">
+                                                    <i class="fa-solid fa-box-archive"></i>
                                                 </button>
                                             </form>
                                         </div>

@@ -733,10 +733,29 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * "Delete" archives the job. We never hard-delete so applications,
+     * candidate history, partner data, etc. remain intact and viewable
+     * in the Archived Jobs section.
+     */
     public function destroyJob(Job $job)
     {
-        $job->delete();
-        return redirect()->route('admin.jobs.pending')->with('success', 'Job deleted permanently.');
+        if ($job->archived_at) {
+            return redirect()->route('admin.jobs.archived.show', $job)
+                ->with('info', 'Job is already archived.');
+        }
+
+        $job->update([
+            'status'                    => 'closed',
+            'archived_at'               => now(),
+            'archived_by_role'          => 'Superadmin',
+            'archived_by_user_id'       => auth()->id(),
+            'deactivation_requested_at' => null,
+            'deactivation_reason'       => null,
+        ]);
+
+        return redirect()->route('admin.jobs.archived')
+            ->with('success', 'Job moved to archive. All applications and candidate data preserved.');
     }
 
     /**
@@ -751,6 +770,8 @@ class AdminController extends Controller
         $job->update([
             'status'                    => 'closed',
             'archived_at'               => now(),
+            'archived_by_role'          => 'Client',
+            'archived_by_user_id'       => $job->user_id,
             'deactivation_requested_at' => null,
             'deactivation_reason'       => null,
         ]);
@@ -764,7 +785,7 @@ class AdminController extends Controller
     public function archivedJobs()
     {
         $jobs = Job::whereNotNull('archived_at')
-            ->with(['user', 'category'])
+            ->with(['user', 'category', 'archivedBy'])
             ->withCount('jobApplications')
             ->latest('archived_at')
             ->paginate(20);
@@ -786,6 +807,7 @@ class AdminController extends Controller
             'category',
             'experienceLevel',
             'educationLevel',
+            'archivedBy',
             'jobApplications.candidate.partner',
             'jobApplications.candidateUser',
         ]);
@@ -803,8 +825,10 @@ class AdminController extends Controller
         }
 
         $job->update([
-            'status'      => 'approved',
-            'archived_at' => null,
+            'status'              => 'approved',
+            'archived_at'         => null,
+            'archived_by_role'    => null,
+            'archived_by_user_id' => null,
         ]);
 
         return back()->with('success', 'Job restored and set back to approved.');
