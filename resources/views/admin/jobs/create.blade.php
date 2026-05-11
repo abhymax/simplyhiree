@@ -177,35 +177,13 @@
                     </div>
                 </div>
 
-                {{-- SECTION 3a: CLIENT COMMERCIALS --}}
-                <div class="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 backdrop-blur-xl border border-blue-500/30 rounded-3xl p-8 mb-8 shadow-2xl">
-                    <h3 class="text-xl font-bold text-blue-200 mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-receipt text-blue-300"></i> Client Commercials (Client → SimplyHiree)
-                    </h3>
-                    <p class="text-blue-200/70 text-xs mb-6">What the client pays SimplyHiree per successful hire and the replacement-guarantee window.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label class="block text-xs font-bold text-blue-200 uppercase mb-2">Commission per Candidate (₹) <span class="text-rose-400">*</span></label>
-                            <input type="number" name="client_payout_amount" min="0" step="0.01" required value="{{ old('client_payout_amount') }}" class="w-full bg-slate-900/80 border border-blue-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-12 px-3">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-blue-200 uppercase mb-2">Payment Release (Days) <span class="text-rose-400">*</span></label>
-                            <input type="number" name="client_payout_days" min="0" max="365" required value="{{ old('client_payout_days', 30) }}" class="w-full bg-slate-900/80 border border-blue-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-12 px-3">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-blue-200 uppercase mb-2">Replacement Guarantee (Days) <span class="text-rose-400">*</span></label>
-                            <input type="number" name="replacement_guarantee_days" min="0" max="365" required value="{{ old('replacement_guarantee_days', 90) }}" class="w-full bg-slate-900/80 border border-blue-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-12 px-3">
-                        </div>
-                    </div>
-                </div>
-
-                {{-- SECTION 3b: PARTNER PAYOUT --}}
+                {{-- SECTION 3: PAYOUT SETTINGS --}}
                 <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/40 backdrop-blur-xl border border-amber-500/30 rounded-3xl p-8 mb-8 shadow-2xl">
                     <h3 class="text-xl font-bold text-amber-300 mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-coins text-amber-400"></i> Partner Payout (SimplyHiree → Partner)
+                        <i class="fa-solid fa-coins text-amber-400"></i> Payout Settings
                     </h3>
-                    <p class="text-amber-200/70 text-xs mb-6">What SimplyHiree pays the sourcing partner once the candidate completes the maturity period.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <p class="text-amber-200/70 text-xs mb-6">Payout amount per successful hire, the maturity period before release, and the replacement-guarantee window.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label class="block text-xs font-bold text-amber-200 uppercase mb-2">Payout Amount (₹)</label>
                             <input type="number" name="payout_amount" value="{{ old('payout_amount') }}" class="w-full bg-slate-900/80 border border-amber-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-12 px-3">
@@ -213,6 +191,10 @@
                         <div>
                             <label class="block text-xs font-bold text-amber-200 uppercase mb-2">Maturity Period (Days)</label>
                             <input type="number" name="minimum_stay_days" value="{{ old('minimum_stay_days', 30) }}" class="w-full bg-slate-900/80 border border-amber-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-12 px-3">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-200 uppercase mb-2">Replacement Guarantee (Days)</label>
+                            <input type="number" name="replacement_guarantee_days" min="0" max="365" value="{{ old('replacement_guarantee_days', 90) }}" class="w-full bg-slate-900/80 border border-amber-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-12 px-3">
                         </div>
                     </div>
                 </div>
