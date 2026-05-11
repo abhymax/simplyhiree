@@ -190,6 +190,13 @@ class JobController extends Controller
             'status' => 'required|in:approved,on_hold,closed',
         ]);
 
+        // Block first-time approval through this lightweight path —
+        // it must go through admin.jobs.approve so payout + maturity
+        // are set. Re-approving an already-approved job is allowed.
+        if ($request->status === 'approved' && $job->status === 'pending_approval') {
+            return redirect()->back()->with('error', 'Please set the Payout Amount and Maturity Period before approving this job.');
+        }
+
         $job->update(['status' => $request->status]);
 
         $statusMessages = [
