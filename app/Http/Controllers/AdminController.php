@@ -799,7 +799,8 @@ class AdminController extends Controller
     public function showArchivedJob(Job $job)
     {
         if (!$job->archived_at) {
-            abort(404);
+            return redirect()->route('admin.jobs.show', $job)
+                ->with('info', "Job #{$job->id} is currently active — it has not been archived. Use the Archive button on the job page to move it to the archive.");
         }
 
         $job->load([

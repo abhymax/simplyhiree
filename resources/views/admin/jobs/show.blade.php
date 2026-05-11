@@ -7,7 +7,23 @@
         <div class="absolute bottom-0 left-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
 
         <div class="relative z-10 max-w-6xl mx-auto">
-            
+
+            @if(session('info'))
+                <div class="mb-6 px-5 py-3 bg-blue-500/20 border border-blue-400/40 text-blue-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i> {{ session('info') }}
+                </div>
+            @endif
+            @if(session('success'))
+                <div class="mb-6 px-5 py-3 bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="mb-6 px-5 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ session('error') }}
+                </div>
+            @endif
+
             {{-- HEADER / BREADCRUMB --}}
             <div class="mb-8 border-b border-white/10 pb-6 flex flex-col md:flex-row justify-between items-end gap-4">
                 <div>
