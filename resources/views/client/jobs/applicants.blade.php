@@ -94,6 +94,11 @@
                                     @elseif($app->joined_status == 'Left')
                                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-100 border border-rose-400/40">Left</span>
                                         <div class="text-xs text-blue-200 mt-1">On: {{ $app->left_at->format('M d, Y') }}</div>
+                                        @if($app->replacement_requested_at)
+                                            <div class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-200 border border-amber-400/40 px-2 py-0.5 rounded">
+                                                <i class="fa-solid fa-rotate"></i> Replacement Requested
+                                            </div>
+                                        @endif
                                     @elseif($app->hiring_status == 'Selected')
                                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-100 border border-cyan-400/40">Selected</span>
                                         <div class="text-xs text-blue-200 mt-1">Joining: {{ $app->joining_date->format('M d, Y') }}</div>
@@ -139,6 +144,33 @@
                                         </div>
                                     @elseif($app->joined_status == 'Joined')
                                         <a href="{{ route('client.applications.showLeftForm', $app) }}" class="fx-btn inline-block bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 px-3 rounded-lg">Mark Left</a>
+                                    @elseif($app->joined_status == 'Left')
+                                        @php
+                                            $guaranteeDays = (int) ($app->job->replacement_guarantee_days ?? 0);
+                                            $tenureDays = ($app->joining_date && $app->left_at) ? $app->joining_date->diffInDays($app->left_at) : null;
+                                            $withinGuarantee = $guaranteeDays === 0 || ($tenureDays !== null && $tenureDays <= $guaranteeDays);
+                                        @endphp
+                                        @if($app->replacement_requested_at)
+                                            <span class="text-amber-200 text-xs font-semibold">Replacement requested {{ $app->replacement_requested_at->diffForHumans() }}</span>
+                                        @elseif($withinGuarantee)
+                                            <button type="button" onclick="document.getElementById('repl-{{ $app->id }}').classList.toggle('hidden')"
+                                                class="fx-btn inline-block bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold py-2 px-3 rounded-lg">
+                                                <i class="fa-solid fa-rotate mr-1"></i> Request Replacement
+                                            </button>
+                                            <form id="repl-{{ $app->id }}" method="POST" action="{{ route('client.applications.request-replacement', $app) }}"
+                                                  class="hidden mt-2 flex flex-col gap-2 w-64 bg-slate-900/70 border border-amber-400/30 p-3 rounded-lg text-left">
+                                                @csrf
+                                                <p class="text-amber-200 text-[11px]">Tenure was {{ $tenureDays }} day(s) — within the {{ $guaranteeDays }}-day guarantee. The sourcing partner will be notified.</p>
+                                                <textarea name="reason" rows="2" maxlength="1000" placeholder="Reason (optional)"
+                                                    class="w-full text-xs bg-slate-900 border border-white/20 rounded p-2 text-white"></textarea>
+                                                <div class="flex gap-2">
+                                                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold px-3 py-1.5 rounded">Submit</button>
+                                                    <button type="button" onclick="document.getElementById('repl-{{ $app->id }}').classList.add('hidden')" class="text-xs text-slate-300 hover:text-white">Cancel</button>
+                                                </div>
+                                            </form>
+                                        @else
+                                            <span class="text-slate-400 text-xs">Beyond guarantee ({{ $tenureDays ?? '?' }}/{{ $guaranteeDays }} days)</span>
+                                        @endif
                                     @else
                                         <span class="text-slate-400 text-xs">--</span>
                                     @endif

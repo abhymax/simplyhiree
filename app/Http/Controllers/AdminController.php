@@ -600,6 +600,9 @@ class AdminController extends Controller
             'restricted_candidates' => 'array|nullable',
             'payout_amount'         => 'nullable|numeric',
             'minimum_stay_days'     => 'nullable|integer',
+            'client_payout_amount'  => 'required|numeric|min:0',
+            'client_payout_days'    => 'required|integer|min:0|max:365',
+            'replacement_guarantee_days' => 'required|integer|min:0|max:365',
 
             // Job specification (mirrors ClientController::validateClientJob)
             'title'                 => 'required|string|max:255',
@@ -650,6 +653,9 @@ class AdminController extends Controller
             'application_deadline' => $validated['application_deadline'] ?? null,
             'payout_amount'        => $validated['payout_amount'] ?? 0,
             'minimum_stay_days'    => $validated['minimum_stay_days'] ?? 0,
+            'client_payout_amount' => $validated['client_payout_amount'],
+            'client_payout_days'   => $validated['client_payout_days'],
+            'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
             'partner_visibility'   => $validated['partner_visibility'],
             'skills_required'      => $validated['skills_required'] ?? null,
             'company_website'      => $validated['company_website'] ?? null,
@@ -688,14 +694,19 @@ class AdminController extends Controller
     public function approveJob(Request $request, Job $job)
     {
         $validated = $request->validate([
-            'payout_amount' => 'required|numeric|min:0',
-            'minimum_stay_days' => 'required|integer|min:1',
+            'payout_amount'              => 'required|numeric|min:0',
+            'minimum_stay_days'          => 'required|integer|min:1',
+            'replacement_guarantee_days' => 'nullable|integer|min:0|max:365',
         ]);
-        $job->update([
-            'status' => 'approved',
-            'payout_amount' => $validated['payout_amount'],
+        $update = [
+            'status'            => 'approved',
+            'payout_amount'     => $validated['payout_amount'],
             'minimum_stay_days' => $validated['minimum_stay_days'],
-        ]);
+        ];
+        if (array_key_exists('replacement_guarantee_days', $validated) && $validated['replacement_guarantee_days'] !== null) {
+            $update['replacement_guarantee_days'] = $validated['replacement_guarantee_days'];
+        }
+        $job->update($update);
         $this->sendJobApprovedNotifications($job);
         return redirect()->back()->with('success', 'Job has been approved and is now live.');
     }

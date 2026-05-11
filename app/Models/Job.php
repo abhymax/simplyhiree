@@ -43,6 +43,9 @@ class Job extends Model
         // Admin / Billing fields
         'payout_amount',
         'minimum_stay_days',
+        'client_payout_amount',
+        'client_payout_days',
+        'replacement_guarantee_days',
         'partner_visibility',
         // Advanced fields
         'skills_required',

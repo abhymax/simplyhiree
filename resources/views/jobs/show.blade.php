@@ -92,6 +92,10 @@
                                         value="{{ old('minimum_stay_days', $job->minimum_stay_days ?: 30) }}"
                                         placeholder="Days *" title="Maturity Period (days)"
                                         class="w-20 bg-slate-900/80 border border-amber-500/40 rounded-md text-white text-sm font-semibold px-2 h-9 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                    <input type="number" name="replacement_guarantee_days" min="0" max="365"
+                                        value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
+                                        placeholder="Guarantee" title="Replacement Guarantee (days). Client said: {{ $job->replacement_guarantee_days ?? '—' }}"
+                                        class="w-24 bg-slate-900/80 border border-amber-500/40 rounded-md text-white text-sm font-semibold px-2 h-9 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
                                     <button type="submit" class="fx-btn h-9 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-bold whitespace-nowrap">
                                         Approve &amp; Make Live
                                     </button>

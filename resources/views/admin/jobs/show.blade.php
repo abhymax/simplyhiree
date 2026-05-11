@@ -192,6 +192,13 @@
                                             placeholder="e.g. 30"
                                             class="w-full bg-slate-900/80 border border-amber-500/40 rounded-lg text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-11 px-3">
                                     </div>
+                                    <div>
+                                        <label class="block text-[11px] text-amber-200 font-bold uppercase mb-1">Replacement Guarantee (Days) <span class="text-amber-300/70">(client said {{ $job->replacement_guarantee_days ?? '—' }})</span></label>
+                                        <input type="number" name="replacement_guarantee_days" min="0" max="365"
+                                            value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
+                                            placeholder="Override client value if needed"
+                                            class="w-full bg-slate-900/80 border border-amber-500/40 rounded-lg text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-11 px-3">
+                                    </div>
                                     @error('payout_amount') <p class="text-rose-300 text-xs">{{ $message }}</p> @enderror
                                     @error('minimum_stay_days') <p class="text-rose-300 text-xs">{{ $message }}</p> @enderror
                                     <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-1 flex items-center justify-center gap-2">

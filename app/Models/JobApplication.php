@@ -21,6 +21,8 @@ class JobApplication extends Model
         'joining_date',
         'joined_status',
         'left_at',
+        'replacement_requested_at',
+        'replacement_reason',
         // New Billing Fields
         'payment_status',
         'paid_at',
@@ -31,8 +33,9 @@ class JobApplication extends Model
         'interview_at' => 'datetime',
         'joining_date' => 'datetime',
         'left_at' => 'datetime',
-        'paid_at' => 'datetime', // <-- Add this
+        'paid_at' => 'datetime',
         'billing_due_alerted_at' => 'datetime',
+        'replacement_requested_at' => 'datetime',
     ];
 
     /**

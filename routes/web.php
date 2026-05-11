@@ -228,6 +228,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->name('jobs.destroy');
         Route::post('/jobs/{job}/request-deactivation', [ClientController::class, 'requestDeactivation'])->name('jobs.request-deactivation');
         Route::delete('/jobs/{job}/cancel-deactivation', [ClientController::class, 'cancelDeactivationRequest'])->name('jobs.cancel-deactivation');
+        Route::post('/applications/{application}/request-replacement', [ClientController::class, 'requestCandidateReplacement'])->name('applications.request-replacement');
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
         
         // Profile Management

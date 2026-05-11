@@ -22,7 +22,7 @@ class PartnerController extends Controller
     public function index()
     {
         $partner = Auth::user();
-        
+
         // --- Morning Brief Data ---
         $todayInterviews = JobApplication::whereHas('candidate', function ($query) use ($partner) {
                 $query->where('partner_id', $partner->id);
@@ -30,9 +30,18 @@ class PartnerController extends Controller
             ->whereDate('interview_at', Carbon::today())
             ->count();
 
+        // Replacement requests raised by clients for this partner's candidates
+        $replacementRequests = JobApplication::with(['job', 'candidate'])
+            ->whereNotNull('replacement_requested_at')
+            ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partner->id))
+            ->latest('replacement_requested_at')
+            ->limit(10)
+            ->get();
+
         return view('partner.dashboard', [
-            'partner' => $partner,
-            'todayInterviews' => $todayInterviews
+            'partner'             => $partner,
+            'todayInterviews'     => $todayInterviews,
+            'replacementRequests' => $replacementRequests,
         ]);
     }
 

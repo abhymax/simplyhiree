@@ -33,6 +33,43 @@
             </div>
         @endif
 
+        @if(!empty($replacementRequests) && $replacementRequests->count())
+            <div class="mb-8 bg-amber-500/10 border border-amber-400/40 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-amber-400/30 flex items-center justify-between">
+                    <h3 class="text-amber-200 font-extrabold text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-rotate"></i>
+                        Replacement Requests
+                        <span class="bg-amber-500 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $replacementRequests->count() }}</span>
+                    </h3>
+                    <p class="text-amber-100/80 text-xs">Clients have asked for replacements on these candidates. Send fresh candidates for the listed jobs.</p>
+                </div>
+                <div class="divide-y divide-amber-400/10">
+                    @foreach($replacementRequests as $rr)
+                    <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                            <div class="text-white font-bold">
+                                {{ trim(($rr->candidate->first_name ?? '').' '.($rr->candidate->last_name ?? '')) ?: 'Candidate' }}
+                                <span class="text-amber-200/80 text-sm font-medium">left</span>
+                                <span class="text-white">{{ $rr->job->title ?? '—' }}</span>
+                            </div>
+                            <div class="text-blue-200/80 text-xs mt-0.5">
+                                Joined {{ optional($rr->joining_date)->format('M d, Y') ?: '—' }}
+                                · Left {{ optional($rr->left_at)->format('M d, Y') ?: '—' }}
+                                · Requested {{ $rr->replacement_requested_at->diffForHumans() }}
+                            </div>
+                            @if($rr->replacement_reason)
+                                <div class="mt-1 text-amber-100/90 text-sm italic">"{{ \Illuminate\Support\Str::limit($rr->replacement_reason, 200) }}"</div>
+                            @endif
+                        </div>
+                        <a href="{{ route('partner.jobs.show', $rr->job->id) }}" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+                            <i class="fa-solid fa-paper-plane"></i> Send Candidates
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-white/10 pb-6">
             <div>
                 <div class="flex items-center gap-2 mb-2">

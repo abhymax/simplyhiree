@@ -155,6 +155,9 @@ class ClientController extends Controller
             'company_website' => $request->company_website,
             'openings' => $request->openings ?? 1,
             'partner_visibility' => 'all', // Default visibility
+            'client_payout_amount' => $validated['client_payout_amount'],
+            'client_payout_days' => $validated['client_payout_days'],
+            'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
         ]);
 
         return redirect()->route('client.dashboard')->with('success', 'Job posted successfully! Waiting for admin approval.');
@@ -187,6 +190,9 @@ class ClientController extends Controller
             'skills_required' => $validated['skills_required'] ?? null,
             'company_website' => $validated['company_website'] ?? null,
             'openings' => $validated['openings'] ?? 1,
+            'client_payout_amount' => $validated['client_payout_amount'],
+            'client_payout_days' => $validated['client_payout_days'],
+            'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
             'status' => 'pending_approval',
         ]);
 
@@ -232,7 +238,49 @@ class ClientController extends Controller
             'company_website' => 'nullable|url',
             'openings' => 'nullable|integer|min:1',
             'gender_preference' => 'required|string|in:Any,Male,Female,Other',
+            'client_payout_amount' => 'required|numeric|min:0',
+            'client_payout_days' => 'required|integer|min:0|max:365',
+            'replacement_guarantee_days' => 'required|integer|min:0|max:365',
         ]);
+    }
+
+    /**
+     * Client requests a replacement for a candidate who joined and left
+     * before the replacement-guarantee window. One-shot per application.
+     */
+    public function requestCandidateReplacement(Request $request, \App\Models\JobApplication $application)
+    {
+        $clientId = Auth::id();
+        $application->loadMissing(['job', 'candidate.partner']);
+        if (!$application->job || (int) $application->job->user_id !== (int) $clientId) {
+            abort(403, 'Unauthorized.');
+        }
+        if (!$application->joining_date) {
+            return back()->with('error', 'Replacement can only be requested for candidates who joined the role.');
+        }
+        if (!$application->left_at) {
+            return back()->with('error', 'This candidate has not been marked as Left. Mark them as left before requesting a replacement.');
+        }
+        if ($application->replacement_requested_at) {
+            return back()->with('error', 'A replacement has already been requested for this candidate.');
+        }
+        $guaranteeDays = (int) ($application->job->replacement_guarantee_days ?? 0);
+        if ($guaranteeDays > 0) {
+            $tenure = $application->joining_date->diffInDays($application->left_at);
+            if ($tenure > $guaranteeDays) {
+                return back()->with('error', "Candidate worked {$tenure} day(s), which is beyond the {$guaranteeDays}-day replacement-guarantee window.");
+            }
+        }
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ]);
+        $application->update([
+            'replacement_requested_at' => now(),
+            'replacement_reason'       => $data['reason'] ?? null,
+        ]);
+
+        return back()->with('success', 'Replacement request raised. The sourcing partner has been notified.');
     }
 
     private function ensureClientCanEditJob(Job $job): void
