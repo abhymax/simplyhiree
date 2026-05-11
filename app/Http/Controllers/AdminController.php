@@ -1216,7 +1216,9 @@ class AdminController extends Controller
 
     public function jobReport(Request $request)
     {
-        $query = Job::with(['user', 'jobApplications.candidate.partner', 'jobApplications.candidateUser'])->latest();
+        $query = Job::with(['user', 'jobApplications.candidate.partner', 'jobApplications.candidateUser'])
+            ->whereNull('archived_at')
+            ->latest();
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
@@ -1236,7 +1238,9 @@ class AdminController extends Controller
 
     public function exportJobReport(Request $request)
     {
-        $query = Job::with(['user', 'jobApplications'])->latest();
+        $query = Job::with(['user', 'jobApplications'])
+            ->whereNull('archived_at')
+            ->latest();
 
         if ($request->filled('search')) {
             $searchTerm = $request->search;
