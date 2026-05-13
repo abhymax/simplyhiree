@@ -420,6 +420,23 @@
         </div>
     </div>
 
+    {{-- ── SECTION: Registration Behaviour ──────────────────────────────── --}}
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-white mb-5">After Registration</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="lp-label">Redirect URL after submit (e.g. a payment link)</label>
+                <input type="url" name="redirect_url" value="{{ old('redirect_url', $landingPage->redirect_url ?? '') }}" class="lp-input" placeholder="https://rzp.io/rzp/EXAMPLE">
+                <p class="text-xs text-blue-200/80 mt-1">If set, the user is taken straight to this URL after a successful registration. Leave blank to keep the on-page "You're Registered!" confirmation instead.</p>
+            </div>
+            <div>
+                <label class="lp-label">Notify Emails (comma-separated)</label>
+                <input type="text" name="notify_emails" value="{{ old('notify_emails', $landingPage->notify_emails ?? '') }}" class="lp-input" placeholder="admin@simplyhiree.com, ops@simplyhiree.com">
+                <p class="text-xs text-blue-200/80 mt-1">Each registration's details will be emailed to these addresses.</p>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {{-- JS for dynamic rows --}}

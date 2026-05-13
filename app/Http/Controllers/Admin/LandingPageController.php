@@ -136,6 +136,8 @@ class LandingPageController extends Controller
             'earnings_summary'      => 'nullable|string',
             'contact_info'          => 'nullable|string|max:255',
             'tagline'               => 'nullable|string|max:255',
+            'redirect_url'          => 'nullable|url|max:500',
+            'notify_emails'         => 'nullable|string|max:500',
             'logo'                  => 'nullable|image|max:2048',
             'hero_image'            => 'nullable|image|max:4096',
             'host_photo'            => 'nullable|image|max:2048',

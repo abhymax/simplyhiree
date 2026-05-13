@@ -24,6 +24,7 @@ class LandingPage extends Model
         'footer_disclaimer',
         'trust_badges', 'earnings_summary', 'career_outcomes', 'bonuses',
         'contact_info', 'tagline',
+        'redirect_url', 'notify_emails',
     ];
 
     protected $casts = [
