@@ -404,7 +404,13 @@ class AdminController extends Controller
             'other_docs.*' => 'nullable|mimes:pdf,jpg,jpeg,png|max:5120', 
         ]);
 
-        $user->update(['billable_period_days' => $validated['billable_period_days']]);
+        $userUpdate = ['billable_period_days' => $validated['billable_period_days']];
+        if (!empty($validated['company_name'])) {
+            // Keep users.name in sync with the editable Company Name on this form,
+            // because the client listing displays users.name.
+            $userUpdate['name'] = $validated['company_name'];
+        }
+        $user->update($userUpdate);
 
         $profileData = $request->only([
             'company_name', 'website', 'industry', 'company_size', 'description',
