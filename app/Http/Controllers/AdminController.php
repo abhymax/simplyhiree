@@ -110,12 +110,9 @@ class AdminController extends Controller
             ->get();
 
         foreach ($unpaidHires as $hire) {
-            if ($hire->job && $hire->job->user) {
-                $billableDays = $hire->job->user->billable_period_days ?? 30;
-                $invoiceDate = $hire->joining_date->copy()->addDays($billableDays);
-                if ($invoiceDate->isPast() || $invoiceDate->isToday()) {
-                    $dueInvoicesCount++;
-                }
+            $due = $hire->invoiceDueAt();
+            if ($due && ($due->isPast() || $due->isToday())) {
+                $dueInvoicesCount++;
             }
         }
 
@@ -1174,9 +1171,9 @@ class AdminController extends Controller
 
             $client = $app->job->user;
             $joiningDate = Carbon::parse($app->joining_date);
-            $billableDays = $client->billable_period_days ?? 30;
+            $billableDays = $app->effectiveInvoiceReleaseDays();
             $invoiceDate = $joiningDate->copy()->addDays($billableDays);
-            $isDue = $invoiceDate->isPast();
+            $isDue = $invoiceDate->isPast() || $invoiceDate->isToday();
             
             $statusLabel = 'Pending Maturity';
             $rowClass = '';

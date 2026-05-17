@@ -64,6 +64,36 @@ class JobApplication extends Model
         return $this->belongsTo(Candidate::class, 'candidate_id');
     }
 
+    /**
+     * Effective invoice-release days for this application: per-job
+     * invoice_release_days takes precedence; falls back to the client
+     * user's billable_period_days; finally to 30. The value 0 is honoured
+     * (invoice due on the joining day itself).
+     */
+    public function effectiveInvoiceReleaseDays(): int
+    {
+        $job = $this->relationLoaded('job') ? $this->getRelation('job') : $this->job;
+        if ($job && $job->invoice_release_days !== null) {
+            return (int) $job->invoice_release_days;
+        }
+        $client = $job?->user;
+        if ($client && $client->billable_period_days !== null) {
+            return (int) $client->billable_period_days;
+        }
+        return 30;
+    }
+
+    /**
+     * Date on which the invoice becomes due. Null until the candidate joins.
+     */
+    public function invoiceDueAt(): ?\Carbon\Carbon
+    {
+        if (!$this->joining_date) {
+            return null;
+        }
+        return $this->joining_date->copy()->addDays($this->effectiveInvoiceReleaseDays());
+    }
+
     // --- NEW ACCESSOR ---
     /**
      * Get the candidate's full name, regardless of source (User or Agency Candidate).

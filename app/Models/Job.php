@@ -47,6 +47,25 @@ class Job extends Model
         'client_payout_days',
         'replacement_guarantee_days',
         'partner_visibility',
+        // Finance (per-job billing engine)
+        'fee_type',
+        'fee_amount',
+        'invoice_release_days',
+        'replacement_period_days',
+        // Screening & vendor controls
+        'screening_required',
+        'auto_forward_hours',
+        'max_resume_per_vendor',
+        'resume_submission_deadline',
+        // Staffing & confidentiality
+        'is_company_confidential',
+        'staffing_model',
+        'contract_billing_cycle',
+        'contract_margin_type',
+        'contract_payroll_managed_by',
+        'rpo_monthly_retainer',
+        'rpo_per_position_fee',
+        'rpo_dedicated_recruiter_cost',
         // Advanced fields
         'skills_required',
         'company_website',
@@ -61,11 +80,18 @@ class Job extends Model
     ];
 
     protected $casts = [
-        'application_deadline' => 'date',
-        'job_type_tags' => 'array',
-        'interview_slot' => 'datetime',
-        'deactivation_requested_at' => 'datetime',
-        'archived_at' => 'datetime',
+        'application_deadline'         => 'date',
+        'job_type_tags'                => 'array',
+        'interview_slot'               => 'datetime',
+        'deactivation_requested_at'    => 'datetime',
+        'archived_at'                  => 'datetime',
+        'resume_submission_deadline'   => 'datetime',
+        'screening_required'           => 'boolean',
+        'is_company_confidential'      => 'boolean',
+        'fee_amount'                   => 'decimal:2',
+        'rpo_monthly_retainer'         => 'decimal:2',
+        'rpo_per_position_fee'         => 'decimal:2',
+        'rpo_dedicated_recruiter_cost' => 'decimal:2',
     ];
 
     /**

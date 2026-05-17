@@ -56,13 +56,12 @@ class ClientController extends Controller
             ->where('hiring_status', 'Selected')
             ->where('payment_status', '!=', 'paid')
             ->whereNotNull('joining_date')
+            ->with('job.user')
             ->get();
 
-        $billableDays = $client->billable_period_days ?? 30;
-
         foreach ($myHires as $hire) {
-            $invoiceDate = $hire->joining_date->copy()->addDays($billableDays);
-            if ($invoiceDate->isPast() || $invoiceDate->isToday()) {
+            $due = $hire->invoiceDueAt();
+            if ($due && ($due->isPast() || $due->isToday())) {
                 $dueInvoicesCount++;
             }
         }
@@ -599,15 +598,21 @@ class ClientController extends Controller
     public function billing()
     {
         $client = Auth::user();
-        $billableDays = (int) ($client->billable_period_days ?? 30);
+        $fallbackDays = (int) ($client->billable_period_days ?? 30);
 
+        // Per-job invoice_release_days takes precedence over the client's
+        // global billable_period_days; fall back to 30 if both are null.
         $hires = JobApplication::where('hiring_status', 'Selected')
-            ->whereNotNull('joining_date')
+            ->whereNotNull('job_applications.joining_date')
             ->whereHas('job', function ($q) use ($client) {
                 $q->where('user_id', $client->id);
             })
             ->with(['job', 'candidate', 'candidateUser'])
-            ->selectRaw("*, DATE_ADD(joining_date, INTERVAL ? DAY) as invoice_date", [$billableDays])
+            ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+            ->selectRaw(
+                "job_applications.*, DATE_ADD(job_applications.joining_date, INTERVAL COALESCE(jobs.invoice_release_days, ?) DAY) as invoice_date",
+                [$fallbackDays]
+            )
             ->orderByRaw('invoice_date DESC')
             ->paginate(25);
 
