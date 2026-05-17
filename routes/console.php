@@ -127,3 +127,13 @@ Schedule::command('superadmin:billing-due-check')
     ->timezone('Asia/Kolkata')
     ->dailyAt('10:00')
     ->withoutOverlapping();
+
+Schedule::command('resumes:auto-forward')
+    ->timezone('Asia/Kolkata')
+    ->hourly()
+    ->withoutOverlapping();
+
+Schedule::command('replacements:resolve')
+    ->timezone('Asia/Kolkata')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();

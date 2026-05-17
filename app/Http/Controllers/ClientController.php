@@ -278,12 +278,27 @@ class ClientController extends Controller
         $data = $request->validate([
             'reason' => 'nullable|string|max:1000',
         ]);
+
+        $partnerWindowDays = 15; // Default partner window for replacement.
         $application->update([
-            'replacement_requested_at' => now(),
-            'replacement_reason'       => $data['reason'] ?? null,
+            'replacement_requested_at'        => now(),
+            'replacement_reason'              => $data['reason'] ?? null,
+            'replacement_status'              => 'window_open',
+            'partner_replacement_window_days' => $partnerWindowDays,
+            'replacement_deadline'            => now()->addDays($partnerWindowDays),
         ]);
 
-        return back()->with('success', 'Replacement request raised. The sourcing partner has been notified.');
+        // Notify the sourcing partner via the existing database channel.
+        $partner = $application->candidate?->partner;
+        if ($partner) {
+            try {
+                $partner->notify(new \App\Notifications\ReplacementRequested($application));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('ReplacementRequested notify failed: '.$e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Replacement request raised. The sourcing partner has {$partnerWindowDays} days to provide a replacement.");
     }
 
     private function ensureClientCanEditJob(Job $job): void

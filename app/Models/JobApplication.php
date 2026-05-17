@@ -28,6 +28,10 @@ class JobApplication extends Model
         'invoice_amount',
         'invoice_generated_at',
         'replacement_window_days',
+        'replacement_status',
+        'replacement_deadline',
+        'replacement_application_id',
+        'partner_replacement_window_days',
         // New Billing Fields
         'payment_status',
         'paid_at',
@@ -45,6 +49,7 @@ class JobApplication extends Model
         'invoice_generated_at' => 'datetime',
         'final_ctc' => 'decimal:2',
         'invoice_amount' => 'decimal:2',
+        'replacement_deadline' => 'datetime',
     ];
 
     /**
@@ -232,6 +237,47 @@ class JobApplication extends Model
             'payment_due_at'   => $paymentDueAt,
             'gst_applicable'   => (bool) ($commercial->is_gst_applicable ?? true),
         ];
+    }
+
+    /**
+     * Replacement candidate (the one provided in place of this failed hire).
+     */
+    public function replacementApplication()
+    {
+        return $this->belongsTo(JobApplication::class, 'replacement_application_id');
+    }
+
+    /**
+     * Inverse — if this application IS the replacement for another, this points back.
+     */
+    public function replacesApplication()
+    {
+        return $this->hasOne(JobApplication::class, 'replacement_application_id');
+    }
+
+    public function partnerCreditNote()
+    {
+        return $this->hasOne(\App\Models\PartnerCreditNote::class, 'source_application_id');
+    }
+
+    /**
+     * Spec-aligned candidate lifecycle status:
+     *   Active             - joined, replacement_status null/none
+     *   Left               - joined_status='Left', no replacement requested yet
+     *   Replacement Given  - replacement_status='replacement_given' or replacement_application_id set
+     *   Credit Pending     - replacement_status='credit_pending'
+     *   Closed             - replacement_status='closed' (replacement accepted)
+     */
+    public function candidateStatus(): string
+    {
+        if ($this->replacement_status === 'closed')             return 'Closed';
+        if ($this->replacement_status === 'credit_pending')     return 'Credit Pending';
+        if ($this->replacement_status === 'replacement_given')  return 'Replacement Given';
+        if ($this->replacement_status === 'window_open')        return 'Replacement Pending';
+
+        if (($this->joined_status ?? null) === 'Left')          return 'Left';
+        if (($this->joined_status ?? null) === 'Joined')        return 'Active';
+        return ucfirst($this->joined_status ?? '—');
     }
 
     /**
