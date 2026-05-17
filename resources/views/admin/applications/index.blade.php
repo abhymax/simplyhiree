@@ -62,10 +62,17 @@
                             @endforeach
                         </select>
 
-                        <input type="date" name="date_from" value="{{ request('date_from') }}" max="{{ date('Y-m-d') }}" title="Applied from"
+                        <select name="client_id" title="Client" class="{{ $fldClass }} min-w-[140px] max-w-[200px]">
+                            <option value="" class="text-gray-400">All Clients</option>
+                            @foreach($clients as $client)
+                                <option value="{{ $client->id }}" class="bg-slate-900" {{ request('client_id') == $client->id ? 'selected' : '' }}>{{ Str::limit($client->name, 18) }}</option>
+                            @endforeach
+                        </select>
+
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" max="{{ date('Y-m-d') }}" title="Updated/Approved from"
                             class="{{ $fldClass }} w-[150px]">
                         <span class="text-blue-200/70 text-xs px-0.5">to</span>
-                        <input type="date" name="date_to" value="{{ request('date_to') }}" max="{{ date('Y-m-d') }}" title="Applied to"
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" max="{{ date('Y-m-d') }}" title="Updated/Approved to"
                             class="{{ $fldClass }} w-[150px]">
 
                         <select name="per_page" onchange="this.form.submit()" title="Per page" class="{{ $fldClass }}">
@@ -212,6 +219,11 @@
                                             <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white border-2 border-emerald-400 text-xs font-extrabold shadow-lg">
                                                 <i class="fa-solid fa-check"></i> Approved
                                             </span>
+                                            @if($application->auto_forwarded_at)
+                                                <div class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-200 border border-violet-400/40 px-2 py-0.5 rounded">
+                                                    <i class="fa-solid fa-robot"></i> Auto-forwarded
+                                                </div>
+                                            @endif
                                         @elseif($status === 'rejected')
                                             <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 text-white border-2 border-red-400 text-xs font-extrabold shadow-lg">
                                                 <i class="fa-solid fa-xmark"></i> Rejected
@@ -225,13 +237,23 @@
 
                                     {{-- Actions (Bright Icons) --}}
                                     <td class="px-6 py-5 text-right">
-                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition border border-indigo-400">
-                                            @if(strtolower($application->status) === 'pending review')
-                                                Review &amp; Decide
-                                            @else
-                                                View Details
+                                        <div class="flex items-center justify-end gap-2">
+                                            @php
+                                                $resumePath = $agencyCandidate?->resume_path ?? $directCandidate?->profile?->resume_path;
+                                            @endphp
+                                            @if($resumePath)
+                                                <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" title="Download CV" class="inline-flex items-center justify-center w-10 h-10 bg-slate-700 hover:bg-cyan-600 text-white rounded-xl shadow-md transition border border-slate-600 hover:border-cyan-400">
+                                                    <i class="fa-solid fa-download"></i>
+                                                </a>
                                             @endif
-                                        </a>
+                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition border border-indigo-400 whitespace-nowrap">
+                                                @if(strtolower($application->status) === 'pending review')
+                                                    Review &amp; Decide
+                                                @else
+                                                    View Details
+                                                @endif
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

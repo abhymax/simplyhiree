@@ -23,6 +23,7 @@ class JobApplication extends Model
         'left_at',
         'replacement_requested_at',
         'replacement_reason',
+        'auto_forwarded_at',
         // New Billing Fields
         'payment_status',
         'paid_at',
@@ -36,6 +37,7 @@ class JobApplication extends Model
         'paid_at' => 'datetime',
         'billing_due_alerted_at' => 'datetime',
         'replacement_requested_at' => 'datetime',
+        'auto_forwarded_at' => 'datetime',
     ];
 
     /**

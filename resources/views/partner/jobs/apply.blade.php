@@ -14,7 +14,7 @@
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6">
                         <h1 class="text-3xl font-bold text-white mb-2">{{ $job->title }}</h1>
-                        <p class="text-lg text-slate-200 mb-4">{{ $job->company_name }} - {{ $job->location }}</p>
+                        <p class="text-lg text-slate-200 mb-4">{{ $job->is_company_confidential ? 'SimplyHiree Client' : $job->company_name }} - {{ $job->location }}</p>
 
                         <div class="flex items-center gap-3 mb-6">
                             <span class="bg-blue-500/20 border border-blue-400/30 text-blue-100 text-sm font-medium px-3 py-1 rounded">
@@ -42,6 +42,45 @@
                 </div>
 
                 <div class="lg:col-span-1">
+                    @php
+                        $partner = auth()->user();
+                        $alreadyCount = \App\Models\JobApplication::where('job_id', $job->id)
+                            ->whereHas('candidate', fn($q) => $q->where('partner_id', $partner->id))
+                            ->count();
+                        $cap = (int) ($job->max_resume_per_vendor ?? 0);
+                        $remaining = $cap > 0 ? max(0, $cap - $alreadyCount) : null;
+                        $deadlinePassed = $job->resume_submission_deadline && now()->isAfter($job->resume_submission_deadline);
+                        $isBlocked = $deadlinePassed || ($remaining === 0);
+                    @endphp
+
+                    @if($job->resume_submission_deadline || $cap > 0)
+                    <div class="mb-3 rounded-2xl border {{ $isBlocked ? 'bg-rose-500/10 border-rose-400/40' : 'bg-blue-500/10 border-blue-400/30' }} px-4 py-3 text-sm space-y-1">
+                        @if($job->resume_submission_deadline)
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-semibold text-white"><i class="fa-regular fa-clock mr-1"></i> Submission Deadline</span>
+                                <span class="{{ $deadlinePassed ? 'text-rose-200 font-bold' : 'text-blue-100' }}">
+                                    {{ \Illuminate\Support\Carbon::parse($job->resume_submission_deadline)->format('d M Y, H:i') }}
+                                    {{ $deadlinePassed ? '(closed)' : '· ' . \Illuminate\Support\Carbon::parse($job->resume_submission_deadline)->diffForHumans() }}
+                                </span>
+                            </div>
+                        @endif
+                        @if($cap > 0)
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-semibold text-white"><i class="fa-solid fa-users mr-1"></i> Resumes Quota</span>
+                                <span class="{{ $remaining === 0 ? 'text-rose-200 font-bold' : 'text-blue-100' }}">
+                                    {{ $alreadyCount }} / {{ $cap }} used · {{ $remaining }} left
+                                </span>
+                            </div>
+                        @endif
+                        @if($isBlocked)
+                            <div class="text-rose-200 text-xs pt-1 border-t border-rose-400/20 mt-1.5">
+                                <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                                {{ $deadlinePassed ? 'The submission window for this job has closed.' : 'You have reached your resume cap for this job.' }}
+                            </div>
+                        @endif
+                    </div>
+                    @endif
+
                     <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden flex flex-col h-[calc(100vh-100px)] sticky top-6">
                         <div class="p-4 bg-slate-900/40 border-b border-white/10 z-10">
                             <h3 class="font-bold text-white mb-3">Select Candidates</h3>
@@ -81,8 +120,9 @@
                         </div>
 
                         <div class="p-4 bg-slate-900/40 border-t border-white/10">
-                            <button type="submit" class="w-full justify-center inline-flex items-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-semibold text-xs text-white uppercase tracking-widest hover:from-blue-600 hover:to-indigo-600 transition">
-                                Submit Selected
+                            <button type="submit" {{ $isBlocked ? 'disabled' : '' }}
+                                class="w-full justify-center inline-flex items-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-semibold text-xs text-white uppercase tracking-widest hover:from-blue-600 hover:to-indigo-600 transition disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed disabled:opacity-70">
+                                {{ $isBlocked ? ($deadlinePassed ? 'Deadline Passed' : 'Cap Reached') : 'Submit Selected' }}
                             </button>
                             <a href="{{ route('partner.jobs') }}" class="block text-center mt-3 text-sm text-slate-300 hover:text-white">Cancel</a>
                         </div>
@@ -123,20 +163,24 @@
                             <input type="text" name="last_name" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Email <span class="text-rose-300">*</span></label>
-                            <input type="email" name="email" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Email</label>
+                            <input type="email" name="email" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300">Phone <span class="text-rose-300">*</span></label>
                             <input type="text" name="phone_number" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Date of Birth</label>
-                            <input type="date" name="date_of_birth" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Alternate Phone</label>
+                            <input type="text" name="alternate_phone_number" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Gender</label>
-                            <select name="gender" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Date of Birth <span class="text-rose-300">*</span></label>
+                            <input type="date" name="date_of_birth" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Gender <span class="text-rose-300">*</span></label>
+                            <select name="gender" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                                 <option value="" class="text-slate-900">Select</option>
                                 <option value="Male" class="text-slate-900">Male</option>
                                 <option value="Female" class="text-slate-900">Female</option>
@@ -144,10 +188,24 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Location</label>
-                            <input type="text" name="location" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Marital Status <span class="text-rose-300">*</span></label>
+                            <select name="marital_status" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                                <option value="" class="text-slate-900">Select</option>
+                                <option value="Single" class="text-slate-900">Single</option>
+                                <option value="Married" class="text-slate-900">Married</option>
+                                <option value="Divorced" class="text-slate-900">Divorced</option>
+                                <option value="Widowed" class="text-slate-900">Widowed</option>
+                            </select>
                         </div>
                         <div>
+                            <label class="block text-xs font-medium text-slate-300">Current Location <span class="text-rose-300">*</span></label>
+                            <input type="text" name="location" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Preferred Locations <span class="text-rose-300">*</span></label>
+                            <input type="text" name="preferred_locations" required placeholder="e.g. Mumbai, Pune" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-slate-300">Languages Spoken</label>
                             <input type="text" name="languages_spoken" placeholder="e.g. English, Hindi" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
@@ -160,31 +218,59 @@
                             <input type="text" name="skills" placeholder="Java, Python, Sales, Marketing..." class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Highest Education</label>
-                            <input type="text" name="education_level" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Education Level <span class="text-rose-300">*</span></label>
+                            <input type="text" name="education_level" required placeholder="e.g. Under Graduate" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Experience Status</label>
-                            <select name="experience_status" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Qualification / Degree <span class="text-rose-300">*</span></label>
+                            <input type="text" name="qualification_degree" required placeholder="e.g. B.Tech" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Specialization <span class="text-rose-300">*</span></label>
+                            <input type="text" name="specialization" required placeholder="e.g. Computer Science" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Experience Status <span class="text-rose-300">*</span></label>
+                            <select name="experience_status" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                                 <option value="Experienced" class="text-slate-900">Experienced</option>
                                 <option value="Fresher" class="text-slate-900">Fresher</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Current/Expected CTC</label>
-                            <input type="number" name="expected_ctc" placeholder="Annual CTC" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Total Experience (Years) <span class="text-rose-300">*</span></label>
+                            <input type="number" name="total_experience_years" required min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Notice Period</label>
-                            <input type="text" name="notice_period" placeholder="e.g. 15 Days, Immediate" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Total Experience (Months) <span class="text-rose-300">*</span></label>
+                            <input type="number" name="total_experience_months" required min="0" max="11" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
+                            <label class="block text-xs font-medium text-slate-300">Current Company <span class="text-rose-300">*</span></label>
+                            <input type="text" name="current_company" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Current Designation <span class="text-rose-300">*</span></label>
+                            <input type="text" name="current_designation" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Current CTC <span class="text-rose-300">*</span></label>
+                            <input type="text" name="current_ctc" required placeholder="Annual CTC" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Expected CTC <span class="text-rose-300">*</span></label>
+                            <input type="text" name="expected_ctc" required placeholder="Annual CTC" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Notice Period <span class="text-rose-300">*</span></label>
+                            <input type="text" name="notice_period" required placeholder="e.g. 15 Days, Immediate" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300">Job Interest <span class="text-rose-300">*</span></label>
+                            <input type="text" name="job_interest" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                        </div>
+                        <div class="md:col-span-2">
                             <label class="block text-xs font-medium text-slate-300">Preferred Job Role</label>
                             <input type="text" name="job_role_preference" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300">Job Interest</label>
-                            <input type="text" name="job_interest" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                     </div>
 
