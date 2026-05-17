@@ -131,10 +131,10 @@ class PartnerController extends Controller
                   });
             });
 
-        // 3. Premium job gating — Free-plan partners only see non-premium jobs.
-        $ownerId = $partner->partnerOwnerId();
+        // 3. Premium / bulk-hiring jobs are reserved for Pro & Enterprise plans.
+        $ownerId   = $partner->partnerOwnerId();
         $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
-        if ($ownerPlan === 'Free') {
+        if (!in_array($ownerPlan, ['Pro', 'Enterprise'], true)) {
             $query->where(function ($q) {
                 $q->where('is_premium', false)->orWhereNull('is_premium');
             });
@@ -501,6 +501,25 @@ class PartnerController extends Controller
         ]);
 
         $partner = Auth::user();
+        // 3. Plan-based monthly submission cap.
+        $ownerId   = $partner->partnerOwnerId();
+        $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
+        $monthlyCaps = ['Free' => 10, 'Basic' => 50]; // Pro & Enterprise = unlimited
+        if (isset($monthlyCaps[$ownerPlan])) {
+            $cap = $monthlyCaps[$ownerPlan];
+            // Count submissions this month across the whole team
+            $teamIds = \App\Models\User::where('parent_partner_id', $ownerId)->pluck('id')->push($ownerId)->all();
+            $thisMonth = JobApplication::whereIn('submitted_by_user_id', $teamIds)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count();
+            $attemptingToSubmit = count($request->input('candidate_ids'));
+            if (($thisMonth + $attemptingToSubmit) > $cap) {
+                return redirect()->back()->with('error',
+                    "Your {$ownerPlan} plan allows {$cap} submissions / month. You've used {$thisMonth}. Upgrade your plan to submit more.");
+            }
+        }
+
         $submittedCount = 0;
         // Screening branching: Mode 3 (client unchecked) skips admin queue.
         $initialStatus = ($job->screening_required ?? true) ? 'Pending Review' : 'Approved';

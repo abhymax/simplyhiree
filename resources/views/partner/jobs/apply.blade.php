@@ -50,10 +50,27 @@
                         $cap = (int) ($job->max_resume_per_vendor ?? 0);
                         $remaining = $cap > 0 ? max(0, $cap - $alreadyCount) : null;
                         $deadlinePassed = $job->resume_submission_deadline && now()->isAfter($job->resume_submission_deadline);
-                        $isBlocked = $deadlinePassed || ($remaining === 0);
+
+                        // Plan-based monthly cap
+                        $ownerId   = $partner->partnerOwnerId();
+                        $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
+                        $monthlyCaps = ['Free' => 10, 'Basic' => 50];
+                        $planCap = $monthlyCaps[$ownerPlan] ?? null;
+                        $monthlyUsed = null;
+                        if ($planCap !== null) {
+                            $teamIds = \App\Models\User::where('parent_partner_id', $ownerId)->pluck('id')->push($ownerId)->all();
+                            $monthlyUsed = \App\Models\JobApplication::whereIn('submitted_by_user_id', $teamIds)
+                                ->whereMonth('created_at', now()->month)
+                                ->whereYear('created_at', now()->year)
+                                ->count();
+                        }
+                        $monthlyRemaining = $planCap !== null ? max(0, $planCap - $monthlyUsed) : null;
+                        $monthlyExhausted = $planCap !== null && $monthlyRemaining === 0;
+
+                        $isBlocked = $deadlinePassed || ($remaining === 0) || $monthlyExhausted;
                     @endphp
 
-                    @if($job->resume_submission_deadline || $cap > 0)
+                    @if($job->resume_submission_deadline || $cap > 0 || $planCap !== null)
                     <div class="mb-3 rounded-2xl border {{ $isBlocked ? 'bg-rose-500/10 border-rose-400/40' : 'bg-blue-500/10 border-blue-400/30' }} px-4 py-3 text-sm space-y-1">
                         @if($job->resume_submission_deadline)
                             <div class="flex items-center justify-between gap-2">
@@ -72,10 +89,21 @@
                                 </span>
                             </div>
                         @endif
+                        @if($planCap !== null)
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-semibold text-white"><i class="fa-solid fa-gauge-high mr-1"></i> Monthly Plan Cap ({{ $ownerPlan }})</span>
+                                <span class="{{ $monthlyExhausted ? 'text-rose-200 font-bold' : 'text-blue-100' }}">
+                                    {{ $monthlyUsed }} / {{ $planCap }} used · {{ $monthlyRemaining }} left
+                                </span>
+                            </div>
+                        @endif
                         @if($isBlocked)
                             <div class="text-rose-200 text-xs pt-1 border-t border-rose-400/20 mt-1.5">
                                 <i class="fa-solid fa-circle-exclamation mr-1"></i>
-                                {{ $deadlinePassed ? 'The submission window for this job has closed.' : 'You have reached your resume cap for this job.' }}
+                                @if($deadlinePassed) The submission window for this job has closed.
+                                @elseif($monthlyExhausted) Monthly plan cap reached — <a href="{{ route('partner.upgrade') }}" class="underline">upgrade your plan</a> to submit more.
+                                @else You have reached your resume cap for this job.
+                                @endif
                             </div>
                         @endif
                     </div>
