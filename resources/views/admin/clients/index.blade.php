@@ -143,7 +143,8 @@
 
                                             <button @click="$dispatch('open-modal', 'pwd-{{ $user->id }}')" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-purple-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-key"></i></button>
                                             
-                                            <a href="{{ route('admin.clients.edit', $user->id) }}" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('admin.clients.edit', $user->id) }}" title="Edit Profile" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-pen"></i></a>
+                                            <a href="{{ route('admin.clients.commercials.edit', $user->id) }}" title="Set Commercials" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-amber-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-file-invoice-dollar"></i></a>
                                             
                                             @if($user->status !== 'active')
                                                 <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">

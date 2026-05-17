@@ -448,6 +448,135 @@ class AdminController extends Controller
         return view('admin.clients.show', compact('user', 'jobs', 'totalJobs', 'activeJobs', 'totalHires'));
     }
 
+    // --- CLIENT COMMERCIALS (Permanent Hiring Format) ---
+
+    /**
+     * Default rows pulled from the Permanent Hiring Commercial Format doc.
+     */
+    private function defaultCommercialContractData(): array
+    {
+        return [
+            'percentage_based' => [
+                ['label' => 'Upto 10 Lakh',     'min_ctc' => 0,        'max_ctc' => 1000000,  'fee_percent' => 7,    'replacement_days' => 30],
+                ['label' => '10.01 to 20 Lakh', 'min_ctc' => 1000001,  'max_ctc' => 2000000,  'fee_percent' => 8.33, 'replacement_days' => 60],
+                ['label' => '20.01 to 30 Lakh', 'min_ctc' => 2000001,  'max_ctc' => 3000000,  'fee_percent' => 10,   'replacement_days' => 90],
+                ['label' => '30.01 to 40 Lakh', 'min_ctc' => 3000001,  'max_ctc' => 4000000,  'fee_percent' => 12,   'replacement_days' => 90],
+                ['label' => '40.01 Lakh Above', 'min_ctc' => 4000001,  'max_ctc' => null,     'fee_percent' => 15,   'replacement_days' => 90],
+            ],
+            'profile_wise' => [
+                ['profile' => 'Entry Level',     'fee_percent' => 5,    'replacement_days' => 30],
+                ['profile' => 'Mid-Level',       'fee_percent' => 8.33, 'replacement_days' => 60],
+                ['profile' => 'Sr. Level',       'fee_percent' => 10,   'replacement_days' => 90],
+                ['profile' => 'Leader/CXO Level','fee_percent' => 12,   'replacement_days' => 90],
+            ],
+            'flat' => [
+                ['category' => 'BPO/Sales', 'fee_amount' => 5000, 'replacement_days' => 30],
+            ],
+        ];
+    }
+
+    public function editCommercials(User $user)
+    {
+        if (!$user->hasRole('client')) abort(404);
+
+        $commercial = \App\Models\ClientCommercial::firstOrNew(['user_id' => $user->id]);
+        $defaults = $this->defaultCommercialContractData();
+
+        // For a brand-new commercial, pre-seed every billing type with the
+        // doc defaults so the admin can see and tweak them in any tab.
+        $existing = is_array($commercial->contract_data) ? $commercial->contract_data : [];
+        $contract = [
+            'percentage_based' => $existing['percentage_based'] ?? $defaults['percentage_based'],
+            'profile_wise'     => $existing['profile_wise']     ?? $defaults['profile_wise'],
+            'flat'             => $existing['flat']             ?? $defaults['flat'],
+        ];
+
+        return view('admin.clients.commercials', [
+            'user'       => $user,
+            'commercial' => $commercial,
+            'contract'   => $contract,
+        ]);
+    }
+
+    public function updateCommercials(Request $request, User $user)
+    {
+        if (!$user->hasRole('client')) abort(404);
+
+        $validated = $request->validate([
+            'billing_type'       => 'required|in:percentage_based,profile_wise,flat',
+            'invoice_raise_days' => 'required|integer|min:0|max:365',
+            'payment_terms_days' => 'required|integer|min:0|max:365',
+            'is_gst_applicable'  => 'nullable|boolean',
+
+            // Slab rows
+            'slab_label.*'           => 'nullable|string|max:60',
+            'slab_min_ctc.*'         => 'nullable|integer|min:0',
+            'slab_max_ctc.*'         => 'nullable|integer|min:0',
+            'slab_fee_percent.*'     => 'nullable|numeric|min:0|max:100',
+            'slab_replacement.*'     => 'nullable|integer|min:0|max:365',
+
+            // Profile rows
+            'prof_profile.*'         => 'nullable|string|max:60',
+            'prof_fee_percent.*'     => 'nullable|numeric|min:0|max:100',
+            'prof_replacement.*'     => 'nullable|integer|min:0|max:365',
+
+            // Flat rows
+            'flat_category.*'        => 'nullable|string|max:60',
+            'flat_fee_amount.*'      => 'nullable|numeric|min:0',
+            'flat_replacement.*'     => 'nullable|integer|min:0|max:365',
+        ]);
+
+        $slabs = [];
+        foreach ((array) $request->input('slab_label', []) as $i => $label) {
+            if (!trim((string) $label) && $request->input('slab_fee_percent.' . $i) === null) continue;
+            $slabs[] = [
+                'label'            => trim((string) $label),
+                'min_ctc'          => $request->input("slab_min_ctc.$i") !== null && $request->input("slab_min_ctc.$i") !== '' ? (int) $request->input("slab_min_ctc.$i") : null,
+                'max_ctc'          => $request->input("slab_max_ctc.$i") !== null && $request->input("slab_max_ctc.$i") !== '' ? (int) $request->input("slab_max_ctc.$i") : null,
+                'fee_percent'      => (float) $request->input("slab_fee_percent.$i", 0),
+                'replacement_days' => (int) $request->input("slab_replacement.$i", 0),
+            ];
+        }
+
+        $profiles = [];
+        foreach ((array) $request->input('prof_profile', []) as $i => $profile) {
+            if (!trim((string) $profile)) continue;
+            $profiles[] = [
+                'profile'          => trim((string) $profile),
+                'fee_percent'      => (float) $request->input("prof_fee_percent.$i", 0),
+                'replacement_days' => (int) $request->input("prof_replacement.$i", 0),
+            ];
+        }
+
+        $flats = [];
+        foreach ((array) $request->input('flat_category', []) as $i => $category) {
+            if (!trim((string) $category)) continue;
+            $flats[] = [
+                'category'         => trim((string) $category),
+                'fee_amount'       => (float) $request->input("flat_fee_amount.$i", 0),
+                'replacement_days' => (int) $request->input("flat_replacement.$i", 0),
+            ];
+        }
+
+        \App\Models\ClientCommercial::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'billing_type'       => $validated['billing_type'],
+                'contract_data'      => [
+                    'percentage_based' => $slabs,
+                    'profile_wise'     => $profiles,
+                    'flat'             => $flats,
+                ],
+                'invoice_raise_days' => $validated['invoice_raise_days'],
+                'payment_terms_days' => $validated['payment_terms_days'],
+                'is_gst_applicable'  => (bool) ($request->input('is_gst_applicable') ?? false),
+            ]
+        );
+
+        return redirect()->route('admin.clients.commercials.edit', $user)
+            ->with('success', 'Client commercials saved.');
+    }
+
     // --- PARTNER MANAGEMENT ---
 
     public function listPartners(Request $request)

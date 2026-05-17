@@ -141,6 +141,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/clients/{user}/edit', [AdminController::class, 'editClient'])->name('clients.edit');
             Route::patch('/clients/{user}', [AdminController::class, 'updateClient'])->name('clients.update');
             Route::get('/clients/{user}/show', [AdminController::class, 'showClient'])->name('clients.show');
+            Route::get('/clients/{user}/commercials', [AdminController::class, 'editCommercials'])->name('clients.commercials.edit');
+            Route::put('/clients/{user}/commercials', [AdminController::class, 'updateCommercials'])->name('clients.commercials.update');
         });
 
 
