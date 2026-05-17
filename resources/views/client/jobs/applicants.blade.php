@@ -146,7 +146,7 @@
                                         <a href="{{ route('client.applications.showLeftForm', $app) }}" class="fx-btn inline-block bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 px-3 rounded-lg">Mark Left</a>
                                     @elseif($app->joined_status == 'Left')
                                         @php
-                                            $guaranteeDays = (int) ($app->job->replacement_guarantee_days ?? 0);
+                                            $guaranteeDays = (int) ($app->replacement_window_days ?? $app->job->replacement_guarantee_days ?? 0);
                                             $tenureDays = ($app->joining_date && $app->left_at) ? $app->joining_date->diffInDays($app->left_at) : null;
                                             $withinGuarantee = $guaranteeDays === 0 || ($tenureDays !== null && $tenureDays <= $guaranteeDays);
                                         @endphp

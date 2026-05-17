@@ -263,7 +263,11 @@ class ClientController extends Controller
         if ($application->replacement_requested_at) {
             return back()->with('error', 'A replacement has already been requested for this candidate.');
         }
-        $guaranteeDays = (int) ($application->job->replacement_guarantee_days ?? 0);
+        // Prefer the locked-in window stamped at hire-time from the resolved
+        // commercial row; fall back to the job-level posting value.
+        $guaranteeDays = (int) ($application->replacement_window_days
+            ?? $application->job->replacement_guarantee_days
+            ?? 0);
         if ($guaranteeDays > 0) {
             $tenure = $application->joining_date->diffInDays($application->left_at);
             if ($tenure > $guaranteeDays) {
@@ -560,12 +564,20 @@ class ClientController extends Controller
     private function stampResolvedInvoice(JobApplication $application): void
     {
         $resolved = $application->resolveCommercial();
-        if (!$resolved || $resolved['invoice_amount'] <= 0) {
-            return;
+        if (!$resolved) return;
+
+        $stamp = [];
+        if ($application->invoice_amount === null && $resolved['invoice_amount'] > 0) {
+            $stamp['invoice_amount'] = $resolved['invoice_amount'];
         }
-        $application->update([
-            'invoice_amount' => $resolved['invoice_amount'],
-        ]);
+        // Lock in the replacement window for this hire so subsequent edits
+        // to the client's contract don't retroactively change it.
+        if ($application->replacement_window_days === null && $resolved['replacement_days'] !== null) {
+            $stamp['replacement_window_days'] = $resolved['replacement_days'];
+        }
+        if (!empty($stamp)) {
+            $application->update($stamp);
+        }
     }
 
     public function markAsJoined(JobApplication $application)

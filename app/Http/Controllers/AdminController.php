@@ -1362,13 +1362,16 @@ class AdminController extends Controller
 
     public function markInvoiceRaised(JobApplication $application)
     {
-        // Stamp the resolved amount if it isn't already set; that way the
-        // amount used at "raise time" is locked in.
+        // Lock in everything resolvable at raise-time so the contract can
+        // be edited later without rewriting history.
         $stamp = ['invoice_generated_at' => now()];
-        if (!$application->invoice_amount) {
-            $cb = $application->resolveCommercial();
-            if ($cb && $cb['invoice_amount'] > 0) {
+        $cb = $application->resolveCommercial();
+        if ($cb) {
+            if (!$application->invoice_amount && $cb['invoice_amount'] > 0) {
                 $stamp['invoice_amount'] = $cb['invoice_amount'];
+            }
+            if ($application->replacement_window_days === null && $cb['replacement_days'] !== null) {
+                $stamp['replacement_window_days'] = $cb['replacement_days'];
             }
         }
         $application->update($stamp);

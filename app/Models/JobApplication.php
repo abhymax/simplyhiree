@@ -27,6 +27,7 @@ class JobApplication extends Model
         'final_ctc',
         'invoice_amount',
         'invoice_generated_at',
+        'replacement_window_days',
         // New Billing Fields
         'payment_status',
         'paid_at',
@@ -208,6 +209,16 @@ class JobApplication extends Model
         if ($this->joining_date) {
             $invoiceDueAt = $this->joining_date->copy()->addDays((int) ($commercial->invoice_raise_days ?? 30));
             $paymentDueAt = $invoiceDueAt->copy()->addDays((int) ($commercial->payment_terms_days ?? 30));
+        }
+
+        // Lock-in: once stamped on the application, prefer the persisted
+        // values over live-recomputed ones so contract edits don't rewrite
+        // history.
+        if ($this->invoice_amount !== null && (float) $this->invoice_amount > 0) {
+            $invoiceAmount = (float) $this->invoice_amount;
+        }
+        if ($this->replacement_window_days !== null) {
+            $replacementDays = (int) $this->replacement_window_days;
         }
 
         return [
