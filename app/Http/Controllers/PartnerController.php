@@ -16,6 +16,11 @@ use Carbon\Carbon;
 
 class PartnerController extends Controller
 {
+    public function upgrade()
+    {
+        return view('partner.upgrade', ['partner' => Auth::user()]);
+    }
+
     public function wallet()
     {
         $partner = Auth::user();
@@ -125,6 +130,15 @@ class PartnerController extends Controller
                            });
                   });
             });
+
+        // 3. Premium job gating — Free-plan partners only see non-premium jobs.
+        $ownerId = $partner->partnerOwnerId();
+        $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
+        if ($ownerPlan === 'Free') {
+            $query->where(function ($q) {
+                $q->where('is_premium', false)->orWhereNull('is_premium');
+            });
+        }
 
         // --- Search Filters ---
         if ($request->filled('search')) {
@@ -488,6 +502,8 @@ class PartnerController extends Controller
 
         $partner = Auth::user();
         $submittedCount = 0;
+        // Screening branching: Mode 3 (client unchecked) skips admin queue.
+        $initialStatus = ($job->screening_required ?? true) ? 'Pending Review' : 'Approved';
 
         foreach ($request->input('candidate_ids') as $candidateId) {
             // Verify candidate belongs to partner
@@ -503,9 +519,10 @@ class PartnerController extends Controller
             
             if (!$existingApplication) {
                 JobApplication::create([
-                    'job_id' => $job->id,
-                    'candidate_id' => $candidateId,
-                    'status' => 'Pending Review',
+                    'job_id'              => $job->id,
+                    'candidate_id'        => $candidateId,
+                    'status'              => $initialStatus,
+                    'submitted_by_user_id' => Auth::id(),
                 ]);
                 $submittedCount++;
             }

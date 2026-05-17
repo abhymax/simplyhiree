@@ -32,6 +32,7 @@ class JobApplication extends Model
         'replacement_deadline',
         'replacement_application_id',
         'partner_replacement_window_days',
+        'submitted_by_user_id',
         // New Billing Fields
         'payment_status',
         'paid_at',

@@ -47,6 +47,7 @@ class Job extends Model
         'client_payout_days',
         'replacement_guarantee_days',
         'partner_visibility',
+        'is_premium',
         // Finance (per-job billing engine)
         'fee_type',
         'fee_amount',
@@ -88,6 +89,7 @@ class Job extends Model
         'resume_submission_deadline'   => 'datetime',
         'screening_required'           => 'boolean',
         'is_company_confidential'      => 'boolean',
+        'is_premium'                   => 'boolean',
         'fee_amount'                   => 'decimal:2',
         'rpo_monthly_retainer'         => 'decimal:2',
         'rpo_per_position_fee'         => 'decimal:2',

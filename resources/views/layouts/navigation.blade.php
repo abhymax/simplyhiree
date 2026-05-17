@@ -94,6 +94,11 @@
                         <x-nav-link :href="route('partner.wallet')" :active="request()->routeIs('partner.wallet')" class="text-slate-600 hover:text-indigo-600">
                             Wallet
                         </x-nav-link>
+                        @if(auth()->user()->isPartnerOwner())
+                            <x-nav-link :href="route('partner.team.index')" :active="request()->routeIs('partner.team.*')" class="text-slate-600 hover:text-indigo-600">
+                                Team
+                            </x-nav-link>
+                        @endif
                         <x-nav-link :href="route('partner.profile.business')" :active="request()->routeIs('partner.profile.business')" class="text-slate-600 hover:text-indigo-600">
                             My Account
                         </x-nav-link>

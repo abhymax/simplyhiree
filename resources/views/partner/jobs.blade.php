@@ -88,6 +88,9 @@
                                         @if($job->is_walkin)
                                             <span class="ml-2 bg-cyan-500/20 text-cyan-100 text-xs font-bold px-2 py-1 rounded border border-cyan-400/30">Walkin</span>
                                         @endif
+                                        @if($job->is_premium)
+                                            <span class="ml-2 bg-yellow-500/20 text-yellow-100 text-xs font-bold px-2 py-1 rounded border border-yellow-400/40" title="Premium-plan job"><i class="fa-solid fa-crown"></i> Premium</span>
+                                        @endif
                                     </a>
                                     <div class="text-amber-300 text-sm font-bold mt-1">{{ $job->company_name }}</div>
                                     <div class="text-blue-200 text-xs">{{ $job->location }} | {{ $job->category->name ?? 'N/A' }}</div>

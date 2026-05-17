@@ -291,6 +291,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
         Route::get('/wallet', [PartnerController::class, 'wallet'])->name('wallet');
+
+        // Team management
+        Route::get('/team', [\App\Http\Controllers\PartnerTeamController::class, 'index'])->name('team.index');
+        Route::post('/team', [\App\Http\Controllers\PartnerTeamController::class, 'store'])->name('team.store');
+        Route::patch('/team/{user}', [\App\Http\Controllers\PartnerTeamController::class, 'update'])->name('team.update');
+        Route::patch('/team/{user}/toggle', [\App\Http\Controllers\PartnerTeamController::class, 'toggle'])->name('team.toggle');
+
+        // Plan / upgrade
+        Route::get('/upgrade', [PartnerController::class, 'upgrade'])->name('upgrade');
         
         // Jobs
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');

@@ -23,6 +23,11 @@ class User extends Authenticatable
         'google_id',
         'billable_period_days',
         'status',
+        'parent_partner_id',
+        'team_role',
+        'access_level',
+        'partner_tier',
+        'partner_plan',
     ];
 
     protected $hidden = [
@@ -103,6 +108,40 @@ class User extends Authenticatable
     public function clientCommercial(): HasOne
     {
         return $this->hasOne(\App\Models\ClientCommercial::class);
+    }
+
+    public function parentPartner()
+    {
+        return $this->belongsTo(User::class, 'parent_partner_id');
+    }
+
+    public function teamMembers()
+    {
+        return $this->hasMany(User::class, 'parent_partner_id');
+    }
+
+    /**
+     * The owner id for whichever partner team this user is part of.
+     * For an owner this returns their own id; for a team-member, their parent.
+     */
+    public function partnerOwnerId(): ?int
+    {
+        return $this->parent_partner_id ?? $this->id;
+    }
+
+    public function isPartnerOwner(): bool
+    {
+        return $this->hasRole('partner') && empty($this->parent_partner_id);
+    }
+
+    public function isPartnerTeamMember(): bool
+    {
+        return $this->hasRole('partner') && !empty($this->parent_partner_id);
+    }
+
+    public function canSeeCommercials(): bool
+    {
+        return $this->isPartnerOwner() || in_array($this->access_level, ['full', null], true);
     }
 
     public function jobs(): HasMany

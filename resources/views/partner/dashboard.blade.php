@@ -72,10 +72,26 @@
 
         <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-white/10 pb-6">
             <div>
-                <div class="flex items-center gap-2 mb-2">
+                @php
+                    $tier = auth()->user()->partner_tier ?? 'Bronze';
+                    $plan = auth()->user()->partner_plan ?? 'Free';
+                    $tierColors = [
+                        'Bronze' => 'bg-orange-700/30 text-orange-200 border-orange-400/40',
+                        'Silver' => 'bg-slate-400/20 text-slate-200 border-slate-400/40',
+                        'Gold'   => 'bg-yellow-500/20 text-yellow-200 border-yellow-400/40',
+                        'Diamond'=> 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40',
+                    ];
+                @endphp
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
                     <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
                         Partner Workspace
                     </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $tierColors[$tier] ?? '' }}">
+                        <i class="fa-solid fa-award"></i> {{ $tier }}
+                    </span>
+                    <a href="{{ route('partner.upgrade') }}" class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-900 hover:from-yellow-400 hover:to-orange-400 transition shadow-md shadow-yellow-500/30">
+                        <i class="fa-solid fa-rocket mr-1"></i> Upgrade Plan ({{ $plan }})
+                    </a>
                 </div>
                 <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
                     Overview
