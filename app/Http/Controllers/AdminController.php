@@ -1332,11 +1332,25 @@ class AdminController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        // Sanity check — clients with Selected hires but no commercial configured.
+        // Pulls a fresh query so it's independent of pagination / status filter.
+        $missingCommercials = \App\Models\User::role('client')
+            ->whereHas('jobs.jobApplications', fn ($q) => $q->where('hiring_status', 'Selected')->whereNotNull('joining_date'))
+            ->whereDoesntHave('clientCommercial')
+            ->withCount(['jobs as selected_hires_count' => function ($q) {
+                $q->join('job_applications', 'job_applications.job_id', '=', 'jobs.id')
+                  ->where('job_applications.hiring_status', 'Selected')
+                  ->whereNotNull('job_applications.joining_date');
+            }])
+            ->orderByDesc('selected_hires_count')
+            ->get(['id', 'name', 'email']);
+
         return view('admin.billing.index', [
-            'placements'    => $rows,
-            'counts'        => $counts,
-            'clients'       => $clients,
-            'statusFilter'  => $statusFilter,
+            'placements'         => $rows,
+            'counts'             => $counts,
+            'clients'            => $clients,
+            'statusFilter'       => $statusFilter,
+            'missingCommercials' => $missingCommercials,
         ]);
     }
 

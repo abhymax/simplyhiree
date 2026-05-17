@@ -100,6 +100,11 @@ class User extends Authenticatable
         return $this->hasOne(ClientProfile::class);
     }
 
+    public function clientCommercial(): HasOne
+    {
+        return $this->hasOne(\App\Models\ClientCommercial::class);
+    }
+
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);

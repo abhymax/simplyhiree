@@ -20,6 +20,36 @@
                 @endif
             </div>
 
+            @if($missingCommercials->isNotEmpty())
+                <div class="mb-6 rounded-2xl border border-amber-400/50 bg-amber-500/10 backdrop-blur-md px-5 py-4 shadow-lg">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-300"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-amber-100 font-extrabold text-base flex items-center gap-2">
+                                Commercial Sanity Check
+                                <span class="bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">{{ $missingCommercials->count() }}</span>
+                            </h3>
+                            <p class="text-amber-100/90 text-sm mt-1">
+                                The following client{{ $missingCommercials->count() === 1 ? '' : 's' }}
+                                {{ $missingCommercials->count() === 1 ? 'has' : 'have' }} successful hires but no commercial contract configured yet. Invoice amounts and dates cannot be auto-resolved for them.
+                            </p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @foreach($missingCommercials as $m)
+                                    <a href="{{ route('admin.clients.commercials.edit', $m->id) }}"
+                                       class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                        {{ $m->name }}
+                                        <span class="bg-slate-900/30 text-slate-900 px-1.5 py-0.5 rounded text-[10px] font-extrabold">{{ $m->selected_hires_count }} {{ $m->selected_hires_count === 1 ? 'hire' : 'hires' }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @php
                 $colors = [
                     'Maturing'     => 'bg-slate-500/20 text-slate-200 border-slate-400/40',
