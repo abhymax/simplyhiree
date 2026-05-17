@@ -39,6 +39,12 @@
                             <x-nav-link :href="route('admin.billing.index')" :active="request()->routeIs('admin.billing.index')" class="text-slate-600 hover:text-indigo-600">
                                 Billing Report
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.replacements.index')" :active="request()->routeIs('admin.replacements.*')" class="text-slate-600 hover:text-indigo-600">
+                                Replacements
+                            </x-nav-link>
+                            <x-nav-link :href="route('admin.credit-notes.index')" :active="request()->routeIs('admin.credit-notes.*')" class="text-slate-600 hover:text-indigo-600">
+                                Credit Notes
+                            </x-nav-link>
                             <x-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')" class="text-slate-600 hover:text-indigo-600">
                                 Master Job Report
                             </x-nav-link>
@@ -84,6 +90,9 @@
                         </x-nav-link>
                         <x-nav-link :href="route('partner.candidates.index')" :active="request()->routeIs('partner.candidates.index')" class="text-slate-600 hover:text-indigo-600">
                             My Candidates
+                        </x-nav-link>
+                        <x-nav-link :href="route('partner.wallet')" :active="request()->routeIs('partner.wallet')" class="text-slate-600 hover:text-indigo-600">
+                            Wallet
                         </x-nav-link>
                         <x-nav-link :href="route('partner.profile.business')" :active="request()->routeIs('partner.profile.business')" class="text-slate-600 hover:text-indigo-600">
                             My Account

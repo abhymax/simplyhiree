@@ -16,6 +16,44 @@ use Carbon\Carbon;
 
 class PartnerController extends Controller
 {
+    public function wallet()
+    {
+        $partner = Auth::user();
+
+        $myApps = JobApplication::whereHas('candidate', fn ($q) => $q->where('partner_id', $partner->id))
+            ->with(['job', 'candidate', 'partnerCreditNote']);
+
+        $activeCount = (clone $myApps)->where('joined_status', 'Joined')->whereNull('replacement_status')->count();
+        $underGuaranteeCount = (clone $myApps)
+            ->where('joined_status', 'Joined')
+            ->whereNotNull('joining_date')
+            ->whereRaw('DATE_ADD(joining_date, INTERVAL COALESCE(replacement_window_days, 90) DAY) >= NOW()')
+            ->count();
+        $replacementRequiredCount = (clone $myApps)->where('replacement_status', 'window_open')->count();
+
+        $credits = \App\Models\PartnerCreditNote::where('partner_id', $partner->id)
+            ->with(['sourceApplication.job', 'sourceApplication.candidate'])
+            ->latest()
+            ->paginate(20);
+
+        $totals = [
+            'pending'   => \App\Models\PartnerCreditNote::where('partner_id', $partner->id)->where('status', 'pending')->sum('amount'),
+            'applied'   => \App\Models\PartnerCreditNote::where('partner_id', $partner->id)->where('status', 'applied')->sum('amount'),
+            'cancelled' => \App\Models\PartnerCreditNote::where('partner_id', $partner->id)->where('status', 'cancelled')->sum('amount'),
+        ];
+
+        $replacementsRequired = (clone $myApps)
+            ->where('replacement_status', 'window_open')
+            ->latest('replacement_requested_at')
+            ->limit(20)
+            ->get();
+
+        return view('partner.wallet', compact(
+            'activeCount', 'underGuaranteeCount', 'replacementRequiredCount',
+            'credits', 'totals', 'replacementsRequired'
+        ));
+    }
+
     /**
      * Show the partner dashboard.
      */

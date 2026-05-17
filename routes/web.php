@@ -196,6 +196,17 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
             Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
             Route::patch('/applications/{application}/mark-raised', [AdminController::class, 'markInvoiceRaised'])->name('applications.markRaised');
+
+            // Replacement lifecycle
+            Route::get('/replacements', [AdminController::class, 'replacementsIndex'])->name('replacements.index');
+            Route::post('/replacements/{application}/approve', [AdminController::class, 'replacementsApprove'])->name('replacements.approve');
+            Route::post('/replacements/{application}/close', [AdminController::class, 'replacementsClose'])->name('replacements.close');
+            Route::post('/replacements/{application}/issue-credit', [AdminController::class, 'creditNotesIssue'])->name('replacements.issue-credit');
+
+            // Credit notes
+            Route::get('/credit-notes', [AdminController::class, 'creditNotesIndex'])->name('credit-notes.index');
+            Route::post('/credit-notes/{creditNote}/apply', [AdminController::class, 'creditNotesApply'])->name('credit-notes.apply');
+            Route::post('/credit-notes/{creditNote}/cancel', [AdminController::class, 'creditNotesCancel'])->name('credit-notes.cancel');
             
             // MASTER JOB REPORT
             Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
@@ -279,6 +290,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
+        Route::get('/wallet', [PartnerController::class, 'wallet'])->name('wallet');
         
         // Jobs
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');

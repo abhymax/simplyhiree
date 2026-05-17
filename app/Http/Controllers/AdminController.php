@@ -1360,6 +1360,135 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Invoice marked as PAID.');
     }
 
+    // --- REPLACEMENT LIFECYCLE ---
+
+    public function replacementsIndex(\Illuminate\Http\Request $request)
+    {
+        $query = JobApplication::query()
+            ->whereNotNull('replacement_status')
+            ->with(['job.user', 'candidate.partner', 'candidateUser', 'partnerCreditNote', 'replacementApplication.candidate']);
+
+        if ($request->filled('status')) {
+            $query->where('replacement_status', $request->status);
+        }
+
+        $apps = $query->latest('replacement_requested_at')->paginate(25)->withQueryString();
+
+        $counts = [
+            'window_open'       => JobApplication::where('replacement_status', 'window_open')->count(),
+            'replacement_given' => JobApplication::where('replacement_status', 'replacement_given')->count(),
+            'credit_pending'    => JobApplication::where('replacement_status', 'credit_pending')->count(),
+            'closed'            => JobApplication::where('replacement_status', 'closed')->count(),
+        ];
+
+        return view('admin.replacements.index', compact('apps', 'counts'));
+    }
+
+    /**
+     * Link an application as the replacement for a failed hire.
+     * Guards: same candidate cannot be its own replacement; the replacement
+     * application must belong to the same job and same partner.
+     */
+    public function replacementsApprove(\Illuminate\Http\Request $request, JobApplication $application)
+    {
+        $data = $request->validate([
+            'replacement_application_id' => 'required|integer|exists:job_applications,id',
+        ]);
+        $replacementId = (int) $data['replacement_application_id'];
+
+        if ($replacementId === (int) $application->id) {
+            return back()->with('error', 'A candidate cannot be their own replacement.');
+        }
+
+        $repl = JobApplication::with('candidate')->find($replacementId);
+        if (!$repl) return back()->with('error', 'Replacement application not found.');
+
+        // Same job + same partner
+        if ($repl->job_id !== $application->job_id) {
+            return back()->with('error', 'Replacement must be for the same job.');
+        }
+        $srcPartnerId = $application->candidate?->partner_id;
+        $replPartnerId = $repl->candidate?->partner_id;
+        if (!$srcPartnerId || $srcPartnerId !== $replPartnerId) {
+            return back()->with('error', 'Replacement must come from the same sourcing partner.');
+        }
+        // Same candidate ID guard
+        if ($repl->candidate_id && $application->candidate_id && $repl->candidate_id === $application->candidate_id) {
+            return back()->with('error', 'The replacement cannot be the same candidate as the failed hire.');
+        }
+
+        $application->update([
+            'replacement_status'         => 'closed',
+            'replacement_application_id' => $repl->id,
+        ]);
+        // The new application becomes the active hire — tag it for traceability.
+        $repl->update(['replacement_status' => 'replacement_given']);
+
+        return back()->with('success', "Replacement linked. Case for application #{$application->id} is now closed.");
+    }
+
+    public function replacementsClose(JobApplication $application)
+    {
+        $application->update(['replacement_status' => 'closed']);
+        return back()->with('success', 'Case manually closed.');
+    }
+
+    // --- CREDIT NOTES ---
+
+    public function creditNotesIndex(\Illuminate\Http\Request $request)
+    {
+        $query = \App\Models\PartnerCreditNote::with(['partner', 'sourceApplication.job', 'sourceApplication.candidate']);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', (int) $request->partner_id);
+        }
+        $notes = $query->latest()->paginate(25)->withQueryString();
+
+        $counts = [
+            'pending'   => \App\Models\PartnerCreditNote::where('status', 'pending')->count(),
+            'applied'   => \App\Models\PartnerCreditNote::where('status', 'applied')->count(),
+            'cancelled' => \App\Models\PartnerCreditNote::where('status', 'cancelled')->count(),
+        ];
+
+        $partners = \App\Models\User::role('partner')->orderBy('name')->get(['id','name']);
+
+        return view('admin.credit_notes.index', compact('notes', 'counts', 'partners'));
+    }
+
+    public function creditNotesIssue(JobApplication $application)
+    {
+        $partner = $application->candidate?->partner;
+        if (!$partner) return back()->with('error', 'This application has no sourcing partner.');
+        $amount = (float) ($application->job?->payout_amount ?? 0);
+        if ($amount <= 0) return back()->with('error', 'Source job has no payout amount; nothing to credit.');
+
+        \App\Models\PartnerCreditNote::updateOrCreate(
+            ['source_application_id' => $application->id],
+            [
+                'partner_id' => $partner->id,
+                'amount'     => $amount,
+                'status'     => 'pending',
+                'reason'     => 'Manually issued by admin.',
+            ]
+        );
+        $application->update(['replacement_status' => 'credit_pending']);
+        return back()->with('success', 'Credit note issued.');
+    }
+
+    public function creditNotesApply(\App\Models\PartnerCreditNote $creditNote)
+    {
+        $creditNote->update(['status' => 'applied', 'applied_at' => now()]);
+        return back()->with('success', "Credit note #{$creditNote->id} marked as applied.");
+    }
+
+    public function creditNotesCancel(\App\Models\PartnerCreditNote $creditNote)
+    {
+        $creditNote->update(['status' => 'cancelled']);
+        return back()->with('success', "Credit note #{$creditNote->id} cancelled.");
+    }
+
     public function markInvoiceRaised(JobApplication $application)
     {
         // Lock in everything resolvable at raise-time so the contract can
