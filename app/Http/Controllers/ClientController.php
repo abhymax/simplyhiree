@@ -618,57 +618,39 @@ class ClientController extends Controller
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate marked as \'Left\'.');
     }
 
-    public function billing()
+    public function billing(Request $request)
     {
         $client = Auth::user();
-        $fallbackDays = (int) ($client->billable_period_days ?? 30);
 
-        // Per-job invoice_release_days takes precedence over the client's
-        // global billable_period_days; fall back to 30 if both are null.
         $hires = JobApplication::where('hiring_status', 'Selected')
-            ->whereNotNull('job_applications.joining_date')
-            ->whereHas('job', function ($q) use ($client) {
-                $q->where('user_id', $client->id);
-            })
-            ->with(['job', 'candidate', 'candidateUser'])
-            ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->selectRaw(
-                "job_applications.*, DATE_ADD(job_applications.joining_date, INTERVAL COALESCE(jobs.invoice_release_days, ?) DAY) as invoice_date",
-                [$fallbackDays]
-            )
-            ->orderByRaw('invoice_date DESC')
-            ->paginate(25);
+            ->whereNotNull('joining_date')
+            ->whereHas('job', fn ($q) => $q->where('user_id', $client->id))
+            ->with(['job.user', 'candidate', 'candidateUser'])
+            ->latest('joining_date')
+            ->paginate(25)
+            ->withQueryString();
 
-        $statusColors = [
-            'Paid'            => 'text-green-600 bg-green-100',
-            'Due for Payment' => 'text-red-600 bg-red-100',
-            'Maturing'        => 'text-yellow-600 bg-yellow-100',
+        $billingData = $hires->through(fn ($app) => $app->billingSnapshot());
+
+        // Optional status filter
+        $statusFilter = $request->input('status');
+        if ($statusFilter) {
+            $billingData->setCollection(
+                $billingData->getCollection()->filter(fn ($row) => $row['status'] === $statusFilter)->values()
+            );
+        }
+
+        // Tally per bucket
+        $allOnPage = $billingData->getCollection();
+        $counts = [
+            'Paid'         => $allOnPage->where('status', 'Paid')->count(),
+            'Overdue'      => $allOnPage->where('status', 'Overdue')->count(),
+            'Raised'       => $allOnPage->where('status', 'Raised')->count(),
+            'Due to Raise' => $allOnPage->where('status', 'Due to Raise')->count(),
+            'Maturing'     => $allOnPage->where('status', 'Maturing')->count(),
         ];
 
-        $billingData = $hires->through(function ($hire) use ($statusColors) {
-            $invoiceDate = Carbon::parse($hire->invoice_date);
-
-            if ($hire->payment_status === 'paid') {
-                $status = 'Paid';
-            } elseif ($invoiceDate->isPast() || $invoiceDate->isToday()) {
-                $status = 'Due for Payment';
-            } else {
-                $status = 'Maturing';
-            }
-
-            return (object) [
-                'candidate_name' => $hire->candidate_name,
-                'job_title'      => $hire->job->title,
-                'joining_date'   => Carbon::parse($hire->joining_date)->format('M d, Y'),
-                'amount'         => $hire->job->payout_amount ? '₹' . number_format($hire->job->payout_amount) : 'N/A',
-                'invoice_date'   => $invoiceDate->format('M d, Y'),
-                'status'         => $status,
-                'status_color'   => $statusColors[$status],
-                'paid_at'        => $hire->paid_at ? Carbon::parse($hire->paid_at)->format('M d, Y') : null,
-            ];
-        });
-
-        return view('client.billing.index', compact('billingData'));
+        return view('client.billing.index', compact('billingData', 'counts', 'statusFilter'));
     }
 
     private function notifyAdminAndPartner($notification, JobApplication $application)

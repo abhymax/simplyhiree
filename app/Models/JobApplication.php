@@ -223,6 +223,76 @@ class JobApplication extends Model
         ];
     }
 
+    /**
+     * Status bucket for billing views. Falls back gracefully when the
+     * commercial isn't configured yet (treats joining_date + effective
+     * release days as the invoice-due date).
+     *
+     *   Maturing      - joined but invoice-due in the future
+     *   Due to Raise  - invoice-due reached, invoice_generated_at still null
+     *   Raised        - invoice generated, not paid, payment-due in future
+     *   Overdue       - invoice generated, not paid, payment-due passed
+     *   Paid          - payment_status === 'paid'
+     */
+    public function billingStatus(): string
+    {
+        if (($this->payment_status ?? null) === 'paid') {
+            return 'Paid';
+        }
+
+        $cb = $this->resolveCommercial();
+        $invoiceDueAt = $cb['invoice_due_at'] ?? $this->invoiceDueAt();
+        $paymentDueAt = $cb['payment_due_at'] ?? null;
+
+        if ($this->invoice_generated_at) {
+            if ($paymentDueAt && $paymentDueAt->isPast()) return 'Overdue';
+            return 'Raised';
+        }
+
+        if ($invoiceDueAt && ($invoiceDueAt->isPast() || $invoiceDueAt->isToday())) {
+            return 'Due to Raise';
+        }
+        return 'Maturing';
+    }
+
+    /**
+     * Rich row data for the billing screens. Combines the commercial
+     * resolver, fallback dates, status bucket, and presentation strings.
+     */
+    public function billingSnapshot(): array
+    {
+        $cb = $this->resolveCommercial();
+        $invoiceDueAt = $cb['invoice_due_at'] ?? $this->invoiceDueAt();
+        $paymentDueAt = $cb['payment_due_at'] ?? null;
+
+        $amount = $cb['invoice_amount'] ?? null;
+        if (!$amount && $this->invoice_amount) {
+            $amount = (float) $this->invoice_amount;
+        }
+
+        return [
+            'application'         => $this,
+            'candidate_name'      => $this->candidate_name,
+            'job_title'           => $this->job?->title,
+            'client_name'         => $this->job?->user?->name,
+            'joining_date'        => $this->joining_date,
+            'final_ctc'           => $this->final_ctc,
+            'billing_type'        => $cb['billing_type'] ?? null,
+            'matched_row'         => $cb['matched_row'] ?? null,
+            'fee_percent'         => $cb['fee_percent'] ?? null,
+            'fee_amount_flat'     => $cb['fee_amount_flat'] ?? null,
+            'invoice_amount'      => $amount,
+            'gst_applicable'      => $cb['gst_applicable'] ?? false,
+            'replacement_days'    => $cb['replacement_days'] ?? null,
+            'invoice_due_at'      => $invoiceDueAt,
+            'payment_due_at'      => $paymentDueAt,
+            'invoice_generated_at'=> $this->invoice_generated_at,
+            'paid_at'             => $this->paid_at,
+            'payment_status'      => $this->payment_status,
+            'status'              => $this->billingStatus(),
+        ];
+    }
+
     // --- NEW ACCESSOR ---
     /**
      * Get the candidate's full name, regardless of source (User or Agency Candidate).

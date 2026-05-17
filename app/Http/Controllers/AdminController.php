@@ -1289,68 +1289,76 @@ class AdminController extends Controller
 
     // --- BILLING ---
 
-    public function billingReport()
+    public function billingReport(Request $request)
     {
-        $placements = JobApplication::where('hiring_status', 'Selected')
-                                    ->with(['job.user', 'candidate', 'candidateUser'])
-                                    ->get();
-        $reportData = [];
-        foreach ($placements as $app) {
-            if (empty($app->joining_date) || !$app->job || !$app->job->user) continue;
+        $query = JobApplication::where('hiring_status', 'Selected')
+            ->whereNotNull('joining_date')
+            ->with(['job.user', 'candidate', 'candidateUser']);
 
-            $client = $app->job->user;
-            $joiningDate = Carbon::parse($app->joining_date);
-            $billableDays = $app->effectiveInvoiceReleaseDays();
-            $invoiceDate = $joiningDate->copy()->addDays($billableDays);
-            $isDue = $invoiceDate->isPast() || $invoiceDate->isToday();
-            
-            $statusLabel = 'Pending Maturity';
-            $rowClass = '';
-            if ($app->payment_status === 'paid') {
-                $statusLabel = 'Paid';
-                $rowClass = 'bg-green-50';
-            } elseif ($isDue) {
-                $statusLabel = 'Due / Billable';
-                $rowClass = 'bg-red-50';
-            }
-
-            $reportData[] = (object) [
-                'id' => $app->id,
-                'candidate_name' => $app->candidate_name, 
-                'client_name' => $client->name,
-                'job_title' => $app->job->title,
-                'joining_date' => $app->joining_date->format('M d, Y'),
-                'billable_period' => $billableDays . ' days',
-                'invoice_date' => $invoiceDate->format('M d, Y'),
-                'payment_status' => $app->payment_status,
-                'paid_at' => $app->paid_at ? $app->paid_at->format('M d, Y') : '-',
-                'status_label' => $statusLabel,
-                'row_class' => $rowClass,
-                'is_due' => $isDue,
-                'payout_amount' => $app->job->payout_amount ?? 0, 
-            ];
+        if ($request->filled('client_id')) {
+            $query->whereHas('job', fn ($q) => $q->where('user_id', (int) $request->client_id));
+        }
+        if ($request->filled('search')) {
+            $term = $request->input('search');
+            $query->where(function ($q) use ($term) {
+                $q->whereHas('candidate', fn ($qq) => $qq->where('first_name', 'like', "%{$term}%")->orWhere('last_name', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%"))
+                  ->orWhereHas('candidateUser', fn ($qq) => $qq->where('name', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%"))
+                  ->orWhereHas('job', fn ($qq) => $qq->where('title', 'like', "%{$term}%"));
+            });
         }
 
-        $reportData = collect($reportData)->sortBy(function($item) {
-            if ($item->payment_status === 'paid') return 3;
-            if ($item->is_due) return 1;
-            return 2;
-        });
+        $apps = $query->latest('joining_date')->paginate(25)->withQueryString();
+        $rows = $apps->through(fn ($app) => $app->billingSnapshot());
 
-        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage();
-        $perPage = 20;
-        $currentItems = $reportData->slice(($currentPage - 1) * $perPage, $perPage)->all();
-        $paginatedItems = new \Illuminate\Pagination\LengthAwarePaginator($currentItems, count($reportData), $perPage, $currentPage, [
-            'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()
+        $statusFilter = $request->input('status');
+        if ($statusFilter) {
+            $rows->setCollection(
+                $rows->getCollection()->filter(fn ($r) => $r['status'] === $statusFilter)->values()
+            );
+        }
+
+        $current = $rows->getCollection();
+        $counts = [
+            'Paid'         => $current->where('status', 'Paid')->count(),
+            'Overdue'      => $current->where('status', 'Overdue')->count(),
+            'Raised'       => $current->where('status', 'Raised')->count(),
+            'Due to Raise' => $current->where('status', 'Due to Raise')->count(),
+            'Maturing'     => $current->where('status', 'Maturing')->count(),
+        ];
+
+        // For the client filter dropdown — clients who have any Selected hire
+        $clients = \App\Models\User::role('client')
+            ->whereHas('jobs.jobApplications', fn ($q) => $q->where('hiring_status', 'Selected'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('admin.billing.index', [
+            'placements'    => $rows,
+            'counts'        => $counts,
+            'clients'       => $clients,
+            'statusFilter'  => $statusFilter,
         ]);
-
-        return view('admin.billing.index', ['placements' => $paginatedItems]);
     }
 
     public function markAsPaid(JobApplication $application)
     {
         $application->update(['payment_status' => 'paid', 'paid_at' => now()]);
         return redirect()->back()->with('success', 'Invoice marked as PAID.');
+    }
+
+    public function markInvoiceRaised(JobApplication $application)
+    {
+        // Stamp the resolved amount if it isn't already set; that way the
+        // amount used at "raise time" is locked in.
+        $stamp = ['invoice_generated_at' => now()];
+        if (!$application->invoice_amount) {
+            $cb = $application->resolveCommercial();
+            if ($cb && $cb['invoice_amount'] > 0) {
+                $stamp['invoice_amount'] = $cb['invoice_amount'];
+            }
+        }
+        $application->update($stamp);
+        return redirect()->back()->with('success', 'Invoice marked as RAISED.');
     }
 
     public function jobReport(Request $request)

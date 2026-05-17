@@ -195,6 +195,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::middleware(['can:view_billing_data'])->group(function() {
             Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
             Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
+            Route::patch('/applications/{application}/mark-raised', [AdminController::class, 'markInvoiceRaised'])->name('applications.markRaised');
             
             // MASTER JOB REPORT
             Route::get('/reports/jobs', [AdminController::class, 'jobReport'])->name('reports.jobs');
