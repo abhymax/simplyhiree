@@ -24,6 +24,9 @@ class JobApplication extends Model
         'replacement_requested_at',
         'replacement_reason',
         'auto_forwarded_at',
+        'final_ctc',
+        'invoice_amount',
+        'invoice_generated_at',
         // New Billing Fields
         'payment_status',
         'paid_at',
@@ -38,6 +41,9 @@ class JobApplication extends Model
         'billing_due_alerted_at' => 'datetime',
         'replacement_requested_at' => 'datetime',
         'auto_forwarded_at' => 'datetime',
+        'invoice_generated_at' => 'datetime',
+        'final_ctc' => 'decimal:2',
+        'invoice_amount' => 'decimal:2',
     ];
 
     /**
@@ -65,10 +71,11 @@ class JobApplication extends Model
     }
 
     /**
-     * Effective invoice-release days for this application: per-job
-     * invoice_release_days takes precedence; falls back to the client
-     * user's billable_period_days; finally to 30. The value 0 is honoured
-     * (invoice due on the joining day itself).
+     * Effective invoice-release days for this application:
+     *   jobs.invoice_release_days (per-job override)
+     *   -> client_commercials.invoice_raise_days (permanent-hiring contract)
+     *   -> users.billable_period_days (legacy client default)
+     *   -> 30
      */
     public function effectiveInvoiceReleaseDays(): int
     {
@@ -77,6 +84,10 @@ class JobApplication extends Model
             return (int) $job->invoice_release_days;
         }
         $client = $job?->user;
+        $commercial = $this->clientCommercial();
+        if ($commercial && $commercial->invoice_raise_days !== null) {
+            return (int) $commercial->invoice_raise_days;
+        }
         if ($client && $client->billable_period_days !== null) {
             return (int) $client->billable_period_days;
         }
@@ -92,6 +103,124 @@ class JobApplication extends Model
             return null;
         }
         return $this->joining_date->copy()->addDays($this->effectiveInvoiceReleaseDays());
+    }
+
+    /**
+     * The client_commercials row for this application's client, if any.
+     */
+    public function clientCommercial(): ?\App\Models\ClientCommercial
+    {
+        $job = $this->relationLoaded('job') ? $this->getRelation('job') : $this->job;
+        $clientId = $job?->user_id;
+        if (!$clientId) return null;
+        return \App\Models\ClientCommercial::where('user_id', $clientId)->first();
+    }
+
+    /**
+     * Derive a profile-wise tier from the job's experience band. Used when
+     * the client's billing is profile_wise but no explicit override is set.
+     */
+    public function derivedProfileTier(): string
+    {
+        $job = $this->relationLoaded('job') ? $this->getRelation('job') : $this->job;
+        $years = (int) ($job?->min_experience ?? 0);
+        if ($years >= 15) return 'Leader/CXO Level';
+        if ($years >= 8)  return 'Sr. Level';
+        if ($years >= 3)  return 'Mid-Level';
+        return 'Entry Level';
+    }
+
+    /**
+     * Resolve the per-job commercial outcome for this application.
+     * Returns null if final_ctc isn't set or the client has no commercial.
+     *
+     * Shape:
+     *   [
+     *     'billing_type'    => 'percentage_based'|'profile_wise'|'flat',
+     *     'matched_row'     => array|null,
+     *     'fee_percent'     => float|null,
+     *     'fee_amount_flat' => float|null,
+     *     'invoice_amount'  => float,
+     *     'replacement_days'=> int|null,
+     *     'invoice_due_at'  => Carbon|null,
+     *     'payment_due_at'  => Carbon|null,
+     *     'gst_applicable'  => bool,
+     *   ]
+     */
+    public function resolveCommercial(): ?array
+    {
+        $commercial = $this->clientCommercial();
+        if (!$commercial) return null;
+        $finalCtc = (float) ($this->final_ctc ?? 0);
+
+        $type = $commercial->billing_type ?? 'percentage_based';
+        $data = is_array($commercial->contract_data) ? $commercial->contract_data : [];
+
+        $matched = null;
+        $feePercent = null;
+        $feeFlat = null;
+        $replacementDays = null;
+        $invoiceAmount = 0.0;
+
+        if ($type === 'percentage_based') {
+            $rows = $data['percentage_based'] ?? [];
+            foreach ($rows as $r) {
+                $min = $r['min_ctc'] !== null ? (float) $r['min_ctc'] : null;
+                $max = $r['max_ctc'] !== null ? (float) $r['max_ctc'] : null;
+                $inMin = $min === null || $finalCtc >= $min;
+                $inMax = $max === null || $finalCtc <= $max;
+                if ($finalCtc > 0 && $inMin && $inMax) {
+                    $matched         = $r;
+                    $feePercent      = (float) ($r['fee_percent'] ?? 0);
+                    $replacementDays = (int) ($r['replacement_days'] ?? 0);
+                    $invoiceAmount   = round($finalCtc * $feePercent / 100, 2);
+                    break;
+                }
+            }
+        } elseif ($type === 'profile_wise') {
+            $rows = $data['profile_wise'] ?? [];
+            $tier = $this->derivedProfileTier();
+            foreach ($rows as $r) {
+                if (strcasecmp((string) ($r['profile'] ?? ''), $tier) === 0) {
+                    $matched = $r;
+                    break;
+                }
+            }
+            if ($matched && $finalCtc > 0) {
+                $feePercent      = (float) ($matched['fee_percent'] ?? 0);
+                $replacementDays = (int) ($matched['replacement_days'] ?? 0);
+                $invoiceAmount   = round($finalCtc * $feePercent / 100, 2);
+            }
+        } else { // flat
+            $rows = $data['flat'] ?? [];
+            // If only one flat row, use it. Otherwise the admin/client UI
+            // should let the operator pick; for v1 we use the first row.
+            if (!empty($rows)) {
+                $matched         = $rows[0];
+                $feeFlat         = (float) ($matched['fee_amount'] ?? 0);
+                $replacementDays = (int) ($matched['replacement_days'] ?? 0);
+                $invoiceAmount   = $feeFlat;
+            }
+        }
+
+        $invoiceDueAt = null;
+        $paymentDueAt = null;
+        if ($this->joining_date) {
+            $invoiceDueAt = $this->joining_date->copy()->addDays((int) ($commercial->invoice_raise_days ?? 30));
+            $paymentDueAt = $invoiceDueAt->copy()->addDays((int) ($commercial->payment_terms_days ?? 30));
+        }
+
+        return [
+            'billing_type'     => $type,
+            'matched_row'      => $matched,
+            'fee_percent'      => $feePercent,
+            'fee_amount_flat'  => $feeFlat,
+            'invoice_amount'   => $invoiceAmount,
+            'replacement_days' => $replacementDays,
+            'invoice_due_at'   => $invoiceDueAt,
+            'payment_due_at'   => $paymentDueAt,
+            'gst_applicable'   => (bool) ($commercial->is_gst_applicable ?? true),
+        ];
     }
 
     // --- NEW ACCESSOR ---

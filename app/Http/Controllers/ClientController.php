@@ -505,15 +505,19 @@ class ClientController extends Controller
         }
         $validated = $request->validate([
             'joining_date' => 'required|date|after_or_equal:today',
+            'final_ctc'    => 'nullable|numeric|min:0',
             'client_notes' => 'nullable|string|max:1000',
         ]);
-        
+
         $application->update([
             'hiring_status' => 'Selected',
-            'joining_date' => Carbon::parse($validated['joining_date']),
-            'client_notes' => $validated['client_notes'],
+            'joining_date'  => Carbon::parse($validated['joining_date']),
+            'final_ctc'     => $validated['final_ctc'] ?? null,
+            'client_notes'  => $validated['client_notes'] ?? null,
         ]);
-        
+
+        $this->stampResolvedInvoice($application->fresh(['job.user']));
+
         $this->notifyAdminAndPartner(new CandidateSelected($application), $application);
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
     }
@@ -534,15 +538,34 @@ class ClientController extends Controller
         }
         $validated = $request->validate([
             'joining_date' => 'required|date|after_or_equal:today',
+            'final_ctc'    => 'nullable|numeric|min:0',
             'client_notes' => 'nullable|string|max:1000',
         ]);
-        
+
         $application->update([
             'joining_date' => Carbon::parse($validated['joining_date']),
-            'client_notes' => $validated['client_notes'],
+            'final_ctc'    => $validated['final_ctc'] ?? $application->final_ctc,
+            'client_notes' => $validated['client_notes'] ?? null,
         ]);
-        
+
+        $this->stampResolvedInvoice($application->fresh(['job.user']));
+
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Selection details updated successfully!');
+    }
+
+    /**
+     * Compute and stamp invoice_amount on the application from the
+     * client's permanent-hiring commercial contract.
+     */
+    private function stampResolvedInvoice(JobApplication $application): void
+    {
+        $resolved = $application->resolveCommercial();
+        if (!$resolved || $resolved['invoice_amount'] <= 0) {
+            return;
+        }
+        $application->update([
+            'invoice_amount' => $resolved['invoice_amount'],
+        ]);
     }
 
     public function markAsJoined(JobApplication $application)

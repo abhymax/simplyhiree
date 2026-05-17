@@ -216,6 +216,68 @@
                             </div>
                         @endif
                     </div>
+
+                    {{-- Commercial Breakdown --}}
+                    @php $cb = $application->resolveCommercial(); @endphp
+                    @if($cb)
+                        <div class="bg-amber-500/5 backdrop-blur-xl border border-amber-400/30 rounded-3xl p-8 shadow-lg">
+                            <h3 class="text-xl font-bold text-amber-200 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Commercial Breakdown
+                                <span class="ml-2 text-[11px] uppercase tracking-wider bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2 py-0.5 rounded-full">
+                                    {{ str_replace('_', ' ', $cb['billing_type']) }}
+                                </span>
+                            </h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Matched Row</div>
+                                    <div class="text-white font-semibold">
+                                        @if($cb['billing_type'] === 'percentage_based')
+                                            {{ $cb['matched_row']['label'] ?? '—' }}
+                                        @elseif($cb['billing_type'] === 'profile_wise')
+                                            {{ $cb['matched_row']['profile'] ?? '—' }}
+                                        @else
+                                            {{ $cb['matched_row']['category'] ?? '—' }}
+                                        @endif
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Final CTC</div>
+                                    <div class="text-white font-semibold">{{ $application->final_ctc ? '₹' . number_format($application->final_ctc) : '—' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Fee</div>
+                                    <div class="text-white font-semibold">
+                                        @if($cb['fee_percent'] !== null) {{ $cb['fee_percent'] }}% @endif
+                                        @if($cb['fee_amount_flat'] !== null) ₹{{ number_format($cb['fee_amount_flat']) }} flat @endif
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Invoice Amount</div>
+                                    <div class="text-emerald-300 font-extrabold text-base">₹{{ number_format($cb['invoice_amount'], 2) }} @if($cb['gst_applicable'])<span class="text-amber-200/70 text-[10px] font-bold uppercase ml-1">+ GST</span>@endif</div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Replacement Window</div>
+                                    <div class="text-white font-semibold">{{ $cb['replacement_days'] !== null ? $cb['replacement_days'] . ' days' : '—' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Invoice Due</div>
+                                    <div class="text-white font-semibold">{{ $cb['invoice_due_at']?->format('d M Y') ?? '— (joining date not set)' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Payment Due</div>
+                                    <div class="text-white font-semibold">{{ $cb['payment_due_at']?->format('d M Y') ?? '—' }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] uppercase tracking-wider text-amber-300 font-bold mb-1">Stamped Invoice</div>
+                                    <div class="text-white font-semibold">{{ $application->invoice_amount ? '₹' . number_format($application->invoice_amount, 2) : 'pending' }}</div>
+                                </div>
+                            </div>
+                            @if(!$application->final_ctc)
+                                <p class="text-amber-100/80 text-xs mt-4 italic"><i class="fa-solid fa-circle-info mr-1"></i> Once the client records a Final CTC on this candidate, the invoice amount will be auto-computed and stamped.</p>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 {{-- RIGHT COLUMN: STATUS & ACTIONS --}}

@@ -35,6 +35,16 @@
                 </div>
 
                 <div class="mt-4">
+                    <label for="final_ctc" class="block text-sm text-blue-100">Final Offered CTC (₹ / year)</label>
+                    <input id="final_ctc" name="final_ctc" type="number" step="0.01" min="0"
+                        value="{{ old('final_ctc', $application->final_ctc) }}"
+                        placeholder="e.g. 1200000"
+                        class="block mt-1 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                    <p class="text-xs text-blue-200/70 mt-1">Used to compute the invoice amount based on the client's commercial contract.</p>
+                    @error('final_ctc') <p class="mt-2 text-rose-300 text-sm">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="mt-4">
                     <label for="client_notes" class="block text-sm text-blue-100">Final Notes (Optional)</label>
                     <textarea id="client_notes" name="client_notes" rows="4"
                         class="block mt-1 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">{{ old('client_notes', $application->client_notes) }}</textarea>
