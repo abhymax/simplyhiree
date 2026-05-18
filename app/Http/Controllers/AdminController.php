@@ -1096,6 +1096,59 @@ class AdminController extends Controller
     }
 
     /**
+     * Superadmin marks a candidate Selected on behalf of the client.
+     * Stamps selected_by_admin_id + selected_by_admin_at so the client
+     * UI can render a distinct "Selected by Superadmin" chip.
+     */
+    public function adminSelectApplicant(Request $request, JobApplication $application)
+    {
+        $application->load('job');
+        if (!$application->job || $application->status !== 'Approved') {
+            return back()->with('error', 'Only approved applications can be marked Selected.');
+        }
+        if (in_array($application->hiring_status, ['Selected', 'Joined'], true)) {
+            return back()->with('error', 'This candidate is already marked Selected.');
+        }
+
+        $validated = $request->validate([
+            'joining_date' => 'required|date|after_or_equal:today',
+            'final_ctc'    => 'nullable|numeric|min:0',
+            'admin_notes'  => 'nullable|string|max:1000',
+        ]);
+
+        $application->update([
+            'hiring_status'         => 'Selected',
+            'joining_date'          => Carbon::parse($validated['joining_date']),
+            'final_ctc'             => $validated['final_ctc'] ?? null,
+            'client_notes'          => $validated['admin_notes'] ?? null,
+            'selected_by_admin_id'  => Auth::id(),
+            'selected_by_admin_at'  => now(),
+        ]);
+
+        // Stamp the resolved invoice amount and replacement window.
+        $resolved = $application->fresh(['job.user'])->resolveCommercial();
+        if ($resolved) {
+            $stamp = [];
+            if ($application->invoice_amount === null && $resolved['invoice_amount'] > 0) {
+                $stamp['invoice_amount'] = $resolved['invoice_amount'];
+            }
+            if ($application->replacement_window_days === null && $resolved['replacement_days'] !== null) {
+                $stamp['replacement_window_days'] = $resolved['replacement_days'];
+            }
+            if (!empty($stamp)) $application->update($stamp);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Notification::send(
+                array_filter([$application->job?->user, $application->candidate?->partner]),
+                new \App\Notifications\CandidateSelected($application->fresh())
+            );
+        } catch (\Throwable $e) {}
+
+        return back()->with('success', 'Candidate marked Selected on behalf of the client. The client will see this as "Selected by Superadmin".');
+    }
+
+    /**
      * Tracker Download — stream a CSV of the 16-field candidate data
      * format for the selected job applications. Capped at 500 ids per
      * request so the server never has to hold an unbounded set in memory.

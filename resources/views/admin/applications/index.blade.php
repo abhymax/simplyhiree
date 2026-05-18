@@ -248,22 +248,56 @@
 
                                     {{-- Actions (Bright Icons) --}}
                                     <td class="px-6 py-5 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            @php
-                                                $resumePath = $agencyCandidate?->resume_path ?? $directCandidate?->profile?->resume_path;
-                                            @endphp
-                                            @if($resumePath)
-                                                <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" title="Download CV" class="action-icon inline-flex items-center justify-center bg-slate-700 hover:bg-cyan-600 text-white rounded-lg shadow-sm transition border border-slate-600 hover:border-cyan-400">
-                                                    <i class="fa-solid fa-download text-xs"></i>
-                                                </a>
-                                            @endif
-                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="action-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-sm transition border border-indigo-400 whitespace-nowrap">
-                                                @if(strtolower($application->status) === 'pending review')
-                                                    Review &amp; Decide
-                                                @else
-                                                    View Details
+                                        <div class="flex flex-col items-end gap-2">
+                                            <div class="flex items-center justify-end gap-2">
+                                                @php
+                                                    $resumePath = $agencyCandidate?->resume_path ?? $directCandidate?->profile?->resume_path;
+                                                @endphp
+                                                @if($resumePath)
+                                                    <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" title="Download CV" class="action-icon inline-flex items-center justify-center bg-slate-700 hover:bg-cyan-600 text-white rounded-lg shadow-sm transition border border-slate-600 hover:border-cyan-400">
+                                                        <i class="fa-solid fa-download text-xs"></i>
+                                                    </a>
                                                 @endif
-                                            </a>
+                                                <a href="{{ route('admin.applications.show', $application->id) }}" class="action-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-sm transition border border-indigo-400 whitespace-nowrap">
+                                                    @if(strtolower($application->status) === 'pending review')
+                                                        Review &amp; Decide
+                                                    @else
+                                                        View Details
+                                                    @endif
+                                                </a>
+                                            </div>
+
+                                            @if(strtolower($application->status) === 'approved' && !in_array($application->hiring_status, ['Selected', 'Joined']))
+                                                <button type="button"
+                                                    onclick="document.getElementById('admin-select-{{ $application->id }}').classList.toggle('hidden')"
+                                                    class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold border border-emerald-400 px-3 py-1.5 whitespace-nowrap">
+                                                    <i class="fa-solid fa-user-check"></i> Mark Selected (on behalf of client)
+                                                </button>
+                                                <form id="admin-select-{{ $application->id }}" method="POST"
+                                                      action="{{ route('admin.applications.adminSelect', $application->id) }}"
+                                                      class="hidden mt-1 flex flex-col gap-2 w-72 bg-slate-900/80 border border-emerald-400/40 p-3 rounded-lg text-left">
+                                                    @csrf
+                                                    <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Joining Date *</label>
+                                                    <input type="date" name="joining_date" required min="{{ date('Y-m-d') }}"
+                                                        class="bg-slate-800 border border-white/20 rounded text-white text-sm p-1.5">
+                                                    <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Final CTC (₹)</label>
+                                                    <input type="number" name="final_ctc" min="0" step="0.01" placeholder="Optional"
+                                                        class="bg-slate-800 border border-white/20 rounded text-white text-sm p-1.5">
+                                                    <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Notes</label>
+                                                    <textarea name="admin_notes" rows="2" maxlength="1000" placeholder="Optional"
+                                                        class="bg-slate-800 border border-white/20 rounded text-white text-xs p-1.5"></textarea>
+                                                    <div class="flex gap-2">
+                                                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded">Confirm Select</button>
+                                                        <button type="button" onclick="document.getElementById('admin-select-{{ $application->id }}').classList.add('hidden')" class="text-xs text-slate-300 hover:text-white">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            @endif
+
+                                            @if($application->selected_by_admin_id)
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-200 border border-purple-400/40 px-2 py-0.5 rounded">
+                                                    <i class="fa-solid fa-user-shield"></i> Selected by Superadmin
+                                                </span>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

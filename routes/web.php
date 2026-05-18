@@ -202,6 +202,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
             Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
             Route::patch('/applications/{application}/mark-raised', [AdminController::class, 'markInvoiceRaised'])->name('applications.markRaised');
+            Route::post('/applications/{application}/admin-select', [AdminController::class, 'adminSelectApplicant'])->name('applications.adminSelect');
 
             // Replacement lifecycle
             Route::get('/replacements', [AdminController::class, 'replacementsIndex'])->name('replacements.index');

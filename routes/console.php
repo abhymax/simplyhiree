@@ -142,3 +142,8 @@ Schedule::command('vendors:recompute-ratings')
     ->timezone('Asia/Kolkata')
     ->dailyAt('02:30')
     ->withoutOverlapping();
+
+Schedule::command('clients:approved-applications-digest')
+    ->timezone('Asia/Kolkata')
+    ->dailyAt('08:00')
+    ->withoutOverlapping();

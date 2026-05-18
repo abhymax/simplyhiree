@@ -100,7 +100,13 @@
                                             </div>
                                         @endif
                                     @elseif($app->hiring_status == 'Selected')
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-100 border border-cyan-400/40">Selected</span>
+                                        @if($app->selected_by_admin_id)
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/25 text-purple-100 border border-purple-400/50 inline-flex items-center gap-1.5">
+                                                <i class="fa-solid fa-user-shield"></i> Selected by Superadmin
+                                            </span>
+                                        @else
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-100 border border-cyan-400/40">Selected</span>
+                                        @endif
                                         <div class="text-xs text-blue-200 mt-1">Joining: {{ $app->joining_date->format('M d, Y') }}</div>
                                     @elseif($app->hiring_status == 'Interview Scheduled')
                                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-100 border border-indigo-400/40">Interview Scheduled</span>
