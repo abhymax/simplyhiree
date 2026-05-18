@@ -61,6 +61,22 @@
                             <input type="url" name="company_website" value="{{ old('company_website') }}" placeholder="https://" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-12">
                         </div>
                     </div>
+
+                    {{-- Confidentiality toggle --}}
+                    <div class="mt-5 pt-4 border-t border-white/10">
+                        <label class="flex items-start gap-3 cursor-pointer select-none">
+                            <input type="hidden" name="is_company_confidential" value="0">
+                            <input type="checkbox" name="is_company_confidential" value="1"
+                                   {{ old('is_company_confidential') ? 'checked' : '' }}
+                                   class="mt-1 h-5 w-5 rounded border-white/40 bg-slate-800 text-blue-500 focus:ring-2 focus:ring-blue-400">
+                            <div>
+                                <div class="text-white font-bold text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-user-secret text-amber-300"></i> Keep company name confidential
+                                </div>
+                                <p class="text-slate-400 text-xs mt-0.5">Vendors and candidates will see this posting as "Confidential" until the company is revealed.</p>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
                 {{-- SECTION 2: JOB SPECIFICATION --}}

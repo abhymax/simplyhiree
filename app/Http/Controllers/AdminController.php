@@ -772,6 +772,7 @@ class AdminController extends Controller
             'company_website'       => 'nullable|url',
             'openings'              => 'nullable|integer|min:1',
             'gender_preference'     => 'required|string|in:Any,Male,Female,Other',
+            'is_company_confidential' => 'nullable|boolean',
         ]);
 
         $salary = $this->formatSalaryRange(
@@ -810,6 +811,7 @@ class AdminController extends Controller
             'skills_required'      => $validated['skills_required'] ?? null,
             'company_website'      => $validated['company_website'] ?? null,
             'openings'             => $validated['openings'] ?? 1,
+            'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
         ]);
 
         if ($validated['partner_visibility'] === 'selected' && $request->has('allowed_partners')) {
