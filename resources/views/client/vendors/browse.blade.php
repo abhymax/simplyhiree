@@ -7,8 +7,8 @@
 
         <div class="flex flex-wrap items-end justify-between gap-3 mb-6 border-b border-white/10 pb-6">
             <div>
-                <h1 class="text-4xl font-extrabold tracking-tight">Browse Vendors</h1>
-                <p class="text-blue-200 mt-1">Filter by rating, location, industry or badge. Add the best ones to your Preferred list.</p>
+                <h1 class="text-4xl font-extrabold tracking-tight">My Vendors</h1>
+                <p class="text-blue-200 mt-1">Only vendors you've invited yourself, or that SimplyHiree has assigned to your account, are shown here.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('client.vendors.invite') }}" class="bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold px-4 py-2 rounded-lg">+ Invite My Vendor</a>
@@ -76,7 +76,21 @@
                     </form>
                 </div>
             @empty
-                <div class="col-span-full text-center text-blue-200 py-16">No vendors match your filters.</div>
+                <div class="col-span-full text-center py-16 bg-white/5 border border-white/10 rounded-3xl">
+                    <i class="fa-solid fa-handshake text-5xl text-blue-300 mb-3"></i>
+                    <p class="font-bold text-white text-lg mb-1">No vendors connected to your account yet</p>
+                    <p class="text-blue-200 text-sm max-w-md mx-auto mb-5">
+                        @if(request()->anyFilled(['search','min_rating','level','badge','location','industry']))
+                            No vendors match these filters. Try resetting them, or invite/request new vendors.
+                        @else
+                            Add vendors to your account by inviting them directly, or ask SimplyHiree to assign vetted vendors that match your hiring needs.
+                        @endif
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <a href="{{ route('client.vendors.invite') }}" class="bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold px-4 py-2 rounded-lg">+ Invite My Vendor</a>
+                        <a href="{{ route('client.vendors.assign-request') }}" class="bg-purple-500 hover:bg-purple-400 text-white text-sm font-bold px-4 py-2 rounded-lg">🤝 Ask SimplyHiree to Assign</a>
+                    </div>
+                </div>
             @endforelse
         </div>
         <div class="mt-6">{{ $vendors->links() }}</div>

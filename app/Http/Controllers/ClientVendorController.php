@@ -19,9 +19,25 @@ class ClientVendorController extends Controller
     public function browse(Request $request)
     {
         $client = Auth::user();
+
+        // Scope: only vendors connected to this client.
+        //   1. Preferred vendors — manually picked by the client OR assigned to
+        //      them by SimplyHiree (admin fulfils assignment requests by adding
+        //      partners here).
+        //   2. Vendors who joined via this client's own invitation flow
+        //      (client_vendor_invitations with status=joined).
+        $preferredIds = $client->preferredVendors()->pluck('users.id')->all();
+        $invitedJoinedIds = ClientVendorInvitation::where('client_id', $client->id)
+            ->where('status', 'joined')
+            ->whereNotNull('joined_partner_id')
+            ->pluck('joined_partner_id')
+            ->all();
+        $connectedIds = array_values(array_unique(array_merge($preferredIds, $invitedJoinedIds)));
+
         $query = User::role('partner')
             ->whereNull('parent_partner_id')
-            ->where('status', 'active');
+            ->where('status', 'active')
+            ->whereIn('id', $connectedIds ?: [0]); // [0] forces empty result set when client has no connections
 
         if ($request->filled('search')) {
             $t = $request->input('search');
