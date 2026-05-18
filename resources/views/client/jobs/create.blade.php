@@ -72,7 +72,7 @@
                     @endif
 
                     {{-- Job Specification Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#076AFF;">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-briefcase text-white"></i> Job Specification
@@ -185,7 +185,7 @@
                     </div>{{-- /Job Specification card --}}
 
                     {{-- Description & Skills Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#076AFF;">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-align-left text-white"></i> Description &amp; Skills
@@ -213,7 +213,7 @@
 
                     {{-- Vendor Assignment Card --}}
                     @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#076AFF;" x-data="{ mode: '{{ $currMode }}' }">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;" x-data="{ mode: '{{ $currMode }}' }">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-handshake text-white"></i> Vendor Assignment
@@ -267,7 +267,7 @@
                     </div>
 
                     {{-- Payout Settings Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#076AFF;">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;">
                         <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-coins text-white"></i> Payout Settings
