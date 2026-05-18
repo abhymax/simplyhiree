@@ -12,9 +12,12 @@
     .neon-btn:hover { filter: brightness(1.1); box-shadow: 0 18px 40px -10px rgba(34,211,238,.7), inset 0 1px 0 rgba(255,255,255,.35); }
     .blob { animation: float 18s ease-in-out infinite alternate; }
     @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(20px,-20px) scale(1.05); } }
-    .fld input, .fld select, .fld textarea { background: rgba(2,6,23,.55) !important; border-color: rgba(255,255,255,.18) !important; color: #fff !important; border-radius: .75rem; padding: .55rem .85rem; }
+    .fld input, .fld select, .fld textarea { background: rgba(2,6,23,.55) !important; border: 1px solid rgba(255,255,255,.18) !important; color: #fff !important; border-radius: .75rem; padding: .7rem .95rem; line-height: 1.4; font-size: .95rem; width: 100%; box-sizing: border-box; }
+    .fld input[type="text"], .fld input[type="email"], .fld input[type="url"], .fld input[type="tel"], .fld select { height: 48px; }
+    .fld textarea { min-height: 96px; resize: vertical; }
     .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: #22d3ee !important; box-shadow: 0 0 0 3px rgba(34,211,238,.18); outline: none; }
-    .fld label { color: #bfdbfe; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .fld label { color: #bfdbfe; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: .35rem; }
+    .fld input::placeholder, .fld textarea::placeholder { color: rgba(191,219,254,.45); }
     .sec-icon { width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border-radius: .9rem; }
 </style>
 
@@ -52,25 +55,23 @@
              style="background: linear-gradient(135deg, #0c4a6e 0%, #312e81 55%, #4a1d96 100%);">
             <div class="absolute inset-0" style="background: radial-gradient(120% 60% at 0% 0%, rgba(255,255,255,.18), transparent 55%);"></div>
             <div class="absolute -right-12 -bottom-12 w-72 h-72 rounded-full" style="background: rgba(56,189,248,.18); filter: blur(60px);"></div>
-            <div class="relative gloss p-7 md:p-9 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <span class="px-3 py-1.5 rounded-full bg-white/15 border border-white/30 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg">
+            <div class="relative gloss p-7 md:p-9 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
+                <div class="min-w-0">
+                    <span class="px-3 py-1.5 rounded-full bg-white/15 border border-white/30 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg inline-block">
                         ✨ Client Workspace
                     </span>
                     <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white mt-3" style="text-shadow: 0 2px 12px rgba(34,211,238,.35);">Company Profile</h1>
-                    <p class="text-blue-100 mt-2 max-w-2xl" style="text-shadow: 0 1px 4px rgba(0,0,0,.35);">Keep your brand identity, compliance documents, and billing details up to date so jobs go live faster and invoices flow smoothly.</p>
+                    <p class="text-blue-100 mt-2" style="text-shadow: 0 1px 4px rgba(0,0,0,.35);">Keep your brand identity, compliance documents, and billing details up to date so jobs go live faster and invoices flow smoothly.</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="px-4 py-3 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md flex items-center gap-3">
-                        @if(isset($profile->logo_path))
-                            <img src="{{ asset('storage/' . $profile->logo_path) }}" alt="Logo" class="w-12 h-12 rounded-full object-cover border-2 border-white/30">
-                        @else
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-cyan-200" style="background: rgba(34,211,238,.18);"><i class="fa-regular fa-building"></i></div>
-                        @endif
-                        <div>
-                            <p class="text-[10px] text-cyan-200 font-bold uppercase tracking-widest">Account</p>
-                            <p class="text-white font-bold leading-tight">{{ $profile->company_name ?? $user->name }}</p>
-                        </div>
+                <div class="px-4 py-3 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md flex items-center gap-3 lg:justify-self-end shrink-0 w-full lg:w-auto">
+                    @if(isset($profile->logo_path))
+                        <img src="{{ asset('storage/' . $profile->logo_path) }}" alt="Logo" class="w-12 h-12 rounded-full object-cover border-2 border-white/30 shrink-0">
+                    @else
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-cyan-200 shrink-0" style="background: rgba(34,211,238,.18);"><i class="fa-regular fa-building"></i></div>
+                    @endif
+                    <div class="min-w-0">
+                        <p class="text-[10px] text-cyan-200 font-bold uppercase tracking-widest">Account</p>
+                        <p class="text-white font-bold leading-tight truncate">{{ $profile->company_name ?? $user->name }}</p>
                     </div>
                 </div>
             </div>
