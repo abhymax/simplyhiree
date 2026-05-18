@@ -93,17 +93,17 @@
 
         {{-- Hero CTA + quick action --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
-            <div class="lg:col-span-2 relative rounded-3xl overflow-hidden ring-glow">
-                {{-- Gradient frame --}}
-                <div class="absolute inset-0 bg-gradient-to-br from-cyan-500 via-indigo-500 to-fuchsia-500 opacity-90"></div>
-                <div class="absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,rgba(255,255,255,.35),transparent_55%)]"></div>
-                <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-white/15 rounded-full blur-3xl"></div>
+            <div class="lg:col-span-2 relative rounded-3xl overflow-hidden ring-glow"
+                 style="background: linear-gradient(135deg, #0c4a6e 0%, #312e81 55%, #4a1d96 100%);">
+                {{-- Gradient overlays --}}
+                <div class="absolute inset-0" style="background: radial-gradient(120% 60% at 0% 0%, rgba(255,255,255,.18), transparent 55%);"></div>
+                <div class="absolute -right-12 -bottom-12 w-72 h-72 rounded-full" style="background: rgba(56,189,248,.18); filter: blur(60px);"></div>
                 <div class="relative gloss p-8 md:p-10">
                     <div class="flex items-center gap-3 mb-6">
-                        <span class="bg-white/20 backdrop-blur-md p-2.5 rounded-xl border border-white/30 shadow-md"><i class="fa-solid fa-bolt text-yellow-200"></i></span>
-                        <h3 class="font-extrabold text-2xl text-white drop-shadow">Daily Pulse</h3>
+                        <span class="bg-white/15 backdrop-blur-md p-2.5 rounded-xl border border-white/30 shadow-md"><i class="fa-solid fa-bolt text-yellow-300"></i></span>
+                        <h3 class="font-extrabold text-2xl text-white drop-shadow" style="text-shadow: 0 2px 8px rgba(0,0,0,.4);">Daily Pulse</h3>
                     </div>
-                    <p class="text-white/90 text-lg mb-6 max-w-xl">A snapshot of what needs your attention today — interviews on the schedule, pending payments, and how your jobs are performing.</p>
+                    <p class="text-blue-100 text-lg mb-6 max-w-xl" style="text-shadow: 0 1px 4px rgba(0,0,0,.35);">A snapshot of what needs your attention today — interviews on the schedule, pending payments, and how your jobs are performing.</p>
                     <div class="flex flex-wrap gap-3">
                         <a href="{{ route('client.jobs.create') }}" class="neon-btn inline-flex items-center gap-2 text-white px-6 py-3 rounded-xl font-extrabold transition">
                             <i class="fa-solid fa-plus"></i> Post New Job <i class="fa-solid fa-arrow-right text-sm"></i>
@@ -118,16 +118,18 @@
                 </div>
             </div>
 
-            <div class="stat-card gloss bg-gradient-to-br from-emerald-500/20 to-teal-500/10 backdrop-blur-xl border border-emerald-400/30 rounded-3xl p-7 ring-glow flex flex-col">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-3 bg-emerald-500/30 rounded-2xl text-emerald-100 border border-emerald-300/40 shadow-lg shadow-emerald-500/20">
+            <div class="stat-card gloss backdrop-blur-xl border border-emerald-400/30 rounded-3xl p-6 ring-glow flex flex-col"
+                 style="background: linear-gradient(160deg, rgba(16,185,129,.22), rgba(20,184,166,.10));">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 rounded-2xl text-emerald-100 border border-emerald-300/40 shadow-lg shadow-emerald-500/20"
+                         style="background: rgba(16,185,129,.30);">
                         <i class="fa-solid fa-briefcase text-xl"></i>
                     </div>
+                    <p class="text-emerald-200 text-xs font-bold uppercase tracking-widest">Quick Action</p>
                 </div>
-                <p class="text-emerald-200 text-xs font-bold uppercase tracking-widest">Quick Action</p>
-                <p class="text-2xl font-extrabold text-white mt-2 leading-tight">Manage Posted Jobs</p>
-                <p class="text-emerald-100/80 text-sm mt-1">Track status and open applicants for each posting.</p>
-                <a href="#my-jobs" class="mt-auto pt-6 border-t border-white/10 flex items-center justify-between text-emerald-200 font-bold hover:text-white transition">
+                <p class="text-2xl font-extrabold text-white leading-tight">Manage Posted Jobs</p>
+                <p class="text-emerald-100/90 text-sm mt-2">Track status and open applicants for each posting.</p>
+                <a href="#my-jobs" class="mt-auto pt-5 border-t border-white/10 flex items-center justify-between text-emerald-200 font-bold hover:text-white transition">
                     <span>Jump to My Jobs</span>
                     <i class="fa-solid fa-arrow-right"></i>
                 </a>
