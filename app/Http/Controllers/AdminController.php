@@ -1374,6 +1374,48 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Invoice marked as PAID.');
     }
 
+    // --- VENDOR RATINGS ---
+
+    public function vendorRatingsIndex(\Illuminate\Http\Request $request)
+    {
+        $query = \App\Models\User::role('partner')
+            ->whereNull('parent_partner_id')
+            ->select(['id','name','email','status','partner_plan','partner_tier','avg_rating','total_ratings','selection_ratio','closure_rate','repeat_hire_count','vendor_badge','vendor_level','penalty_active','penalty_reason']);
+
+        if ($request->filled('level')) {
+            $query->where('vendor_level', $request->level);
+        }
+        if ($request->filled('search')) {
+            $term = $request->input('search');
+            $query->where(fn ($q) => $q->where('name','like',"%{$term}%")->orWhere('email','like',"%{$term}%"));
+        }
+
+        $partners = $query->orderByDesc('avg_rating')->orderByDesc('total_ratings')->paginate(25)->withQueryString();
+        $recentRatings = \App\Models\VendorRating::with(['partner','ratedBy','job'])->latest()->limit(10)->get();
+
+        return view('admin.vendor_ratings.index', compact('partners','recentRatings'));
+    }
+
+    public function vendorRatingPenalty(\Illuminate\Http\Request $request, \App\Models\User $user)
+    {
+        if (!$user->hasRole('partner')) abort(404);
+        $data = $request->validate(['penalty_reason' => 'nullable|string|max:500']);
+        $user->update([
+            'penalty_active' => true,
+            'penalty_reason' => $data['penalty_reason'] ?? 'Manual admin penalty',
+            'vendor_level'   => 'Restricted',
+        ]);
+        return back()->with('success', "Penalty applied to {$user->name}.");
+    }
+
+    public function vendorRatingLiftPenalty(\App\Models\User $user)
+    {
+        if (!$user->hasRole('partner')) abort(404);
+        $user->update(['penalty_active' => false, 'penalty_reason' => null]);
+        \App\Models\VendorRating::recomputeFor($user->id); // recalc level from data
+        return back()->with('success', "Penalty lifted for {$user->name}.");
+    }
+
     // --- PLAN CHANGE REQUESTS ---
 
     public function planRequestsIndex(\Illuminate\Http\Request $request)

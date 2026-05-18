@@ -186,13 +186,23 @@ class PartnerController extends Controller
                   });
             });
 
-        // 3. Premium / bulk-hiring jobs are reserved for Pro & Enterprise plans.
-        $ownerId   = $partner->partnerOwnerId();
-        $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
-        if (!in_array($ownerPlan, ['Pro', 'Enterprise'], true)) {
+        // 3. Premium / bulk-hiring jobs are reserved for Pro & Enterprise plans
+        //    AND partners whose rating tier is at least Pro (>= 4.0).
+        $ownerId    = $partner->partnerOwnerId();
+        $owner      = \App\Models\User::find($ownerId);
+        $ownerPlan  = $owner?->partner_plan ?? 'Free';
+        $ownerLevel = $owner?->vendor_level ?? 'Basic';
+        $hasPremiumPlan = in_array($ownerPlan,  ['Pro', 'Enterprise'], true);
+        $hasPremiumTier = in_array($ownerLevel, ['Pro', 'Elite'], true);
+        if (!$hasPremiumPlan || !$hasPremiumTier) {
             $query->where(function ($q) {
                 $q->where('is_premium', false)->orWhereNull('is_premium');
             });
+        }
+        // Restricted-tier partners (avg < 3.5) lose visibility everywhere.
+        if ($ownerLevel === 'Restricted') {
+            // Show jobs but cut volume in half by date — soft penalty.
+            $query->where('created_at', '>=', now()->subDays(30));
         }
 
         // --- Search Filters ---

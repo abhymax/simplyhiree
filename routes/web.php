@@ -203,6 +203,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/replacements/{application}/close', [AdminController::class, 'replacementsClose'])->name('replacements.close');
             Route::post('/replacements/{application}/issue-credit', [AdminController::class, 'creditNotesIssue'])->name('replacements.issue-credit');
 
+            // Vendor ratings
+            Route::get('/vendor-ratings', [AdminController::class, 'vendorRatingsIndex'])->name('vendor-ratings.index');
+            Route::post('/vendor-ratings/{user}/penalty', [AdminController::class, 'vendorRatingPenalty'])->name('vendor-ratings.penalty');
+            Route::post('/vendor-ratings/{user}/lift', [AdminController::class, 'vendorRatingLiftPenalty'])->name('vendor-ratings.lift');
+
             // Plan upgrade requests
             Route::get('/plan-requests', [AdminController::class, 'planRequestsIndex'])->name('plan-requests.index');
             Route::post('/plan-requests/{planChangeRequest}/contacted', [AdminController::class, 'planRequestMarkContacted'])->name('plan-requests.contacted');
@@ -281,6 +286,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             
         // 5. Final Status (Joined / Not Joined)
         Route::post('/applications/{application}/mark-joined', [ClientController::class, 'markAsJoined'])->name('applications.markJoined');
+        Route::get('/applications/{application}/rate', [ClientController::class, 'showRatePartner'])->name('applications.rate');
+        Route::post('/applications/{application}/rate', [ClientController::class, 'storeRatePartner'])->name('applications.rate.store');
         Route::post('/applications/{application}/mark-not-joined', [ClientController::class, 'markAsNotJoined'])->name('applications.markNotJoined');
 
         // 6. Left / Exited

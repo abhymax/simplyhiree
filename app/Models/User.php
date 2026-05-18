@@ -28,7 +28,18 @@ class User extends Authenticatable
         'access_level',
         'partner_tier',
         'partner_plan',
+        'avg_rating',
+        'total_ratings',
+        'selection_ratio',
+        'closure_rate',
+        'repeat_hire_count',
+        'vendor_badge',
+        'vendor_level',
+        'penalty_active',
+        'penalty_reason',
     ];
+
+    protected $appends = [];
 
     protected $hidden = [
         'password',

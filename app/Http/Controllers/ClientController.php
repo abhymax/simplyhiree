@@ -602,7 +602,54 @@ class ClientController extends Controller
         }
         $application->update(['joined_status' => 'Joined']);
         $this->notifyAdminAndPartner(new CandidateJoined($application), $application);
+
+        // Redirect the client to the rating page if the candidate came via a partner
+        $partnerId = $application->candidate?->partner_id;
+        if ($partnerId && !\App\Models\VendorRating::where('application_id', $application->id)->exists()) {
+            return redirect()->route('client.applications.rate', $application->id)
+                ->with('success', "Candidate marked as 'Joined'. Please rate the sourcing partner.");
+        }
         return redirect()->back()->with('success', 'Candidate marked as \'Joined\'.');
+    }
+
+    public function showRatePartner(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) abort(403);
+        $partner = $application->candidate?->partner;
+        if (!$partner) abort(404, 'This candidate has no sourcing partner.');
+        if (\App\Models\VendorRating::where('application_id', $application->id)->exists()) {
+            return redirect()->route('client.jobs.applicants', $application->job_id)->with('info', 'Partner already rated for this hire.');
+        }
+        return view('client.applications.rate', compact('application', 'partner'));
+    }
+
+    public function storeRatePartner(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) abort(403);
+        $partner = $application->candidate?->partner;
+        if (!$partner) abort(404);
+
+        $data = $request->validate([
+            'score'               => 'required|integer|min:1|max:5',
+            'speed_score'         => 'nullable|integer|min:1|max:5',
+            'quality_score'       => 'nullable|integer|min:1|max:5',
+            'communication_score' => 'nullable|integer|min:1|max:5',
+            'feedback'            => 'nullable|string|max:1500',
+        ]);
+
+        \App\Models\VendorRating::updateOrCreate(
+            ['application_id' => $application->id],
+            array_merge($data, [
+                'partner_id'       => $partner->id,
+                'rated_by_user_id' => Auth::id(),
+                'job_id'           => $application->job_id,
+            ])
+        );
+
+        \App\Models\VendorRating::recomputeFor($partner->id);
+
+        return redirect()->route('client.jobs.applicants', $application->job_id)
+            ->with('success', 'Thanks! Your rating has been recorded.');
     }
 
     public function markAsNotJoined(JobApplication $application)

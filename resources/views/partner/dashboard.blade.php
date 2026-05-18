@@ -82,13 +82,42 @@
                         'Diamond'=> 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40',
                     ];
                 @endphp
+                @php
+                    $partnerOwner = auth()->user();
+                    $avgRating    = $partnerOwner->avg_rating;
+                    $totalRatings = $partnerOwner->total_ratings ?? 0;
+                    $badge        = $partnerOwner->vendor_badge;
+                    $level        = $partnerOwner->vendor_level ?? 'Basic';
+                    $levelColors = [
+                        'Elite'      => 'bg-purple-500/20 text-purple-200 border-purple-400/40',
+                        'Pro'        => 'bg-blue-500/20 text-blue-200 border-blue-400/40',
+                        'Basic'      => 'bg-slate-500/20 text-slate-200 border-slate-400/40',
+                        'Restricted' => 'bg-rose-500/20 text-rose-200 border-rose-400/40',
+                    ];
+                    $badgeColors = [
+                        'Rising Talent'  => 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40',
+                        'Top Recruiter'  => 'bg-blue-500/20 text-blue-200 border-blue-400/40',
+                        'Elite Partner'  => 'bg-purple-500/20 text-purple-200 border-purple-400/40',
+                        'Trusted Vendor' => 'bg-rose-500/20 text-rose-200 border-rose-400/40',
+                    ];
+                @endphp
                 <div class="flex items-center gap-2 mb-2 flex-wrap">
                     <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
                         Partner Workspace
                     </span>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $tierColors[$tier] ?? '' }}">
-                        <i class="fa-solid fa-award"></i> {{ $tier }}
+                    @if($avgRating !== null)
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 border border-amber-400/40 text-amber-200">
+                            ⭐ {{ number_format($avgRating, 1) }} / 5 <span class="opacity-70">({{ $totalRatings }})</span>
+                        </span>
+                    @endif
+                    <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $levelColors[$level] ?? '' }}">
+                        <i class="fa-solid fa-medal"></i> {{ $level }} Tier
                     </span>
+                    @if($badge)
+                        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $badgeColors[$badge] ?? '' }}">
+                            <i class="fa-solid fa-trophy"></i> {{ $badge }}
+                        </span>
+                    @endif
                     <a href="{{ route('partner.upgrade') }}" class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-900 hover:from-yellow-400 hover:to-orange-400 transition shadow-md shadow-yellow-500/30">
                         <i class="fa-solid fa-rocket mr-1"></i> Upgrade Plan ({{ $plan }})
                     </a>
