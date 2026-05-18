@@ -309,7 +309,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     // ==========================================
     //          PARTNER (AGENCY) ROUTES
     // ==========================================
-    Route::middleware(['role:partner'])->prefix('partner')->name('partner.')->group(function () {
+    Route::middleware(['role:partner', 'partner.access'])->prefix('partner')->name('partner.')->group(function () {
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');

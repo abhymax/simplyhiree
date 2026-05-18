@@ -169,6 +169,23 @@ class User extends Authenticatable
         return $this->isPartnerOwner() || in_array($this->access_level, ['full', null], true);
     }
 
+    public function partnerAccessLevel(): string
+    {
+        if ($this->isPartnerOwner()) return 'owner';
+        return $this->access_level ?: 'full';
+    }
+
+    public function canSubmitCandidates(): bool
+    {
+        if ($this->isPartnerOwner()) return true;
+        return in_array($this->access_level, ['full', 'submissions_only'], true);
+    }
+
+    public function canManagePartnerSettings(): bool
+    {
+        return $this->isPartnerOwner();
+    }
+
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);
