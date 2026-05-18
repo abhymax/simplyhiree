@@ -213,7 +213,7 @@
 
                     {{-- Vendor Assignment Card --}}
                     @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;" x-data="{ mode: '{{ $currMode }}' }">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;" x-data="{ mode: '{{ $currMode }}' }">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-handshake text-white"></i> Vendor Assignment
@@ -263,6 +263,22 @@
                                     </div>
                                 @endif
                             </div>
+                        </div>
+
+                        {{-- Confidentiality toggle --}}
+                        <div class="mt-5 pt-4 border-t border-white/20">
+                            <label class="flex items-start gap-3 cursor-pointer select-none">
+                                <input type="hidden" name="is_company_confidential" value="0">
+                                <input type="checkbox" name="is_company_confidential" value="1"
+                                       {{ old('is_company_confidential', $job->is_company_confidential ?? false) ? 'checked' : '' }}
+                                       class="mt-1 h-5 w-5 rounded border-white/40 bg-blue-950/40 text-white focus:ring-2 focus:ring-white">
+                                <div>
+                                    <div class="text-white font-bold text-sm flex items-center gap-2">
+                                        <i class="fa-solid fa-user-secret"></i> Keep company name confidential
+                                    </div>
+                                    <p class="text-white/80 text-xs mt-0.5">Vendors and candidates will see this posting as "Confidential" until you choose to reveal your company.</p>
+                                </div>
+                            </label>
                         </div>
                     </div>
 

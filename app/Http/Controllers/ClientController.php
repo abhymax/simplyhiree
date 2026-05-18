@@ -163,6 +163,7 @@ class ClientController extends Controller
             'payout_amount' => $validated['payout_amount'],
             'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
+            'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
         ]);
 
         // Resolve the allowed-partner list according to mode
@@ -206,6 +207,7 @@ class ClientController extends Controller
             'payout_amount' => $validated['payout_amount'],
             'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
+            'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
             'status' => 'pending_approval',
         ]);
 
@@ -258,6 +260,7 @@ class ClientController extends Controller
             'max_vendors_per_job'    => 'nullable|integer|min:1|max:50',
             'allowed_partners'       => 'nullable|array',
             'allowed_partners.*'     => 'integer|exists:users,id',
+            'is_company_confidential' => 'nullable|boolean',
         ]);
     }
 
