@@ -139,19 +139,34 @@ class ClientVendorController extends Controller
 
     /**
      * Vendor performance dashboard for this client only.
+     * Scoped to vendors that are connected to this client — either
+     * invited by the client themselves OR assigned by SimplyHiree.
      */
     public function performance(Request $request)
     {
         $client = Auth::user();
         $myJobIds = Job::where('user_id', $client->id)->pluck('id');
 
-        // Per-partner aggregates limited to this client's jobs
+        // Same scoping as the My Vendors page:
+        //   preferred (client-picked OR admin-assigned) + invitation-joined
+        $preferredIds = $client->preferredVendors()->pluck('users.id')->all();
+        $invitedJoinedIds = ClientVendorInvitation::where('client_id', $client->id)
+            ->where('status', 'joined')
+            ->whereNotNull('joined_partner_id')
+            ->pluck('joined_partner_id')
+            ->all();
+        $connectedIds = array_values(array_unique(array_merge($preferredIds, $invitedJoinedIds)));
+
+        // Per-partner aggregates: limit to BOTH the client's jobs AND vendors
+        // the client is officially connected to. Empty connection list means
+        // empty performance dashboard, which is the correct behavior.
         $rows = JobApplication::query()
             ->whereIn('job_id', $myJobIds)
-            ->whereHas('candidate', fn ($q) => $q->whereNotNull('partner_id'))
+            ->whereHas('candidate', fn ($q) => $q->whereNotNull('partner_id')->whereIn('partner_id', $connectedIds ?: [0]))
             ->join('candidates', 'candidates.id', '=', 'job_applications.candidate_id')
             ->join('users as p', 'p.id', '=', 'candidates.partner_id')
             ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+            ->whereIn('p.id', $connectedIds ?: [0])
             ->selectRaw("
                 p.id as partner_id, p.name as partner_name, p.avg_rating, p.vendor_level, p.vendor_badge,
                 COUNT(job_applications.id) as submitted,
