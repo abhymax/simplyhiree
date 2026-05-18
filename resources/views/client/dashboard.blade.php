@@ -2,120 +2,149 @@
 
 @section('content')
 <style>
-    .fx-card { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
-    .fx-card:hover { transform: translateY(-5px); box-shadow: 0 18px 34px rgba(14,165,233,.22); border-color: rgba(255,255,255,.32); }
+    /* --- Glossy effects --- */
+    .gloss { position: relative; isolation: isolate; }
+    .gloss::before {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(120deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,.08) 100%);
+        pointer-events: none; border-radius: inherit; z-index: 0;
+    }
+    .gloss::after {
+        content: ""; position: absolute; inset: 0;
+        background: radial-gradient(120% 60% at 0% 0%, rgba(255,255,255,.22), transparent 60%);
+        pointer-events: none; border-radius: inherit; z-index: 0; mix-blend-mode: overlay;
+    }
+    .gloss > * { position: relative; z-index: 1; }
+
+    .ring-glow { box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 20px 60px -20px rgba(99,102,241,.55), 0 0 80px -25px rgba(34,211,238,.45); }
+    .stat-card { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 22px 50px -20px rgba(56,189,248,.45); border-color: rgba(255,255,255,.35); }
+
+    .neon-btn { background: linear-gradient(135deg, #06b6d4, #6366f1); box-shadow: 0 10px 30px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+    .neon-btn:hover { filter: brightness(1.1); box-shadow: 0 18px 40px -10px rgba(34,211,238,.7), inset 0 1px 0 rgba(255,255,255,.35); }
+
+    .blob { animation: float 18s ease-in-out infinite alternate; }
+    @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, -20px) scale(1.05); } }
+
     .fx-row { transition: all .2s ease; border-left: 4px solid transparent; }
-    .fx-row:hover { transform: scale(1.003); background: rgba(255,255,255,.08) !important; border-left-color: #22d3ee; }
-    .fx-btn { transition: transform .18s ease, box-shadow .18s ease; }
-    .fx-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 24px rgba(59,130,246,.35); }
+    .fx-row:hover { background: rgba(255,255,255,.06) !important; border-left-color: #22d3ee; }
 </style>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
-    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
-    <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
+<div class="min-h-screen bg-[#0b1224] text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
+    {{-- Background gradient + animated blobs --}}
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900"></div>
+    <div class="blob absolute -top-32 -left-32 w-[28rem] h-[28rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25"></div>
+    <div class="blob absolute top-1/3 right-0 w-[28rem] h-[28rem] bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-6s"></div>
+    <div class="blob absolute bottom-0 left-1/3 w-[28rem] h-[28rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-12s"></div>
+    <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px;"></div>
 
     <div class="relative z-10 max-w-7xl mx-auto">
 
+        {{-- Header --}}
         <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-white/10 pb-6">
             <div>
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
-                        Client Workspace
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-400/30 to-indigo-400/30 border border-cyan-300/40 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg shadow-cyan-500/10">
+                        ✨ Client Workspace
                     </span>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">Overview</h1>
-                <p class="text-blue-200 mt-2 text-lg">
-                    Welcome back, <span class="text-white font-semibold">{{ Auth::user()->name }}</span>.
-                </p>
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-cyan-200 to-indigo-200 bg-clip-text text-transparent drop-shadow">Overview</h1>
+                <p class="text-blue-200 mt-2 text-lg">Welcome back, <span class="text-white font-semibold">{{ Auth::user()->name }}</span>.</p>
             </div>
-
             <div class="mt-6 md:mt-0">
-                <div class="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl flex items-center gap-4">
-                    <div class="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-lg">
+                <div class="gloss bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-2xl flex items-center gap-4 ring-glow">
+                    <div class="p-2.5 bg-gradient-to-br from-cyan-400 to-indigo-500 rounded-xl shadow-md shadow-cyan-500/40">
                         <i class="fa-regular fa-calendar text-white"></i>
                     </div>
                     <div>
-                        <p class="text-xs text-blue-300 font-bold uppercase">Today's Date</p>
+                        <p class="text-[10px] text-cyan-200 font-bold uppercase tracking-widest">Today</p>
                         <p class="text-white font-bold">{{ date('F j, Y') }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            <div class="col-span-1 lg:col-span-2 bg-gradient-to-r from-indigo-600/90 to-blue-600/90 rounded-3xl p-1 shadow-2xl">
-                <div class="h-full bg-slate-900/50 backdrop-blur-xl rounded-[20px] p-8 relative overflow-hidden">
-                    <div class="absolute right-0 top-0 p-6 opacity-10">
-                        <i class="fa-solid fa-chart-line text-9xl text-white"></i>
+        {{-- Stat tiles --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            @php
+                $tiles = [
+                    ['icon'=>'fa-video','grad'=>'from-cyan-400 to-blue-500','label'=>'Interviews Today','val'=>($todayInterviews ?? 0),'href'=>route('client.interviews.today')],
+                    ['icon'=>'fa-file-invoice-dollar','grad'=>'from-amber-400 to-orange-500','label'=>'Payments Due','val'=>($dueInvoicesCount ?? 0),'href'=>route('client.billing')],
+                    ['icon'=>'fa-users','grad'=>'from-emerald-400 to-teal-500','label'=>'Total Applicants','val'=>($totalApplicants ?? 0),'href'=>'#my-jobs'],
+                    ['icon'=>'fa-briefcase','grad'=>'from-fuchsia-400 to-purple-500','label'=>'Active Jobs','val'=>($activeJobs ?? 0),'href'=>'#my-jobs'],
+                ];
+            @endphp
+            @foreach($tiles as $t)
+                <a href="{{ $t['href'] }}" class="stat-card gloss bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                    <div class="p-3 rounded-xl bg-gradient-to-br {{ $t['grad'] }} shadow-lg shadow-black/40">
+                        <i class="fa-solid {{ $t['icon'] }} text-white text-lg"></i>
                     </div>
+                    <div class="flex-1">
+                        <div class="text-3xl font-black tracking-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">{{ $t['val'] }}</div>
+                        <div class="text-blue-200 text-xs font-semibold uppercase tracking-wider">{{ $t['label'] }}</div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
 
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-white/20 p-2 rounded-lg"><i class="fa-solid fa-heart-pulse"></i></span>
-                            <h3 class="font-bold text-xl text-white">Daily Pulse</h3>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <a href="{{ route('client.interviews.today') }}" class="block rounded-xl px-2 py-1 hover:bg-white/10 transition">
-                                <span class="text-5xl font-black text-white tracking-tighter">{{ $todayInterviews ?? 0 }}</span>
-                                <p class="text-blue-200 font-medium mt-1">Interviews Today</p>
-                            </a>
-                            <a href="{{ route('client.billing') }}" class="block rounded-xl px-2 py-1 hover:bg-white/10 transition">
-                                <span class="text-5xl font-black text-white tracking-tighter">{{ $dueInvoicesCount ?? 0 }}</span>
-                                <p class="text-blue-200 font-medium mt-1">Payments Due</p>
-                            </a>
-                            <a href="{{ route('client.dashboard') }}#my-jobs" class="block rounded-xl px-2 py-1 hover:bg-white/10 transition">
-                                <span class="text-5xl font-black text-white tracking-tighter">{{ $totalApplicants ?? 0 }}</span>
-                                <p class="text-blue-200 font-medium mt-1">Total Applicants</p>
-                            </a>
-                        </div>
-
-                        <div class="mt-8 flex flex-wrap gap-3">
-                            <a href="{{ route('client.jobs.create') }}" class="fx-btn inline-flex items-center gap-2 bg-white text-blue-900 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg">
-                                Post New Job <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                            <a href="{{ route('client.interviews.today') }}" class="fx-btn inline-flex items-center gap-2 bg-white/15 border border-white/20 text-white px-6 py-3 rounded-xl font-bold hover:bg-white/25 transition">
-                                View Interviews
-                            </a>
-                        </div>
+        {{-- Hero CTA + quick action --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
+            <div class="lg:col-span-2 relative rounded-3xl overflow-hidden ring-glow">
+                {{-- Gradient frame --}}
+                <div class="absolute inset-0 bg-gradient-to-br from-cyan-500 via-indigo-500 to-fuchsia-500 opacity-90"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,rgba(255,255,255,.35),transparent_55%)]"></div>
+                <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-white/15 rounded-full blur-3xl"></div>
+                <div class="relative gloss p-8 md:p-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="bg-white/20 backdrop-blur-md p-2.5 rounded-xl border border-white/30 shadow-md"><i class="fa-solid fa-bolt text-yellow-200"></i></span>
+                        <h3 class="font-extrabold text-2xl text-white drop-shadow">Daily Pulse</h3>
+                    </div>
+                    <p class="text-white/90 text-lg mb-6 max-w-xl">A snapshot of what needs your attention today — interviews on the schedule, pending payments, and how your jobs are performing.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{{ route('client.jobs.create') }}" class="neon-btn inline-flex items-center gap-2 text-white px-6 py-3 rounded-xl font-extrabold transition">
+                            <i class="fa-solid fa-plus"></i> Post New Job <i class="fa-solid fa-arrow-right text-sm"></i>
+                        </a>
+                        <a href="{{ route('client.interviews.today') }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-6 py-3 rounded-xl font-bold backdrop-blur-md transition shadow-md">
+                            <i class="fa-regular fa-calendar-check"></i> View Interviews
+                        </a>
+                        <a href="{{ route('client.vendors.browse') }}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-xl font-bold backdrop-blur-md transition">
+                            <i class="fa-solid fa-handshake"></i> Vendors
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:bg-white/15 transition duration-300">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400 border border-emerald-500/20">
-                        <i class="fa-solid fa-briefcase text-2xl"></i>
+            <div class="stat-card gloss bg-gradient-to-br from-emerald-500/20 to-teal-500/10 backdrop-blur-xl border border-emerald-400/30 rounded-3xl p-7 ring-glow flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-emerald-500/30 rounded-2xl text-emerald-100 border border-emerald-300/40 shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-briefcase text-xl"></i>
                     </div>
                 </div>
-
-                <p class="text-blue-300 text-sm font-bold uppercase tracking-wider">Quick Action</p>
-                <p class="text-2xl font-extrabold text-white mt-2">Manage Posted Jobs</p>
-                <p class="text-slate-300 text-sm mt-1">Track status and open applicants for each posting.</p>
-
-                <div class="mt-8 pt-6 border-t border-white/10">
-                    <a href="#my-jobs" class="w-full flex items-center justify-between text-white font-bold hover:text-emerald-400 transition-colors">
-                        <span>Open</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                </div>
+                <p class="text-emerald-200 text-xs font-bold uppercase tracking-widest">Quick Action</p>
+                <p class="text-2xl font-extrabold text-white mt-2 leading-tight">Manage Posted Jobs</p>
+                <p class="text-emerald-100/80 text-sm mt-1">Track status and open applicants for each posting.</p>
+                <a href="#my-jobs" class="mt-auto pt-6 border-t border-white/10 flex items-center justify-between text-emerald-200 font-bold hover:text-white transition">
+                    <span>Jump to My Jobs</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
             </div>
         </div>
 
-        <div id="my-jobs" class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-            <div class="p-6 border-b border-white/10 bg-slate-900/40 flex flex-col md:flex-row justify-between gap-3 md:items-center">
+        {{-- Jobs table --}}
+        <div id="my-jobs" class="gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl overflow-hidden ring-glow">
+            <div class="p-6 border-b border-white/10 bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 flex flex-col md:flex-row justify-between gap-3 md:items-center">
                 <div>
-                    <h3 class="text-2xl font-bold text-white">My Job Postings</h3>
-                    <p class="text-blue-100 text-sm mt-1">Total Jobs: {{ $totalJobs ?? 0 }} | Active: {{ $activeJobs ?? 0 }}</p>
+                    <h3 class="text-2xl font-extrabold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">My Job Postings</h3>
+                    <p class="text-blue-200 text-sm mt-1">Total Jobs: <span class="text-white font-bold">{{ $totalJobs ?? 0 }}</span> · Active: <span class="text-emerald-300 font-bold">{{ $activeJobs ?? 0 }}</span></p>
                 </div>
-                <a href="{{ route('client.jobs.create') }}" class="fx-btn inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 px-4 py-2 rounded-lg font-black">
-                    <i class="fa-solid fa-plus"></i> New Job
+                <a href="{{ route('client.jobs.create') }}" class="neon-btn inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-extrabold transition">
+                    <i class="fa-solid fa-plus"></i> Post New Job
                 </a>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="min-w-full text-left text-sm">
-                    <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
+                    <thead class="bg-slate-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-widest">
                         <tr>
                             <th class="px-6 py-4">Designation / Role</th>
                             <th class="px-6 py-4">Requirements</th>
@@ -131,15 +160,13 @@
                                     <a href="{{ route('jobs.show', $job->id) }}" class="font-bold text-white hover:text-cyan-300 transition">
                                         {{ $job->title }}
                                     </a>
-                                    <div class="text-xs text-blue-200 mt-1">{{ $job->location }} | {{ $job->job_type }}</div>
+                                    <div class="text-xs text-blue-200 mt-1">{{ $job->location }} · {{ $job->job_type }}</div>
                                 </td>
-
                                 <td class="px-6 py-4 text-blue-100">
-                                    <div><span class="text-cyan-300 text-xs uppercase font-bold">Openings:</span> {{ $job->openings ?? 'N/A' }}</div>
-                                    <div><span class="text-cyan-300 text-xs uppercase font-bold">Exp:</span> {{ $job->formatted_experience }}</div>
-                                    <div><span class="text-cyan-300 text-xs uppercase font-bold">Gender:</span> {{ $job->gender_preference ?? 'Any' }}</div>
+                                    <div><span class="text-cyan-300 text-[10px] uppercase font-bold">Openings:</span> {{ $job->openings ?? 'N/A' }}</div>
+                                    <div><span class="text-cyan-300 text-[10px] uppercase font-bold">Exp:</span> {{ $job->formatted_experience }}</div>
+                                    <div><span class="text-cyan-300 text-[10px] uppercase font-bold">Gender:</span> {{ $job->gender_preference ?? 'Any' }}</div>
                                 </td>
-
                                 <td class="px-6 py-4">
                                     @php
                                         $statusMap = [
@@ -150,15 +177,14 @@
                                             'rejected' => 'bg-rose-500/20 text-rose-100 border-rose-400/40',
                                         ];
                                     @endphp
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $statusMap[$job->status] ?? 'bg-blue-500/20 text-blue-100 border-blue-400/40' }}">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $statusMap[$job->status] ?? 'bg-blue-500/20 text-blue-100 border-blue-400/40' }} shadow-sm">
                                         {{ str_replace('_', ' ', ucfirst($job->status)) }}
                                     </span>
                                 </td>
-
                                 <td class="px-6 py-4">
                                     @if($job->status == 'approved')
                                         <div class="flex flex-col gap-2 items-start">
-                                            <a href="{{ route('client.jobs.applicants', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-bold text-xs text-white">
+                                            <a href="{{ route('client.jobs.applicants', $job) }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 shadow-md shadow-indigo-500/30 px-3 py-2 rounded-lg font-bold text-xs text-white">
                                                 View Applicants ({{ $job->jobApplications->where('status', 'Approved')->count() }})
                                             </a>
                                             @if($job->deactivation_requested_at)
@@ -187,22 +213,21 @@
                                             @endif
                                         </div>
                                     @elseif($job->status === 'pending_approval')
-                                        <a href="{{ route('client.jobs.edit', $job) }}" class="fx-btn inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 px-3 py-2 rounded-lg font-bold text-xs text-slate-900">
+                                        <a href="{{ route('client.jobs.edit', $job) }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 shadow-md shadow-amber-500/30 px-3 py-2 rounded-lg font-bold text-xs text-slate-900">
                                             <i class="fa-solid fa-pen-to-square"></i> Edit Pending Job
                                         </a>
                                     @else
                                         <span class="text-slate-400 text-xs italic">Not available</span>
                                     @endif
                                 </td>
-
                                 <td class="px-6 py-4 text-blue-200">{{ $job->created_at->format('M d, Y') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-14 text-center text-blue-100">
-                                    <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
-                                    <p class="font-bold text-white">No jobs posted yet</p>
-                                    <a href="{{ route('client.jobs.create') }}" class="text-cyan-300 hover:text-white">Post your first job</a>
+                                <td colspan="5" class="px-6 py-16 text-center text-blue-100">
+                                    <i class="fa-regular fa-folder-open text-5xl mb-3 text-cyan-300"></i>
+                                    <p class="font-bold text-white text-lg">No jobs posted yet</p>
+                                    <a href="{{ route('client.jobs.create') }}" class="text-cyan-300 hover:text-white underline">Post your first job</a>
                                 </td>
                             </tr>
                         @endforelse
@@ -210,7 +235,6 @@
                 </table>
             </div>
         </div>
-
     </div>
 </div>
 @endsection

@@ -26,16 +26,33 @@
     $existingMinSalary = $salaryDigits->get(0);
     $existingMaxSalary = $salaryDigits->count() > 1 ? $salaryDigits->get(1) : $salaryDigits->get(0);
 @endphp
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
-    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
-    <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
+<style>
+    .gloss { position: relative; isolation: isolate; }
+    .gloss::before { content:""; position:absolute; inset:0; background:linear-gradient(120deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,.08) 100%); pointer-events:none; border-radius:inherit; z-index:0; }
+    .gloss > * { position:relative; z-index:1; }
+    .ring-glow { box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 20px 60px -20px rgba(99,102,241,.55), 0 0 80px -25px rgba(34,211,238,.45); }
+    .field-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .field-card:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -16px rgba(34,211,238,.35); border-color: rgba(255,255,255,.25); }
+    .neon-btn { background: linear-gradient(135deg, #06b6d4, #6366f1); box-shadow: 0 10px 30px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+    .neon-btn:hover { filter: brightness(1.1); box-shadow: 0 18px 40px -10px rgba(34,211,238,.7), inset 0 1px 0 rgba(255,255,255,.35); }
+    .blob { animation: float 18s ease-in-out infinite alternate; }
+    @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(20px,-20px) scale(1.05); } }
+    .section-h { background: linear-gradient(90deg, #67e8f9, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+</style>
+
+<div class="min-h-screen bg-[#0b1224] text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900"></div>
+    <div class="blob absolute -top-32 -left-32 w-[28rem] h-[28rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25"></div>
+    <div class="blob absolute top-1/3 right-0 w-[28rem] h-[28rem] bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-6s"></div>
+    <div class="blob absolute bottom-0 left-1/4 w-[28rem] h-[28rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-12s"></div>
+    <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px;"></div>
 
     <div class="relative z-10 max-w-4xl mx-auto">
 
         @if ($errors->any())
-            <div class="mb-6 bg-rose-500/20 border border-rose-400/40 text-rose-100 p-4 rounded-xl">
-                <p class="font-bold">Please fix the following errors:</p>
-                <ul class="list-disc ml-5 mt-1 text-sm">
+            <div class="mb-6 bg-rose-500/20 border border-rose-400/40 text-rose-100 p-4 rounded-xl backdrop-blur-md">
+                <p class="font-bold flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following errors:</p>
+                <ul class="list-disc ml-6 mt-1 text-sm">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -43,15 +60,21 @@
             </div>
         @endif
 
-        <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-            <div class="p-6 border-b border-white/10">
-                <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
-                    Client Workspace
-                </span>
-                <h1 class="text-3xl md:text-4xl font-extrabold mt-3">{{ $formTitle }}</h1>
-                @if($isEditMode)
-                    <p class="mt-2 text-sm text-amber-200">This job is still pending approval, so you can update it. Once approved by superadmin, editing is locked.</p>
-                @endif
+        <div class="gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl shadow-2xl ring-glow overflow-hidden">
+            <div class="relative p-8 border-b border-white/10 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-fuchsia-500/10"></div>
+                <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl"></div>
+                <div class="relative">
+                    <span class="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-400/30 to-indigo-400/30 border border-cyan-300/40 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg shadow-cyan-500/10">
+                        ✨ Client Workspace
+                    </span>
+                    <h1 class="text-3xl md:text-4xl font-black mt-3 bg-gradient-to-r from-white via-cyan-200 to-indigo-200 bg-clip-text text-transparent drop-shadow">{{ $formTitle }}</h1>
+                    @if($isEditMode)
+                        <p class="mt-2 text-sm text-amber-200"><i class="fa-solid fa-circle-info mr-1"></i> This job is still pending approval, so you can update it. Once approved by superadmin, editing is locked.</p>
+                    @else
+                        <p class="mt-2 text-sm text-blue-200">Fill in the details below. The Superadmin will review your job before it goes live to vendors.</p>
+                    @endif
+                </div>
             </div>
 
             <div class="p-6">
@@ -272,12 +295,12 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end">
-                        <a href="{{ route('client.dashboard') }}" class="bg-white/10 border border-white/20 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition mr-4">
+                    <div class="flex justify-end items-center gap-3 pt-4 mt-6 border-t border-white/10">
+                        <a href="{{ route('client.dashboard') }}" class="bg-white/10 border border-white/20 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition backdrop-blur-md">
                             Cancel
                         </a>
-                        <button type="submit" class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold py-3 px-8 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition">
-                            {{ $submitLabel }}
+                        <button type="submit" class="neon-btn text-white font-extrabold py-3 px-8 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> {{ $submitLabel }}
                         </button>
                     </div>
                 </form>
