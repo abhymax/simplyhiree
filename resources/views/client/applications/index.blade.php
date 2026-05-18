@@ -153,17 +153,18 @@
                                         <span class="status-pill inline-flex items-center rounded-full bg-blue-600 text-white border border-blue-400 font-extrabold"><i class="fa-solid fa-circle-info"></i> {{ ucwords($st) }}</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-5 text-right">
-                                    <div class="flex items-center justify-end gap-2">
+                                <td class="px-6 py-5 text-right" style="min-width: 180px;">
+                                    <div class="flex items-center justify-end gap-2 whitespace-nowrap">
                                         @if($resumePath)
                                             <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" title="Download CV"
-                                               class="inline-flex items-center justify-center w-8 h-8 bg-slate-700 hover:bg-cyan-600 text-white rounded-lg border border-slate-600 hover:border-cyan-400">
-                                                <i class="fa-solid fa-download text-xs"></i>
+                                               class="inline-flex items-center justify-center w-9 h-9 bg-slate-700 hover:bg-cyan-600 text-white rounded-lg border border-slate-600 hover:border-cyan-400 shrink-0">
+                                                <i class="fa-solid fa-download text-sm"></i>
                                             </a>
                                         @endif
                                         <a href="{{ route('client.jobs.applicants', $app->job_id) }}#app-{{ $app->id }}"
-                                           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold border border-indigo-400">
-                                            View Details
+                                           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold border border-indigo-400 shadow-md whitespace-nowrap shrink-0"
+                                           style="padding: 0.55rem 1.1rem;">
+                                            <i class="fa-regular fa-eye"></i> View Details
                                         </a>
                                     </div>
                                 </td>
