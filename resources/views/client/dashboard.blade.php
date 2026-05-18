@@ -30,17 +30,12 @@
     .fx-row:hover { background: rgba(255,255,255,.06) !important; border-left-color: #22d3ee; }
 </style>
 
-<div class="min-h-screen text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden"
-     style="background: linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #0f172a 100%);">
-    {{-- Animated gradient blobs --}}
-    <div class="blob absolute -top-32 -left-32 rounded-full mix-blend-screen opacity-25"
-         style="width: 28rem; height: 28rem; background: #06b6d4; filter: blur(140px);"></div>
-    <div class="blob absolute top-1/3 right-0 rounded-full mix-blend-screen opacity-25"
-         style="width: 28rem; height: 28rem; background: #d946ef; filter: blur(140px); animation-delay:-6s"></div>
-    <div class="blob absolute bottom-0 left-1/3 rounded-full mix-blend-screen opacity-25"
-         style="width: 28rem; height: 28rem; background: #6366f1; filter: blur(140px); animation-delay:-12s"></div>
-    <div class="absolute inset-0"
-         style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.07;"></div>
+<div class="min-h-screen text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950">
+    {{-- Superadmin-style background glows --}}
+    <div class="absolute top-0 right-0 w-96 h-96 rounded-full mix-blend-screen filter blur-[120px] opacity-40 animate-pulse"
+         style="background: #9333ea;"></div>
+    <div class="absolute bottom-0 left-0 w-80 h-80 rounded-full mix-blend-screen filter blur-[120px] opacity-40"
+         style="background: #3b82f6;"></div>
 
     <div class="relative z-10 max-w-7xl mx-auto">
 
@@ -94,10 +89,10 @@
         {{-- Hero CTA + quick action --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
             <div class="lg:col-span-2 relative rounded-3xl overflow-hidden ring-glow"
-                 style="background: linear-gradient(135deg, #0c4a6e 0%, #312e81 55%, #4a1d96 100%);">
+                 style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 55%, #6d28d9 100%);">
                 {{-- Gradient overlays --}}
-                <div class="absolute inset-0" style="background: radial-gradient(120% 60% at 0% 0%, rgba(255,255,255,.18), transparent 55%);"></div>
-                <div class="absolute -right-12 -bottom-12 w-72 h-72 rounded-full" style="background: rgba(56,189,248,.18); filter: blur(60px);"></div>
+                <div class="absolute inset-0" style="background: radial-gradient(120% 60% at 0% 0%, rgba(255,255,255,.15), transparent 55%);"></div>
+                <div class="absolute -right-12 -bottom-12 w-72 h-72 rounded-full" style="background: rgba(147,51,234,.25); filter: blur(60px);"></div>
                 <div class="relative gloss p-8 md:p-10">
                     <div class="flex items-center gap-3 mb-6">
                         <span class="bg-white/15 backdrop-blur-md p-2.5 rounded-xl border border-white/30 shadow-md"><i class="fa-solid fa-bolt text-yellow-300"></i></span>
