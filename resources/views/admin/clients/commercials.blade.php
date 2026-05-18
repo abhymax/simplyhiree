@@ -106,20 +106,36 @@
                         <button type="button" onclick="addProfile()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg">+ Add Profile</button>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-left text-sm">
+                        <table class="text-left text-sm" style="max-width: 980px;">
                             <thead class="text-amber-200 text-[11px] uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-3 py-2">Profile</th>
-                                    <th class="px-3 py-2">Fee %</th>
-                                    <th class="px-3 py-2">Replacement (days)</th>
-                                    <th class="px-3 py-2 w-12"></th>
+                                    <th class="px-3 py-2" style="width:200px;">Profile</th>
+                                    <th class="px-3 py-2" style="width:130px;">Fee Type</th>
+                                    <th class="px-3 py-2" style="width:160px;">Fee Value</th>
+                                    <th class="px-3 py-2" style="width:140px;">Replacement (days)</th>
+                                    <th class="px-3 py-2" style="width:40px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="prof-rows">
                                 @foreach($contract['profile_wise'] as $row)
-                                    <tr>
-                                        <td class="px-2 py-1.5"><input type="text" name="prof_profile[]" value="{{ $row['profile'] ?? '' }}" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5"></td>
-                                        <td class="px-2 py-1.5"><input type="number" name="prof_fee_percent[]" step="0.01" min="0" max="100" value="{{ $row['fee_percent'] ?? '' }}" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5"></td>
+                                    @php
+                                        $ftype = $row['fee_type'] ?? 'percent';
+                                        $fval = $ftype === 'flat' ? ($row['fee_flat'] ?? '') : ($row['fee_percent'] ?? '');
+                                    @endphp
+                                    <tr class="prof-row">
+                                        <td class="px-2 py-1.5"><input type="text" name="prof_profile[]" value="{{ $row['profile'] ?? '' }}" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5" placeholder="e.g. Mid-Level"></td>
+                                        <td class="px-2 py-1.5">
+                                            <select name="prof_fee_type[]" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5 fee-type-select" onchange="syncFeeUnit(this)">
+                                                <option value="percent" {{ $ftype === 'percent' ? 'selected' : '' }} class="bg-slate-900">Percentage (%)</option>
+                                                <option value="flat" {{ $ftype === 'flat' ? 'selected' : '' }} class="bg-slate-900">Flat (₹)</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-2 py-1.5">
+                                            <div class="flex items-center gap-1">
+                                                <input type="number" name="prof_fee_value[]" step="0.01" min="0" value="{{ $fval }}" class="flex-1 bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5">
+                                                <span class="fee-unit text-amber-200 text-xs font-bold w-5 text-center">{{ $ftype === 'flat' ? '₹' : '%' }}</span>
+                                            </div>
+                                        </td>
                                         <td class="px-2 py-1.5"><input type="number" name="prof_replacement[]" min="0" max="365" value="{{ $row['replacement_days'] ?? '' }}" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5"></td>
                                         <td class="px-2 py-1.5"><button type="button" onclick="this.closest('tr').remove()" class="text-rose-300 hover:text-rose-200 text-lg">&times;</button></td>
                                     </tr>
@@ -207,11 +223,28 @@
     }
     function addProfile() {
         const r = document.getElementById('prof-rows').insertRow();
+        r.className = 'prof-row';
         r.innerHTML = `
             <td class="px-2 py-1.5"><input type="text" name="prof_profile[]" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5" placeholder="e.g. VP / Director"></td>
-            <td class="px-2 py-1.5"><input type="number" name="prof_fee_percent[]" step="0.01" min="0" max="100" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5"></td>
+            <td class="px-2 py-1.5">
+                <select name="prof_fee_type[]" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5 fee-type-select" onchange="syncFeeUnit(this)">
+                    <option value="percent" class="bg-slate-900">Percentage (%)</option>
+                    <option value="flat" class="bg-slate-900">Flat (₹)</option>
+                </select>
+            </td>
+            <td class="px-2 py-1.5">
+                <div class="flex items-center gap-1">
+                    <input type="number" name="prof_fee_value[]" step="0.01" min="0" class="flex-1 bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5">
+                    <span class="fee-unit text-amber-200 text-xs font-bold w-5 text-center">%</span>
+                </div>
+            </td>
             <td class="px-2 py-1.5"><input type="number" name="prof_replacement[]" min="0" max="365" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5"></td>
             <td class="px-2 py-1.5"><button type="button" onclick="this.closest('tr').remove()" class="text-rose-300 hover:text-rose-200 text-lg">&times;</button></td>`;
+    }
+    function syncFeeUnit(sel) {
+        const row = sel.closest('tr');
+        const unit = row.querySelector('.fee-unit');
+        if (unit) unit.textContent = sel.value === 'flat' ? '₹' : '%';
     }
     function addFlat() {
         const r = document.getElementById('flat-rows').insertRow();

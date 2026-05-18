@@ -526,7 +526,8 @@ class AdminController extends Controller
 
             // Profile rows
             'prof_profile.*'         => 'nullable|string|max:60',
-            'prof_fee_percent.*'     => 'nullable|numeric|min:0|max:100',
+            'prof_fee_type.*'        => 'nullable|in:percent,flat',
+            'prof_fee_value.*'       => 'nullable|numeric|min:0',
             'prof_replacement.*'     => 'nullable|integer|min:0|max:365',
 
             // Flat rows
@@ -550,9 +551,15 @@ class AdminController extends Controller
         $profiles = [];
         foreach ((array) $request->input('prof_profile', []) as $i => $profile) {
             if (!trim((string) $profile)) continue;
+            $type  = $request->input("prof_fee_type.$i", 'percent') === 'flat' ? 'flat' : 'percent';
+            $value = (float) $request->input("prof_fee_value.$i", 0);
+            // Clamp percent values to <=100
+            if ($type === 'percent' && $value > 100) $value = 100;
             $profiles[] = [
                 'profile'          => trim((string) $profile),
-                'fee_percent'      => (float) $request->input("prof_fee_percent.$i", 0),
+                'fee_type'         => $type,
+                'fee_percent'      => $type === 'percent' ? $value : 0,
+                'fee_flat'         => $type === 'flat'    ? $value : 0,
                 'replacement_days' => (int) $request->input("prof_replacement.$i", 0),
             ];
         }

@@ -193,10 +193,16 @@ class JobApplication extends Model
                     break;
                 }
             }
-            if ($matched && $finalCtc > 0) {
-                $feePercent      = (float) ($matched['fee_percent'] ?? 0);
+            if ($matched) {
                 $replacementDays = (int) ($matched['replacement_days'] ?? 0);
-                $invoiceAmount   = round($finalCtc * $feePercent / 100, 2);
+                $rowFeeType      = $matched['fee_type'] ?? 'percent';
+                if ($rowFeeType === 'flat') {
+                    $feeFlat       = (float) ($matched['fee_flat'] ?? 0);
+                    $invoiceAmount = $feeFlat;
+                } elseif ($finalCtc > 0) {
+                    $feePercent    = (float) ($matched['fee_percent'] ?? 0);
+                    $invoiceAmount = round($finalCtc * $feePercent / 100, 2);
+                }
             }
         } else { // flat
             $rows = $data['flat'] ?? [];
