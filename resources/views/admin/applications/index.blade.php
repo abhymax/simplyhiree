@@ -3,8 +3,9 @@
         /* Force white calendar icon on date inputs */
         .date-white::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); cursor: pointer; }
         .date-white { color-scheme: dark; }
-        /* Admin-select inline forms start hidden no matter what */
-        form[id^="admin-select-"]:not(.is-open) { display: none !important; }
+        /* Hide the default disclosure triangle on the Mark Selected details */
+        details.admin-select-details > summary::-webkit-details-marker { display: none; }
+        details.admin-select-details > summary { list-style: none; }
         /* Compact applications list */
         .apps-table thead th { padding-top: .75rem !important; padding-bottom: .75rem !important; }
         .apps-table tbody td { padding-top: .75rem !important; padding-bottom: .75rem !important; vertical-align: middle; }
@@ -270,30 +271,25 @@
                                             </div>
 
                                             @if(strtolower($application->status) === 'approved' && !in_array($application->hiring_status, ['Selected', 'Joined']))
-                                                <button type="button"
-                                                    onclick="(function(f){ f.classList.toggle('is-open'); f.style.display = f.classList.contains('is-open') ? 'flex' : 'none'; })(document.getElementById('admin-select-{{ $application->id }}'))"
-                                                    class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold border border-emerald-400 px-3 py-1.5 whitespace-nowrap">
-                                                    <i class="fa-solid fa-user-check"></i> Mark Selected (on behalf of client)
-                                                </button>
-                                                <form id="admin-select-{{ $application->id }}" method="POST"
-                                                      action="{{ route('admin.applications.adminSelect', $application->id) }}"
-                                                      style="display: none;"
-                                                      class="mt-1 flex-col gap-2 w-72 bg-slate-900/80 border border-emerald-400/40 p-3 rounded-lg text-left">
-                                                    @csrf
-                                                    <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Joining Date *</label>
-                                                    <input type="date" name="joining_date" required min="{{ date('Y-m-d') }}"
-                                                        class="bg-slate-800 border border-white/20 rounded text-white text-sm p-1.5">
-                                                    <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Final CTC (₹)</label>
-                                                    <input type="number" name="final_ctc" min="0" step="0.01" placeholder="Optional"
-                                                        class="bg-slate-800 border border-white/20 rounded text-white text-sm p-1.5">
-                                                    <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Notes</label>
-                                                    <textarea name="admin_notes" rows="2" maxlength="1000" placeholder="Optional"
-                                                        class="bg-slate-800 border border-white/20 rounded text-white text-xs p-1.5"></textarea>
-                                                    <div class="flex gap-2">
-                                                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded">Confirm Select</button>
-                                                        <button type="button" onclick="(function(f){ f.classList.remove('is-open'); f.style.display='none'; })(document.getElementById('admin-select-{{ $application->id }}'))" class="text-xs text-slate-300 hover:text-white">Cancel</button>
-                                                    </div>
-                                                </form>
+                                                <details class="admin-select-details" style="text-align: right;">
+                                                    <summary style="list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; background: #059669; color: #fff; padding: 0.375rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700; border: 1px solid #34d399; white-space: nowrap;">
+                                                        <i class="fa-solid fa-user-check"></i> Mark Selected (on behalf of client)
+                                                    </summary>
+                                                    <form method="POST"
+                                                          action="{{ route('admin.applications.adminSelect', $application->id) }}"
+                                                          style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; width: 18rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(52,211,153,0.4); padding: 0.75rem; border-radius: 0.5rem; text-align: left;">
+                                                        @csrf
+                                                        <label style="font-size: 10px; color: #a7f3d0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Joining Date *</label>
+                                                        <input type="date" name="joining_date" required min="{{ date('Y-m-d') }}" style="background: #1e293b; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; font-size: 14px; padding: 6px;">
+                                                        <label style="font-size: 10px; color: #a7f3d0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Final CTC (₹)</label>
+                                                        <input type="number" name="final_ctc" min="0" step="0.01" placeholder="Optional" style="background: #1e293b; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; font-size: 14px; padding: 6px;">
+                                                        <label style="font-size: 10px; color: #a7f3d0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Notes</label>
+                                                        <textarea name="admin_notes" rows="2" maxlength="1000" placeholder="Optional" style="background: #1e293b; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #fff; font-size: 12px; padding: 6px;"></textarea>
+                                                        <div style="display: flex; gap: 0.5rem;">
+                                                            <button type="submit" style="background: #10b981; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 4px; border: 0;">Confirm Select</button>
+                                                        </div>
+                                                    </form>
+                                                </details>
                                             @endif
 
                                             @if($application->selected_by_admin_id)
