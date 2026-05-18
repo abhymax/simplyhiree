@@ -125,7 +125,8 @@
                                     <tr class="prof-row">
                                         <td class="px-2 py-1.5"><input type="text" name="prof_profile[]" value="{{ $row['profile'] ?? '' }}" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5" placeholder="e.g. Mid-Level"></td>
                                         <td class="px-2 py-1.5">
-                                            <select name="prof_fee_type[]" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm px-2 py-1.5 fee-type-select" onchange="syncFeeUnit(this)">
+                                            <select name="prof_fee_type[]" class="w-full bg-slate-800 border border-white/10 rounded-lg text-white text-sm pl-2 pr-7 py-1.5 fee-type-select appearance-none cursor-pointer" onchange="syncFeeUnit(this)"
+                                                style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 20 20%22 fill=%22%23fcd34d%22><path d=%22M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%22/></svg>'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 12px;">
                                                 <option value="percent" {{ $ftype === 'percent' ? 'selected' : '' }} class="bg-slate-900">Percentage (%)</option>
                                                 <option value="flat" {{ $ftype === 'flat' ? 'selected' : '' }} class="bg-slate-900">Flat (₹)</option>
                                             </select>
