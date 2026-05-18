@@ -12,9 +12,9 @@
     .neon-btn:hover { filter: brightness(1.1); box-shadow: 0 18px 40px -10px rgba(34,211,238,.7), inset 0 1px 0 rgba(255,255,255,.35); }
     .blob { animation: float 18s ease-in-out infinite alternate; }
     @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(20px,-20px) scale(1.05); } }
-    .fld input, .fld select, .fld textarea { background: rgba(2,6,23,.55) !important; border: 1px solid rgba(255,255,255,.18) !important; color: #fff !important; border-radius: .75rem; padding: .7rem .95rem; line-height: 1.4; font-size: .95rem; width: 100%; box-sizing: border-box; }
-    .fld input[type="text"], .fld input[type="email"], .fld input[type="url"], .fld input[type="tel"], .fld select { height: 48px; }
-    .fld textarea { min-height: 96px; resize: vertical; }
+    .fld input, .fld select, .fld textarea { background: rgba(2,6,23,.55) !important; border: 1px solid rgba(255,255,255,.18) !important; color: #fff !important; border-radius: .75rem; padding: .85rem 1.1rem !important; line-height: 1.4; font-size: .95rem; width: 100%; box-sizing: border-box; text-indent: 0; }
+    .fld input[type="text"], .fld input[type="email"], .fld input[type="url"], .fld input[type="tel"], .fld input[type="number"], .fld select { height: 52px; padding-left: 1.1rem !important; padding-right: 1.1rem !important; }
+    .fld textarea { min-height: 110px; resize: vertical; padding: .85rem 1.1rem !important; }
     .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: #22d3ee !important; box-shadow: 0 0 0 3px rgba(34,211,238,.18); outline: none; }
     .fld label { color: #bfdbfe; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: .35rem; }
     .fld input::placeholder, .fld textarea::placeholder { color: rgba(191,219,254,.45); }
@@ -95,30 +95,30 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label>Company Name</label>
-                            <input id="company_name" name="company_name" type="text" class="mt-1 block w-full" value="{{ old('company_name', $profile->company_name ?? $user->name) }}" required />
-                        </div>
-
-                        <div class="mb-4">
-                            <label>Email Address</label>
-                            <input id="email" name="email" type="email" class="mt-1 block w-full" value="{{ old('email', $user->email) }}" required />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label>Company Name</label>
+                                <input id="company_name" name="company_name" type="text" value="{{ old('company_name', $profile->company_name ?? $user->name) }}" required />
+                            </div>
+                            <div>
+                                <label>Email Address</label>
+                                <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required />
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label>Industry / Sector</label>
-                                <select name="industry" id="industry" class="mt-1 block w-full">
+                                <select name="industry" id="industry">
                                     <option value="" style="color:#0f172a;">Select Industry</option>
                                     @foreach(['IT Services', 'Healthcare', 'Education', 'Retail', 'Manufacturing', 'Finance', 'Marketing', 'Real Estate'] as $ind)
                                         <option value="{{ $ind }}" {{ (old('industry', $profile->industry ?? '') == $ind) ? 'selected' : '' }} style="color:#0f172a;">{{ $ind }}</option>
                                     @endforeach
                                 </select>
                             </div>
-
                             <div>
                                 <label>Company Size</label>
-                                <select name="company_size" id="company_size" class="mt-1 block w-full">
+                                <select name="company_size" id="company_size">
                                     <option value="" style="color:#0f172a;">Select Size</option>
                                     @foreach(['1-10 Employees', '11-50 Employees', '51-200 Employees', '201-500 Employees', '500+ Employees'] as $size)
                                         <option value="{{ $size }}" {{ (old('company_size', $profile->company_size ?? '') == $size) ? 'selected' : '' }} style="color:#0f172a;">{{ $size }}</option>
@@ -129,12 +129,12 @@
 
                         <div class="mb-4">
                             <label>Website URL</label>
-                            <input id="website" name="website" type="url" class="mt-1 block w-full" value="{{ old('website', $profile->website ?? '') }}" placeholder="https://www.example.com" />
+                            <input id="website" name="website" type="url" value="{{ old('website', $profile->website ?? '') }}" placeholder="https://www.example.com" />
                         </div>
 
                         <div>
                             <label>About Company</label>
-                            <textarea id="description" name="description" rows="4" class="mt-1 block w-full">{{ old('description', $profile->description ?? '') }}</textarea>
+                            <textarea id="description" name="description" rows="4">{{ old('description', $profile->description ?? '') }}</textarea>
                         </div>
                     </div>
 
