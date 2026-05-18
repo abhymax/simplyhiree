@@ -39,9 +39,18 @@
             .job-desc-html u { text-decoration: underline; }
             .job-desc-html a { color: #67e8f9; text-decoration: underline; }
             .job-desc-html blockquote { border-left: 3px solid rgba(255,255,255,0.25); padding-left: 0.85rem; margin: 0.5rem 0; opacity: 0.9; }
+
+            /* Admin sidebar: reserve 256px on desktop so every admin page
+               (including ones that use -mx-* to breakout) stays clear of
+               the fixed left sidebar. Mobile: 56px top offset for the
+               collapsed topbar. */
+            body.has-admin-sidebar { padding-top: 3.5rem; }
+            @media (min-width: 1024px) {
+                body.has-admin-sidebar { padding-top: 0; padding-left: 16rem; }
+            }
         </style>
     </head>
-    <body class="font-sans antialiased bg-slate-50 text-slate-900">
+    <body class="font-sans antialiased bg-slate-50 text-slate-900 @if(auth()->check() && (auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'))) has-admin-sidebar @endif">
         
         @php
             $usesSidebar = auth()->check() && (auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'));
@@ -56,14 +65,14 @@
             @endif
 
             @if (isset($header))
-                <header class="bg-white shadow-sm border-b border-slate-100 z-10 relative {{ $usesSidebar ? 'lg:ml-64' : '' }}">
+                <header class="bg-white shadow-sm border-b border-slate-100 z-10 relative">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
             @endif
 
-            <main class="flex-grow {{ $usesSidebar ? 'lg:ml-64 pt-14 lg:pt-0' : '' }}">
+            <main class="flex-grow">
                 @if (isset($slot))
                     {{ $slot }}
                 @else
