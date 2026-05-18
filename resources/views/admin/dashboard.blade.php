@@ -97,6 +97,45 @@
                 </div>
             </div>
 
+            {{-- PLAN UPGRADE REQUESTS CARD --}}
+            @if(($pendingPlanRequestsCount ?? 0) > 0 || ($pendingPlanRequests ?? collect())->isNotEmpty())
+                <div class="mt-8 bg-gradient-to-br from-cyan-900/40 to-purple-900/40 backdrop-blur-md border border-cyan-400/40 rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="px-6 py-4 border-b border-cyan-400/20 flex items-center justify-between">
+                        <h3 class="text-cyan-100 font-extrabold text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-rocket"></i> Plan Upgrade Requests
+                            <span class="bg-cyan-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $pendingPlanRequestsCount }} pending</span>
+                        </h3>
+                        <a href="{{ route('admin.plan-requests.index') }}" class="text-cyan-200 hover:text-white text-xs font-bold underline">View all →</a>
+                    </div>
+                    <div class="divide-y divide-cyan-400/10">
+                        @foreach($pendingPlanRequests as $r)
+                            <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div>
+                                    <div class="text-white font-bold">{{ $r->partner?->name ?? '—' }}
+                                        <span class="text-cyan-100/80 text-sm font-normal">wants to switch from</span>
+                                        <span class="text-white font-bold">{{ $r->current_plan }}</span>
+                                        <i class="fa-solid fa-arrow-right text-slate-400 mx-1"></i>
+                                        <span class="text-white font-bold">{{ $r->requested_plan }}</span>
+                                    </div>
+                                    <div class="text-cyan-100/70 text-xs mt-0.5">
+                                        {{ $r->partner?->email }}
+                                        @php $phone = $r->partner?->profile?->phone_number; @endphp
+                                        @if($phone) · <a href="tel:{{ $phone }}" class="text-emerald-300 hover:text-white"><i class="fa-solid fa-phone mr-0.5"></i>{{ $phone }}</a>@endif
+                                        · {{ $r->created_at->diffForHumans() }}
+                                    </div>
+                                    @if($r->notes)
+                                        <div class="mt-1 text-cyan-100/80 text-sm italic">"{{ \Illuminate\Support\Str::limit($r->notes, 160) }}"</div>
+                                    @endif
+                                </div>
+                                <a href="{{ route('admin.plan-requests.index') }}" class="inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-300 text-slate-900 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+                                    <i class="fa-solid fa-headset"></i> Review &amp; Contact
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- SECTION 2: QUICK ACTIONS (5 Items) --}}
             <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
                 <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> Quick Actions

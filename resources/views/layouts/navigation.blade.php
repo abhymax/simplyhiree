@@ -45,6 +45,9 @@
                             <x-nav-link :href="route('admin.credit-notes.index')" :active="request()->routeIs('admin.credit-notes.*')" class="text-slate-600 hover:text-indigo-600">
                                 Credit Notes
                             </x-nav-link>
+                            <x-nav-link :href="route('admin.plan-requests.index')" :active="request()->routeIs('admin.plan-requests.*')" class="text-slate-600 hover:text-indigo-600">
+                                Plan Requests
+                            </x-nav-link>
                             <x-nav-link :href="route('admin.reports.jobs')" :active="request()->routeIs('admin.reports.jobs')" class="text-slate-600 hover:text-indigo-600">
                                 Master Job Report
                             </x-nav-link>

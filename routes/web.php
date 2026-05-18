@@ -203,6 +203,12 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/replacements/{application}/close', [AdminController::class, 'replacementsClose'])->name('replacements.close');
             Route::post('/replacements/{application}/issue-credit', [AdminController::class, 'creditNotesIssue'])->name('replacements.issue-credit');
 
+            // Plan upgrade requests
+            Route::get('/plan-requests', [AdminController::class, 'planRequestsIndex'])->name('plan-requests.index');
+            Route::post('/plan-requests/{planChangeRequest}/contacted', [AdminController::class, 'planRequestMarkContacted'])->name('plan-requests.contacted');
+            Route::post('/plan-requests/{planChangeRequest}/approve', [AdminController::class, 'planRequestApprove'])->name('plan-requests.approve');
+            Route::post('/plan-requests/{planChangeRequest}/reject', [AdminController::class, 'planRequestReject'])->name('plan-requests.reject');
+
             // Credit notes
             Route::get('/credit-notes', [AdminController::class, 'creditNotesIndex'])->name('credit-notes.index');
             Route::post('/credit-notes/{creditNote}/apply', [AdminController::class, 'creditNotesApply'])->name('credit-notes.apply');
@@ -300,6 +306,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 
         // Plan / upgrade
         Route::get('/upgrade', [PartnerController::class, 'upgrade'])->name('upgrade');
+        Route::post('/upgrade/request', [PartnerController::class, 'requestPlanChange'])->name('upgrade.request');
+        Route::delete('/upgrade/request/{planChangeRequest}', [PartnerController::class, 'cancelPlanChange'])->name('upgrade.cancel');
         
         // Jobs
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');

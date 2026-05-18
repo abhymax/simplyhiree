@@ -15,105 +15,112 @@
             </div>
         </div>
 
+        @if(session('success'))
+            <div class="mb-5 px-5 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 rounded-xl font-bold">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="mb-5 px-5 py-3 bg-rose-500/20 border border-rose-500/50 text-rose-100 rounded-xl font-bold">{{ session('error') }}</div>
+        @endif
+
+        @if($pendingRequest)
+            <div class="mb-6 bg-amber-500/10 border border-amber-400/40 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <div class="text-amber-100 font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        Pending request: {{ $pendingRequest->current_plan }} → {{ $pendingRequest->requested_plan }}
+                    </div>
+                    <div class="text-amber-100/80 text-xs mt-1">
+                        Submitted {{ $pendingRequest->created_at->diffForHumans() }}. A SimplyHiree manager will contact you shortly.
+                    </div>
+                    @if($pendingRequest->notes)
+                        <div class="mt-1 text-amber-100/80 text-sm italic">"{{ $pendingRequest->notes }}"</div>
+                    @endif
+                </div>
+                <form method="POST" action="{{ route('partner.upgrade.cancel', $pendingRequest->id) }}" onsubmit="return confirm('Cancel this plan request?');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-4 py-2 rounded-lg">Cancel Request</button>
+                </form>
+            </div>
+        @endif
+
+        @php
+            $cards = [
+                ['key'=>'Free','label'=>'🟢 Free','price'=>'₹0','priceSub'=>'/month','badge'=>'Entry / Freshers','frame'=>'bg-slate-900/60 border border-white/15','features'=>[
+                    '✔ 5–10 job submissions / month',
+                    '✔ 20–30% commission per closure',
+                    '✔ Basic profile visibility',
+                    '<span class="opacity-50">✘ Bulk hiring projects</span>',
+                    '<span class="opacity-50">✘ Priority support</span>',
+                ]],
+                ['key'=>'Basic','label'=>'🔵 Basic','price'=>'₹499<span class="text-base font-semibold">–999</span>','priceSub'=>'/month','badge'=>'Starter Paid · Serious Freelancers','frame'=>'bg-slate-900/60 border border-blue-400/30','features'=>[
+                    '✔ 30–50 job submissions / month',
+                    '✔ 15–20% commission per closure',
+                    '✔ WhatsApp support group',
+                    '✔ Medium profile visibility boost',
+                    '✔ Early access (2–4 hrs before Free)',
+                ]],
+                ['key'=>'Pro','label'=>'🟣 Pro','price'=>'₹1,999<span class="text-base font-semibold">–2,999</span>','priceSub'=>'/month','badge'=>'High Performer · Experienced Recruiters','frame'=>'bg-gradient-to-br from-purple-800/40 to-fuchsia-700/40 border-2 border-purple-400/60 shadow-2xl shadow-purple-500/20','popular'=>true,'features'=>[
+                    '✔ <strong>Unlimited</strong> job submissions',
+                    '✔ 10–15% commission (lowest)',
+                    '✔ Dedicated Account Manager',
+                    '✔ Priority payouts',
+                    '✔ Bulk hiring projects access',
+                    '✔ Featured profile (top listing)',
+                ]],
+                ['key'=>'Enterprise','label'=>'🔴 Enterprise','price'=>'₹5,000<span class="text-base font-semibold">–15,000</span>','priceSub'=>'/month (custom)','badge'=>'Big Vendors · Agencies','frame'=>'bg-slate-900/60 border border-rose-400/40','features'=>[
+                    '✔ Dedicated hiring projects',
+                    '✔ Direct client connection',
+                    '✔ Unlimited team logins',
+                    '✔ Zero / very-low commission',
+                    '✔ SLA-based hiring contracts',
+                    '✔ Dashboard + reporting',
+                ]],
+            ];
+        @endphp
+
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-            {{-- FREE --}}
-            <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-3xl p-6 flex flex-col {{ $currentPlan === 'Free' ? 'ring-2 ring-white/30' : '' }}">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-300 font-bold uppercase text-[11px] tracking-wider">🟢 Free</span>
-                    @if($currentPlan === 'Free')<span class="text-[10px] bg-white/10 text-white px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
-                </div>
-                <div class="text-4xl font-extrabold text-white">₹0</div>
-                <div class="text-blue-300 text-sm mb-1">/month</div>
-                <div class="text-xs text-blue-300/70 mb-5">Entry / Freshers</div>
-                <ul class="text-sm text-blue-100 space-y-2 flex-1">
-                    <li>✔ 5–10 job submissions / month</li>
-                    <li>✔ 20–30% commission per closure</li>
-                    <li>✔ Basic profile visibility</li>
-                    <li class="opacity-50">✘ Bulk hiring projects</li>
-                    <li class="opacity-50">✘ Priority support</li>
-                </ul>
-                @if($currentPlan === 'Free')
-                    <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed">Current Plan</button>
-                @else
-                    <a href="mailto:downgrades@simplyhiree.com?subject=Downgrade%20to%20Free" class="mt-6 w-full block text-center bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition">Downgrade</a>
-                @endif
-            </div>
+            @foreach($cards as $card)
+                @php $isCurrent = $currentPlan === $card['key']; @endphp
+                <div class="{{ $card['frame'] }} backdrop-blur-xl rounded-3xl p-6 flex flex-col relative {{ $isCurrent ? 'ring-2 ring-white/40' : '' }}">
+                    @if(!empty($card['popular']))
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-400 text-slate-900 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider">Most Popular</div>
+                    @endif
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold uppercase text-[11px] tracking-wider">{{ $card['label'] }}</span>
+                        @if($isCurrent)<span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
+                    </div>
+                    <div class="text-4xl font-extrabold text-white">{!! $card['price'] !!}</div>
+                    <div class="text-sm mb-1">{{ $card['priceSub'] }}</div>
+                    <div class="text-xs opacity-70 mb-5">{{ $card['badge'] }}</div>
+                    <ul class="text-sm space-y-2 flex-1">
+                        @foreach($card['features'] as $f)
+                            <li>{!! $f !!}</li>
+                        @endforeach
+                    </ul>
 
-            {{-- BASIC --}}
-            <div class="bg-slate-900/60 backdrop-blur-xl border border-blue-400/30 rounded-3xl p-6 flex flex-col {{ $currentPlan === 'Basic' ? 'ring-2 ring-blue-400/60' : '' }}">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-blue-200 font-bold uppercase text-[11px] tracking-wider">🔵 Basic</span>
-                    @if($currentPlan === 'Basic')<span class="text-[10px] bg-blue-500/30 text-blue-100 px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
+                    @if($isCurrent)
+                        <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed">Current Plan</button>
+                    @elseif($pendingRequest)
+                        <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed" title="Cancel your pending request first">Request Pending</button>
+                    @else
+                        <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $card['key'] }}? A SimplyHiree manager will contact you.');" class="mt-6">
+                            @csrf
+                            <input type="hidden" name="requested_plan" value="{{ $card['key'] }}">
+                            <button type="submit" class="w-full bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-extrabold py-3 rounded-xl transition">
+                                @if(array_search($card['key'], ['Free','Basic','Pro','Enterprise']) < array_search($currentPlan, ['Free','Basic','Pro','Enterprise']))
+                                    Request Downgrade
+                                @else
+                                    Request Upgrade
+                                @endif
+                            </button>
+                        </form>
+                    @endif
                 </div>
-                <div class="text-4xl font-extrabold text-white">₹499<span class="text-base font-semibold text-blue-200">–999</span></div>
-                <div class="text-blue-200 text-sm mb-1">/month</div>
-                <div class="text-xs text-blue-300/70 mb-5">Starter Paid · Serious Freelancers</div>
-                <ul class="text-sm text-blue-100 space-y-2 flex-1">
-                    <li>✔ 30–50 job submissions / month</li>
-                    <li>✔ 15–20% commission per closure</li>
-                    <li>✔ WhatsApp support group</li>
-                    <li>✔ Medium profile visibility boost</li>
-                    <li>✔ Early access (2–4 hrs before Free)</li>
-                </ul>
-                @if($currentPlan !== 'Basic')
-                    <a href="mailto:upgrades@simplyhiree.com?subject=Upgrade%20to%20Basic" class="mt-6 w-full block text-center bg-blue-500 hover:bg-blue-400 text-white font-extrabold py-3 rounded-xl transition shadow-md shadow-blue-500/30">Upgrade to Basic</a>
-                @else
-                    <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed">Current Plan</button>
-                @endif
-            </div>
-
-            {{-- PRO --}}
-            <div class="bg-gradient-to-br from-purple-800/40 to-fuchsia-700/40 backdrop-blur-xl border-2 border-purple-400/60 rounded-3xl p-6 flex flex-col relative shadow-2xl shadow-purple-500/20 {{ $currentPlan === 'Pro' ? 'ring-2 ring-purple-300' : '' }}">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-400 text-slate-900 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider">Most Popular</div>
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-purple-200 font-bold uppercase text-[11px] tracking-wider">🟣 Pro</span>
-                    @if($currentPlan === 'Pro')<span class="text-[10px] bg-purple-500/30 text-purple-100 px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
-                </div>
-                <div class="text-4xl font-extrabold text-white">₹1,999<span class="text-base font-semibold text-purple-200">–2,999</span></div>
-                <div class="text-purple-200 text-sm mb-1">/month</div>
-                <div class="text-xs text-purple-200/70 mb-5">High Performer · Experienced Recruiters</div>
-                <ul class="text-sm text-white space-y-2 flex-1">
-                    <li>✔ <strong>Unlimited</strong> job submissions</li>
-                    <li>✔ 10–15% commission (lowest)</li>
-                    <li>✔ Dedicated Account Manager</li>
-                    <li>✔ Priority payouts</li>
-                    <li>✔ Bulk hiring projects access</li>
-                    <li>✔ Featured profile (top listing)</li>
-                </ul>
-                @if($currentPlan !== 'Pro')
-                    <a href="mailto:upgrades@simplyhiree.com?subject=Upgrade%20to%20Pro" class="mt-6 w-full block text-center bg-purple-400 hover:bg-purple-300 text-slate-900 font-extrabold py-3 rounded-xl transition">Upgrade to Pro</a>
-                @else
-                    <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed">Current Plan</button>
-                @endif
-            </div>
-
-            {{-- ENTERPRISE --}}
-            <div class="bg-slate-900/60 backdrop-blur-xl border border-rose-400/40 rounded-3xl p-6 flex flex-col {{ $currentPlan === 'Enterprise' ? 'ring-2 ring-rose-400' : '' }}">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-rose-200 font-bold uppercase text-[11px] tracking-wider">🔴 Enterprise</span>
-                    @if($currentPlan === 'Enterprise')<span class="text-[10px] bg-rose-500/30 text-rose-100 px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
-                </div>
-                <div class="text-4xl font-extrabold text-white">₹5,000<span class="text-base font-semibold text-rose-200">–15,000</span></div>
-                <div class="text-rose-200 text-sm mb-1">/month (custom)</div>
-                <div class="text-xs text-rose-200/70 mb-5">Big Vendors · Agencies</div>
-                <ul class="text-sm text-rose-50 space-y-2 flex-1">
-                    <li>✔ Dedicated hiring projects</li>
-                    <li>✔ Direct client connection</li>
-                    <li>✔ Unlimited team logins</li>
-                    <li>✔ Zero / very-low commission</li>
-                    <li>✔ SLA-based hiring contracts</li>
-                    <li>✔ Dashboard + reporting</li>
-                </ul>
-                @if($currentPlan !== 'Enterprise')
-                    <a href="mailto:sales@simplyhiree.com?subject=Enterprise%20Plan%20Enquiry" class="mt-6 w-full block text-center bg-rose-400 hover:bg-rose-300 text-slate-900 font-extrabold py-3 rounded-xl transition">Talk to Sales</a>
-                @else
-                    <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed">Current Plan</button>
-                @endif
-            </div>
+            @endforeach
         </div>
 
         <p class="text-center text-blue-200 text-sm mt-8">
-            Have a question? Email <a href="mailto:sales@simplyhiree.com" class="text-cyan-300 underline">sales@simplyhiree.com</a> or call your account manager.
+            All requests are reviewed by a SimplyHiree manager. You'll be contacted by phone or email shortly after submitting.
         </p>
     </div>
 </div>

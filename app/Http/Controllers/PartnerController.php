@@ -18,7 +18,62 @@ class PartnerController extends Controller
 {
     public function upgrade()
     {
-        return view('partner.upgrade', ['partner' => Auth::user()]);
+        $partner = Auth::user();
+        $existing = \App\Models\PlanChangeRequest::where('partner_id', $partner->partnerOwnerId())
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+        return view('partner.upgrade', ['partner' => $partner, 'pendingRequest' => $existing]);
+    }
+
+    public function requestPlanChange(Request $request)
+    {
+        $partner = Auth::user();
+        // Only the partner-owner can change plan
+        if (!$partner->isPartnerOwner()) {
+            return back()->with('error', 'Only the partner-account owner can request a plan change.');
+        }
+
+        $data = $request->validate([
+            'requested_plan' => 'required|in:Free,Basic,Pro,Enterprise',
+            'notes'          => 'nullable|string|max:1000',
+        ]);
+
+        $currentPlan = $partner->partner_plan ?? 'Free';
+        if ($data['requested_plan'] === $currentPlan) {
+            return back()->with('error', "You are already on the {$currentPlan} plan.");
+        }
+
+        // Block duplicates while a request is pending
+        $existing = \App\Models\PlanChangeRequest::where('partner_id', $partner->id)
+            ->where('status', 'pending')
+            ->first();
+        if ($existing) {
+            return back()->with('error', "You already have a pending plan-change request to {$existing->requested_plan}. Wait for the admin to action it, or cancel it first.");
+        }
+
+        \App\Models\PlanChangeRequest::create([
+            'partner_id'     => $partner->id,
+            'current_plan'   => $currentPlan,
+            'requested_plan' => $data['requested_plan'],
+            'notes'          => $data['notes'] ?? null,
+            'status'         => 'pending',
+        ]);
+
+        return back()->with('success', "Plan change to {$data['requested_plan']} requested. A SimplyHiree manager will reach out to you shortly.");
+    }
+
+    public function cancelPlanChange(\App\Models\PlanChangeRequest $planChangeRequest)
+    {
+        $partner = Auth::user();
+        if ((int) $planChangeRequest->partner_id !== (int) $partner->partnerOwnerId()) {
+            abort(403);
+        }
+        if ($planChangeRequest->status !== 'pending') {
+            return back()->with('error', 'Only pending requests can be cancelled.');
+        }
+        $planChangeRequest->update(['status' => 'cancelled']);
+        return back()->with('success', 'Request cancelled.');
     }
 
     public function wallet()

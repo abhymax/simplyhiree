@@ -116,15 +116,24 @@ class AdminController extends Controller
             }
         }
 
+        $pendingPlanRequests = \App\Models\PlanChangeRequest::with('partner')
+            ->where('status', 'pending')
+            ->latest()
+            ->limit(5)
+            ->get();
+        $pendingPlanRequestsCount = \App\Models\PlanChangeRequest::where('status', 'pending')->count();
+
         return view('admin.dashboard', [
-            'totalUsers' => $totalUsers,
-            'totalClients' => $totalClients,
-            'totalPartners' => $totalPartners,
-            'totalCandidates' => $totalCandidates,
-            'pendingJobs' => $pendingJobs,
-            'pendingApplications' => $pendingApplications,
-            'todayInterviews' => $todayInterviews,
-            'dueInvoicesCount' => $dueInvoicesCount
+            'totalUsers'              => $totalUsers,
+            'totalClients'            => $totalClients,
+            'totalPartners'           => $totalPartners,
+            'totalCandidates'         => $totalCandidates,
+            'pendingJobs'             => $pendingJobs,
+            'pendingApplications'     => $pendingApplications,
+            'todayInterviews'         => $todayInterviews,
+            'dueInvoicesCount'        => $dueInvoicesCount,
+            'pendingPlanRequests'     => $pendingPlanRequests,
+            'pendingPlanRequestsCount'=> $pendingPlanRequestsCount,
         ]);
     }
 
@@ -1358,6 +1367,63 @@ class AdminController extends Controller
     {
         $application->update(['payment_status' => 'paid', 'paid_at' => now()]);
         return redirect()->back()->with('success', 'Invoice marked as PAID.');
+    }
+
+    // --- PLAN CHANGE REQUESTS ---
+
+    public function planRequestsIndex(\Illuminate\Http\Request $request)
+    {
+        $query = \App\Models\PlanChangeRequest::with(['partner', 'actionedBy']);
+        if ($request->filled('status')) $query->where('status', $request->status);
+        $requests = $query->latest()->paginate(25)->withQueryString();
+
+        $counts = [
+            'pending'   => \App\Models\PlanChangeRequest::where('status', 'pending')->count(),
+            'contacted' => \App\Models\PlanChangeRequest::where('status', 'contacted')->count(),
+            'approved'  => \App\Models\PlanChangeRequest::where('status', 'approved')->count(),
+            'rejected'  => \App\Models\PlanChangeRequest::where('status', 'rejected')->count(),
+            'cancelled' => \App\Models\PlanChangeRequest::where('status', 'cancelled')->count(),
+        ];
+
+        return view('admin.plan_requests.index', compact('requests', 'counts'));
+    }
+
+    public function planRequestMarkContacted(\App\Models\PlanChangeRequest $planChangeRequest)
+    {
+        $planChangeRequest->update([
+            'status'             => 'contacted',
+            'actioned_at'        => now(),
+            'actioned_by_user_id'=> auth()->id(),
+        ]);
+        return back()->with('success', 'Marked as contacted.');
+    }
+
+    public function planRequestApprove(\Illuminate\Http\Request $request, \App\Models\PlanChangeRequest $planChangeRequest)
+    {
+        $data = $request->validate(['admin_notes' => 'nullable|string|max:1000']);
+        // Apply the plan change to the partner
+        \App\Models\User::where('id', $planChangeRequest->partner_id)->update([
+            'partner_plan' => $planChangeRequest->requested_plan,
+        ]);
+        $planChangeRequest->update([
+            'status'              => 'approved',
+            'admin_notes'         => $data['admin_notes'] ?? null,
+            'actioned_at'         => now(),
+            'actioned_by_user_id' => auth()->id(),
+        ]);
+        return back()->with('success', "Plan changed to {$planChangeRequest->requested_plan} for {$planChangeRequest->partner?->name}.");
+    }
+
+    public function planRequestReject(\Illuminate\Http\Request $request, \App\Models\PlanChangeRequest $planChangeRequest)
+    {
+        $data = $request->validate(['admin_notes' => 'nullable|string|max:1000']);
+        $planChangeRequest->update([
+            'status'              => 'rejected',
+            'admin_notes'         => $data['admin_notes'] ?? null,
+            'actioned_at'         => now(),
+            'actioned_by_user_id' => auth()->id(),
+        ]);
+        return back()->with('success', 'Plan request rejected.');
     }
 
     // --- REPLACEMENT LIFECYCLE ---
