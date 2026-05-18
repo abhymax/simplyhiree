@@ -106,14 +106,14 @@
                         <button type="button" onclick="addProfile()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg">+ Add Profile</button>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="text-left text-sm" style="max-width: 980px;">
+                        <table class="text-left text-sm w-full" style="max-width: 1280px;">
                             <thead class="text-amber-200 text-[11px] uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-3 py-2" style="width:200px;">Profile</th>
-                                    <th class="px-3 py-2" style="width:130px;">Fee Type</th>
-                                    <th class="px-3 py-2" style="width:160px;">Fee Value</th>
-                                    <th class="px-3 py-2" style="width:140px;">Replacement (days)</th>
-                                    <th class="px-3 py-2" style="width:40px;"></th>
+                                    <th class="px-3 py-2" style="width:280px;">Profile</th>
+                                    <th class="px-3 py-2" style="width:200px;">Fee Type</th>
+                                    <th class="px-3 py-2" style="width:230px;">Fee Value</th>
+                                    <th class="px-3 py-2" style="width:200px;">Replacement (days)</th>
+                                    <th class="px-3 py-2" style="width:50px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="prof-rows">
