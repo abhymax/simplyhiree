@@ -108,13 +108,13 @@
                 </div>
             </a>
 
-            {{-- 2. Interviews --}}
-            <a href="{{ route('client.interviews.today') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            {{-- 2. Applications --}}
+            <a href="{{ route('client.applications.index') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center mb-3">
-                    <i class="fa-solid fa-video"></i>
+                    <i class="fa-solid fa-file-lines"></i>
                 </div>
-                <h4 class="font-bold text-white">Interviews</h4>
-                <p class="text-slate-400 text-xs">Today's schedule</p>
+                <h4 class="font-bold text-white">All Applications</h4>
+                <p class="text-slate-400 text-xs">Every candidate</p>
             </a>
 
             {{-- 3. Vendors --}}
@@ -163,7 +163,7 @@
                 <div class="text-2xl font-extrabold text-white">{{ $totalJobs ?? 0 }}</div>
             </a>
 
-            <a href="#my-jobs" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+            <a href="{{ route('client.applications.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-slate-400 text-xs font-bold uppercase">Applicants</span>
                     <i class="fa-solid fa-users text-emerald-400"></i>

@@ -261,6 +261,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::delete('/jobs/{job}/cancel-deactivation', [ClientController::class, 'cancelDeactivationRequest'])->name('jobs.cancel-deactivation');
         Route::post('/applications/{application}/request-replacement', [ClientController::class, 'requestCandidateReplacement'])->name('applications.request-replacement');
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
+        Route::get('/applications', [ClientController::class, 'listAllApplications'])->name('applications.index');
         
         // Profile Management
         Route::get('/profile/company', [ClientProfileController::class, 'edit'])->name('profile.company');

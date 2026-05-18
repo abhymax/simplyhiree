@@ -421,6 +421,74 @@ class ClientController extends Controller
     }
 
     /**
+     * Global "All Applications" listing across every job this client owns.
+     * Mirrors the admin AllApplications page but scoped to the client's jobs.
+     */
+    public function listAllApplications(Request $request)
+    {
+        $clientId = Auth::id();
+
+        $query = JobApplication::with(['job.category', 'candidate.partner', 'candidateUser'])
+            ->whereHas('job', function ($q) use ($clientId) {
+                $q->where('user_id', $clientId);
+            });
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('candidate', function ($c) use ($search) {
+                    $c->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('candidateUser', function ($u) use ($search) {
+                    $u->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('job_id')) {
+            $query->where('job_id', (int) $request->input('job_id'));
+        }
+
+        if ($request->filled('partner_id')) {
+            $pid = (int) $request->input('partner_id');
+            $query->whereHas('candidate', function ($c) use ($pid) {
+                $c->where('partner_id', $pid);
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        $allowedPerPage = [10, 20, 50, 100];
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, $allowedPerPage, true)) $perPage = 20;
+
+        $applications = $query->latest()->paginate($perPage)->withQueryString();
+
+        $jobs = Job::where('user_id', $clientId)->select('id', 'title')->orderBy('title')->get();
+        $partners = User::role('partner')
+            ->whereNull('parent_partner_id')
+            ->where('status', 'active')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return view('client.applications.index', compact(
+            'applications', 'jobs', 'partners', 'perPage', 'allowedPerPage'
+        ));
+    }
+
+    /**
      * Show the applicants for a specific job.
      */
     public function showApplicants(Job $job)
