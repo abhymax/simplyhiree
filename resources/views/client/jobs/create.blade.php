@@ -65,7 +65,7 @@
         @endif
 
         <div>
-                <form action="{{ $formAction }}" method="POST" class="space-y-5">
+                <form action="{{ $formAction }}" method="POST" class="space-y-8">
                     @csrf
                     @if($isEditMode)
                         @method('PATCH')
