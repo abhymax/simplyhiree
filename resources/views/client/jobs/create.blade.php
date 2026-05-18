@@ -65,14 +65,14 @@
         @endif
 
         <div>
-                <form action="{{ $formAction }}" method="POST" class="space-y-8">
+                <form action="{{ $formAction }}" method="POST">
                     @csrf
                     @if($isEditMode)
                         @method('PATCH')
                     @endif
 
                     {{-- Job Specification Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-briefcase text-white"></i> Job Specification
@@ -185,7 +185,7 @@
                     </div>{{-- /Job Specification card --}}
 
                     {{-- Description & Skills Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-align-left text-white"></i> Description &amp; Skills
@@ -267,7 +267,7 @@
                     </div>
 
                     {{-- Payout Settings Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd;">
+                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
                         <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-coins text-white"></i> Payout Settings
