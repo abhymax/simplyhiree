@@ -42,6 +42,11 @@ Route::get('/', function () {
 Route::view('/about', 'pages.about')->name('about');
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/support', [\App\Http\Controllers\SupportController::class, 'show'])->name('support');
+    Route::post('/support', [\App\Http\Controllers\SupportController::class, 'submit'])->name('support.submit');
+});
 Route::view('/terms', 'pages.terms')->name('terms');
 Route::view('/privacy', 'pages.privacy')->name('privacy');
 
