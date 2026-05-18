@@ -5,15 +5,15 @@
 <style>
     #job-description-editor { min-height: 220px; color: #fff; }
     #job-description-editor .ql-editor { min-height: 200px; font-size: 15px; line-height: 1.6; }
-    #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, 0.55); font-style: normal; }
-    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
-    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
+    #job-description-editor .ql-editor.ql-blank::before { color: rgba(148, 163, 184, 0.55); font-style: normal; }
+    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
+    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
     .ql-snow .ql-stroke { stroke: #cbd5e1; }
     .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
     .ql-snow .ql-picker { color: #cbd5e1; }
-    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.2); }
-    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #67e8f9; }
-    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #67e8f9; }
+    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.1); }
+    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #60a5fa; }
+    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #60a5fa; }
 </style>
 @php
     $isEditMode = ($formMode ?? 'create') === 'edit' && isset($job) && $job;
@@ -26,34 +26,35 @@
     $existingMinSalary = $salaryDigits->get(0);
     $existingMaxSalary = $salaryDigits->count() > 1 ? $salaryDigits->get(1) : $salaryDigits->get(0);
 @endphp
-<style>
-    .gloss { position: relative; isolation: isolate; }
-    .gloss::before { content:""; position:absolute; inset:0; background:linear-gradient(120deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,.08) 100%); pointer-events:none; border-radius:inherit; z-index:0; }
-    .gloss > * { position:relative; z-index:1; }
-    .ring-glow { box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 20px 60px -20px rgba(99,102,241,.55), 0 0 80px -25px rgba(34,211,238,.45); }
-    .field-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-    .field-card:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -16px rgba(34,211,238,.35); border-color: rgba(255,255,255,.25); }
-    .neon-btn { background: linear-gradient(135deg, #06b6d4, #6366f1); box-shadow: 0 10px 30px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.3); }
-    .neon-btn:hover { filter: brightness(1.1); box-shadow: 0 18px 40px -10px rgba(34,211,238,.7), inset 0 1px 0 rgba(255,255,255,.35); }
-    .blob { animation: float 18s ease-in-out infinite alternate; }
-    @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(20px,-20px) scale(1.05); } }
-    .section-h { background: linear-gradient(90deg, #67e8f9, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-</style>
 
-<div class="min-h-screen text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden"
-     style="background: linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #0f172a 100%);">
-    <div class="blob absolute -top-32 -left-32 rounded-full mix-blend-screen opacity-25"
-         style="width:28rem; height:28rem; background:#06b6d4; filter:blur(140px);"></div>
-    <div class="blob absolute top-1/3 right-0 rounded-full mix-blend-screen opacity-25"
-         style="width:28rem; height:28rem; background:#d946ef; filter:blur(140px); animation-delay:-6s;"></div>
-    <div class="blob absolute bottom-0 left-1/4 rounded-full mix-blend-screen opacity-25"
-         style="width:28rem; height:28rem; background:#6366f1; filter:blur(140px); animation-delay:-12s;"></div>
-    <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px;"></div>
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
 
-    <div class="relative z-10 max-w-4xl mx-auto">
+    {{-- DECORATIVE BACKGROUND GLOWS --}}
+    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto">
+
+        {{-- HEADER --}}
+        <div class="mb-8 border-b border-white/10 pb-6">
+            <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-blue-300 hover:text-white mb-2 transition-colors text-sm font-bold tracking-wide uppercase">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Cancel &amp; Return
+            </a>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
+                    Client Workspace
+                </span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">{{ $formTitle }}</h1>
+            @if($isEditMode)
+                <p class="mt-2 text-amber-300 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> This job is still pending approval, so you can update it. Once approved, editing is locked.</p>
+            @else
+                <p class="mt-2 text-blue-200">Fill in the details below. The Superadmin will review your job before it goes live to vendors.</p>
+            @endif
+        </div>
 
         @if ($errors->any())
-            <div class="mb-6 bg-rose-500/20 border border-rose-400/40 text-rose-100 p-4 rounded-xl backdrop-blur-md">
+            <div class="mb-6 bg-rose-500/10 border border-rose-400/40 text-rose-100 p-4 rounded-2xl backdrop-blur-md">
                 <p class="font-bold flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following errors:</p>
                 <ul class="list-disc ml-6 mt-1 text-sm">
                     @foreach ($errors->all() as $error)
@@ -63,41 +64,30 @@
             </div>
         @endif
 
-        <div class="gloss backdrop-blur-xl border border-white/15 rounded-3xl shadow-2xl ring-glow overflow-hidden"
-             style="background: linear-gradient(180deg, rgba(2,6,23,.85) 0%, rgba(15,23,42,.92) 100%);">
-            <div class="relative p-8 border-b border-white/10 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-fuchsia-500/10"></div>
-                <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl"></div>
-                <div class="relative">
-                    <span class="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-400/30 to-indigo-400/30 border border-cyan-300/40 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg shadow-cyan-500/10">
-                        ✨ Client Workspace
-                    </span>
-                    <h1 class="text-3xl md:text-4xl font-black mt-3 text-white drop-shadow" style="text-shadow: 0 2px 12px rgba(34,211,238,.35);">{{ $formTitle }}</h1>
-                    @if($isEditMode)
-                        <p class="mt-2 text-sm text-amber-200"><i class="fa-solid fa-circle-info mr-1"></i> This job is still pending approval, so you can update it. Once approved by superadmin, editing is locked.</p>
-                    @else
-                        <p class="mt-2 text-sm text-blue-200">Fill in the details below. The Superadmin will review your job before it goes live to vendors.</p>
-                    @endif
-                </div>
-            </div>
-
-            <div class="p-6">
-                <form action="{{ $formAction }}" method="POST">
+        <div>
+                <form action="{{ $formAction }}" method="POST" class="space-y-6">
                     @csrf
                     @if($isEditMode)
                         @method('PATCH')
                     @endif
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {{-- Job Specification Card --}}
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 md:p-8">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-briefcase text-blue-400"></i> Job Specification
+                        </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-blue-100">Job Title <span class="text-rose-300">*</span></label>
-                            <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" placeholder="e.g. Senior Accountant">
+                            <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white" placeholder="e.g. Senior Accountant">
                             @error('title') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Category <span class="text-rose-300">*</span></label>
-                            <select name="category_id" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <select name="category_id" required class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                                 <option value="" class="text-slate-900">Select Category</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ (string) old('category_id', $job->category_id ?? '') === (string) $cat->id ? 'selected' : '' }} class="text-slate-900">{{ $cat->name }}</option>
@@ -108,7 +98,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Job Type <span class="text-rose-300">*</span></label>
-                            <select name="job_type" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <select name="job_type" required class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                                 <option value="" class="text-slate-900">Select Type</option>
                                 <option value="Full-time" {{ old('job_type', $job->job_type ?? '') == 'Full-time' ? 'selected' : '' }} class="text-slate-900">Full-time</option>
                                 <option value="Part-time" {{ old('job_type', $job->job_type ?? '') == 'Part-time' ? 'selected' : '' }} class="text-slate-900">Part-time</option>
@@ -137,11 +127,11 @@
                             <label class="block text-sm font-medium text-blue-100">Salary Range (INR)</label>
                             <div class="flex space-x-2">
                                 <div class="w-1/2">
-                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                                     @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-1/2">
-                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                                     @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -151,11 +141,11 @@
                             <label class="block text-sm font-medium text-blue-100">Experience Range (Years) <span class="text-rose-300">*</span></label>
                             <div class="flex space-x-2">
                                 <div class="w-1/2">
-                                    <input type="number" name="min_experience" placeholder="Min" value="{{ old('min_experience', $job->min_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" required>
+                                    <input type="number" name="min_experience" placeholder="Min" value="{{ old('min_experience', $job->min_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white" required>
                                     @error('min_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-1/2">
-                                    <input type="number" name="max_experience" placeholder="Max" value="{{ old('max_experience', $job->max_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" required>
+                                    <input type="number" name="max_experience" placeholder="Max" value="{{ old('max_experience', $job->max_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white" required>
                                     @error('max_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -163,7 +153,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Desired Candidate Gender <span class="text-rose-300">*</span></label>
-                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                                 @foreach(['Any', 'Male', 'Female', 'Other'] as $genderOption)
                                     <option value="{{ $genderOption }}" {{ old('gender_preference', $job->gender_preference ?? 'Any') === $genderOption ? 'selected' : '' }} class="text-slate-900">{{ $genderOption }}</option>
                                 @endforeach
@@ -173,7 +163,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Education <span class="text-rose-300">*</span></label>
-                            <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                                 @foreach($educationLevels as $edu)
                                     <option value="{{ $edu->id }}" {{ (string) old('education_level_id', $job->education_level_id ?? '') === (string) $edu->id ? 'selected' : '' }} class="text-slate-900">{{ $edu->name }}</option>
                                 @endforeach
@@ -182,55 +172,68 @@
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Application Deadline</label>
-                            <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" min="{{ date('Y-m-d') }}">
+                            <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white" min="{{ date('Y-m-d') }}">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-blue-100">Total Openings</label>
-                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
                         </div>
                     </div>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-blue-100">Job Description <span class="text-rose-300">*</span></label>
-                        <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
-                        <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/20 text-white min-h-[200px]"></div>
-                        <p class="mt-1 text-xs text-blue-200/80">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
-                        @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    </div>{{-- /Job Specification grid --}}
+                    </div>{{-- /Job Specification card --}}
+
+                    {{-- Description & Skills Card --}}
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 md:p-8">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-emerald-500 rounded-full"></span>
+                            <i class="fa-solid fa-align-left text-emerald-400"></i> Description &amp; Skills
+                        </h3>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-blue-100">Job Description <span class="text-rose-300">*</span></label>
+                            <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
+                            <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/10 text-white min-h-[200px]"></div>
+                            <p class="mt-1 text-xs text-slate-400">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
+                            @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-blue-100">Skills Required (Comma separated)</label>
+                                <input type="text" name="skills_required" value="{{ old('skills_required', $job->skills_required ?? '') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-blue-100">Company Website (Optional)</label>
+                                <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-blue-100">Skills Required (Comma separated)</label>
-                        <input type="text" name="skills_required" value="{{ old('skills_required', $job->skills_required ?? '') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-blue-100">Company Website (Optional)</label>
-                        <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
-                    </div>
-
-                    {{-- Vendor Assignment --}}
+                    {{-- Vendor Assignment Card --}}
                     @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
-                    <div class="mb-6 bg-cyan-500/10 border border-cyan-400/30 rounded-2xl p-5" x-data="{ mode: '{{ $currMode }}' }">
-                        <h3 class="text-cyan-200 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-handshake"></i> Vendor Assignment
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 md:p-8" x-data="{ mode: '{{ $currMode }}' }">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-purple-500 rounded-full"></span>
+                            <i class="fa-solid fa-handshake text-purple-400"></i> Vendor Assignment
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='open' ? 'ring-2 ring-cyan-400 border-cyan-400/50' : ''">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='open' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
                                 <input type="radio" name="vendor_assignment_mode" value="open" x-model="mode" class="mt-1">
                                 <div>
                                     <div class="text-white font-bold text-sm">🔓 Open Marketplace</div>
                                     <div class="text-blue-200 text-xs">All active partners can apply</div>
                                 </div>
                             </label>
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='preferred' ? 'ring-2 ring-cyan-400 border-cyan-400/50' : ''">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='preferred' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
                                 <input type="radio" name="vendor_assignment_mode" value="preferred" x-model="mode" class="mt-1">
                                 <div>
                                     <div class="text-white font-bold text-sm">⭐ Preferred Only</div>
                                     <div class="text-blue-200 text-xs">Only my saved Preferred vendors</div>
                                 </div>
                             </label>
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='selected' ? 'ring-2 ring-cyan-400 border-cyan-400/50' : ''">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='selected' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
                                 <input type="radio" name="vendor_assignment_mode" value="selected" x-model="mode" class="mt-1">
                                 <div>
                                     <div class="text-white font-bold text-sm">🎯 Selected (Per-Job)</div>
@@ -240,12 +243,12 @@
                         </div>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-cyan-200 text-[11px] uppercase font-bold mb-1">Max Vendors per Job (optional)</label>
+                                <label class="block text-blue-200 text-[11px] uppercase font-bold mb-1">Max Vendors per Job (optional)</label>
                                 <input type="number" name="max_vendors_per_job" min="1" max="50" value="{{ old('max_vendors_per_job', $job->max_vendors_per_job ?? '') }}" placeholder="e.g. 5"
-                                    class="block w-full rounded-xl border border-cyan-400/30 bg-slate-900/60 text-white px-3 py-2.5">
+                                    class="block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white px-3 py-2.5">
                             </div>
                             <div class="md:col-span-2" x-show="mode === 'selected'" x-cloak>
-                                <label class="block text-cyan-200 text-[11px] uppercase font-bold mb-1">Pick from Preferred Vendors</label>
+                                <label class="block text-blue-200 text-[11px] uppercase font-bold mb-1">Pick from Preferred Vendors</label>
                                 @php $preferred = auth()->user()->preferredVendors()->orderBy('name')->get(); @endphp
                                 @if($preferred->isEmpty())
                                     <p class="text-rose-200 text-xs">You have no preferred vendors yet. <a href="{{ route('client.vendors.browse') }}" class="underline">Browse and add some</a> first.</p>
@@ -263,52 +266,52 @@
                         </div>
                     </div>
 
-                    {{-- Payout Settings --}}
-                    <div class="mb-6 bg-amber-500/10 border border-amber-400/30 rounded-2xl p-5">
-                        <h3 class="text-amber-200 font-bold text-sm uppercase tracking-wider mb-1 flex items-center gap-2">
-                            <i class="fa-solid fa-coins"></i> Payout Settings
+                    {{-- Payout Settings Card --}}
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 md:p-8">
+                        <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-amber-500 rounded-full"></span>
+                            <i class="fa-solid fa-coins text-amber-400"></i> Payout Settings
                         </h3>
-                        <p class="text-amber-100/80 text-xs mb-4">
+                        <p class="text-slate-400 text-sm ml-5 mb-5">
                             Payout amount per successful hire, the maturity period before release, and the replacement-guarantee window.
                         </p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Payout Amount (₹) <span class="text-rose-300">*</span></label>
+                                <label class="block text-xs font-bold text-blue-100 uppercase mb-1">Payout Amount (₹) <span class="text-rose-300">*</span></label>
                                 <input type="number" name="payout_amount" min="0" step="0.01" required
                                     value="{{ old('payout_amount', $job->payout_amount ?? '') }}"
                                     placeholder="e.g. 25000"
-                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                    class="block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                                 @error('payout_amount') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Maturity Period (Days) <span class="text-rose-300">*</span></label>
+                                <label class="block text-xs font-bold text-blue-100 uppercase mb-1">Maturity Period (Days) <span class="text-rose-300">*</span></label>
                                 <input type="number" name="minimum_stay_days" min="0" max="365" required
                                     value="{{ old('minimum_stay_days', $job->minimum_stay_days ?? 30) }}"
                                     placeholder="e.g. 30"
-                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                    class="block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                                 @error('minimum_stay_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Replacement Guarantee (Days) <span class="text-rose-300">*</span></label>
+                                <label class="block text-xs font-bold text-blue-100 uppercase mb-1">Replacement Guarantee (Days) <span class="text-rose-300">*</span></label>
                                 <input type="number" name="replacement_guarantee_days" min="0" max="365" required
                                     value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
                                     placeholder="e.g. 90"
-                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                    class="block w-full rounded-xl border border-white/10 bg-slate-900/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                                 @error('replacement_guarantee_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex justify-end items-center gap-3 pt-4 mt-6 border-t border-white/10">
-                        <a href="{{ route('client.dashboard') }}" class="bg-white/10 border border-white/20 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition backdrop-blur-md">
+                    <div class="flex justify-end items-center gap-3 pt-2">
+                        <a href="{{ route('client.dashboard') }}" class="bg-white/10 border border-white/10 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition backdrop-blur-md">
                             Cancel
                         </a>
-                        <button type="submit" class="neon-btn text-white font-extrabold py-3 px-8 rounded-xl transition flex items-center gap-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-extrabold py-3 px-8 rounded-xl transition flex items-center gap-2 shadow-lg hover:shadow-blue-500/40">
                             <i class="fa-solid fa-paper-plane"></i> {{ $submitLabel }}
                         </button>
                     </div>
                 </form>
-            </div>
         </div>
 
     </div>
