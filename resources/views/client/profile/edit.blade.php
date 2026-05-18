@@ -31,7 +31,7 @@
          style="width:28rem; height:28rem; background:#6366f1; filter:blur(140px); animation-delay:-12s;"></div>
     <div class="absolute inset-0" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.07;"></div>
 
-    <div class="relative z-10 max-w-screen-2xl mx-auto space-y-6">
+    <div class="relative z-10 max-w-6xl mx-auto space-y-6">
 
         @if(session('success'))
             <div class="gloss bg-emerald-500/15 border border-emerald-400/40 text-emerald-100 p-4 rounded-2xl ring-glow">
