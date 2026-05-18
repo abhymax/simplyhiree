@@ -188,109 +188,14 @@
             </a>
         </div>
 
-        {{-- SECTION 4: RECENT APPLICATIONS (matches All Applications styling) --}}
+        {{-- SECTION 4: MY JOB POSTINGS --}}
         <style>
-            .apps-table thead th { padding-top: .75rem !important; padding-bottom: .75rem !important; }
-            .apps-table tbody td { padding-top: .75rem !important; padding-bottom: .75rem !important; vertical-align: middle; }
-            .apps-table .cand-avatar { width: 36px !important; height: 36px !important; font-size: .9rem !important; }
+            .jobs-table thead th { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+            .jobs-table tbody td { padding-top: .75rem !important; padding-bottom: .75rem !important; vertical-align: middle; }
+            .jobs-table .job-icon { width: 36px !important; height: 36px !important; font-size: .9rem !important; }
             .status-pill { padding: .35rem .7rem !important; font-size: .7rem !important; gap: .35rem !important; }
         </style>
-        <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden mb-8">
-            <div class="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between gap-3 md:items-center">
-                <div>
-                    <h3 class="text-lg font-bold text-white flex items-center gap-3">
-                        <span class="w-1.5 h-7 bg-emerald-500 rounded-full"></span> Recent Applications
-                    </h3>
-                    <p class="text-slate-400 text-sm mt-1 ml-5">Showing the latest {{ $recentApplications->count() }} of {{ $totalApplicants ?? 0 }} total.</p>
-                </div>
-                <a href="{{ route('client.applications.index') }}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg">
-                    View All <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="apps-table min-w-full text-left text-sm">
-                    <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
-                        <tr>
-                            <th class="px-6 py-5">Candidate</th>
-                            <th class="px-6 py-5">Job Details</th>
-                            <th class="px-6 py-5">Source</th>
-                            <th class="px-6 py-5">Status</th>
-                            <th class="px-6 py-5 text-right" style="min-width:180px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/10 text-white">
-                        @forelse($recentApplications as $app)
-                            @php
-                                $agency = $app->candidate;
-                                $direct = $app->candidateUser;
-                                $name = trim(($agency?->first_name ?? '') . ' ' . ($agency?->last_name ?? ''));
-                                if ($name === '') $name = $direct?->name ?? 'N/A';
-                                $email = $agency?->email ?? $direct?->email ?? '';
-                                $partner = $agency?->partner;
-                                $initial = strtoupper(substr($name, 0, 1)) ?: 'U';
-                                $appCode = $app->application_code ?? ('SH-APP-' . str_pad((string) $app->id, 6, '0', STR_PAD_LEFT));
-                                $candCode = $agency?->candidate_code ?? $direct?->entity_code ?? 'SH-CND-NA';
-                                $jobCode = $app->job?->job_code ?? 'SH-JOB-NA';
-                            @endphp
-                            <tr class="hover:bg-white/10 transition">
-                                <td class="px-6 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="cand-avatar h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold ring-2 ring-white/20 shrink-0">{{ $initial }}</div>
-                                        <div class="min-w-0">
-                                            <div class="font-bold text-white">{{ $name }}</div>
-                                            <div class="text-cyan-200 text-xs truncate"><i class="fa-regular fa-envelope mr-1"></i> {{ $email }}</div>
-                                            <div class="text-[10px] text-slate-300 mt-0.5">{{ $appCode }} · {{ $candCode }} · {{ $app->created_at->format('M d, Y') }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="font-bold text-white">{{ $app->job->title ?? 'Deleted Job' }}</div>
-                                    <div class="text-[10px] text-slate-300 mt-0.5">{{ $jobCode }}</div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    @if($partner)
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-600 text-white text-[11px] font-bold">
-                                            <i class="fa-solid fa-handshake"></i> {{ Str::limit($partner->name, 14) }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-700 text-white text-[11px] font-bold border border-slate-500"><i class="fa-solid fa-globe"></i> Direct</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-5">
-                                    @php $st = strtolower($app->status); @endphp
-                                    @if($st === 'pending review')
-                                        <span class="status-pill inline-flex items-center rounded-full bg-amber-500 text-black border border-amber-300 font-extrabold animate-pulse"><i class="fa-regular fa-clock"></i> Pending Review</span>
-                                    @elseif($st === 'approved')
-                                        <span class="status-pill inline-flex items-center rounded-full bg-emerald-500 text-white border border-emerald-400 font-extrabold"><i class="fa-solid fa-check"></i> Approved</span>
-                                    @elseif($st === 'rejected')
-                                        <span class="status-pill inline-flex items-center rounded-full bg-red-600 text-white border border-red-400 font-extrabold"><i class="fa-solid fa-xmark"></i> Rejected</span>
-                                    @else
-                                        <span class="status-pill inline-flex items-center rounded-full bg-blue-600 text-white border border-blue-400 font-extrabold"><i class="fa-solid fa-circle-info"></i> {{ ucwords($st) }}</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-5 text-right" style="min-width:180px;">
-                                    <a href="{{ route('client.jobs.applicants', $app->job_id) }}#app-{{ $app->id }}"
-                                       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold border border-indigo-400 shadow-md whitespace-nowrap"
-                                       style="padding: 0.55rem 1.1rem;">
-                                        <i class="fa-regular fa-eye"></i> View Details
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-blue-200">
-                                    <i class="fa-regular fa-folder-open text-4xl text-blue-300 mb-2 block"></i>
-                                    No applications yet. Post a job and partners will start submitting.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- SECTION 5: MY JOB POSTINGS --}}
-        <div id="my-jobs" class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden">
+        <div id="my-jobs" class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden">
             <div class="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between gap-3 md:items-center">
                 <div>
                     <h3 class="text-lg font-bold text-white flex items-center gap-3">
@@ -304,84 +209,77 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-sm">
-                    <thead class="bg-slate-900/50 text-blue-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
+                <table class="jobs-table min-w-full text-left text-sm">
+                    <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                         <tr>
-                            <th class="px-6 py-4">Designation / Role</th>
-                            <th class="px-6 py-4">Requirements</th>
-                            <th class="px-6 py-4">Status</th>
-                            <th class="px-6 py-4">Applicants</th>
-                            <th class="px-6 py-4">Posted On</th>
+                            <th class="px-6 py-5">Designation / Role</th>
+                            <th class="px-6 py-5">Requirements</th>
+                            <th class="px-6 py-5">Status</th>
+                            <th class="px-6 py-5">Posted On</th>
+                            <th class="px-6 py-5 text-right" style="min-width:220px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/10">
+                    <tbody class="divide-y divide-white/10 text-white">
                         @forelse($jobs as $job)
-                            <tr class="hover:bg-white/5 transition">
-                                <td class="px-6 py-4">
-                                    <a href="{{ route('jobs.show', $job->id) }}" class="font-bold text-white hover:text-blue-300 transition">
-                                        {{ $job->title }}
-                                    </a>
-                                    <div class="text-xs text-slate-400 mt-1">{{ $job->location }} · {{ $job->job_type }}</div>
-                                </td>
-                                <td class="px-6 py-4 text-slate-300">
-                                    <div><span class="text-blue-300 text-[10px] uppercase font-bold">Openings:</span> {{ $job->openings ?? 'N/A' }}</div>
-                                    <div><span class="text-blue-300 text-[10px] uppercase font-bold">Exp:</span> {{ $job->formatted_experience }}</div>
-                                    <div><span class="text-blue-300 text-[10px] uppercase font-bold">Gender:</span> {{ $job->gender_preference ?? 'Any' }}</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    @php
-                                        $statusMap = [
-                                            'approved' => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-                                            'pending_approval' => 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-                                            'on_hold' => 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-                                            'closed' => 'bg-slate-500/20 text-slate-300 border-slate-500/40',
-                                            'rejected' => 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-                                        ];
-                                    @endphp
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $statusMap[$job->status] ?? 'bg-blue-500/20 text-blue-300 border-blue-500/40' }}">
-                                        {{ str_replace('_', ' ', ucfirst($job->status)) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if($job->status == 'approved')
-                                        <div class="flex flex-col gap-2 items-start">
-                                            <a href="{{ route('client.jobs.applicants', $job) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 shadow-md px-3 py-2 rounded-lg font-bold text-xs text-white">
-                                                View Applicants ({{ $job->jobApplications->where('status', 'Approved')->count() }})
-                                            </a>
-                                            @if($job->deactivation_requested_at)
-                                                <span class="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-300 px-2.5 py-1 rounded-md text-[11px] font-semibold">
-                                                    <i class="fa-solid fa-hourglass-half"></i> Deactivation Requested
-                                                </span>
-                                                <form method="POST" action="{{ route('client.jobs.cancel-deactivation', $job) }}">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="text-[11px] text-slate-300 hover:text-white underline">Cancel request</button>
-                                                </form>
-                                            @else
-                                                <button type="button" onclick="document.getElementById('deact-{{ $job->id }}').classList.toggle('hidden')"
-                                                    class="text-[11px] text-rose-300 hover:text-rose-200 underline">
-                                                    Request Deactivation
-                                                </button>
-                                                <form id="deact-{{ $job->id }}" method="POST" action="{{ route('client.jobs.request-deactivation', $job) }}"
-                                                      class="hidden mt-1 flex flex-col gap-2 w-64 bg-slate-900/60 border border-rose-400/30 p-3 rounded-lg">
-                                                    @csrf
-                                                    <textarea name="reason" rows="2" maxlength="1000" placeholder="Reason (optional)"
-                                                        class="w-full text-xs bg-slate-900 border border-white/20 rounded p-2 text-white"></textarea>
-                                                    <div class="flex gap-2">
-                                                        <button type="submit" class="bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold px-3 py-1.5 rounded">Submit</button>
-                                                        <button type="button" onclick="document.getElementById('deact-{{ $job->id }}').classList.add('hidden')" class="text-xs text-slate-300 hover:text-white">Cancel</button>
-                                                    </div>
-                                                </form>
-                                            @endif
+                            @php
+                                $jobCode = $job->job_code ?? ('SH-JOB-' . str_pad((string) $job->id, 6, '0', STR_PAD_LEFT));
+                                $jobInitial = strtoupper(substr($job->title, 0, 1)) ?: 'J';
+                                $approvedCount = $job->jobApplications->where('status', 'Approved')->count();
+                            @endphp
+                            <tr class="hover:bg-white/10 transition">
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="job-icon h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold ring-2 ring-white/20 shrink-0">{{ $jobInitial }}</div>
+                                        <div class="min-w-0">
+                                            <a href="{{ route('jobs.show', $job->id) }}" class="font-bold text-white hover:text-cyan-300 transition">{{ $job->title }}</a>
+                                            <div class="text-cyan-200 text-xs truncate"><i class="fa-solid fa-location-dot mr-1"></i> {{ $job->location }} · {{ $job->job_type }}</div>
+                                            <div class="text-[10px] text-slate-300 mt-0.5">{{ $jobCode }} · {{ $job->openings ?? 1 }} opening(s)</div>
                                         </div>
-                                    @elseif($job->status === 'pending_approval')
-                                        <a href="{{ route('client.jobs.edit', $job) }}" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 shadow-md px-3 py-2 rounded-lg font-bold text-xs text-slate-900">
-                                            <i class="fa-solid fa-pen-to-square"></i> Edit Pending Job
-                                        </a>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <div class="text-white font-semibold text-xs">{{ $job->formatted_experience }} exp</div>
+                                    <div class="text-[11px] text-slate-300 mt-0.5">Gender: {{ $job->gender_preference ?? 'Any' }}</div>
+                                </td>
+                                <td class="px-6 py-5">
+                                    @php $st = $job->status; @endphp
+                                    @if($st === 'approved')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-emerald-500 text-white border border-emerald-400 font-extrabold"><i class="fa-solid fa-check"></i> Approved</span>
+                                    @elseif($st === 'pending_approval')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-amber-500 text-black border border-amber-300 font-extrabold animate-pulse"><i class="fa-regular fa-clock"></i> Pending</span>
+                                    @elseif($st === 'rejected')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-red-600 text-white border border-red-400 font-extrabold"><i class="fa-solid fa-xmark"></i> Rejected</span>
+                                    @elseif($st === 'on_hold')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-orange-500 text-white border border-orange-400 font-extrabold"><i class="fa-solid fa-pause"></i> On Hold</span>
                                     @else
-                                        <span class="text-slate-500 text-xs italic">Not available</span>
+                                        <span class="status-pill inline-flex items-center rounded-full bg-slate-600 text-white border border-slate-400 font-extrabold"><i class="fa-solid fa-circle-info"></i> {{ ucwords(str_replace('_',' ',$st)) }}</span>
+                                    @endif
+                                    @if($job->deactivation_requested_at)
+                                        <div class="mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-200 border border-amber-400/40 px-2 py-0.5 rounded">
+                                            <i class="fa-solid fa-hourglass-half"></i> Deactivation Requested
+                                        </div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-slate-300">{{ $job->created_at->format('M d, Y') }}</td>
+                                <td class="px-6 py-5 text-slate-300 text-xs">{{ $job->created_at->format('M d, Y') }}</td>
+                                <td class="px-6 py-5 text-right" style="min-width:220px;">
+                                    <div class="flex items-center justify-end gap-2 whitespace-nowrap">
+                                        @if($job->status === 'approved')
+                                            <a href="{{ route('client.jobs.applicants', $job) }}"
+                                               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold border border-indigo-400 shadow-md whitespace-nowrap"
+                                               style="padding: 0.55rem 1.1rem;">
+                                                <i class="fa-regular fa-eye"></i> View Applicants ({{ $approvedCount }})
+                                            </a>
+                                        @elseif($job->status === 'pending_approval')
+                                            <a href="{{ route('client.jobs.edit', $job) }}"
+                                               class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg text-sm font-bold border border-amber-300 shadow-md whitespace-nowrap"
+                                               style="padding: 0.55rem 1.1rem;">
+                                                <i class="fa-solid fa-pen-to-square"></i> Edit Pending
+                                            </a>
+                                        @else
+                                            <span class="text-slate-400 text-xs italic">No actions</span>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
