@@ -19,3 +19,6 @@ Thumbs.db
 
 databse-abhy/
 deploy-last.log
+
+app/Models/*.bak
+project_files.tar.gz
