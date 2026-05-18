@@ -1042,6 +1042,9 @@ class AdminController extends Controller
                 $q->where('partner_id', $request->input('partner_id'));
              });
         }
+        if ($request->filled('client_id')) {
+            $query->whereHas('job', fn ($q) => $q->where('user_id', (int) $request->input('client_id')));
+        }
         if ($request->filled('date_from')) {
             try { $query->whereDate('created_at', '>=', \Carbon\Carbon::parse($request->input('date_from'))->toDateString()); } catch (\Throwable $e) {}
         }
@@ -1058,11 +1061,13 @@ class AdminController extends Controller
         $applications = $query->latest()->paginate($perPage)->withQueryString();
         $jobs = Job::select('id', 'title')->orderBy('title')->get();
         $partners = User::role('partner')->select('id', 'name')->orderBy('name')->get();
+        $clients = User::role('client')->select('id', 'name')->orderBy('name')->get();
 
         return view('admin.applications.index', [
             'applications'   => $applications,
             'jobs'           => $jobs,
             'partners'       => $partners,
+            'clients'        => $clients,
             'allowedPerPage' => $allowedPerPage,
             'perPage'        => $perPage,
         ]);
