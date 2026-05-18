@@ -182,6 +182,60 @@
                         <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
                     </div>
 
+                    {{-- Vendor Assignment --}}
+                    @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
+                    <div class="mb-6 bg-cyan-500/10 border border-cyan-400/30 rounded-2xl p-5" x-data="{ mode: '{{ $currMode }}' }">
+                        <h3 class="text-cyan-200 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-handshake"></i> Vendor Assignment
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='open' ? 'ring-2 ring-cyan-400 border-cyan-400/50' : ''">
+                                <input type="radio" name="vendor_assignment_mode" value="open" x-model="mode" class="mt-1">
+                                <div>
+                                    <div class="text-white font-bold text-sm">🔓 Open Marketplace</div>
+                                    <div class="text-blue-200 text-xs">All active partners can apply</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='preferred' ? 'ring-2 ring-cyan-400 border-cyan-400/50' : ''">
+                                <input type="radio" name="vendor_assignment_mode" value="preferred" x-model="mode" class="mt-1">
+                                <div>
+                                    <div class="text-white font-bold text-sm">⭐ Preferred Only</div>
+                                    <div class="text-blue-200 text-xs">Only my saved Preferred vendors</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='selected' ? 'ring-2 ring-cyan-400 border-cyan-400/50' : ''">
+                                <input type="radio" name="vendor_assignment_mode" value="selected" x-model="mode" class="mt-1">
+                                <div>
+                                    <div class="text-white font-bold text-sm">🎯 Selected (Per-Job)</div>
+                                    <div class="text-blue-200 text-xs">Pick specific vendors for this job</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-cyan-200 text-[11px] uppercase font-bold mb-1">Max Vendors per Job (optional)</label>
+                                <input type="number" name="max_vendors_per_job" min="1" max="50" value="{{ old('max_vendors_per_job', $job->max_vendors_per_job ?? '') }}" placeholder="e.g. 5"
+                                    class="block w-full rounded-xl border border-cyan-400/30 bg-slate-900/60 text-white px-3 py-2.5">
+                            </div>
+                            <div class="md:col-span-2" x-show="mode === 'selected'" x-cloak>
+                                <label class="block text-cyan-200 text-[11px] uppercase font-bold mb-1">Pick from Preferred Vendors</label>
+                                @php $preferred = auth()->user()->preferredVendors()->orderBy('name')->get(); @endphp
+                                @if($preferred->isEmpty())
+                                    <p class="text-rose-200 text-xs">You have no preferred vendors yet. <a href="{{ route('client.vendors.browse') }}" class="underline">Browse and add some</a> first.</p>
+                                @else
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                                        @foreach($preferred as $pv)
+                                            <label class="flex items-center gap-2 text-blue-100 text-sm bg-slate-900/60 border border-white/10 rounded-md px-2 py-1.5">
+                                                <input type="checkbox" name="allowed_partners[]" value="{{ $pv->id }}" class="rounded">
+                                                <span>{{ $pv->name }} <span class="text-blue-300 text-xs">(⭐ {{ $pv->avg_rating ?? '—' }})</span></span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Payout Settings --}}
                     <div class="mb-6 bg-amber-500/10 border border-amber-400/30 rounded-2xl p-5">
                         <h3 class="text-amber-200 font-bold text-sm uppercase tracking-wider mb-1 flex items-center gap-2">

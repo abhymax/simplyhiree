@@ -47,6 +47,8 @@ class Job extends Model
         'client_payout_days',
         'replacement_guarantee_days',
         'partner_visibility',
+        'vendor_assignment_mode',
+        'max_vendors_per_job',
         'is_premium',
         // Finance (per-job billing engine)
         'fee_type',

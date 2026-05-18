@@ -261,6 +261,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/profile/company', [ClientProfileController::class, 'update'])->name('profile.update');
         
         Route::get('/billing', [ClientController::class, 'billing'])->name('billing');
+
+        // Vendor management
+        Route::get('/vendors', [\App\Http\Controllers\ClientVendorController::class, 'browse'])->name('vendors.browse');
+        Route::post('/vendors/{user}/toggle', [\App\Http\Controllers\ClientVendorController::class, 'togglePreferred'])->name('vendors.toggle');
+        Route::get('/vendors/invite', [\App\Http\Controllers\ClientVendorController::class, 'invitePage'])->name('vendors.invite');
+        Route::post('/vendors/invite', [\App\Http\Controllers\ClientVendorController::class, 'inviteStore'])->name('vendors.invite.store');
+        Route::get('/vendors/assign-request', [\App\Http\Controllers\ClientVendorController::class, 'requestAssignmentPage'])->name('vendors.assign-request');
+        Route::post('/vendors/assign-request', [\App\Http\Controllers\ClientVendorController::class, 'requestAssignmentStore'])->name('vendors.assign-request.store');
+        Route::get('/vendor-performance', [\App\Http\Controllers\ClientVendorController::class, 'performance'])->name('vendors.performance');
         Route::get('/interviews/today', [ClientController::class, 'dailySchedule'])->name('interviews.today');
 
         // --- INTERVIEW & HIRING WORKFLOW ---

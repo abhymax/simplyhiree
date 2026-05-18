@@ -78,6 +78,9 @@
                         <x-nav-link :href="route('client.billing')" :active="request()->routeIs('client.billing')" class="text-slate-600 hover:text-indigo-600">
                             Billing
                         </x-nav-link>
+                        <x-nav-link :href="route('client.vendors.browse')" :active="request()->routeIs('client.vendors.*')" class="text-slate-600 hover:text-indigo-600">
+                            Vendors
+                        </x-nav-link>
                         <x-nav-link :href="route('client.profile.company')" :active="request()->routeIs('client.profile.company')" class="text-slate-600 hover:text-indigo-600">
                             Company Profile
                         </x-nav-link>

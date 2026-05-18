@@ -132,10 +132,14 @@ class ClientController extends Controller
             $validated['max_salary'] ?? null
         );
 
-        Job::create([
-            'user_id' => Auth::id(), // Automatically assign to logged-in client
-            'company_name' => Auth::user()->name, // Default to client name
-            'status' => 'pending_approval', // Jobs posted by clients need approval
+        // Map the new vendor_assignment_mode onto the legacy partner_visibility column.
+        $assignMode = $validated['vendor_assignment_mode'] ?? 'open';
+        $legacyVisibility = $assignMode === 'open' ? 'all' : 'selected';
+
+        $job = Job::create([
+            'user_id' => Auth::id(),
+            'company_name' => Auth::user()->name,
+            'status' => 'pending_approval',
             'title' => $validated['title'],
             'category_id' => $validated['category_id'],
             'location' => $validated['location'],
@@ -143,21 +147,31 @@ class ClientController extends Controller
             'job_type' => $validated['job_type'],
             'description' => $this->sanitizeJobDescription($validated['description']),
             'gender_preference' => $validated['gender_preference'],
-            
+
             'min_experience' => $validated['min_experience'],
             'max_experience' => $validated['max_experience'],
             'experience_level_id' => null,
-            
+
             'education_level_id' => $validated['education_level_id'],
             'application_deadline' => $validated['application_deadline'],
             'skills_required' => $request->skills_required,
             'company_website' => $request->company_website,
             'openings' => $request->openings ?? 1,
-            'partner_visibility' => 'all', // Default visibility
+            'partner_visibility' => $legacyVisibility,
+            'vendor_assignment_mode' => $assignMode,
+            'max_vendors_per_job' => $validated['max_vendors_per_job'] ?? null,
             'payout_amount' => $validated['payout_amount'],
             'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
         ]);
+
+        // Resolve the allowed-partner list according to mode
+        if ($assignMode === 'preferred') {
+            $preferredIds = Auth::user()->preferredVendors()->pluck('users.id')->all();
+            $job->allowedPartners()->sync($preferredIds);
+        } elseif ($assignMode === 'selected') {
+            $job->allowedPartners()->sync($request->input('allowed_partners', []));
+        }
 
         return redirect()->route('client.dashboard')->with('success', 'Job posted successfully! Waiting for admin approval.');
     }
@@ -240,6 +254,10 @@ class ClientController extends Controller
             'payout_amount' => 'required|numeric|min:0',
             'minimum_stay_days' => 'required|integer|min:0|max:365',
             'replacement_guarantee_days' => 'required|integer|min:0|max:365',
+            'vendor_assignment_mode' => 'nullable|in:open,preferred,selected',
+            'max_vendors_per_job'    => 'nullable|integer|min:1|max:50',
+            'allowed_partners'       => 'nullable|array',
+            'allowed_partners.*'     => 'integer|exists:users,id',
         ]);
     }
 

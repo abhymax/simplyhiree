@@ -121,6 +121,20 @@ class User extends Authenticatable
         return $this->hasOne(\App\Models\ClientCommercial::class);
     }
 
+    /** Client → their preferred partner pool */
+    public function preferredVendors()
+    {
+        return $this->belongsToMany(User::class, 'client_preferred_vendors', 'client_id', 'partner_id')
+            ->withTimestamps()->withPivot('added_at');
+    }
+
+    /** Partner → clients who preferred them */
+    public function preferringClients()
+    {
+        return $this->belongsToMany(User::class, 'client_preferred_vendors', 'partner_id', 'client_id')
+            ->withTimestamps();
+    }
+
     public function parentPartner()
     {
         return $this->belongsTo(User::class, 'parent_partner_id');
