@@ -1,4 +1,18 @@
 <x-app-layout>
+    <style>
+        /* Force white calendar icon on date inputs */
+        .date-white::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); cursor: pointer; }
+        .date-white { color-scheme: dark; }
+        /* Compact applications list */
+        .apps-table thead th { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+        .apps-table tbody td { padding-top: .75rem !important; padding-bottom: .75rem !important; vertical-align: middle; }
+        .apps-table .cand-avatar { width: 36px !important; height: 36px !important; font-size: .9rem !important; }
+        .apps-table .cand-name { font-size: .95rem !important; }
+        .apps-table .job-name { font-size: .95rem !important; }
+        .apps-table .status-pill { padding: .35rem .7rem !important; font-size: .7rem !important; gap: .35rem !important; border-width: 1px !important; }
+        .apps-table .action-btn { padding: .45rem .85rem !important; font-size: .75rem !important; }
+        .apps-table .action-icon { width: 32px !important; height: 32px !important; }
+    </style>
     {{-- FULL PAGE BLUE BACKGROUND WRAPPER --}}
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
         
@@ -70,10 +84,10 @@
                         </select>
 
                         <input type="date" name="date_from" value="{{ request('date_from') }}" max="{{ date('Y-m-d') }}" title="Updated/Approved from"
-                            class="{{ $fldClass }} w-[150px]">
-                        <span class="text-blue-200/70 text-xs px-0.5">to</span>
+                            class="{{ $fldClass }} w-[160px] date-white">
+                        <span class="text-white font-bold text-sm px-1">to</span>
                         <input type="date" name="date_to" value="{{ request('date_to') }}" max="{{ date('Y-m-d') }}" title="Updated/Approved to"
-                            class="{{ $fldClass }} w-[150px]">
+                            class="{{ $fldClass }} w-[160px] date-white">
 
                         <select name="per_page" onchange="this.form.submit()" title="Per page" class="{{ $fldClass }}">
                             @foreach($allowedPerPage as $opt)
@@ -131,7 +145,7 @@
 
                 {{-- DATA TABLE --}}
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-left text-sm">
+                    <table class="apps-table min-w-full text-left text-sm">
                         <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
                             <tr>
                                 <th class="px-4 py-5 w-10"><span class="sr-only">Select</span></th>
@@ -164,16 +178,15 @@
                                     </td>
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
-                                        <div class="flex items-center gap-4">
-                                            <div class="h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/20">
+                                        <div class="flex items-center gap-3">
+                                            <div class="cand-avatar h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-white/20 shrink-0">
                                                 {{ $initial !== '' ? $initial : 'U' }}
                                             </div>
-                                            <div>
-                                                <div class="font-bold text-white text-lg leading-tight">{{ $candidateName }}</div>
-                                                <div class="text-cyan-200 text-sm font-medium mt-0.5"><i class="fa-regular fa-envelope mr-1"></i> {{ $candidateEmail }}</div>
-                                                <div class="text-blue-300 text-xs mt-1 opacity-80">{{ $application->created_at->format('M d, Y') }}</div>
-                                                <div class="mt-1 text-[11px] text-slate-300 font-semibold tracking-wide">
-                                                    {{ $applicationCode }} | {{ $candidateCode }}
+                                            <div class="min-w-0">
+                                                <div class="cand-name font-bold text-white leading-tight">{{ $candidateName }}</div>
+                                                <div class="text-cyan-200 text-xs font-medium mt-0.5 truncate"><i class="fa-regular fa-envelope mr-1"></i> {{ $candidateEmail }}</div>
+                                                <div class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">
+                                                    {{ $applicationCode }} · {{ $candidateCode }} · {{ $application->created_at->format('M d, Y') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -181,12 +194,10 @@
 
                                     {{-- Job Details (Fixed High Visibility) --}}
                                     <td class="px-6 py-5">
-                                        <div class="font-bold text-white text-lg">{{ $application->job->title ?? 'Deleted Job' }}</div>
-                                        <div class="text-[11px] text-slate-300 font-semibold tracking-wide mt-0.5">{{ $jobCode }}</div>
-                                        
-                                        {{-- COMPANY NAME: BRIGHT AMBER --}}
-                                        <div class="text-amber-300 font-bold text-sm mt-1 flex items-center gap-1.5" style="color: #fcd34d !important;">
-                                            <i class="fa-solid fa-building text-amber-400"></i> 
+                                        <div class="job-name font-bold text-white">{{ $application->job->title ?? 'Deleted Job' }}</div>
+                                        <div class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">{{ $jobCode }}</div>
+                                        <div class="font-bold text-xs mt-1 flex items-center gap-1.5" style="color: #fcd34d;">
+                                            <i class="fa-solid fa-building text-amber-400"></i>
                                             {{ $application->job->company_name ?? 'Internal' }}
                                         </div>
                                     </td>
@@ -194,14 +205,14 @@
                                     {{-- Source --}}
                                     <td class="px-6 py-5">
                                         @if($sourcePartner)
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-bold shadow-md">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-600 text-white text-[11px] font-bold shadow-sm">
                                                 <i class="fa-solid fa-handshake"></i> {{ Str::limit($sourcePartner->name, 12) }}
                                             </span>
-                                            <div class="text-[11px] text-slate-300 font-semibold tracking-wide mt-1">
+                                            <div class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">
                                                 {{ $sourcePartner->entity_code ?? ('SH-PRT-' . str_pad((string) $sourcePartner->id, 6, '0', STR_PAD_LEFT)) }}
                                             </div>
                                         @else
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 text-white text-xs font-bold border border-slate-500">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-700 text-white text-[11px] font-bold border border-slate-500">
                                                 <i class="fa-solid fa-globe"></i> Direct
                                             </span>
                                         @endif
@@ -212,11 +223,11 @@
                                         @php $status = strtolower($application->status); @endphp
 
                                         @if($status === 'pending review')
-                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500 text-black border-2 border-amber-300 text-xs font-extrabold shadow-lg shadow-amber-500/20 animate-pulse">
+                                            <span class="status-pill inline-flex items-center gap-2 rounded-full bg-amber-500 text-black border-2 border-amber-300 text-xs font-extrabold shadow-lg shadow-amber-500/20 animate-pulse">
                                                 <i class="fa-regular fa-clock"></i> Pending Review
                                             </span>
                                         @elseif($status === 'approved')
-                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white border-2 border-emerald-400 text-xs font-extrabold shadow-lg">
+                                            <span class="status-pill inline-flex items-center gap-2 rounded-full bg-emerald-500 text-white border-2 border-emerald-400 text-xs font-extrabold shadow-lg">
                                                 <i class="fa-solid fa-check"></i> Approved
                                             </span>
                                             @if($application->auto_forwarded_at)
@@ -225,11 +236,11 @@
                                                 </div>
                                             @endif
                                         @elseif($status === 'rejected')
-                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 text-white border-2 border-red-400 text-xs font-extrabold shadow-lg">
+                                            <span class="status-pill inline-flex items-center gap-2 rounded-full bg-red-600 text-white border-2 border-red-400 text-xs font-extrabold shadow-lg">
                                                 <i class="fa-solid fa-xmark"></i> Rejected
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white border-2 border-blue-400 text-xs font-extrabold shadow-lg">
+                                            <span class="status-pill inline-flex items-center gap-2 rounded-full bg-blue-600 text-white border-2 border-blue-400 text-xs font-extrabold shadow-lg">
                                                 <i class="fa-solid fa-circle-info"></i> {{ ucfirst($status) }}
                                             </span>
                                         @endif
@@ -242,11 +253,11 @@
                                                 $resumePath = $agencyCandidate?->resume_path ?? $directCandidate?->profile?->resume_path;
                                             @endphp
                                             @if($resumePath)
-                                                <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" title="Download CV" class="inline-flex items-center justify-center w-10 h-10 bg-slate-700 hover:bg-cyan-600 text-white rounded-xl shadow-md transition border border-slate-600 hover:border-cyan-400">
-                                                    <i class="fa-solid fa-download"></i>
+                                                <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" title="Download CV" class="action-icon inline-flex items-center justify-center bg-slate-700 hover:bg-cyan-600 text-white rounded-lg shadow-sm transition border border-slate-600 hover:border-cyan-400">
+                                                    <i class="fa-solid fa-download text-xs"></i>
                                                 </a>
                                             @endif
-                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition border border-indigo-400 whitespace-nowrap">
+                                            <a href="{{ route('admin.applications.show', $application->id) }}" class="action-btn inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-sm transition border border-indigo-400 whitespace-nowrap">
                                                 @if(strtolower($application->status) === 'pending review')
                                                     Review &amp; Decide
                                                 @else
