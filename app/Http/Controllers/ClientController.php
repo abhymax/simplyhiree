@@ -66,6 +66,12 @@ class ClientController extends Controller
             }
         }
 
+        $recentApplications = JobApplication::with(['job', 'candidate.partner', 'candidateUser'])
+            ->whereIn('job_id', $jobs->pluck('id'))
+            ->latest()
+            ->limit(8)
+            ->get();
+
         return view('client.dashboard', [
             'client' => $client,
             'jobs'   => $jobs,
@@ -74,7 +80,8 @@ class ClientController extends Controller
             'totalApplicants' => $totalApplicants,
             'totalHires' => $totalHires,
             'todayInterviews' => $todayInterviews,
-            'dueInvoicesCount' => $dueInvoicesCount
+            'dueInvoicesCount' => $dueInvoicesCount,
+            'recentApplications' => $recentApplications
         ]);
     }
 

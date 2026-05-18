@@ -188,7 +188,108 @@
             </a>
         </div>
 
-        {{-- SECTION 4: MY JOB POSTINGS --}}
+        {{-- SECTION 4: RECENT APPLICATIONS (matches All Applications styling) --}}
+        <style>
+            .apps-table thead th { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+            .apps-table tbody td { padding-top: .75rem !important; padding-bottom: .75rem !important; vertical-align: middle; }
+            .apps-table .cand-avatar { width: 36px !important; height: 36px !important; font-size: .9rem !important; }
+            .status-pill { padding: .35rem .7rem !important; font-size: .7rem !important; gap: .35rem !important; }
+        </style>
+        <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden mb-8">
+            <div class="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between gap-3 md:items-center">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-3">
+                        <span class="w-1.5 h-7 bg-emerald-500 rounded-full"></span> Recent Applications
+                    </h3>
+                    <p class="text-slate-400 text-sm mt-1 ml-5">Showing the latest {{ $recentApplications->count() }} of {{ $totalApplicants ?? 0 }} total.</p>
+                </div>
+                <a href="{{ route('client.applications.index') }}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg">
+                    View All <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="apps-table min-w-full text-left text-sm">
+                    <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
+                        <tr>
+                            <th class="px-6 py-5">Candidate</th>
+                            <th class="px-6 py-5">Job Details</th>
+                            <th class="px-6 py-5">Source</th>
+                            <th class="px-6 py-5">Status</th>
+                            <th class="px-6 py-5 text-right" style="min-width:180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/10 text-white">
+                        @forelse($recentApplications as $app)
+                            @php
+                                $agency = $app->candidate;
+                                $direct = $app->candidateUser;
+                                $name = trim(($agency?->first_name ?? '') . ' ' . ($agency?->last_name ?? ''));
+                                if ($name === '') $name = $direct?->name ?? 'N/A';
+                                $email = $agency?->email ?? $direct?->email ?? '';
+                                $partner = $agency?->partner;
+                                $initial = strtoupper(substr($name, 0, 1)) ?: 'U';
+                                $appCode = $app->application_code ?? ('SH-APP-' . str_pad((string) $app->id, 6, '0', STR_PAD_LEFT));
+                                $candCode = $agency?->candidate_code ?? $direct?->entity_code ?? 'SH-CND-NA';
+                                $jobCode = $app->job?->job_code ?? 'SH-JOB-NA';
+                            @endphp
+                            <tr class="hover:bg-white/10 transition">
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="cand-avatar h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold ring-2 ring-white/20 shrink-0">{{ $initial }}</div>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-white">{{ $name }}</div>
+                                            <div class="text-cyan-200 text-xs truncate"><i class="fa-regular fa-envelope mr-1"></i> {{ $email }}</div>
+                                            <div class="text-[10px] text-slate-300 mt-0.5">{{ $appCode }} · {{ $candCode }} · {{ $app->created_at->format('M d, Y') }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <div class="font-bold text-white">{{ $app->job->title ?? 'Deleted Job' }}</div>
+                                    <div class="text-[10px] text-slate-300 mt-0.5">{{ $jobCode }}</div>
+                                </td>
+                                <td class="px-6 py-5">
+                                    @if($partner)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-600 text-white text-[11px] font-bold">
+                                            <i class="fa-solid fa-handshake"></i> {{ Str::limit($partner->name, 14) }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-700 text-white text-[11px] font-bold border border-slate-500"><i class="fa-solid fa-globe"></i> Direct</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-5">
+                                    @php $st = strtolower($app->status); @endphp
+                                    @if($st === 'pending review')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-amber-500 text-black border border-amber-300 font-extrabold animate-pulse"><i class="fa-regular fa-clock"></i> Pending Review</span>
+                                    @elseif($st === 'approved')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-emerald-500 text-white border border-emerald-400 font-extrabold"><i class="fa-solid fa-check"></i> Approved</span>
+                                    @elseif($st === 'rejected')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-red-600 text-white border border-red-400 font-extrabold"><i class="fa-solid fa-xmark"></i> Rejected</span>
+                                    @else
+                                        <span class="status-pill inline-flex items-center rounded-full bg-blue-600 text-white border border-blue-400 font-extrabold"><i class="fa-solid fa-circle-info"></i> {{ ucwords($st) }}</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-5 text-right" style="min-width:180px;">
+                                    <a href="{{ route('client.jobs.applicants', $app->job_id) }}#app-{{ $app->id }}"
+                                       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold border border-indigo-400 shadow-md whitespace-nowrap"
+                                       style="padding: 0.55rem 1.1rem;">
+                                        <i class="fa-regular fa-eye"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-blue-200">
+                                    <i class="fa-regular fa-folder-open text-4xl text-blue-300 mb-2 block"></i>
+                                    No applications yet. Post a job and partners will start submitting.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- SECTION 5: MY JOB POSTINGS --}}
         <div id="my-jobs" class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden">
             <div class="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between gap-3 md:items-center">
                 <div>
