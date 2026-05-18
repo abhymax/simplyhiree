@@ -40,11 +40,14 @@
     .section-h { background: linear-gradient(90deg, #67e8f9, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 </style>
 
-<div class="min-h-screen bg-[#0b1224] text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900"></div>
-    <div class="blob absolute -top-32 -left-32 w-[28rem] h-[28rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25"></div>
-    <div class="blob absolute top-1/3 right-0 w-[28rem] h-[28rem] bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-6s"></div>
-    <div class="blob absolute bottom-0 left-1/4 w-[28rem] h-[28rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-12s"></div>
+<div class="min-h-screen text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden"
+     style="background: linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #0f172a 100%);">
+    <div class="blob absolute -top-32 -left-32 rounded-full mix-blend-screen opacity-25"
+         style="width:28rem; height:28rem; background:#06b6d4; filter:blur(140px);"></div>
+    <div class="blob absolute top-1/3 right-0 rounded-full mix-blend-screen opacity-25"
+         style="width:28rem; height:28rem; background:#d946ef; filter:blur(140px); animation-delay:-6s;"></div>
+    <div class="blob absolute bottom-0 left-1/4 rounded-full mix-blend-screen opacity-25"
+         style="width:28rem; height:28rem; background:#6366f1; filter:blur(140px); animation-delay:-12s;"></div>
     <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px;"></div>
 
     <div class="relative z-10 max-w-4xl mx-auto">
@@ -68,7 +71,7 @@
                     <span class="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-400/30 to-indigo-400/30 border border-cyan-300/40 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg shadow-cyan-500/10">
                         ✨ Client Workspace
                     </span>
-                    <h1 class="text-3xl md:text-4xl font-black mt-3 bg-gradient-to-r from-white via-cyan-200 to-indigo-200 bg-clip-text text-transparent drop-shadow">{{ $formTitle }}</h1>
+                    <h1 class="text-3xl md:text-4xl font-black mt-3 text-white drop-shadow" style="text-shadow: 0 2px 12px rgba(34,211,238,.35);">{{ $formTitle }}</h1>
                     @if($isEditMode)
                         <p class="mt-2 text-sm text-amber-200"><i class="fa-solid fa-circle-info mr-1"></i> This job is still pending approval, so you can update it. Once approved by superadmin, editing is locked.</p>
                     @else

@@ -30,13 +30,17 @@
     .fx-row:hover { background: rgba(255,255,255,.06) !important; border-left-color: #22d3ee; }
 </style>
 
-<div class="min-h-screen bg-[#0b1224] text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
-    {{-- Background gradient + animated blobs --}}
-    <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900"></div>
-    <div class="blob absolute -top-32 -left-32 w-[28rem] h-[28rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25"></div>
-    <div class="blob absolute top-1/3 right-0 w-[28rem] h-[28rem] bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-6s"></div>
-    <div class="blob absolute bottom-0 left-1/3 w-[28rem] h-[28rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-[140px] opacity-25" style="animation-delay:-12s"></div>
-    <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px;"></div>
+<div class="min-h-screen text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden"
+     style="background: linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #0f172a 100%);">
+    {{-- Animated gradient blobs --}}
+    <div class="blob absolute -top-32 -left-32 rounded-full mix-blend-screen opacity-25"
+         style="width: 28rem; height: 28rem; background: #06b6d4; filter: blur(140px);"></div>
+    <div class="blob absolute top-1/3 right-0 rounded-full mix-blend-screen opacity-25"
+         style="width: 28rem; height: 28rem; background: #d946ef; filter: blur(140px); animation-delay:-6s"></div>
+    <div class="blob absolute bottom-0 left-1/3 rounded-full mix-blend-screen opacity-25"
+         style="width: 28rem; height: 28rem; background: #6366f1; filter: blur(140px); animation-delay:-12s"></div>
+    <div class="absolute inset-0"
+         style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.07;"></div>
 
     <div class="relative z-10 max-w-7xl mx-auto">
 
@@ -48,7 +52,7 @@
                         ✨ Client Workspace
                     </span>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-cyan-200 to-indigo-200 bg-clip-text text-transparent drop-shadow">Overview</h1>
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow" style="text-shadow: 0 2px 12px rgba(34,211,238,.35);">Overview</h1>
                 <p class="text-blue-200 mt-2 text-lg">Welcome back, <span class="text-white font-semibold">{{ Auth::user()->name }}</span>.</p>
             </div>
             <div class="mt-6 md:mt-0">
@@ -80,7 +84,7 @@
                         <i class="fa-solid {{ $t['icon'] }} text-white text-lg"></i>
                     </div>
                     <div class="flex-1">
-                        <div class="text-3xl font-black tracking-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">{{ $t['val'] }}</div>
+                        <div class="text-3xl font-black tracking-tight text-white" style="text-shadow: 0 2px 8px rgba(0,0,0,.4);">{{ $t['val'] }}</div>
                         <div class="text-blue-200 text-xs font-semibold uppercase tracking-wider">{{ $t['label'] }}</div>
                     </div>
                 </a>
@@ -134,7 +138,7 @@
         <div id="my-jobs" class="gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl overflow-hidden ring-glow">
             <div class="p-6 border-b border-white/10 bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 flex flex-col md:flex-row justify-between gap-3 md:items-center">
                 <div>
-                    <h3 class="text-2xl font-extrabold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">My Job Postings</h3>
+                    <h3 class="text-2xl font-extrabold text-white">My Job Postings</h3>
                     <p class="text-blue-200 text-sm mt-1">Total Jobs: <span class="text-white font-bold">{{ $totalJobs ?? 0 }}</span> · Active: <span class="text-emerald-300 font-bold">{{ $activeJobs ?? 0 }}</span></p>
                 </div>
                 <a href="{{ route('client.jobs.create') }}" class="neon-btn inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-extrabold transition">
