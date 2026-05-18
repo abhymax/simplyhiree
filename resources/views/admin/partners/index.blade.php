@@ -149,19 +149,20 @@
                                     <td class="px-6 py-5">
                                         @php
                                             $tier = $user->partner_tier ?: 'Bronze';
-                                            $tierColors = [
-                                                'Bronze'  => 'bg-amber-700/30 text-amber-200 border-amber-600/40',
-                                                'Silver'  => 'bg-slate-400/20 text-slate-100 border-slate-300/40',
-                                                'Gold'    => 'bg-yellow-500/20 text-yellow-200 border-yellow-400/40',
-                                                'Diamond' => 'bg-cyan-500/20 text-cyan-100 border-cyan-300/40',
+                                            $tierStyles = [
+                                                'Bronze'  => 'background:#78350f; color:#fcd34d; border:1px solid #b45309;',
+                                                'Silver'  => 'background:#475569; color:#f1f5f9; border:1px solid #94a3b8;',
+                                                'Gold'    => 'background:#a16207; color:#fef08a; border:1px solid #eab308;',
+                                                'Diamond' => 'background:#0e7490; color:#cffafe; border:1px solid #22d3ee;',
                                             ];
                                         @endphp
                                         <form method="POST" action="{{ route('admin.partners.tier.update', $user->id) }}" class="inline-flex">
                                             @csrf @method('PATCH')
                                             <select name="partner_tier" onchange="this.form.submit()"
-                                                class="px-2.5 py-1 rounded-lg text-xs font-bold border cursor-pointer {{ $tierColors[$tier] ?? $tierColors['Bronze'] }}">
+                                                class="px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer appearance-none pr-7"
+                                                style="{{ $tierStyles[$tier] ?? $tierStyles['Bronze'] }} background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 20 20%22 fill=%22currentColor%22><path d=%22M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z%22/></svg>'); background-repeat: no-repeat; background-position: right 0.4rem center;">
                                                 @foreach(['Bronze','Silver','Gold','Diamond'] as $t)
-                                                    <option value="{{ $t }}" {{ $tier === $t ? 'selected' : '' }} class="bg-slate-900 text-white">{{ $t }}</option>
+                                                    <option value="{{ $t }}" {{ $tier === $t ? 'selected' : '' }} style="background:#0f172a; color:#fff;">{{ $t }}</option>
                                                 @endforeach
                                             </select>
                                         </form>
