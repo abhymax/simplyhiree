@@ -42,11 +42,19 @@
 
             /* Admin sidebar: reserve 256px on desktop so every admin page
                (including ones that use -mx-* to breakout) stays clear of
-               the fixed left sidebar. Mobile: 56px top offset for the
-               collapsed topbar. */
-            body.has-admin-sidebar { padding-top: 3.5rem; }
+               the fixed left sidebar. Body bg matches the sidebar so
+               sub-pixel rounding never shows a white seam between them. */
+            body.has-admin-sidebar {
+                padding-top: 3.5rem; /* mobile topbar */
+                background-color: #0f172a; /* slate-900 — matches sidebar */
+            }
             @media (min-width: 1024px) {
                 body.has-admin-sidebar { padding-top: 0; padding-left: 16rem; }
+                .admin-mobile-only { display: none !important; }
+                .admin-sidebar-aside { transform: translateX(0) !important; }
+            }
+            @media (max-width: 1023px) {
+                .admin-desktop-only { display: none !important; }
             }
         </style>
     </head>

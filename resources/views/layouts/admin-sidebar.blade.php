@@ -2,7 +2,7 @@
      slide-in panel on small screens triggered by the topbar hamburger. --}}
 <div x-data="{ open: false }">
     {{-- Mobile topbar --}}
-    <div class="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 border-b border-white/10 h-14 flex items-center justify-between px-3">
+    <div class="admin-mobile-only fixed top-0 left-0 right-0 z-50 bg-slate-900 border-b border-white/10 h-14 flex items-center justify-between px-3">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
             <div class="w-8 h-8 bg-gradient-to-br from-indigo-600 to-sky-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">SH</div>
             <span class="font-bold text-white text-sm">SimplyHiree</span>
@@ -11,18 +11,18 @@
     </div>
 
     {{-- Backdrop on mobile --}}
-    <div x-show="open" @click="open = false" class="lg:hidden fixed inset-0 bg-black/60 z-40" x-transition></div>
+    <div x-show="open" @click="open = false" class="admin-mobile-only fixed inset-0 bg-black/60 z-40" x-transition></div>
 
     {{-- Sidebar itself --}}
-    <aside :class="open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-           class="fixed top-0 left-0 z-50 w-64 h-screen bg-slate-900 border-r border-white/10 text-slate-200 shadow-2xl transition-transform duration-200 flex flex-col">
+    <aside :class="open ? 'translate-x-0' : '-translate-x-full'"
+           class="admin-sidebar-aside fixed top-0 left-0 z-50 w-64 h-screen bg-slate-900 border-r border-white/10 text-slate-200 shadow-2xl transition-transform duration-200 flex flex-col">
 
         <div class="h-16 flex items-center justify-between px-4 border-b border-white/10 flex-shrink-0">
             <a href="{{ route('dashboard') }}" class="flex items-center gap-2 min-w-0">
                 <div class="w-9 h-9 bg-gradient-to-br from-indigo-600 to-sky-500 rounded-lg flex items-center justify-center text-white font-bold text-base shadow-lg flex-shrink-0">SH</div>
                 <span class="font-bold text-white text-base tracking-tight truncate">SimplyHiree</span>
             </a>
-            <button type="button" @click="open = false" class="lg:hidden text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" @click="open = false" class="admin-mobile-only text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <nav class="flex-1 overflow-y-auto py-3 space-y-0.5">
