@@ -78,7 +78,16 @@
                 </tbody>
             </table>
 
-            <div style="margin-top: 28px; text-align: center;">
+            <div style="margin-top: 24px; padding: 14px 18px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                <div style="font-weight: 700; color: #92400e; font-size: 13px; margin-bottom: 4px;">
+                    📎 Full candidate tracker attached as CSV
+                </div>
+                <p style="margin: 0; color: #78350f; font-size: 12px; line-height: 1.5;">
+                    The attached spreadsheet contains the complete details for all {{ $applications->count() }} candidate{{ $applications->count() === 1 ? '' : 's' }} — including phone, preferred locations, qualification, expected salary, notice period and more.
+                </p>
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
                 <a href="{{ url(route('client.applications.index', [], false)) }}"
                    style="background: #0443cd; color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px;">
                     Open Dashboard →
