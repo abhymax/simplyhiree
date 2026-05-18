@@ -43,19 +43,27 @@
     </head>
     <body class="font-sans antialiased bg-slate-50 text-slate-900">
         
+        @php
+            $usesSidebar = auth()->check() && (auth()->user()->hasRole('Superadmin') || auth()->user()->hasRole('Manager'));
+        @endphp
+
         <div class="flex flex-col min-h-screen">
-            
-            @include('layouts.navigation')
+
+            @if($usesSidebar)
+                @include('layouts.admin-sidebar')
+            @else
+                @include('layouts.navigation')
+            @endif
 
             @if (isset($header))
-                <header class="bg-white shadow-sm border-b border-slate-100 z-10 relative">
+                <header class="bg-white shadow-sm border-b border-slate-100 z-10 relative {{ $usesSidebar ? 'lg:ml-64' : '' }}">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
             @endif
 
-            <main class="flex-grow">
+            <main class="flex-grow {{ $usesSidebar ? 'lg:ml-64 pt-14 lg:pt-0' : '' }}">
                 @if (isset($slot))
                     {{ $slot }}
                 @else
