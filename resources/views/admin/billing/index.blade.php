@@ -31,9 +31,9 @@
                                 Commercial Sanity Check
                                 <span class="bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">{{ $missingCommercials->count() }}</span>
                             </h3>
-                            <p class="text-amber-100/90 text-sm mt-1">
+                            <p class="text-white text-sm mt-1.5 leading-relaxed">
                                 The following client{{ $missingCommercials->count() === 1 ? '' : 's' }}
-                                {{ $missingCommercials->count() === 1 ? 'has' : 'have' }} successful hires but no commercial contract configured yet. Invoice amounts and dates cannot be auto-resolved for them.
+                                {{ $missingCommercials->count() === 1 ? 'has' : 'have' }} successful hires but <span class="font-bold text-amber-200">no commercial contract configured</span> yet. Invoice amounts and dates cannot be auto-resolved for them.
                             </p>
                             <div class="mt-3 flex flex-wrap gap-2">
                                 @foreach($missingCommercials as $m)
@@ -159,19 +159,26 @@
                                             <div class="text-[10px] text-emerald-200 mt-1">{{ $row['paid_at']->format('d M, Y') }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4 text-right">
-                                        <div class="flex flex-col items-end gap-1.5">
-                                            <a href="{{ route('admin.applications.show', $app->id) }}" class="text-xs text-cyan-300 hover:text-white underline">View</a>
+                                    <td class="px-5 py-4">
+                                        <div class="flex flex-col items-stretch gap-2 min-w-[120px]">
+                                            <a href="{{ route('admin.applications.show', $app->id) }}"
+                                               class="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 rounded-lg transition">
+                                                <i class="fa-regular fa-eye"></i> View
+                                            </a>
                                             @if(!$row['invoice_generated_at'] && in_array($row['status'], ['Due to Raise', 'Maturing']))
                                                 <form method="POST" action="{{ route('admin.applications.markRaised', $app->id) }}">
                                                     @csrf @method('PATCH')
-                                                    <button type="submit" class="text-[11px] bg-blue-500 hover:bg-blue-400 text-white font-bold px-2.5 py-1 rounded">Mark Raised</button>
+                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg shadow-md shadow-blue-500/30 transition">
+                                                        <i class="fa-solid fa-file-invoice"></i> Mark Raised
+                                                    </button>
                                                 </form>
                                             @endif
                                             @if($row['payment_status'] !== 'paid' && $row['invoice_generated_at'])
                                                 <form method="POST" action="{{ route('admin.applications.markPaid', $app->id) }}">
                                                     @csrf @method('PATCH')
-                                                    <button type="submit" class="text-[11px] bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-2.5 py-1 rounded">Mark Paid</button>
+                                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-400 px-3 py-1.5 rounded-lg shadow-md shadow-emerald-500/30 transition">
+                                                        <i class="fa-solid fa-check"></i> Mark Paid
+                                                    </button>
                                                 </form>
                                             @endif
                                         </div>
