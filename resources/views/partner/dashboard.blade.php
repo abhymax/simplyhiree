@@ -118,8 +118,11 @@
                             <i class="fa-solid fa-trophy"></i> {{ $badge }}
                         </span>
                     @endif
-                    <a href="{{ route('partner.upgrade') }}" class="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-900 hover:from-yellow-400 hover:to-orange-400 transition shadow-md shadow-yellow-500/30">
-                        <i class="fa-solid fa-rocket mr-1"></i> Upgrade Plan ({{ $plan }})
+                    <a href="{{ route('partner.upgrade') }}"
+                       class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition"
+                       style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: #1e293b; box-shadow: 0 6px 18px -6px rgba(245,158,11,.5), inset 0 1px 0 rgba(255,255,255,.35);"
+                       onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+                        <i class="fa-solid fa-rocket"></i> Upgrade Plan ({{ $plan }})
                     </a>
                 </div>
                 <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
