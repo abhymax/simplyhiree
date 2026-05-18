@@ -16,7 +16,7 @@
     .fld input[type="text"], .fld input[type="email"], .fld input[type="url"], .fld input[type="tel"], .fld input[type="number"], .fld input[type="password"], .fld select { height: 54px !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
     .fld textarea { min-height: 120px !important; resize: vertical; padding: 1rem 1.5rem !important; }
     .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: #22d3ee !important; box-shadow: 0 0 0 3px rgba(34,211,238,.18); outline: none; }
-    .fld label { color: #bfdbfe; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: .35rem; }
+    .fld label:not(.btn-label) { color: #bfdbfe; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: .35rem; }
     .fld input::placeholder, .fld textarea::placeholder { color: rgba(191,219,254,.45); }
     .sec-icon { width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border-radius: .9rem; }
 </style>
@@ -55,7 +55,7 @@
              style="background: linear-gradient(135deg, #0c4a6e 0%, #312e81 55%, #4a1d96 100%);">
             <div class="absolute inset-0" style="background: radial-gradient(120% 60% at 0% 0%, rgba(255,255,255,.18), transparent 55%);"></div>
             <div class="absolute -right-12 -bottom-12 w-72 h-72 rounded-full" style="background: rgba(56,189,248,.18); filter: blur(60px);"></div>
-            <div class="relative gloss p-7 md:p-9 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
+            <div class="relative gloss px-8 md:px-12 py-8 md:py-10 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-center">
                 <div class="min-w-0">
                     <span class="px-3 py-1.5 rounded-full bg-white/15 border border-white/30 text-cyan-100 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg inline-block">
                         ✨ Client Workspace
@@ -274,13 +274,13 @@
                 <div class="md:col-span-1 space-y-6">
 
                     {{-- Logo --}}
-                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-7 ring-glow text-center">
-                        <div class="flex items-center justify-center gap-2 mb-4">
+                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl px-8 py-8 ring-glow text-center">
+                        <div class="flex items-center justify-center gap-3 mb-5">
                             <span class="sec-icon" style="background: linear-gradient(135deg, #06b6d4, #8b5cf6); width:34px; height:34px;"><i class="fa-solid fa-image text-white text-sm"></i></span>
                             <h3 class="text-lg font-extrabold text-white">Company Logo</h3>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-5">
                             @if(isset($profile->logo_path))
                                 <img src="{{ asset('storage/' . $profile->logo_path) }}" alt="Logo" class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-white/20 shadow-lg shadow-cyan-500/20">
                             @else
@@ -290,9 +290,11 @@
                             @endif
                         </div>
 
-                        <label for="logo" class="cursor-pointer inline-flex items-center px-4 py-2 rounded-xl font-bold text-xs text-white uppercase tracking-widest transition" style="background: linear-gradient(135deg, #06b6d4, #6366f1); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
-                            <i class="fa-solid fa-upload mr-2"></i> Upload New Logo
-                        </label>
+                        <div class="flex justify-center">
+                            <label for="logo" class="btn-label cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white uppercase tracking-widest transition" style="background: linear-gradient(135deg, #06b6d4, #6366f1); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5); display: inline-flex;">
+                                <i class="fa-solid fa-upload"></i> Upload New Logo
+                            </label>
+                        </div>
                         <input id="logo" name="logo" type="file" class="hidden" accept="image/*" onchange="document.getElementById('file-chosen').textContent = this.files[0].name">
                         <p id="file-chosen" class="text-xs text-blue-200 mt-3 italic">No file chosen</p>
                     </div>
