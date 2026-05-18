@@ -1565,7 +1565,10 @@ class AdminController extends Controller
             'cancelled' => \App\Models\PartnerCreditNote::where('status', 'cancelled')->count(),
         ];
 
-        $partners = \App\Models\User::role('partner')->orderBy('name')->get(['id','name']);
+        $partners = \App\Models\User::role('partner')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id','name']);
 
         return view('admin.credit_notes.index', compact('notes', 'counts', 'partners'));
     }
