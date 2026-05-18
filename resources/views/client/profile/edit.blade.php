@@ -12,9 +12,9 @@
     .neon-btn:hover { filter: brightness(1.1); box-shadow: 0 18px 40px -10px rgba(34,211,238,.7), inset 0 1px 0 rgba(255,255,255,.35); }
     .blob { animation: float 18s ease-in-out infinite alternate; }
     @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(20px,-20px) scale(1.05); } }
-    .fld input, .fld select, .fld textarea { background: rgba(2,6,23,.55) !important; border: 1px solid rgba(255,255,255,.18) !important; color: #fff !important; border-radius: .75rem; padding: .85rem 1.1rem !important; line-height: 1.4; font-size: .95rem; width: 100%; box-sizing: border-box; text-indent: 0; }
-    .fld input[type="text"], .fld input[type="email"], .fld input[type="url"], .fld input[type="tel"], .fld input[type="number"], .fld select { height: 52px; padding-left: 1.1rem !important; padding-right: 1.1rem !important; }
-    .fld textarea { min-height: 110px; resize: vertical; padding: .85rem 1.1rem !important; }
+    .fld input, .fld select, .fld textarea { background: rgba(2,6,23,.55) !important; border: 1px solid rgba(255,255,255,.18) !important; color: #fff !important; border-radius: .75rem !important; padding: 0.95rem 1.5rem !important; line-height: 1.4; font-size: .95rem; width: 100%; box-sizing: border-box; text-indent: 0; }
+    .fld input[type="text"], .fld input[type="email"], .fld input[type="url"], .fld input[type="tel"], .fld input[type="number"], .fld input[type="password"], .fld select { height: 54px !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+    .fld textarea { min-height: 120px !important; resize: vertical; padding: 1rem 1.5rem !important; }
     .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: #22d3ee !important; box-shadow: 0 0 0 3px rgba(34,211,238,.18); outline: none; }
     .fld label { color: #bfdbfe; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: .35rem; }
     .fld input::placeholder, .fld textarea::placeholder { color: rgba(191,219,254,.45); }
@@ -31,7 +31,7 @@
          style="width:28rem; height:28rem; background:#6366f1; filter:blur(140px); animation-delay:-12s;"></div>
     <div class="absolute inset-0" style="background-image: radial-gradient(rgba(255,255,255,.6) 1px, transparent 1px); background-size: 24px 24px; opacity: 0.07;"></div>
 
-    <div class="relative z-10 max-w-7xl mx-auto space-y-6">
+    <div class="relative z-10 max-w-screen-2xl mx-auto space-y-6">
 
         @if(session('success'))
             <div class="gloss bg-emerald-500/15 border border-emerald-400/40 text-emerald-100 p-4 rounded-2xl ring-glow">
@@ -86,7 +86,7 @@
                 <div class="md:col-span-2 space-y-6">
 
                     {{-- Brand Identity --}}
-                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-7 ring-glow">
+                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-8 ring-glow">
                         <div class="flex items-center gap-3 mb-5 border-b border-white/10 pb-4">
                             <span class="sec-icon" style="background: linear-gradient(135deg, #06b6d4, #6366f1);"><i class="fa-solid fa-id-badge text-white"></i></span>
                             <div>
@@ -139,7 +139,7 @@
                     </div>
 
                     {{-- Compliance --}}
-                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-7 ring-glow">
+                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-8 ring-glow">
                         <div class="flex items-center gap-3 mb-5 border-b border-white/10 pb-4">
                             <span class="sec-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);"><i class="fa-solid fa-shield-halved text-white"></i></span>
                             <div>
@@ -194,7 +194,7 @@
                     </div>
 
                     {{-- Other Documents --}}
-                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-7 ring-glow">
+                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-8 ring-glow">
                         <div class="flex items-center gap-3 mb-5 border-b border-white/10 pb-4">
                             <span class="sec-icon" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);"><i class="fa-solid fa-folder-open text-white"></i></span>
                             <div>
@@ -222,7 +222,7 @@
                     </div>
 
                     {{-- Billing & Contact --}}
-                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-7 ring-glow">
+                    <div class="panel gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl p-8 ring-glow">
                         <div class="flex items-center gap-3 mb-5 border-b border-white/10 pb-4">
                             <span class="sec-icon" style="background: linear-gradient(135deg, #10b981, #14b8a6);"><i class="fa-solid fa-address-card text-white"></i></span>
                             <div>
