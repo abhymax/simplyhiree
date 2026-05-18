@@ -3,6 +3,8 @@
         /* Force white calendar icon on date inputs */
         .date-white::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); cursor: pointer; }
         .date-white { color-scheme: dark; }
+        /* Admin-select inline forms start hidden no matter what */
+        form[id^="admin-select-"]:not(.is-open) { display: none !important; }
         /* Compact applications list */
         .apps-table thead th { padding-top: .75rem !important; padding-bottom: .75rem !important; }
         .apps-table tbody td { padding-top: .75rem !important; padding-bottom: .75rem !important; vertical-align: middle; }
@@ -269,7 +271,7 @@
 
                                             @if(strtolower($application->status) === 'approved' && !in_array($application->hiring_status, ['Selected', 'Joined']))
                                                 <button type="button"
-                                                    onclick="(function(f){ f.style.display = (f.style.display === 'flex') ? 'none' : 'flex'; })(document.getElementById('admin-select-{{ $application->id }}'))"
+                                                    onclick="(function(f){ f.classList.toggle('is-open'); f.style.display = f.classList.contains('is-open') ? 'flex' : 'none'; })(document.getElementById('admin-select-{{ $application->id }}'))"
                                                     class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold border border-emerald-400 px-3 py-1.5 whitespace-nowrap">
                                                     <i class="fa-solid fa-user-check"></i> Mark Selected (on behalf of client)
                                                 </button>
@@ -289,7 +291,7 @@
                                                         class="bg-slate-800 border border-white/20 rounded text-white text-xs p-1.5"></textarea>
                                                     <div class="flex gap-2">
                                                         <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded">Confirm Select</button>
-                                                        <button type="button" onclick="document.getElementById('admin-select-{{ $application->id }}').style.display = 'none'" class="text-xs text-slate-300 hover:text-white">Cancel</button>
+                                                        <button type="button" onclick="(function(f){ f.classList.remove('is-open'); f.style.display='none'; })(document.getElementById('admin-select-{{ $application->id }}'))" class="text-xs text-slate-300 hover:text-white">Cancel</button>
                                                     </div>
                                                 </form>
                                             @endif
