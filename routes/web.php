@@ -158,6 +158,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             
             Route::get('/partners/{user}/edit', [AdminController::class, 'editPartner'])->name('partners.edit');
             Route::patch('/partners/{user}', [AdminController::class, 'updatePartner'])->name('partners.update');
+            Route::patch('/partners/{user}/tier', [AdminController::class, 'updatePartnerTier'])->name('partners.tier.update');
         });
 
 

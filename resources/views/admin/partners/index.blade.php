@@ -79,12 +79,12 @@
                 {{-- Bulk action bar --}}
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-b border-white/10 bg-slate-900/40">
                     <div class="flex items-center gap-3 text-sm">
-                        <label class="inline-flex items-center gap-2 cursor-pointer text-purple-100 font-semibold">
+                        <label class="inline-flex items-center gap-2 cursor-pointer text-white font-semibold">
                             <input type="checkbox" id="partner-select-all" class="h-4 w-4 rounded border-white/30 bg-slate-800 text-purple-500 focus:ring-purple-400">
                             Select All On This Page
                         </label>
-                        <span class="text-slate-400">|</span>
-                        <span class="text-purple-100 font-semibold">Selected: <span id="partner-count" class="text-purple-300 font-bold">0</span></span>
+                        <span class="text-white/60">|</span>
+                        <span class="text-white font-semibold">Selected: <span id="partner-count" class="text-amber-300 font-bold">0</span></span>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <button type="button" data-action="approve" class="partner-bulk-btn inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold shadow-md transition border border-emerald-400/40 disabled:border-white/10" disabled>
@@ -107,6 +107,7 @@
                                 <th class="px-6 py-5">Partner Name</th>
                                 <th class="px-6 py-5">Mobile</th>
                                 <th class="px-6 py-5">Type</th>
+                                <th class="px-6 py-5">Tier</th>
                                 <th class="px-6 py-5">Status</th>
                                 <th class="px-6 py-5">Joined On</th>
                                 <th class="px-6 py-5 text-right">Actions</th>
@@ -143,6 +144,27 @@
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                                             {{ $type }}
                                         </span>
+                                    </td>
+
+                                    <td class="px-6 py-5">
+                                        @php
+                                            $tier = $user->partner_tier ?: 'Bronze';
+                                            $tierColors = [
+                                                'Bronze'  => 'bg-amber-700/30 text-amber-200 border-amber-600/40',
+                                                'Silver'  => 'bg-slate-400/20 text-slate-100 border-slate-300/40',
+                                                'Gold'    => 'bg-yellow-500/20 text-yellow-200 border-yellow-400/40',
+                                                'Diamond' => 'bg-cyan-500/20 text-cyan-100 border-cyan-300/40',
+                                            ];
+                                        @endphp
+                                        <form method="POST" action="{{ route('admin.partners.tier.update', $user->id) }}" class="inline-flex">
+                                            @csrf @method('PATCH')
+                                            <select name="partner_tier" onchange="this.form.submit()"
+                                                class="px-2.5 py-1 rounded-lg text-xs font-bold border cursor-pointer {{ $tierColors[$tier] ?? $tierColors['Bronze'] }}">
+                                                @foreach(['Bronze','Silver','Gold','Diamond'] as $t)
+                                                    <option value="{{ $t }}" {{ $tier === $t ? 'selected' : '' }} class="bg-slate-900 text-white">{{ $t }}</option>
+                                                @endforeach
+                                            </select>
+                                        </form>
                                     </td>
 
                                     <td class="px-6 py-5">

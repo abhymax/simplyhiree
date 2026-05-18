@@ -650,6 +650,19 @@ class AdminController extends Controller
         return view('admin.partners.edit', ['user' => $user, 'profile' => $user->partnerProfile]);
     }
 
+    public function updatePartnerTier(Request $request, User $user)
+    {
+        if (!$user->hasRole('partner')) abort(404);
+
+        $validated = $request->validate([
+            'partner_tier' => 'required|in:Bronze,Silver,Gold,Diamond',
+        ]);
+
+        $user->update(['partner_tier' => $validated['partner_tier']]);
+
+        return back()->with('success', "Tier updated to {$validated['partner_tier']} for {$user->name}.");
+    }
+
     public function updatePartner(Request $request, User $user)
     {
         if (!$user->hasRole('partner')) abort(404);
