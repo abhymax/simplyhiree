@@ -63,7 +63,8 @@
             </div>
         @endif
 
-        <div class="gloss bg-white/5 backdrop-blur-xl border border-white/15 rounded-3xl shadow-2xl ring-glow overflow-hidden">
+        <div class="gloss backdrop-blur-xl border border-white/15 rounded-3xl shadow-2xl ring-glow overflow-hidden"
+             style="background: linear-gradient(180deg, rgba(2,6,23,.85) 0%, rgba(15,23,42,.92) 100%);">
             <div class="relative p-8 border-b border-white/10 overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-fuchsia-500/10"></div>
                 <div class="absolute -right-12 -bottom-12 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl"></div>
