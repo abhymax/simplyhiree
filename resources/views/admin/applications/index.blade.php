@@ -269,13 +269,14 @@
 
                                             @if(strtolower($application->status) === 'approved' && !in_array($application->hiring_status, ['Selected', 'Joined']))
                                                 <button type="button"
-                                                    onclick="document.getElementById('admin-select-{{ $application->id }}').classList.toggle('hidden')"
+                                                    onclick="(function(f){ f.style.display = (f.style.display === 'flex') ? 'none' : 'flex'; })(document.getElementById('admin-select-{{ $application->id }}'))"
                                                     class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold border border-emerald-400 px-3 py-1.5 whitespace-nowrap">
                                                     <i class="fa-solid fa-user-check"></i> Mark Selected (on behalf of client)
                                                 </button>
                                                 <form id="admin-select-{{ $application->id }}" method="POST"
                                                       action="{{ route('admin.applications.adminSelect', $application->id) }}"
-                                                      class="hidden mt-1 flex flex-col gap-2 w-72 bg-slate-900/80 border border-emerald-400/40 p-3 rounded-lg text-left">
+                                                      style="display: none;"
+                                                      class="mt-1 flex-col gap-2 w-72 bg-slate-900/80 border border-emerald-400/40 p-3 rounded-lg text-left">
                                                     @csrf
                                                     <label class="text-[10px] text-emerald-200 font-bold uppercase tracking-wider">Joining Date *</label>
                                                     <input type="date" name="joining_date" required min="{{ date('Y-m-d') }}"
@@ -288,7 +289,7 @@
                                                         class="bg-slate-800 border border-white/20 rounded text-white text-xs p-1.5"></textarea>
                                                     <div class="flex gap-2">
                                                         <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded">Confirm Select</button>
-                                                        <button type="button" onclick="document.getElementById('admin-select-{{ $application->id }}').classList.add('hidden')" class="text-xs text-slate-300 hover:text-white">Cancel</button>
+                                                        <button type="button" onclick="document.getElementById('admin-select-{{ $application->id }}').style.display = 'none'" class="text-xs text-slate-300 hover:text-white">Cancel</button>
                                                     </div>
                                                 </form>
                                             @endif
