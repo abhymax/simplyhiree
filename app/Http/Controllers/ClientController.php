@@ -18,6 +18,8 @@ use App\Notifications\CandidateJoined;
 use App\Notifications\CandidateDidNotJoin;
 use App\Notifications\CandidateLeft;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
+use App\Services\AiSensyWhatsAppService;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Services\SuperadminActivityService;
@@ -554,9 +556,10 @@ class ClientController extends Controller
         ]);
 
         $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
-        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
+        $this->sendInterviewConfirmationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']));
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled — candidate has been notified on WhatsApp + email.');
     }
-    
+
     public function editInterviewDetails(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {
@@ -588,7 +591,90 @@ class ClientController extends Controller
             'interview_reminder_sent_at' => null,
         ]);
 
-        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview details updated successfully!');
+        $this->sendInterviewConfirmationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']), true);
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview updated — candidate has been re-notified.');
+    }
+
+    /**
+     * Push an immediate WhatsApp + email notification to the candidate
+     * with their interview time, company, location/link.
+     */
+    private function sendInterviewConfirmationToCandidate(JobApplication $application, bool $isUpdate = false): void
+    {
+        $whatsapp = app(AiSensyWhatsAppService::class);
+        $cand     = $application->candidate;
+        $direct   = $application->candidateUser;
+
+        $name = $cand
+            ? trim(($cand->first_name ?? '') . ' ' . ($cand->last_name ?? ''))
+            : ($direct?->name ?? 'Candidate');
+        $email = $cand?->email ?? $direct?->email ?? null;
+        $phone = $cand?->phone ?? optional($direct?->profile)->phone_number ?? null;
+
+        $job  = $application->job;
+        $company = $job?->company_name ?: (optional($job?->user)->name ?? 'the company');
+        if ($job && $job->is_company_confidential) $company = 'Confidential (details on call)';
+
+        $time = $application->interview_at?->format('h:i A, D d M Y') ?? 'TBD';
+        $where = $application->meeting_link
+            ?: ($application->interview_location ?: 'Details will be shared by the recruiter');
+        $verb = $isUpdate ? 'updated' : 'scheduled';
+
+        $body  = ($isUpdate ? "Hi {$name}, your interview time has been updated." : "Hi {$name}, your interview has been scheduled.") . "\n\n";
+        $body .= "🏢 Company: {$company}\n";
+        $body .= "💼 Role: " . ($job?->title ?? '—') . "\n";
+        $body .= "🕒 When: {$time}\n";
+        if ($application->meeting_link) {
+            $body .= "🔗 Join: {$application->meeting_link}\n";
+        } elseif ($application->interview_location) {
+            $body .= "📍 Where: {$application->interview_location}\n";
+        }
+        if ($application->client_notes) {
+            $body .= "\n📝 Note: {$application->client_notes}\n";
+        }
+        $body .= "\nGood luck!\n— SimplyHiree";
+
+        // --- WhatsApp via AiSensy ---
+        if ($phone) {
+            try {
+                $whatsapp->sendEventAlert(
+                    $phone,
+                    'interview_scheduled',
+                    'Interview ' . $verb,
+                    $body,
+                    ['template_params' => [
+                        $name,
+                        $job?->title ?? 'the role',
+                        $company,
+                        $time,
+                        $application->meeting_link ?: ($application->interview_location ?: 'TBD'),
+                    ]]
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Interview WA confirmation failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
+
+        // --- Email ---
+        if ($email) {
+            try {
+                Mail::send('client.interviews.email_confirmation', [
+                    'name'         => $name,
+                    'company'      => $company,
+                    'role'         => $job?->title ?? '—',
+                    'time'         => $time,
+                    'meeting_link' => $application->meeting_link,
+                    'location'     => $application->interview_location,
+                    'notes'        => $application->client_notes,
+                    'isUpdate'     => $isUpdate,
+                ], function ($m) use ($email, $name, $verb) {
+                    $m->to($email, $name)
+                      ->subject('[SimplyHiree] Your interview is ' . $verb);
+                });
+            } catch (\Throwable $e) {
+                \Log::warning('Interview email confirmation failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
     }
 
     /**
