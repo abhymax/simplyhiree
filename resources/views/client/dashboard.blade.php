@@ -1,6 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    html { scroll-behavior: smooth; }
+    @keyframes flashRing {
+        0%   { box-shadow: 0 0 0 0 rgba(59,130,246,.55); }
+        50%  { box-shadow: 0 0 0 14px rgba(59,130,246,.15); }
+        100% { box-shadow: 0 0 0 0 rgba(59,130,246,0);   }
+    }
+    .flash-target { animation: flashRing 1.4s ease-out 1; }
+</style>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
 
     {{-- DECORATIVE BACKGROUND GLOWS --}}
@@ -216,7 +225,7 @@
             .jobs-table .job-icon { width: 36px !important; height: 36px !important; font-size: .9rem !important; }
             .status-pill { padding: .35rem .7rem !important; font-size: .7rem !important; gap: .35rem !important; }
         </style>
-        <div id="my-jobs" class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden">
+        <div id="my-jobs" class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden" style="scroll-margin-top: 96px;">
             <div class="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between gap-3 md:items-center">
                 <div>
                     <h3 class="text-lg font-bold text-white flex items-center gap-3">
@@ -320,4 +329,22 @@
 
     </div>
 </div>
+<script>
+    // When any tile that targets #my-jobs is clicked, scroll smoothly to the
+    // table and flash a blue ring so the user clearly sees the destination.
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('a[href="#my-jobs"]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                const target = document.getElementById('my-jobs');
+                if (!target) return;
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target.classList.remove('flash-target');
+                void target.offsetWidth; // force reflow so animation can restart
+                target.classList.add('flash-target');
+                history.replaceState(null, '', '#my-jobs');
+            });
+        });
+    });
+</script>
 @endsection
