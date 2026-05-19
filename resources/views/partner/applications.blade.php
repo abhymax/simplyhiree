@@ -74,7 +74,13 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-5">
-                                    <div class="text-amber-300 font-bold">{{ $application->job->company_name ?? 'N/A' }}</div>
+                                    <div class="text-amber-300 font-bold">
+                                        @if(optional($application->job)->is_company_confidential)
+                                            <i class="fa-solid fa-user-secret mr-1"></i> Confidential Client
+                                        @else
+                                            {{ $application->job->company_name ?? 'N/A' }}
+                                        @endif
+                                    </div>
                                     <div class="text-blue-200 text-xs">{{ $application->job->location ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-5">

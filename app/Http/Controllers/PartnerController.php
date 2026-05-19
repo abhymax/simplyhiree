@@ -158,6 +158,12 @@ class PartnerController extends Controller
                                 ->latest()
                                 ->paginate(20);
 
+        // Strip fields partners must not see (client billing, deal value, etc.)
+        $applications->getCollection()->each(function ($app) {
+            $app->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat']);
+            if ($app->job) $app->job->makeHidden(['user_id', 'invoice_amount']);
+        });
+
         return view('partner.applications', ['applications' => $applications]);
     }
 
@@ -246,7 +252,7 @@ class PartnerController extends Controller
         ->paginate(10)
         ->appends($request->query());
 
-        // --- Calculate Stats ---
+        // --- Calculate Stats AND strip fields partners should never see ---
         $jobs->each(function ($job) {
             $stats = [
                 'applied' => $job->jobApplications->count(),
@@ -256,6 +262,12 @@ class PartnerController extends Controller
                 'joined' => $job->jobApplications->where('joined_status', 'Joined')->count(),
             ];
             $job->stats = (object)$stats;
+            // Hide client/billing fields. Partners only need to see the
+            // partner-payout amount, never the full deal value.
+            $job->makeHidden(['user_id', 'invoice_amount']);
+            foreach ($job->jobApplications as $app) {
+                $app->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat']);
+            }
         });
 
         // --- FIX: Normalize Filter Options ---
@@ -292,8 +304,17 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
 
-        // 1. Get Job Details (Eager load using 'category' alias)
-        $job->load(['experienceLevel', 'educationLevel', 'category', 'user']);
+        // 1. Get Job Details. We DELIBERATELY do not eager-load the 'user'
+        //    relation here — that's the client owner, and partners should not
+        //    see client contact details (email/phone/address).
+        $job->load(['experienceLevel', 'educationLevel', 'category']);
+
+        // Also strip any sensitive fields from the model that might be
+        // dumped to the view by accident. Partners should never see:
+        //   - invoice_amount / fee_percent (deal value with client)
+        //   - client_notes (private notes between client and admin)
+        //   - user_id of the client owner
+        $job->makeHidden(['user_id', 'invoice_amount']);
 
         // 2. Fetch Already Applied Candidates for this Partner
         $appliedApplications = JobApplication::where('job_id', $job->id)

@@ -186,6 +186,29 @@ class Job extends Model
     }
 
     /**
+     * Display the company name with confidentiality respected.
+     * Use this everywhere partners/vendors/candidates see the job.
+     */
+    public function displayCompanyName(?string $confidentialLabel = 'Confidential Client'): string
+    {
+        if ($this->is_company_confidential) {
+            return $confidentialLabel;
+        }
+        return $this->company_name ?: 'SimplyHiree Client';
+    }
+
+    /**
+     * Returns the company website only if the job is NOT confidential.
+     * Always null when confidential — so partners can't side-channel
+     * the company identity through the link.
+     */
+    public function displayCompanyWebsite(): ?string
+    {
+        if ($this->is_company_confidential) return null;
+        return $this->company_website ?: null;
+    }
+
+    /**
      * Partners specifically EXCLUDED from seeing this job.
      * Matches migration table: 'job_partner_exclusions'
      */

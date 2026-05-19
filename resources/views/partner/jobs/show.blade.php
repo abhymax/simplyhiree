@@ -34,12 +34,16 @@
 
                     <div class="flex flex-wrap items-center gap-y-2 gap-x-6 text-slate-100 text-sm md:text-base mt-3">
                         <span class="flex items-center font-medium">
-                            <i class="fa-regular fa-building mr-2 text-blue-300"></i> {{ $job->company_name }}
+                            @if($job->is_company_confidential)
+                                <i class="fa-solid fa-user-secret mr-2 text-amber-300"></i> Confidential Client
+                            @else
+                                <i class="fa-regular fa-building mr-2 text-blue-300"></i> {{ $job->company_name }}
+                            @endif
                         </span>
                         <span class="flex items-center font-medium">
                             <i class="fa-solid fa-location-dot mr-2 text-blue-300"></i> {{ $job->location }}
                         </span>
-                        @if($job->company_website)
+                        @if(!$job->is_company_confidential && $job->company_website)
                             <a href="{{ $job->company_website }}" target="_blank" class="flex items-center text-blue-200 hover:text-white underline transition">
                                 <i class="fa-solid fa-link mr-2"></i> Company Website
                             </a>

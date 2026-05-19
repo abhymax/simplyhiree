@@ -123,7 +123,13 @@
                                         {{ $job->title }}
                                     </a>
                                 </h3>
-                                <p class="text-amber-300 font-bold mt-1">{{ $job->company_name }}</p>
+                                <p class="text-amber-300 font-bold mt-1">
+                                    @if($job->is_company_confidential)
+                                        <i class="fa-solid fa-user-secret mr-1"></i> Confidential Client
+                                    @else
+                                        {{ $job->company_name }}
+                                    @endif
+                                </p>
 
                                 <div class="flex flex-wrap items-center gap-4 mt-3 text-sm text-blue-100">
                                     <span class="flex items-center"><i class="fa-solid fa-location-dot mr-1.5 text-cyan-300"></i> {{ $job->location }}</span>

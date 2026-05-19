@@ -159,7 +159,13 @@
                 <div class="flex flex-col md:flex-row justify-between items-start gap-5">
                     <div>
                         <h1 class="text-3xl md:text-4xl font-extrabold text-white">{{ $job->title }}</h1>
-                        <p class="text-xl text-blue-100 mt-1">{{ $job->company_name }}</p>
+                        <p class="text-xl text-blue-100 mt-1">
+                            @if($job->is_company_confidential)
+                                <i class="fa-solid fa-user-secret mr-1"></i> Confidential Client
+                            @else
+                                {{ $job->company_name }}
+                            @endif
+                        </p>
                         <div class="flex flex-wrap items-center mt-3 text-sm text-blue-100 gap-4">
                             <span class="flex items-center"><i class="fa-solid fa-location-dot mr-2 text-cyan-300"></i> {{ $job->location }}</span>
                             <span class="flex items-center"><i class="fa-solid fa-briefcase mr-2 text-cyan-300"></i> {{ $job->job_type }}</span>
@@ -277,7 +283,7 @@
                             </div>
                         @endif
 
-                        @if($job->company_website)
+                        @if($job->company_website && !$job->is_company_confidential)
                             <a href="{{ $job->company_website }}" target="_blank" class="fx-btn block w-full text-center border-2 border-white/20 text-white font-bold py-3 rounded-xl hover:bg-white/10 hover:text-cyan-300 transition">
                                 Visit Website <i class="fa-solid fa-external-link-alt ml-1"></i>
                             </a>
