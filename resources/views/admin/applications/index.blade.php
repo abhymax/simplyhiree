@@ -123,9 +123,10 @@
                     </div>
                 @endif
 
-                {{-- TRACKER DOWNLOAD FORM (wraps table + action bar) --}}
+                {{-- Tracker Download form lives standalone (not wrapping the table) because the table rows now contain their own forms (admin-select-on-behalf), and HTML disallows nested forms.  Checkboxes inside the table associate themselves via form="tracker-form". --}}
                 <form method="POST" action="{{ route('admin.applications.tracker-export') }}" id="tracker-form">
                     @csrf
+                </form>
 
                     {{-- Action bar --}}
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-b border-white/10 bg-slate-900/40">
@@ -139,7 +140,7 @@
                             <span class="text-slate-400 text-xs hidden md:inline">(Max 200 per export)</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button type="submit" id="tracker-submit" disabled
+                            <button type="submit" form="tracker-form" id="tracker-submit" disabled
                                 class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition border border-emerald-400/40 disabled:border-white/10">
                                 <i class="fa-solid fa-file-arrow-down"></i> Tracker Download
                             </button>
@@ -177,7 +178,7 @@
                                 @endphp
                                 <tr class="group hover:bg-white/10 transition-all duration-200 transform hover:scale-[1.005] cursor-default border-l-4 border-transparent hover:border-cyan-400">
                                     <td class="px-4 py-5 align-top">
-                                        <input type="checkbox" name="ids[]" value="{{ $application->id }}" class="tracker-row-cb h-4 w-4 rounded border-white/30 bg-slate-800 text-cyan-500 focus:ring-cyan-400">
+                                        <input type="checkbox" form="tracker-form" name="ids[]" value="{{ $application->id }}" class="tracker-row-cb h-4 w-4 rounded border-white/30 bg-slate-800 text-cyan-500 focus:ring-cyan-400">
                                     </td>
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
@@ -314,8 +315,7 @@
                         </tbody>
                     </table>
                 </div>
-                </form>
-                {{-- /TRACKER DOWNLOAD FORM --}}
+                {{-- /TRACKER DOWNLOAD TABLE --}}
 
                 {{-- PAGINATION FIX (Forces White Text) --}}
                 <div class="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
@@ -354,7 +354,8 @@
         const counter   = document.getElementById('tracker-count');
         const form      = document.getElementById('tracker-form');
         if (!form) return;
-        const rowCbs    = () => Array.from(form.querySelectorAll('.tracker-row-cb'));
+        // Row checkboxes are now OUTSIDE the form (linked via form="tracker-form")
+        const rowCbs    = () => Array.from(document.querySelectorAll('.tracker-row-cb'));
 
         const updateState = () => {
             const checked = rowCbs().filter(c => c.checked);
