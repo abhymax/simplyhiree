@@ -51,8 +51,16 @@
                                 @if($i->status === 'joined' && $i->joined_at)<div class="text-[10px] text-emerald-200 mt-1">on {{ $i->joined_at->format('d M, Y') }}</div>@endif
                             </td>
                             <td class="px-5 py-3 text-xs">
-                                @php $link = url('/register?invite=' . $i->invite_token); @endphp
-                                <code class="bg-slate-800 border border-white/10 rounded px-2 py-1 text-cyan-200 select-all break-all">{{ $link }}</code>
+                                @php $link = url('/register/partner?invite=' . $i->invite_token); @endphp
+                                <div class="flex items-center gap-2">
+                                    <code id="invite-link-{{ $i->id }}" class="flex-1 bg-slate-800 border border-white/10 rounded px-2 py-1 text-cyan-200 select-all break-all">{{ $link }}</code>
+                                    <button type="button"
+                                            onclick="(function(btn){ const el = document.getElementById('invite-link-{{ $i->id }}'); navigator.clipboard.writeText(el.textContent.trim()).then(() => { btn.innerHTML = '<i class=\'fa-solid fa-check\'></i>'; btn.classList.add('bg-emerald-600'); setTimeout(() => { btn.innerHTML = '<i class=\'fa-regular fa-copy\'></i>'; btn.classList.remove('bg-emerald-600'); }, 1500); }).catch(() => alert('Copy failed — please select the text manually.')); })(this)"
+                                            title="Copy link"
+                                            class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400 transition">
+                                        <i class="fa-regular fa-copy"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty

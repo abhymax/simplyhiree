@@ -22,9 +22,31 @@ class RegisteredUserController extends Controller
     /**
      * Show the partner registration form.
      */
-    public function showPartnerRegistrationForm(): View
+    public function showPartnerRegistrationForm(Request $request): View
     {
-        return view('auth.register_partner');
+        $inviteToken  = $request->query('invite');
+        $invitedBy    = null;
+        $prefillName  = null;
+        $prefillEmail = null;
+        $prefillPhone = null;
+
+        if ($inviteToken) {
+            $invite = \App\Models\ClientVendorInvitation::where('invite_token', $inviteToken)
+                ->where('status', 'pending')
+                ->first();
+            if ($invite) {
+                $invitedBy    = optional(\App\Models\User::find($invite->client_id))->name;
+                $prefillName  = $invite->name;
+                $prefillEmail = $invite->email;
+                $prefillPhone = $invite->phone;
+            } else {
+                $inviteToken = null; // bad/used token; treat as plain signup
+            }
+        }
+
+        return view('auth.register_partner', compact(
+            'inviteToken', 'invitedBy', 'prefillName', 'prefillEmail', 'prefillPhone'
+        ));
     }
 
     /**
@@ -44,7 +66,17 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'company_type' => ['required', 'string', 'in:Placement Agency,Freelancer,Recruiter'],
             'otp_verification_token' => ['nullable', 'string'],
+            'invite_token' => ['nullable', 'string', 'size:40'],
         ]);
+
+        // Resolve the invite (if any) BEFORE creating the user so we can hook
+        // the new partner to the inviting client.
+        $invite = null;
+        if ($request->filled('invite_token')) {
+            $invite = \App\Models\ClientVendorInvitation::where('invite_token', $request->invite_token)
+                ->where('status', 'pending')
+                ->first();
+        }
 
         $phone = $otpService->normalizePhone($request->phone_number);
         $verificationToken = trim((string) $request->input('otp_verification_token', ''));
@@ -79,6 +111,28 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
         $activityService->logUserSignup($user, 'partner', 'web');
+
+        // If this partner came in via a client's invite link, link them to
+        // that client and mark the invitation as joined.
+        if ($invite) {
+            try {
+                $invite->update([
+                    'status'            => 'joined',
+                    'joined_partner_id' => $user->id,
+                    'joined_at'         => now(),
+                ]);
+                // Also auto-add to the inviting client's preferred vendors
+                // so they show up immediately in the client's Vendors page.
+                $client = \App\Models\User::find($invite->client_id);
+                if ($client && method_exists($client, 'preferredVendors')) {
+                    $client->preferredVendors()->syncWithoutDetaching([
+                        $user->id => ['added_at' => now()],
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to link partner ' . $user->id . ' to invite ' . $invite->id . ': ' . $e->getMessage());
+            }
+        }
 
         // Do NOT login automatically. Redirect to login with a message.
         return redirect()->route('login')->with('status', 'Registration successful! Your account is pending Admin approval.');

@@ -2,15 +2,27 @@
     <form method="POST" action="{{ route('register.partner') }}">
         @csrf
 
+        @if(!empty($inviteToken))
+            <div class="mb-4 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-800 text-sm">
+                <i class="fa-solid fa-handshake mr-1"></i>
+                You've been invited to join SimplyHiree
+                @if(!empty($invitedBy))
+                    by <strong>{{ $invitedBy }}</strong>
+                @endif.
+                Complete the form below — you'll be automatically connected to them after admin approval.
+            </div>
+            <input type="hidden" name="invite_token" value="{{ $inviteToken }}">
+        @endif
+
         <div>
             <x-input-label for="name" :value="__('Agency / Partner Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $prefillName ?? '')" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <div class="mt-4">
             <x-input-label for="phone_number" :value="__('Phone Number (India)')" />
-            <x-text-input id="phone_number" class="block mt-1 w-full" type="tel" name="phone_number" :value="old('phone_number')" required autocomplete="tel" />
+            <x-text-input id="phone_number" class="block mt-1 w-full" type="tel" name="phone_number" :value="old('phone_number', $prefillPhone ?? '')" required autocomplete="tel" />
             <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
         </div>
 
@@ -29,7 +41,7 @@
 
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $prefillEmail ?? '')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
