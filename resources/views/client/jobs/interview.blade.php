@@ -34,6 +34,32 @@
                     @error('interview_at') <p class="mt-2 text-rose-300 text-sm">{{ $message }}</p> @enderror
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label for="meeting_provider" class="block text-sm text-blue-100">Meeting Type</label>
+                        <select id="meeting_provider" name="meeting_provider" class="block mt-1 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white"
+                            onchange="document.getElementById('meeting_link_wrap').style.display = (this.value==='inperson') ? 'none':'block'; document.getElementById('inperson_wrap').style.display = (this.value==='inperson')?'block':'none';">
+                            @foreach(['zoom'=>'🎥 Zoom','meet'=>'📹 Google Meet','teams'=>'💼 Microsoft Teams','inperson'=>'📍 In-person','other'=>'🔗 Other'] as $k=>$v)
+                                <option value="{{ $k }}" {{ old('meeting_provider', $application->meeting_provider ?? 'meet') === $k ? 'selected' : '' }}>{{ $v }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div id="meeting_link_wrap" style="display: {{ ($application->meeting_provider ?? 'meet') === 'inperson' ? 'none' : 'block' }};">
+                        <label for="meeting_link" class="block text-sm text-blue-100">Meeting Link</label>
+                        <input id="meeting_link" name="meeting_link" type="url" placeholder="Paste Zoom / Meet / Teams URL"
+                            value="{{ old('meeting_link', $application->meeting_link) }}"
+                            class="block mt-1 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                        <p class="text-xs text-blue-200/70 mt-1">Open <a href="https://meet.google.com/new" target="_blank" class="underline text-cyan-300">meet.google.com/new</a> or your Zoom dashboard, then paste the URL here.</p>
+                    </div>
+                </div>
+
+                <div id="inperson_wrap" class="mt-4" style="display: {{ ($application->meeting_provider ?? 'meet') === 'inperson' ? 'block' : 'none' }};">
+                    <label for="interview_location" class="block text-sm text-blue-100">Address / Location</label>
+                    <input id="interview_location" name="interview_location" type="text" placeholder="Office address, room, floor..."
+                        value="{{ old('interview_location', $application->interview_location) }}"
+                        class="block mt-1 w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                </div>
+
                 <div class="mt-4">
                     <label for="client_notes" class="block text-sm text-blue-100">Interview Notes (Optional)</label>
                     <textarea id="client_notes" name="client_notes" rows="4"

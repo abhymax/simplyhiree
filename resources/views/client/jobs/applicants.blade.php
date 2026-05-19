@@ -132,13 +132,17 @@
                                             </form>
                                         </div>
                                     @elseif($app->hiring_status == 'Interview Scheduled')
-                                        <div class="flex justify-end gap-2">
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            @if($app->meeting_link)
+                                                <a href="{{ $app->meeting_link }}" target="_blank" class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-solid fa-video"></i> Join</a>
+                                            @endif
                                             <a href="{{ route('client.applications.interview.edit', $app) }}" class="fx-btn bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Edit</a>
                                             <form action="{{ route('client.applications.interview.appeared', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Appeared</button></form>
                                             <form action="{{ route('client.applications.interview.noshow', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2 px-3 rounded-lg">No-Show</button></form>
                                         </div>
                                     @elseif($app->hiring_status == 'Interviewed' || $app->hiring_status == 'No-Show')
-                                        <div class="flex justify-end gap-2">
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            <a href="{{ route('client.applications.feedback.create', $app) }}" class="fx-btn bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-regular fa-clipboard"></i> {{ $app->interview_feedback ? 'Edit Feedback' : 'Add Feedback' }}</a>
                                             <a href="{{ route('client.applications.select.show', $app) }}" class="fx-btn bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Select</a>
                                             <form action="{{ route('client.applications.reject', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Reject</button></form>
                                         </div>

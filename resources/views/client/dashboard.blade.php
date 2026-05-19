@@ -135,7 +135,28 @@
                 <p class="text-slate-400 text-xs">Invoices &amp; payments</p>
             </a>
 
-            {{-- 5. Profile --}}
+            {{-- 5. Calendar --}}
+            <a href="{{ route('client.interviews.calendar') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                <div class="h-10 w-10 bg-cyan-500/20 text-cyan-400 rounded-lg flex items-center justify-center mb-3">
+                    <i class="fa-regular fa-calendar"></i>
+                </div>
+                <h4 class="font-bold text-white">Calendar</h4>
+                <p class="text-slate-400 text-xs">Upcoming interviews</p>
+            </a>
+        </div>
+
+        {{-- SECONDARY Quick Actions --}}
+        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <span class="w-1.5 h-8 bg-purple-500 rounded-full"></span> More Actions
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-12">
+            <a href="{{ route('client.broadcasts.index') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                <div class="h-10 w-10 bg-orange-500/20 text-orange-400 rounded-lg flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <h4 class="font-bold text-white">Broadcast</h4>
+                <p class="text-slate-400 text-xs">Message all vendors</p>
+            </a>
             <a href="{{ route('client.profile.company') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-teal-500/20 text-teal-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-building"></i>

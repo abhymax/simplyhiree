@@ -147,3 +147,11 @@ Schedule::command('clients:approved-applications-digest')
     ->timezone('Asia/Kolkata')
     ->dailyAt('08:00')
     ->withoutOverlapping();
+
+// Send WhatsApp reminders to candidates whose interview is starting in the
+// next 60 minutes. Runs every 10 minutes so reminders go out ~50-60 min ahead.
+Schedule::command('interviews:send-reminders --window=60')
+    ->timezone('Asia/Kolkata')
+    ->everyTenMinutes()
+    ->between('06:00', '22:00')
+    ->withoutOverlapping();

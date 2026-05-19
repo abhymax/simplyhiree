@@ -164,6 +164,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/partners/{user}/edit', [AdminController::class, 'editPartner'])->name('partners.edit');
             Route::patch('/partners/{user}', [AdminController::class, 'updatePartner'])->name('partners.update');
             Route::patch('/partners/{user}/tier', [AdminController::class, 'updatePartnerTier'])->name('partners.tier.update');
+
+            // Broadcast to vendors
+            Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
+            Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');
+            Route::get('/broadcasts/{broadcast}', [\App\Http\Controllers\VendorBroadcastController::class, 'show'])->name('broadcasts.show');
         });
 
 
@@ -263,6 +268,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/applications/{application}/request-replacement', [ClientController::class, 'requestCandidateReplacement'])->name('applications.request-replacement');
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
         Route::get('/applications', [ClientController::class, 'listAllApplications'])->name('applications.index');
+
+        // Broadcast to my connected vendors
+        Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
+        Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');
+        Route::get('/broadcasts/{broadcast}', [\App\Http\Controllers\VendorBroadcastController::class, 'show'])->name('broadcasts.show');
         
         // Profile Management
         Route::get('/profile/company', [ClientProfileController::class, 'edit'])->name('profile.company');
@@ -279,6 +289,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/vendors/assign-request', [\App\Http\Controllers\ClientVendorController::class, 'requestAssignmentStore'])->name('vendors.assign-request.store');
         Route::get('/vendor-performance', [\App\Http\Controllers\ClientVendorController::class, 'performance'])->name('vendors.performance');
         Route::get('/interviews/today', [ClientController::class, 'dailySchedule'])->name('interviews.today');
+        Route::get('/interviews/calendar', [ClientController::class, 'interviewCalendar'])->name('interviews.calendar');
+
+        // Interview feedback (post-interview)
+        Route::get('/applications/{application}/feedback', [ClientController::class, 'showInterviewFeedbackForm'])->name('applications.feedback.create');
+        Route::post('/applications/{application}/feedback', [ClientController::class, 'submitInterviewFeedback'])->name('applications.feedback.store');
 
         // --- INTERVIEW & HIRING WORKFLOW ---
         

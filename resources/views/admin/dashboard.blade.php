@@ -199,6 +199,15 @@
                     <p class="text-slate-400 text-xs">View Analytics</p>
                 </a>
                 @endcan
+
+                {{-- 6. Broadcast --}}
+                <a href="{{ route('admin.broadcasts.index') }}" class="group bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+                    <div class="h-10 w-10 bg-orange-500/20 text-orange-400 rounded-lg flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <h4 class="font-bold text-white">Broadcast</h4>
+                    <p class="text-slate-400 text-xs">Message all vendors</p>
+                </a>
             </div>
 
             {{-- SECTION 3: LIVE METRICS (5 Items) --}}

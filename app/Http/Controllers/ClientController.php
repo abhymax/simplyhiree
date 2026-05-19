@@ -536,16 +536,23 @@ class ClientController extends Controller
             abort(403);
         }
         $validated = $request->validate([
-            'interview_at' => 'required|date|after:now',
-            'client_notes' => 'nullable|string|max:1000',
+            'interview_at'        => 'required|date|after:now',
+            'meeting_provider'    => 'nullable|in:zoom,meet,teams,inperson,other',
+            'meeting_link'        => 'nullable|url|max:500',
+            'interview_location'  => 'nullable|string|max:255',
+            'client_notes'        => 'nullable|string|max:1000',
         ]);
-        
+
         $application->update([
-            'hiring_status' => 'Interview Scheduled',
-            'interview_at' => Carbon::parse($validated['interview_at']),
-            'client_notes' => $validated['client_notes'],
+            'hiring_status'      => 'Interview Scheduled',
+            'interview_at'       => Carbon::parse($validated['interview_at']),
+            'meeting_provider'   => $validated['meeting_provider'] ?? null,
+            'meeting_link'       => $validated['meeting_link'] ?? null,
+            'interview_location' => $validated['interview_location'] ?? null,
+            'client_notes'       => $validated['client_notes'] ?? null,
+            'interview_reminder_sent_at' => null, // Reset so the cron re-sends a reminder
         ]);
-        
+
         $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview scheduled successfully!');
     }
@@ -565,16 +572,68 @@ class ClientController extends Controller
             abort(403);
         }
         $validated = $request->validate([
-            'interview_at' => 'required|date|after:now',
-            'client_notes' => 'nullable|string|max:1000',
+            'interview_at'        => 'required|date|after:now',
+            'meeting_provider'    => 'nullable|in:zoom,meet,teams,inperson,other',
+            'meeting_link'        => 'nullable|url|max:500',
+            'interview_location'  => 'nullable|string|max:255',
+            'client_notes'        => 'nullable|string|max:1000',
         ]);
-        
+
         $application->update([
-            'interview_at' => Carbon::parse($validated['interview_at']),
-            'client_notes' => $validated['client_notes'],
+            'interview_at'       => Carbon::parse($validated['interview_at']),
+            'meeting_provider'   => $validated['meeting_provider'] ?? null,
+            'meeting_link'       => $validated['meeting_link'] ?? null,
+            'interview_location' => $validated['interview_location'] ?? null,
+            'client_notes'       => $validated['client_notes'] ?? null,
+            'interview_reminder_sent_at' => null,
         ]);
-        
+
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview details updated successfully!');
+    }
+
+    /**
+     * Interview feedback form (client-side).
+     */
+    public function showInterviewFeedbackForm(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) abort(403);
+        $application->load(['job', 'candidate', 'candidateUser']);
+        return view('client.jobs.interview_feedback', compact('application'));
+    }
+
+    public function submitInterviewFeedback(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) abort(403);
+        $validated = $request->validate([
+            'interview_rating'         => 'required|integer|min:1|max:5',
+            'interview_feedback'       => 'required|string|max:5000',
+            'interview_recommendation' => 'required|in:select,reject,second_round,on_hold',
+        ]);
+
+        $application->update([
+            'interview_rating'         => $validated['interview_rating'],
+            'interview_feedback'       => $validated['interview_feedback'],
+            'interview_feedback_at'    => now(),
+            'interview_recommendation' => $validated['interview_recommendation'],
+            'hiring_status'            => $application->hiring_status === 'Interview Scheduled' ? 'Interviewed' : $application->hiring_status,
+        ]);
+
+        return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview feedback saved.');
+    }
+
+    /**
+     * Interview calendar — all upcoming + past interviews this client owns.
+     */
+    public function interviewCalendar()
+    {
+        $clientId = Auth::id();
+        $events = JobApplication::with(['job', 'candidate', 'candidateUser'])
+            ->whereHas('job', fn ($q) => $q->where('user_id', $clientId))
+            ->whereNotNull('interview_at')
+            ->orderBy('interview_at', 'asc')
+            ->get();
+
+        return view('client.interviews.calendar', compact('events'));
     }
 
     public function markAsAppeared(JobApplication $application)
