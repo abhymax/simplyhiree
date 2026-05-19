@@ -77,7 +77,7 @@
         </div>
 
         <div class="mt-6 text-center text-slate-300 text-sm">
-            Or email us directly at <a href="mailto:{{ config('mail.from.address') }}" class="text-blue-300 hover:text-white font-semibold">{{ config('mail.from.address') }}</a>
+            Or email us directly at <a href="mailto:{{ env('SUPPORT_EMAIL', 'support@simplyhiree.com') }}" class="text-blue-300 hover:text-white font-semibold">{{ env('SUPPORT_EMAIL', 'support@simplyhiree.com') }}</a>
         </div>
     </div>
 </div>

@@ -35,7 +35,7 @@ class SupportController extends Controller
             }
         }
 
-        $to = config('mail.from.address', 'simplyhiree1@gmail.com');
+        $to = env('SUPPORT_EMAIL', 'support@simplyhiree.com');
 
         $data = [
             'sender'         => $user,
