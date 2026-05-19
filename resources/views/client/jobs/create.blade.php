@@ -14,6 +14,39 @@
     .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.1); }
     .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #60a5fa; }
     .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #60a5fa; }
+
+    /* Force all inputs/selects/textareas inside the blue cards to be dark with white text */
+    .post-job-form input[type="text"],
+    .post-job-form input[type="email"],
+    .post-job-form input[type="url"],
+    .post-job-form input[type="number"],
+    .post-job-form input[type="date"],
+    .post-job-form input[type="tel"],
+    .post-job-form input[type="search"],
+    .post-job-form select,
+    .post-job-form textarea {
+        background-color: rgba(2, 6, 23, 0.55) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: #ffffff !important;
+        border-radius: 0.75rem !important;
+        padding: 0.65rem 0.9rem !important;
+        font-size: 0.95rem !important;
+    }
+    .post-job-form input::placeholder,
+    .post-job-form textarea::placeholder {
+        color: rgba(255, 255, 255, 0.55) !important;
+    }
+    .post-job-form input:focus,
+    .post-job-form select:focus,
+    .post-job-form textarea:focus {
+        outline: none !important;
+        border-color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25) !important;
+    }
+    .post-job-form input[type="date"] { color-scheme: dark; }
+    .post-job-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); }
+    /* Dropdown <option> text should be readable when the menu opens (default browser uses page bg) */
+    .post-job-form select option { background: #0f172a; color: #ffffff; }
 </style>
 @php
     $isEditMode = ($formMode ?? 'create') === 'edit' && isset($job) && $job;
@@ -65,7 +98,7 @@
         @endif
 
         <div>
-                <form action="{{ $formAction }}" method="POST">
+                <form action="{{ $formAction }}" method="POST" class="post-job-form">
                     @csrf
                     @if($isEditMode)
                         @method('PATCH')
