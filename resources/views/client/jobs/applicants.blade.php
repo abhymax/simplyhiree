@@ -69,7 +69,13 @@
                                         <div><span class="text-cyan-300 text-xs uppercase font-bold">Skills:</span> {{ $app->candidate->skills ?? 'N/A' }}</div>
                                         <div><span class="text-cyan-300 text-xs uppercase font-bold">Exp:</span> {{ $app->candidate->experience_status ?? 'N/A' }}</div>
                                         <div><span class="text-cyan-300 text-xs uppercase font-bold">Edu:</span> {{ $app->candidate->education_level ?? 'N/A' }}</div>
-                                        <div><span class="text-cyan-300 text-xs uppercase font-bold">CTC:</span> {{ $app->candidate->expected_ctc ? '₹'.number_format($app->candidate->expected_ctc,2) : 'N/A' }}</div>
+                                        <div><span class="text-cyan-300 text-xs uppercase font-bold">CTC:</span>
+                                            @php
+                                                $ctcRaw = $app->candidate->expected_ctc ?? null;
+                                                $ctcNum = is_numeric($ctcRaw) ? (float) $ctcRaw : (float) preg_replace('/[^0-9.]/', '', (string) $ctcRaw);
+                                            @endphp
+                                            {{ $ctcRaw ? '₹'.number_format($ctcNum, 2) : 'N/A' }}
+                                        </div>
                                     @else
                                         N/A
                                     @endif
