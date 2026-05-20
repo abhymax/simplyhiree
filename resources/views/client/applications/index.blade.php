@@ -142,15 +142,25 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-5">
-                                    @php $st = strtolower($app->status); @endphp
-                                    @if($st === 'pending review')
+                                    @php $eff = $app->effectiveStatus(); $efLc = strtolower($eff); @endphp
+                                    @if($efLc === 'pending review')
                                         <span class="status-pill inline-flex items-center rounded-full bg-amber-500 text-black border border-amber-300 font-extrabold animate-pulse"><i class="fa-regular fa-clock"></i> Pending Review</span>
-                                    @elseif($st === 'approved')
+                                    @elseif($efLc === 'approved')
                                         <span class="status-pill inline-flex items-center rounded-full bg-emerald-500 text-white border border-emerald-400 font-extrabold"><i class="fa-solid fa-check"></i> Approved</span>
-                                    @elseif($st === 'rejected')
+                                    @elseif($efLc === 'rejected' || $efLc === 'client rejected')
                                         <span class="status-pill inline-flex items-center rounded-full bg-red-600 text-white border border-red-400 font-extrabold"><i class="fa-solid fa-xmark"></i> Rejected</span>
+                                    @elseif($efLc === 'interview scheduled' || $efLc === 'interviewed' || $efLc === 'no-show')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-indigo-500 text-white border border-indigo-400 font-extrabold"><i class="fa-solid fa-video"></i> {{ $eff }}</span>
+                                    @elseif($efLc === 'selected by superadmin')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-purple-600 text-white border border-purple-400 font-extrabold"><i class="fa-solid fa-user-shield"></i> Selected by Superadmin</span>
+                                    @elseif($efLc === 'selected')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-cyan-500 text-white border border-cyan-400 font-extrabold"><i class="fa-solid fa-circle-check"></i> Selected</span>
+                                    @elseif($efLc === 'joined')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-emerald-600 text-white border border-emerald-400 font-extrabold"><i class="fa-solid fa-user-check"></i> Joined</span>
+                                    @elseif($efLc === 'left')
+                                        <span class="status-pill inline-flex items-center rounded-full bg-rose-600 text-white border border-rose-400 font-extrabold"><i class="fa-solid fa-arrow-right-from-bracket"></i> Left</span>
                                     @else
-                                        <span class="status-pill inline-flex items-center rounded-full bg-blue-600 text-white border border-blue-400 font-extrabold"><i class="fa-solid fa-circle-info"></i> {{ ucwords($st) }}</span>
+                                        <span class="status-pill inline-flex items-center rounded-full bg-blue-600 text-white border border-blue-400 font-extrabold"><i class="fa-solid fa-circle-info"></i> {{ $eff }}</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-5 text-right" style="min-width: 180px;">

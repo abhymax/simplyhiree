@@ -45,13 +45,20 @@
                             @php
                                 $name = $application->candidate ? trim(($application->candidate->first_name ?? '').' '.($application->candidate->last_name ?? '')) : 'Candidate Deleted';
                                 $initial = strtoupper(substr($name ?: 'U', 0, 1));
-                                $status = $application->status;
+                                $status = $application->effectiveStatus();
                                 $statusClasses = [
-                                    'Pending Review' => 'bg-amber-500/20 text-amber-100 border-amber-400/40',
-                                    'Approved' => 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40',
-                                    'Interview Scheduled' => 'bg-indigo-500/20 text-indigo-100 border-indigo-400/40',
-                                    'Selected' => 'bg-cyan-500/20 text-cyan-100 border-cyan-400/40',
-                                    'Rejected' => 'bg-rose-500/20 text-rose-100 border-rose-400/40',
+                                    'Pending Review'        => 'bg-amber-500/20 text-amber-100 border-amber-400/40',
+                                    'Approved'              => 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40',
+                                    'Interview Scheduled'   => 'bg-indigo-500/20 text-indigo-100 border-indigo-400/40',
+                                    'Interviewed'           => 'bg-violet-500/20 text-violet-100 border-violet-400/40',
+                                    'No-Show'               => 'bg-amber-500/20 text-amber-100 border-amber-400/40',
+                                    'Selected'              => 'bg-cyan-500/20 text-cyan-100 border-cyan-400/40',
+                                    'Selected by Superadmin'=> 'bg-purple-500/25 text-purple-100 border-purple-400/50',
+                                    'Joined'                => 'bg-emerald-600/30 text-emerald-100 border-emerald-400/50',
+                                    'Left'                  => 'bg-rose-500/20 text-rose-100 border-rose-400/40',
+                                    'Did Not Join'          => 'bg-rose-500/20 text-rose-100 border-rose-400/40',
+                                    'Rejected'              => 'bg-rose-500/20 text-rose-100 border-rose-400/40',
+                                    'Client Rejected'       => 'bg-rose-500/20 text-rose-100 border-rose-400/40',
                                 ];
                             @endphp
                             <tr class="fx-row">

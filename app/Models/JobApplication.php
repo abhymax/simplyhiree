@@ -290,6 +290,34 @@ class JobApplication extends Model
      *   Credit Pending     - replacement_status='credit_pending'
      *   Closed             - replacement_status='closed' (replacement accepted)
      */
+    /**
+     * Returns the most-progressed status that should be shown to clients,
+     * partners and candidates. The plain `status` field is just the review
+     * stage (Pending Review / Approved / Rejected). Once a candidate moves
+     * through the hiring journey (interview / selected / joined), those
+     * milestones take precedence.
+     *
+     * Returns one of:
+     *   Pending Review | Approved | Rejected
+     *   Interview Scheduled | Interviewed | No-Show | Client Rejected
+     *   Selected | Selected by Superadmin
+     *   Joined | Did Not Join | Left
+     */
+    public function effectiveStatus(): string
+    {
+        if (($this->joined_status ?? null) === 'Joined')       return 'Joined';
+        if (($this->joined_status ?? null) === 'Left')         return 'Left';
+        if (($this->joined_status ?? null) === 'Did Not Join') return 'Did Not Join';
+
+        if (($this->hiring_status ?? null) === 'Selected') {
+            return $this->selected_by_admin_id ? 'Selected by Superadmin' : 'Selected';
+        }
+        if (!empty($this->hiring_status)) {
+            return $this->hiring_status; // Interview Scheduled / Interviewed / No-Show / Client Rejected
+        }
+        return $this->status ?: '—';
+    }
+
     public function candidateStatus(): string
     {
         if ($this->replacement_status === 'closed')             return 'Closed';
