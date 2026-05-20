@@ -99,13 +99,24 @@
 
             {{-- PLAN UPGRADE REQUESTS CARD --}}
             @if(($pendingPlanRequestsCount ?? 0) > 0 || ($pendingPlanRequests ?? collect())->isNotEmpty())
-                <div class="mt-8 bg-gradient-to-br from-cyan-900/40 to-purple-900/40 backdrop-blur-md border border-cyan-400/40 rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="px-6 py-4 border-b border-cyan-400/20 flex items-center justify-between">
+                @php $puMaxId = $pendingPlanRequests->max('id'); @endphp
+                <div id="pu-notice"
+                     data-max-id="{{ $puMaxId }}"
+                     class="mt-8 bg-gradient-to-br from-cyan-900/40 to-purple-900/40 backdrop-blur-md border border-cyan-400/40 rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="px-6 py-4 border-b border-cyan-400/20 flex items-center justify-between gap-3">
                         <h3 class="text-cyan-100 font-extrabold text-lg flex items-center gap-2">
                             <i class="fa-solid fa-rocket"></i> Plan Upgrade Requests
                             <span class="bg-cyan-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $pendingPlanRequestsCount }} pending</span>
                         </h3>
-                        <a href="{{ route('admin.plan-requests.index') }}" class="text-cyan-200 hover:text-white text-xs font-bold underline">View all →</a>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('admin.plan-requests.index') }}" class="text-cyan-200 hover:text-white text-xs font-bold underline">View all →</a>
+                            <button type="button"
+                                onclick="dismissNotice('pu-notice','pu_dismissed_id', this.closest('#pu-notice').dataset.maxId)"
+                                title="Dismiss until new requests arrive"
+                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-100 hover:text-white border border-cyan-400/30">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="divide-y divide-cyan-400/10">
                         @foreach($pendingPlanRequests as $r)
@@ -138,13 +149,24 @@
 
             {{-- VENDOR ASSIGNMENT REQUESTS CARD --}}
             @if(($pendingVendorAssignmentCount ?? 0) > 0 || ($pendingVendorAssignmentRequests ?? collect())->isNotEmpty())
-                <div class="mt-6 bg-gradient-to-br from-amber-900/40 to-orange-900/40 backdrop-blur-md border border-amber-400/40 rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="px-6 py-4 border-b border-amber-400/20 flex items-center justify-between">
+                @php $vaMaxId = $pendingVendorAssignmentRequests->max('id'); @endphp
+                <div id="va-notice"
+                     data-max-id="{{ $vaMaxId }}"
+                     class="mt-6 bg-gradient-to-br from-amber-900/40 to-orange-900/40 backdrop-blur-md border border-amber-400/40 rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="px-6 py-4 border-b border-amber-400/20 flex items-center justify-between gap-3">
                         <h3 class="text-amber-100 font-extrabold text-lg flex items-center gap-2">
                             <i class="fa-solid fa-handshake"></i> Vendor Assignment Requests
                             <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $pendingVendorAssignmentCount }} pending</span>
                         </h3>
-                        <a href="{{ route('admin.vendor-assignment-requests.index') }}" class="text-amber-200 hover:text-white text-xs font-bold underline">View all →</a>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('admin.vendor-assignment-requests.index') }}" class="text-amber-200 hover:text-white text-xs font-bold underline">View all →</a>
+                            <button type="button"
+                                onclick="dismissNotice('va-notice','va_dismissed_id', this.closest('#va-notice').dataset.maxId)"
+                                title="Dismiss until new requests arrive"
+                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-amber-500/20 hover:bg-amber-500/40 text-amber-100 hover:text-white border border-amber-400/30">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="divide-y divide-amber-400/10">
                         @foreach($pendingVendorAssignmentRequests as $r)
@@ -419,6 +441,28 @@
                     }
                 });
             }
+        });
+    </script>
+
+    <script>
+        // Dismiss notification cards (Vendor Assignment / Plan Upgrade) — remembers
+        // the latest request id that was dismissed in localStorage. When new
+        // requests come in (max-id > dismissed-id), the card reappears.
+        function dismissNotice(elId, storageKey, maxId) {
+            try { localStorage.setItem(storageKey, String(maxId || '0')); } catch (e) {}
+            const el = document.getElementById(elId);
+            if (el) el.style.display = 'none';
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            ['va-notice|va_dismissed_id', 'pu-notice|pu_dismissed_id'].forEach(function (pair) {
+                const [elId, key] = pair.split('|');
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const maxId = parseInt(el.dataset.maxId || '0', 10);
+                let dismissed = 0;
+                try { dismissed = parseInt(localStorage.getItem(key) || '0', 10); } catch (e) {}
+                if (maxId && dismissed >= maxId) el.style.display = 'none';
+            });
         });
     </script>
 </x-app-layout>
