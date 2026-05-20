@@ -1035,7 +1035,7 @@ class AdminController extends Controller
     {
         $job->load(['educationLevel']);
         $partners = User::role('partner')->get();
-        $excludedPartnerIds = $job->excludedPartners()->pluck('id')->toArray();
+        $excludedPartnerIds = $job->excludedPartners()->pluck('users.id')->toArray();
         return view('admin.jobs.manage', ['job' => $job, 'allPartners' => $partners, 'excludedPartnerIds' => $excludedPartnerIds]);
     }
 
