@@ -114,13 +114,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-white">Job Title <span class="text-rose-300">*</span></label>
-                            <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" placeholder="e.g. Senior Accountant">
+                            <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" placeholder="e.g. Senior Accountant">
                             @error('title') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-white">Category <span class="text-rose-300">*</span></label>
-                            <select name="category_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                            <select name="category_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                 <option value="" class="text-slate-900">Select Category</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ (string) old('category_id', $job->category_id ?? '') === (string) $cat->id ? 'selected' : '' }} class="text-slate-900">{{ $cat->name }}</option>
@@ -131,7 +131,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-white">Job Type <span class="text-rose-300">*</span></label>
-                            <select name="job_type" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                            <select name="job_type" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                 <option value="" class="text-slate-900">Select Type</option>
                                 <option value="Full-time" {{ old('job_type', $job->job_type ?? '') == 'Full-time' ? 'selected' : '' }} class="text-slate-900">Full-time</option>
                                 <option value="Part-time" {{ old('job_type', $job->job_type ?? '') == 'Part-time' ? 'selected' : '' }} class="text-slate-900">Part-time</option>
@@ -145,7 +145,7 @@
                             <label class="block text-sm font-medium text-white">Location(s) <span class="text-rose-300">*</span></label>
                             <input type="hidden" name="location" id="job-location" value="{{ old('location', $job->location ?? '') }}">
                             <div id="job-location-chipbox"
-                                class="mt-1 flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 focus-within:border-blue-400">
+                                class="mt-1 flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 focus-within:border-blue-400" style="background-color:#0f172a !important;color:#fff !important;">
                                 <input type="text" id="job-location-search" autocomplete="off"
                                     class="flex-1 min-w-[160px] border-0 bg-transparent text-white placeholder-blue-200/60 focus:outline-none focus:ring-0 p-1"
                                     placeholder="Type a city, press Enter to add">
@@ -160,11 +160,11 @@
                             <label class="block text-sm font-medium text-white">Salary Range (INR)</label>
                             <div class="flex space-x-2">
                                 <div class="w-1/2">
-                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                     @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-1/2">
-                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                     @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -174,11 +174,11 @@
                             <label class="block text-sm font-medium text-white">Experience Range (Years) <span class="text-rose-300">*</span></label>
                             <div class="flex space-x-2">
                                 <div class="w-1/2">
-                                    <input type="number" name="min_experience" placeholder="Min" value="{{ old('min_experience', $job->min_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" required>
+                                    <input type="number" name="min_experience" placeholder="Min" value="{{ old('min_experience', $job->min_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" required>
                                     @error('min_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div class="w-1/2">
-                                    <input type="number" name="max_experience" placeholder="Max" value="{{ old('max_experience', $job->max_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" required>
+                                    <input type="number" name="max_experience" placeholder="Max" value="{{ old('max_experience', $job->max_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" required>
                                     @error('max_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -186,7 +186,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-white">Desired Candidate Gender <span class="text-rose-300">*</span></label>
-                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                 @foreach(['Any', 'Male', 'Female', 'Other'] as $genderOption)
                                     <option value="{{ $genderOption }}" {{ old('gender_preference', $job->gender_preference ?? 'Any') === $genderOption ? 'selected' : '' }} class="text-slate-900">{{ $genderOption }}</option>
                                 @endforeach
@@ -196,7 +196,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-white">Education <span class="text-rose-300">*</span></label>
-                            <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                            <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                 @foreach($educationLevels as $edu)
                                     <option value="{{ $edu->id }}" {{ (string) old('education_level_id', $job->education_level_id ?? '') === (string) $edu->id ? 'selected' : '' }} class="text-slate-900">{{ $edu->name }}</option>
                                 @endforeach
@@ -205,12 +205,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-white">Application Deadline</label>
-                            <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" min="{{ date('Y-m-d') }}">
+                            <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" min="{{ date('Y-m-d') }}">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-white">Total Openings</label>
-                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                         </div>
                     </div>
 
@@ -227,7 +227,7 @@
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-white">Job Description <span class="text-rose-300">*</span></label>
                             <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
-                            <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/10 text-white min-h-[200px]"></div>
+                            <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/10 text-white min-h-[200px]" style="background-color:#0f172a !important;color:#fff !important;"></div>
                             <p class="mt-1 text-xs text-slate-400">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
                             @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
@@ -235,11 +235,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-white">Skills Required (Comma separated)</label>
-                                <input type="text" name="skills_required" value="{{ old('skills_required', $job->skills_required ?? '') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                                <input type="text" name="skills_required" value="{{ old('skills_required', $job->skills_required ?? '') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-white">Company Website (Optional)</label>
-                                <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white">
+                                <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                             </div>
                         </div>
                     </div>
@@ -252,21 +252,21 @@
                             <i class="fa-solid fa-handshake text-white"></i> Vendor Assignment
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='open' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='open' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
                                 <input type="radio" name="vendor_assignment_mode" value="open" x-model="mode" class="mt-1">
                                 <div>
                                     <div class="text-white font-bold text-sm">🔓 Open Marketplace</div>
                                     <div class="text-white/80 text-xs">All active partners can apply</div>
                                 </div>
                             </label>
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='preferred' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='preferred' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
                                 <input type="radio" name="vendor_assignment_mode" value="preferred" x-model="mode" class="mt-1">
                                 <div>
                                     <div class="text-white font-bold text-sm">⭐ Preferred Only</div>
                                     <div class="text-white/80 text-xs">Only my saved Preferred vendors</div>
                                 </div>
                             </label>
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" :class="mode==='selected' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
+                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='selected' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
                                 <input type="radio" name="vendor_assignment_mode" value="selected" x-model="mode" class="mt-1">
                                 <div>
                                     <div class="text-white font-bold text-sm">🎯 Selected (Per-Job)</div>
@@ -278,7 +278,7 @@
                             <div>
                                 <label class="block text-white/80 text-[11px] uppercase font-bold mb-1">Max Vendors per Job (optional)</label>
                                 <input type="number" name="max_vendors_per_job" min="1" max="50" value="{{ old('max_vendors_per_job', $job->max_vendors_per_job ?? '') }}" placeholder="e.g. 5"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5">
+                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5" style="background-color:#0f172a !important;color:#fff !important;">
                             </div>
                             <div class="md:col-span-2" x-show="mode === 'selected'" x-cloak>
                                 <label class="block text-white/80 text-[11px] uppercase font-bold mb-1">Pick from Preferred Vendors</label>
@@ -304,7 +304,7 @@
                                 <input type="hidden" name="is_company_confidential" value="0">
                                 <input type="checkbox" name="is_company_confidential" value="1"
                                        {{ old('is_company_confidential', $job->is_company_confidential ?? false) ? 'checked' : '' }}
-                                       class="mt-1 h-5 w-5 rounded border-white/40 bg-blue-950/40 text-white focus:ring-2 focus:ring-white">
+                                       class="mt-1 h-5 w-5 rounded border-white/40 bg-blue-950/40 text-white focus:ring-2 focus:ring-white" style="background-color:#0f172a !important;color:#fff !important;">
                                 <div>
                                     <div class="text-white font-bold text-sm flex items-center gap-2">
                                         <i class="fa-solid fa-user-secret"></i> Keep company name confidential
@@ -330,7 +330,7 @@
                                 <input type="number" name="payout_amount" min="0" step="0.01" required
                                     value="{{ old('payout_amount', $job->payout_amount ?? '') }}"
                                     placeholder="e.g. 25000"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" style="background-color:#0f172a !important;color:#fff !important;">
                                 @error('payout_amount') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                             <div>
@@ -338,7 +338,7 @@
                                 <input type="number" name="minimum_stay_days" min="0" max="365" required
                                     value="{{ old('minimum_stay_days', $job->minimum_stay_days ?? 30) }}"
                                     placeholder="e.g. 30"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" style="background-color:#0f172a !important;color:#fff !important;">
                                 @error('minimum_stay_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                             <div>
@@ -346,7 +346,7 @@
                                 <input type="number" name="replacement_guarantee_days" min="0" max="365" required
                                     value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
                                     placeholder="e.g. 90"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" style="background-color:#0f172a !important;color:#fff !important;">
                                 @error('replacement_guarantee_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                         </div>
