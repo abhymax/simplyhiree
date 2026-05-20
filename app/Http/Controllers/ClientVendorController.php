@@ -129,10 +129,32 @@ class ClientVendorController extends Controller
             'notes'         => 'nullable|string|max:1000',
         ]);
 
-        ClientVendorAssignmentRequest::create(array_merge($data, [
-            'client_id' => Auth::id(),
+        $client  = Auth::user();
+        $reqRow = ClientVendorAssignmentRequest::create(array_merge($data, [
+            'client_id' => $client->id,
             'status'    => 'pending',
         ]));
+
+        // Notify every active Superadmin via email so they pick this up quickly.
+        try {
+            $admins = \App\Models\User::role(['Superadmin', 'Manager'])
+                ->where('status', 'active')
+                ->whereNotNull('email')
+                ->get();
+
+            foreach ($admins as $admin) {
+                \Illuminate\Support\Facades\Mail::send('admin.vendor_assignment_requests.email_notification', [
+                    'admin'   => $admin,
+                    'client'  => $client,
+                    'request' => $reqRow,
+                ], function ($m) use ($admin, $client, $reqRow) {
+                    $m->to($admin->email, $admin->name)
+                      ->subject('[SimplyHiree] New vendor assignment request from ' . $client->name);
+                });
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Vendor assignment request notify failed: ' . $e->getMessage());
+        }
 
         return back()->with('success', "Request submitted. The SimplyHiree team will assign the top {$data['vendor_count']} vendors shortly.");
     }

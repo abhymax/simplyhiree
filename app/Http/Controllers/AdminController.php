@@ -123,6 +123,12 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
         $pendingPlanRequestsCount = \App\Models\PlanChangeRequest::where('status', 'pending')->count();
+        $pendingVendorAssignmentRequests = \App\Models\ClientVendorAssignmentRequest::with('client')
+            ->where('status', 'pending')
+            ->latest()
+            ->limit(5)
+            ->get();
+        $pendingVendorAssignmentCount = \App\Models\ClientVendorAssignmentRequest::where('status', 'pending')->count();
 
         return view('admin.dashboard', [
             'totalUsers'              => $totalUsers,
@@ -135,6 +141,8 @@ class AdminController extends Controller
             'dueInvoicesCount'        => $dueInvoicesCount,
             'pendingPlanRequests'     => $pendingPlanRequests,
             'pendingPlanRequestsCount'=> $pendingPlanRequestsCount,
+            'pendingVendorAssignmentRequests' => $pendingVendorAssignmentRequests,
+            'pendingVendorAssignmentCount'    => $pendingVendorAssignmentCount,
         ]);
     }
 
@@ -1620,6 +1628,91 @@ class AdminController extends Controller
     {
         $application->update(['replacement_status' => 'closed']);
         return back()->with('success', 'Case manually closed.');
+    }
+
+    /**
+     * ============================================================
+     * Vendor Assignment Requests (admin side)
+     * ============================================================
+     */
+    public function vendorAssignmentRequestsIndex(Request $request)
+    {
+        $query = \App\Models\ClientVendorAssignmentRequest::with(['client', 'fulfilledBy']);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        $requests = $query->latest()->paginate(15)->withQueryString();
+
+        $counts = [
+            'pending'     => \App\Models\ClientVendorAssignmentRequest::where('status', 'pending')->count(),
+            'in_progress' => \App\Models\ClientVendorAssignmentRequest::where('status', 'in_progress')->count(),
+            'fulfilled'   => \App\Models\ClientVendorAssignmentRequest::where('status', 'fulfilled')->count(),
+            'cancelled'   => \App\Models\ClientVendorAssignmentRequest::where('status', 'cancelled')->count(),
+        ];
+
+        return view('admin.vendor_assignment_requests.index', compact('requests', 'counts'));
+    }
+
+    public function vendorAssignmentRequestShow(\App\Models\ClientVendorAssignmentRequest $assignmentRequest)
+    {
+        $assignmentRequest->load(['client.preferredVendors', 'fulfilledBy']);
+
+        // Suggest vendors that aren't already attached to this client
+        $existingPartnerIds = $assignmentRequest->client
+            ? $assignmentRequest->client->preferredVendors()->pluck('users.id')->all()
+            : [];
+
+        $eligibleVendors = User::role('partner')
+            ->whereNull('parent_partner_id')
+            ->where('status', 'active')
+            ->whereNotIn('id', $existingPartnerIds)
+            ->with('partnerProfile')
+            ->orderByDesc('avg_rating')
+            ->orderByDesc('total_ratings')
+            ->get(['id', 'name', 'email', 'avg_rating', 'vendor_level', 'vendor_badge', 'total_ratings']);
+
+        return view('admin.vendor_assignment_requests.show', compact('assignmentRequest', 'eligibleVendors', 'existingPartnerIds'));
+    }
+
+    public function vendorAssignmentRequestFulfill(Request $request, \App\Models\ClientVendorAssignmentRequest $assignmentRequest)
+    {
+        $validated = $request->validate([
+            'partner_ids'   => 'required|array|min:1',
+            'partner_ids.*' => 'integer|exists:users,id',
+            'admin_notes'   => 'nullable|string|max:2000',
+        ]);
+
+        $client = User::find($assignmentRequest->client_id);
+        if (!$client) {
+            return back()->with('error', 'Client account not found.');
+        }
+
+        // Attach each partner to the client's preferred-vendors list (idempotent)
+        $payload = [];
+        foreach ($validated['partner_ids'] as $pid) {
+            $payload[(int) $pid] = ['added_at' => now()];
+        }
+        $client->preferredVendors()->syncWithoutDetaching($payload);
+
+        $assignmentRequest->update([
+            'status'               => 'fulfilled',
+            'admin_notes'          => $validated['admin_notes'] ?? null,
+            'fulfilled_by_user_id' => Auth::id(),
+            'fulfilled_at'         => now(),
+        ]);
+
+        return redirect()->route('admin.vendor-assignment-requests.index')
+            ->with('success', count($validated['partner_ids']) . ' vendor(s) assigned to ' . $client->name . '.');
+    }
+
+    public function vendorAssignmentRequestCancel(\App\Models\ClientVendorAssignmentRequest $assignmentRequest)
+    {
+        $assignmentRequest->update([
+            'status'               => 'cancelled',
+            'fulfilled_by_user_id' => Auth::id(),
+            'fulfilled_at'         => now(),
+        ]);
+        return back()->with('success', 'Request cancelled.');
     }
 
     // --- CREDIT NOTES ---

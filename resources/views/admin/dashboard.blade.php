@@ -136,6 +136,43 @@
                 </div>
             @endif
 
+            {{-- VENDOR ASSIGNMENT REQUESTS CARD --}}
+            @if(($pendingVendorAssignmentCount ?? 0) > 0 || ($pendingVendorAssignmentRequests ?? collect())->isNotEmpty())
+                <div class="mt-6 bg-gradient-to-br from-amber-900/40 to-orange-900/40 backdrop-blur-md border border-amber-400/40 rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="px-6 py-4 border-b border-amber-400/20 flex items-center justify-between">
+                        <h3 class="text-amber-100 font-extrabold text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-handshake"></i> Vendor Assignment Requests
+                            <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $pendingVendorAssignmentCount }} pending</span>
+                        </h3>
+                        <a href="{{ route('admin.vendor-assignment-requests.index') }}" class="text-amber-200 hover:text-white text-xs font-bold underline">View all →</a>
+                    </div>
+                    <div class="divide-y divide-amber-400/10">
+                        @foreach($pendingVendorAssignmentRequests as $r)
+                            <div class="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div>
+                                    <div class="text-white font-bold">{{ $r->client?->name ?? '—' }}
+                                        <span class="text-amber-100/80 text-sm font-normal">wants</span>
+                                        <span class="text-white font-bold">{{ $r->vendor_count }} vendor(s) assigned</span>
+                                    </div>
+                                    <div class="text-amber-100/70 text-xs mt-0.5">
+                                        {{ $r->client?->email }}
+                                        @if($r->industry_hint) · <i class="fa-solid fa-briefcase mr-0.5"></i>{{ $r->industry_hint }}@endif
+                                        @if($r->location_hint) · <i class="fa-solid fa-location-dot mr-0.5"></i>{{ $r->location_hint }}@endif
+                                        · {{ $r->created_at->diffForHumans() }}
+                                    </div>
+                                    @if($r->notes)
+                                        <div class="mt-1 text-amber-100/80 text-sm italic">"{{ \Illuminate\Support\Str::limit($r->notes, 160) }}"</div>
+                                    @endif
+                                </div>
+                                <a href="{{ route('admin.vendor-assignment-requests.show', $r) }}" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+                                    <i class="fa-solid fa-user-plus"></i> Assign Vendors
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- SECTION 2: QUICK ACTIONS (5 Items) --}}
             <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
                 <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> Quick Actions

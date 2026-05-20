@@ -165,6 +165,12 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::patch('/partners/{user}', [AdminController::class, 'updatePartner'])->name('partners.update');
             Route::patch('/partners/{user}/tier', [AdminController::class, 'updatePartnerTier'])->name('partners.tier.update');
 
+            // Vendor assignment requests (clients asking admin to attach vendors)
+            Route::get('/vendor-assignment-requests', [AdminController::class, 'vendorAssignmentRequestsIndex'])->name('vendor-assignment-requests.index');
+            Route::get('/vendor-assignment-requests/{assignmentRequest}', [AdminController::class, 'vendorAssignmentRequestShow'])->name('vendor-assignment-requests.show');
+            Route::post('/vendor-assignment-requests/{assignmentRequest}/fulfill', [AdminController::class, 'vendorAssignmentRequestFulfill'])->name('vendor-assignment-requests.fulfill');
+            Route::post('/vendor-assignment-requests/{assignmentRequest}/cancel', [AdminController::class, 'vendorAssignmentRequestCancel'])->name('vendor-assignment-requests.cancel');
+
             // Broadcast to vendors
             Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
             Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');

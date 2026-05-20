@@ -36,6 +36,7 @@
                     ['route'=>'admin.replacements.index',     'label'=>'Replacements',        'icon'=>'fa-rotate',              'active'=>['admin.replacements.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.credit-notes.index',     'label'=>'Credit Notes',        'icon'=>'fa-receipt',             'active'=>['admin.credit-notes.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.plan-requests.index',    'label'=>'Plan Requests',       'icon'=>'fa-rocket',              'active'=>['admin.plan-requests.*'], 'can'=>'view_billing_data'],
+                    ['route'=>'admin.vendor-assignment-requests.index', 'label'=>'Vendor Assignment Req.', 'icon'=>'fa-handshake-angle',  'active'=>['admin.vendor-assignment-requests.*']],
                     ['route'=>'admin.vendor-ratings.index',   'label'=>'Vendor Ratings',      'icon'=>'fa-star',                'active'=>['admin.vendor-ratings.*'], 'can'=>'view_partner_data'],
                     ['route'=>'admin.reports.jobs',           'label'=>'Master Job Report',   'icon'=>'fa-chart-bar',           'active'=>['admin.reports.jobs*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.clients.index',          'label'=>'Clients',             'icon'=>'fa-building',            'active'=>['admin.clients.*']],
