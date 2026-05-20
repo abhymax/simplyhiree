@@ -16,6 +16,7 @@ class PartnerProfile extends Model
         'profile_picture_path',
         'company_type',
         'website',
+        'contact_phone',
         'linkedin_url',
         'facebook_url',
         'twitter_url',

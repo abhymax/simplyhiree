@@ -54,8 +54,8 @@
                         // Plan-based monthly cap
                         $ownerId   = $partner->partnerOwnerId();
                         $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
-                        $monthlyCaps = ['Free' => 10, 'Basic' => 50];
-                        $planCap = $monthlyCaps[$ownerPlan] ?? null;
+                        $plan = \App\Models\PartnerPlan::where('name', $ownerPlan)->first();
+                        $planCap = $plan ? $plan->monthly_submission_limit : null;
                         $monthlyUsed = null;
                         if ($planCap !== null) {
                             $teamIds = \App\Models\User::where('parent_partner_id', $ownerId)->pluck('id')->push($ownerId)->all();

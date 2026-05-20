@@ -154,6 +154,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- PARTNER DATA ---
         Route::middleware(['can:view_partner_data'])->group(function() {
             Route::get('/partners', [AdminController::class, 'listPartners'])->name('partners.index');
+            
+            // Partner Plans Management
+            Route::get('/partner-plans', [AdminController::class, 'managePartnerPlans'])->name('partner-plans.index');
+            Route::put('/partner-plans/{plan}', [AdminController::class, 'updatePartnerPlan'])->name('partner-plans.update');
+
             Route::post('/partners/bulk-status', [AdminController::class, 'bulkUpdatePartnerStatus'])->name('partners.bulk-status');
             Route::get('/partners/create', [AdminController::class, 'createPartner'])->name('partners.create');
             Route::post('/partners', [AdminController::class, 'storePartner'])->name('partners.store');
@@ -260,9 +265,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
         
         // --- Job Management ---
-        Route::get('/jobs', function () {
-            return redirect()->route('client.jobs.create');
-        })->name('jobs.index');
+        Route::get('/jobs', [ClientController::class, 'listJobs'])->name('jobs.index');
         Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
         Route::post('/jobs', [ClientController::class, 'storeJob'])->name('jobs.store');
         Route::get('/jobs/{job}/edit', [ClientController::class, 'editJob'])->name('jobs.edit');

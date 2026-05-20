@@ -41,6 +41,7 @@
                     ['route'=>'admin.reports.jobs',           'label'=>'Master Job Report',   'icon'=>'fa-chart-bar',           'active'=>['admin.reports.jobs*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.clients.index',          'label'=>'Clients',             'icon'=>'fa-building',            'active'=>['admin.clients.*']],
                     ['route'=>'admin.partners.index',         'label'=>'Partners',            'icon'=>'fa-handshake',           'active'=>['admin.partners.*']],
+                    ['route'=>'admin.partner-plans.index',    'label'=>'Partner Plans',       'icon'=>'fa-crown',               'active'=>['admin.partner-plans.*']],
                     ['route'=>'admin.candidates.index',       'label'=>'Candidates',          'icon'=>'fa-users',               'active'=>['admin.candidates.*']],
                     ['route'=>'admin.managers.index',         'label'=>'Managers',            'icon'=>'fa-user-shield',         'active'=>['admin.managers.*']],
                     ['route'=>'admin.landing-pages.index',    'label'=>'Landing Pages',       'icon'=>'fa-globe',               'active'=>['admin.landing-pages.*']],

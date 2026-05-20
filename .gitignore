@@ -22,3 +22,4 @@ deploy-last.log
 
 app/Models/*.bak
 project_files.tar.gz
+*.bak

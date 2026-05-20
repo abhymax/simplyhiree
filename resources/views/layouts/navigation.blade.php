@@ -72,6 +72,9 @@
 
                     {{-- CLIENT LINKS --}}
                     @role('client')
+                        <x-nav-link :href="route('client.jobs.index')" :active="request()->routeIs('client.jobs.index')" class="text-slate-600 hover:text-indigo-600">
+                            My Jobs
+                        </x-nav-link>
                         <x-nav-link :href="route('client.jobs.create')" :active="request()->routeIs('client.jobs.create')" class="text-slate-600 hover:text-indigo-600">
                             Post New Job
                         </x-nav-link>
@@ -244,6 +247,9 @@
             @endif
 
             @role('client')
+                <x-responsive-nav-link :href="route('client.jobs.index')" :active="request()->routeIs('client.jobs.index')">
+                    My Jobs
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('client.jobs.create')" :active="request()->routeIs('client.jobs.create')">
                     Post New Job
                 </x-responsive-nav-link>

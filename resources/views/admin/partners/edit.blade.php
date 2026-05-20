@@ -66,6 +66,10 @@
                                         <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Email</label>
                                         <input type="email" name="email" value="{{ old('email', $user->email) }}" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 h-11" required>
                                     </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Contact Phone</label>
+                                        <input type="text" name="contact_phone" value="{{ old('contact_phone', optional($profile)->contact_phone) }}" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 h-11">
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">

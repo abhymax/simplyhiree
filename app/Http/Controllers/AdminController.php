@@ -683,6 +683,28 @@ class AdminController extends Controller
         return back()->with('success', "Tier updated to {$validated['partner_tier']} for {$user->name}.");
     }
 
+    public function managePartnerPlans()
+    {
+        $plans = \App\Models\PartnerPlan::all();
+        return view('admin.partners.plans', compact('plans'));
+    }
+
+    public function updatePartnerPlan(Request $request, \App\Models\PartnerPlan $plan)
+    {
+        $validated = $request->validate([
+            'monthly_submission_limit' => 'nullable|integer|min:1',
+            'max_team_members' => 'required|integer|min:1',
+            'can_view_premium_jobs' => 'boolean',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        $validated['can_view_premium_jobs'] = $request->has('can_view_premium_jobs');
+
+        $plan->update($validated);
+
+        return redirect()->back()->with('success', "Plan '{$plan->name}' updated successfully.");
+    }
+
     public function updatePartner(Request $request, User $user)
     {
         if (!$user->hasRole('partner')) abort(404);
@@ -692,6 +714,7 @@ class AdminController extends Controller
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'company_type' => 'nullable|string',
             'website' => 'nullable|url',
+            'contact_phone' => 'nullable|string',
             'establishment_year' => 'nullable|integer',
             'bio' => 'nullable|string',
             'address' => 'nullable|string',
@@ -715,7 +738,7 @@ class AdminController extends Controller
         $user->update(['name' => $validated['name'], 'email' => $validated['email']]);
 
         $profileData = $request->only([
-            'company_type', 'website', 'establishment_year', 'bio', 'address',
+            'company_type', 'website', 'contact_phone', 'establishment_year', 'bio', 'address',
             'linkedin_url', 'facebook_url', 'twitter_url', 'instagram_url',
             'beneficiary_name', 'account_number', 'account_type', 'ifsc_code',
             'pan_name', 'pan_number', 'gst_number'

@@ -302,6 +302,10 @@ class PartnerController extends Controller
      */
     public function showJob(Job $job)
     {
+        if ($job->status !== 'approved') {
+            abort(404, 'This job is currently not available.');
+        }
+
         $partner = Auth::user();
 
         // 1. Get Job Details. We DELIBERATELY do not eager-load the 'user'
@@ -568,6 +572,10 @@ class PartnerController extends Controller
 
     public function showApplyForm(Job $job)
     {
+        if ($job->status !== 'approved') {
+            abort(404, 'This job is currently not available.');
+        }
+
         $partner = Auth::user();
         $candidates = Candidate::where('partner_id', $partner->id)
                                 ->latest()
@@ -581,6 +589,10 @@ class PartnerController extends Controller
 
     public function submitApplication(Request $request, Job $job)
     {
+        if ($job->status !== 'approved') {
+            return back()->with('error', 'This job is no longer accepting applications.');
+        }
+
         $request->validate([
             'candidate_ids' => 'required|array|min:1',
             'candidate_ids.*' => 'exists:candidates,id',
@@ -590,9 +602,9 @@ class PartnerController extends Controller
         // 3. Plan-based monthly submission cap.
         $ownerId   = $partner->partnerOwnerId();
         $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
-        $monthlyCaps = ['Free' => 10, 'Basic' => 50]; // Pro & Enterprise = unlimited
-        if (isset($monthlyCaps[$ownerPlan])) {
-            $cap = $monthlyCaps[$ownerPlan];
+        $plan = \App\Models\PartnerPlan::where('name', $ownerPlan)->first();
+        if ($plan && $plan->monthly_submission_limit !== null) {
+            $cap = $plan->monthly_submission_limit;
             // Count submissions this month across the whole team
             $teamIds = \App\Models\User::where('parent_partner_id', $ownerId)->pluck('id')->push($ownerId)->all();
             $thisMonth = JobApplication::whereIn('submitted_by_user_id', $teamIds)
