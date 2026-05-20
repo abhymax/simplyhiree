@@ -50,11 +50,17 @@ return [
             'auth.phone_otp' => env('AISENSY_TEMPLATE_PHONE_OTP', 'simplyhiree_auth_otp_v1'),
             'auth.forgot_password' => env('AISENSY_TEMPLATE_FORGOT_PASSWORD'),
             'candidate.interview_scheduled' => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_SCHEDULED'),
+            'candidate.interview_reminder'  => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_REMINDER'),
             'candidate.selected' => env('AISENSY_TEMPLATE_CANDIDATE_SELECTED'),
             'profile.approved.partner' => env('AISENSY_TEMPLATE_PARTNER_APPROVED'),
             'profile.approved.client' => env('AISENSY_TEMPLATE_CLIENT_APPROVED'),
             'partner.daily_pulse' => env('AISENSY_TEMPLATE_PARTNER_DAILY_PULSE'),
             'billing.period_hit' => env('AISENSY_TEMPLATE_BILLING_PERIOD_HIT'),
+            'vendor.broadcast' => env('AISENSY_TEMPLATE_VENDOR_BROADCAST'),
+            // Aliases (used by newer controllers that pass un-dotted keys)
+            'interview_scheduled' => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_SCHEDULED'),
+            'interview_reminder'  => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_REMINDER'),
+            'vendor_broadcast'    => env('AISENSY_TEMPLATE_VENDOR_BROADCAST'),
         ],
     ],
 
