@@ -15,6 +15,7 @@ use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rules;
