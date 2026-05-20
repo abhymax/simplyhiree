@@ -82,6 +82,40 @@ class ClientController extends Controller
 
     // --- NEW: JOB CREATION METHODS ---
 
+    public function listJobs(Request $request)
+    {
+        $clientId = Auth::id();
+        $query = \App\Models\Job::where('user_id', $clientId)
+            ->withCount('jobApplications')
+            ->orderBy('created_at', 'desc');
+
+        // Map UI status keys → actual DB values so the tabs filter correctly.
+        // DB stores: approved | pending_approval | on_hold | closed | rejected
+        $filterMap = [
+            'approved' => 'approved',
+            'pending'  => 'pending_approval',
+            'hold'     => 'on_hold',
+            'closed'   => 'closed',
+            'rejected' => 'rejected',
+        ];
+        if ($request->filled('status') && isset($filterMap[$request->status])) {
+            $query->where('status', $filterMap[$request->status]);
+        }
+
+        $jobs = $query->paginate(15)->withQueryString();
+
+        $base = \App\Models\Job::where('user_id', $clientId);
+        $counts = [
+            'all'      => (clone $base)->count(),
+            'approved' => (clone $base)->where('status', 'approved')->count(),
+            'pending'  => (clone $base)->where('status', 'pending_approval')->count(),
+            'hold'     => (clone $base)->where('status', 'on_hold')->count(),
+            'closed'   => (clone $base)->where('status', 'closed')->count(),
+        ];
+
+        return view('client.jobs.index', compact('jobs', 'counts'));
+    }
+
     /**
      * Show the form to create a new job.
      */

@@ -317,20 +317,19 @@
                                 <td class="px-6 py-5 text-slate-300 text-xs">{{ $job->created_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-5 text-right" style="min-width:220px;">
                                     <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-                                        @if($job->status === 'approved')
-                                            <a href="{{ route('client.jobs.applicants', $job) }}"
-                                               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold border border-indigo-400 shadow-md whitespace-nowrap"
-                                               style="padding: 0.55rem 1.1rem;">
-                                                <i class="fa-regular fa-eye"></i> View Applicants ({{ $approvedCount }})
-                                            </a>
-                                        @elseif($job->status === 'pending_approval')
+                                        @if($job->status === 'pending_approval')
                                             <a href="{{ route('client.jobs.edit', $job) }}"
                                                class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg text-sm font-bold border border-amber-300 shadow-md whitespace-nowrap"
                                                style="padding: 0.55rem 1.1rem;">
                                                 <i class="fa-solid fa-pen-to-square"></i> Edit Pending
                                             </a>
                                         @else
-                                            <span class="text-slate-400 text-xs italic">No actions</span>
+                                            {{-- approved / on_hold / closed / rejected — any post-submit state can have applicants worth viewing --}}
+                                            <a href="{{ route('client.jobs.applicants', $job) }}"
+                                               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold border border-indigo-400 shadow-md whitespace-nowrap"
+                                               style="padding: 0.55rem 1.1rem;">
+                                                <i class="fa-regular fa-eye"></i> View Applicants ({{ $approvedCount }})
+                                            </a>
                                         @endif
                                     </div>
                                 </td>
