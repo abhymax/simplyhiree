@@ -315,42 +315,13 @@
                         </div>
                     </div>
 
-                    {{-- Payout Settings Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
-                        <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-white rounded-full"></span>
-                            <i class="fa-solid fa-coins text-white"></i> Payout Settings
-                        </h3>
-                        <p class="text-white/80 text-sm ml-5 mb-4">
-                            Payout amount per successful hire, the maturity period before release, and the replacement-guarantee window.
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-white uppercase mb-1">Payout Amount (₹) <span class="text-rose-300">*</span></label>
-                                <input type="number" name="payout_amount" min="0" step="0.01" required
-                                    value="{{ old('payout_amount', $job->payout_amount ?? '') }}"
-                                    placeholder="e.g. 25000"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" style="background-color:#0f172a !important;color:#fff !important;">
-                                @error('payout_amount') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-white uppercase mb-1">Maturity Period (Days) <span class="text-rose-300">*</span></label>
-                                <input type="number" name="minimum_stay_days" min="0" max="365" required
-                                    value="{{ old('minimum_stay_days', $job->minimum_stay_days ?? 30) }}"
-                                    placeholder="e.g. 30"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" style="background-color:#0f172a !important;color:#fff !important;">
-                                @error('minimum_stay_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-white uppercase mb-1">Replacement Guarantee (Days) <span class="text-rose-300">*</span></label>
-                                <input type="number" name="replacement_guarantee_days" min="0" max="365" required
-                                    value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}"
-                                    placeholder="e.g. 90"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" style="background-color:#0f172a !important;color:#fff !important;">
-                                @error('replacement_guarantee_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                    </div>
+                    {{-- Payout settings are managed centrally via the client's
+                         commercial contract — hidden from this form to avoid
+                         duplicate / conflicting values. Sensible defaults are
+                         submitted invisibly so existing validation passes. --}}
+                    <input type="hidden" name="payout_amount"              value="{{ old('payout_amount',              $job->payout_amount              ?? 0)  }}">
+                    <input type="hidden" name="minimum_stay_days"          value="{{ old('minimum_stay_days',          $job->minimum_stay_days          ?? 30) }}">
+                    <input type="hidden" name="replacement_guarantee_days" value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}">
 
                     <div class="flex justify-end items-center gap-3 pt-2">
                         <a href="{{ route('client.dashboard') }}" class="bg-white/10 border border-white/10 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition backdrop-blur-md">
