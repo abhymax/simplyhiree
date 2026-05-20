@@ -47,8 +47,12 @@
                         
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Login Email</label>
-                                <input type="email" value="{{ $user->email }}" class="w-full bg-slate-800/50 border border-white/10 rounded-xl text-slate-400 h-12 cursor-not-allowed" disabled>
+                                <label class="block text-xs font-bold text-emerald-400 uppercase mb-2">Login Email</label>
+                                <input type="email" name="email" required
+                                       value="{{ old('email', $user->email) }}"
+                                       class="w-full bg-slate-800 border border-white/10 rounded-xl text-white h-12 px-3 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400">
+                                @error('email') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                                <p class="text-[10px] text-amber-200 mt-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Changing this changes the client's login. They'll need the new address to sign in.</p>
                             </div>
 
                             <div>

@@ -397,6 +397,7 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'billable_period_days' => 'required|integer|min:1',
+            'email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id)],
             'company_name' => 'nullable|string|max:255',
             'website' => 'nullable|url|max:255',
             'industry' => 'nullable|string|max:255',
@@ -419,7 +420,10 @@ class AdminController extends Controller
             'other_docs.*' => 'nullable|mimes:pdf,jpg,jpeg,png|max:5120', 
         ]);
 
-        $userUpdate = ['billable_period_days' => $validated['billable_period_days']];
+        $userUpdate = [
+            'billable_period_days' => $validated['billable_period_days'],
+            'email' => $validated['email'],
+        ];
         if (!empty($validated['company_name'])) {
             // Keep users.name in sync with the editable Company Name on this form,
             // because the client listing displays users.name.
