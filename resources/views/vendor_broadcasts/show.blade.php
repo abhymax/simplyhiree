@@ -24,9 +24,21 @@
                 <p class="text-emerald-200 text-xs font-bold uppercase">Sent</p>
                 <p class="text-3xl font-extrabold text-emerald-200">{{ $broadcast->sent_count }}</p>
             </div>
-            <div class="bg-rose-500/10 border border-rose-400/30 rounded-2xl p-4">
-                <p class="text-rose-200 text-xs font-bold uppercase">Failed</p>
-                <p class="text-3xl font-extrabold text-rose-200">{{ $broadcast->failed_count }}</p>
+            <div class="bg-rose-500/10 border border-rose-400/30 rounded-2xl p-4 flex flex-col justify-between">
+                <div>
+                    <p class="text-rose-200 text-xs font-bold uppercase">Failed</p>
+                    <p class="text-3xl font-extrabold text-rose-200">{{ $broadcast->failed_count }}</p>
+                </div>
+                @if($broadcast->failed_count > 0)
+                    @php $retryRoute = auth()->user()->hasRole('client') ? 'client.broadcasts.retry' : 'admin.broadcasts.retry'; @endphp
+                    <form method="POST" action="{{ route($retryRoute, $broadcast) }}" class="mt-2"
+                          onsubmit="return confirm('Retry delivery for the {{ $broadcast->failed_count }} failed recipient(s)?');">
+                        @csrf
+                        <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
+                            <i class="fa-solid fa-rotate-right"></i> Retry Failed
+                        </button>
+                    </form>
+                @endif
             </div>
             <div class="bg-white/5 border border-white/10 rounded-2xl p-4">
                 <p class="text-slate-400 text-xs font-bold uppercase">Channels</p>

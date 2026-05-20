@@ -175,6 +175,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
             Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');
             Route::get('/broadcasts/{broadcast}', [\App\Http\Controllers\VendorBroadcastController::class, 'show'])->name('broadcasts.show');
+            Route::post('/broadcasts/{broadcast}/retry', [\App\Http\Controllers\VendorBroadcastController::class, 'retryFailed'])->name('broadcasts.retry');
         });
 
 
@@ -279,6 +280,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
         Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');
         Route::get('/broadcasts/{broadcast}', [\App\Http\Controllers\VendorBroadcastController::class, 'show'])->name('broadcasts.show');
+        Route::post('/broadcasts/{broadcast}/retry', [\App\Http\Controllers\VendorBroadcastController::class, 'retryFailed'])->name('broadcasts.retry');
         
         // Profile Management
         Route::get('/profile/company', [ClientProfileController::class, 'edit'])->name('profile.company');
