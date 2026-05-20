@@ -42,6 +42,30 @@
             </div>
         </div>
 
+        {{-- FLASH MESSAGES --}}
+        @if(session('success'))
+            <div class="mb-6 px-5 py-3 rounded-2xl flex items-start gap-3 shadow-lg"
+                 style="background: rgba(16,185,129,0.15); border: 1px solid rgba(52,211,153,0.4); color: #d1fae5;"
+                 x-data="{ show: true }" x-show="show" x-init="setTimeout(()=>show=false, 6000)" x-transition>
+                <i class="fa-solid fa-circle-check text-emerald-300 text-xl mt-0.5"></i>
+                <div class="flex-1 font-semibold">{{ session('success') }}</div>
+                <button type="button" @click="show=false" class="text-emerald-200 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-6 px-5 py-3 rounded-2xl flex items-start gap-3 shadow-lg"
+                 style="background: rgba(244,63,94,0.15); border: 1px solid rgba(251,113,133,0.4); color: #ffe4e6;"
+                 x-data="{ show: true }" x-show="show" x-init="setTimeout(()=>show=false, 8000)" x-transition>
+                <i class="fa-solid fa-triangle-exclamation text-rose-300 text-xl mt-0.5"></i>
+                <div class="flex-1 font-semibold">{{ session('error') }}</div>
+                <button type="button" @click="show=false" class="text-rose-200 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+
         {{-- SECTION 1: DAILY PULSE --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             {{-- Interviews Card --}}
