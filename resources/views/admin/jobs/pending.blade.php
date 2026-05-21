@@ -174,24 +174,34 @@
                                         <form action="{{ route('admin.jobs.approve', $job) }}" method="POST">
                                             @csrf
                                             <div class="bg-slate-800/50 rounded-xl p-3 border border-white/10 flex flex-col gap-3 shadow-inner">
-                                                
-                                                <div class="flex gap-2">
-                                                    <div class="flex-1">
-                                                        <label class="sr-only">Payout</label>
-                                                        <div class="relative">
-                                                            <span class="absolute left-3 top-2 text-slate-400 text-xs">₹</span>
-                                                            <input type="number" name="payout_amount" placeholder="Payout" required
-                                                                class="w-full pl-6 pr-2 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                                                        </div>
+
+                                                <div>
+                                                    <label class="block text-[10px] text-emerald-300 uppercase font-bold mb-1 tracking-wider">Partner Payout (₹) *</label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-3 top-2 text-slate-400 text-xs">₹</span>
+                                                        <input type="number" name="payout_amount" min="0" step="1" placeholder="25000" required
+                                                            class="w-full pl-6 pr-2 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
-                                                    <div class="flex-1">
-                                                        <label class="sr-only">Stay Days</label>
-                                                        <div class="relative">
-                                                            <span class="absolute right-3 top-2 text-slate-400 text-[10px] uppercase">Days</span>
-                                                            <input type="number" name="minimum_stay_days" placeholder="Stay" required
-                                                                class="w-full pl-3 pr-8 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                                                        </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-[10px] text-amber-300 uppercase font-bold mb-1 tracking-wider">Replacement Period (Days) *</label>
+                                                    <div class="relative">
+                                                        <span class="absolute right-3 top-2 text-slate-400 text-[10px] uppercase">Days</span>
+                                                        <input type="number" name="replacement_guarantee_days" min="0" max="365" placeholder="90" value="{{ $job->replacement_guarantee_days ?? 90 }}" required
+                                                            class="w-full pl-3 pr-12 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Days candidate must stay; partner owes replacement if they leave earlier.</p>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-[10px] text-cyan-300 uppercase font-bold mb-1 tracking-wider">Payout Release After (Days) *</label>
+                                                    <div class="relative">
+                                                        <span class="absolute right-3 top-2 text-slate-400 text-[10px] uppercase">Days</span>
+                                                        <input type="number" name="minimum_stay_days" min="0" max="365" placeholder="30" value="{{ $job->minimum_stay_days ?? 30 }}" required
+                                                            class="w-full pl-3 pr-12 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                                                    </div>
+                                                    <p class="text-[10px] text-slate-400 mt-1">Days after joining when partner's payout matures and is paid.</p>
                                                 </div>
 
                                                 <div class="flex gap-2">

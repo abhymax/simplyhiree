@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="{ activeTab: 'overview' }" class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
+<div x-data="{ activeTab: '{{ request('stage') ? 'applied' : 'overview' }}', stageFilter: '{{ request('stage', '') }}' }"
+     x-init="if (window.location.hash === '#applied') activeTab = 'applied';"
+     class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
     <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
 
@@ -220,6 +222,17 @@
                 <div class="p-6 border-b border-white/10 bg-emerald-500/10">
                     <h3 class="text-lg font-bold text-white">Application History</h3>
                     <p class="text-sm text-emerald-100">Candidates you already submitted for this role.</p>
+
+                    {{-- Stage filter chips (driven by ?stage= query param or activeTab dropdown) --}}
+                    <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                        @php
+                            $stages = ['applied','screened','turned_up','selected','joined'];
+                        @endphp
+                        <button type="button" @click="stageFilter = ''" :class="stageFilter === '' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-emerald-200'" class="px-3 py-1 rounded-full font-bold hover:bg-emerald-400 hover:text-white transition">All</button>
+                        @foreach($stages as $s)
+                            <button type="button" @click="stageFilter = '{{ $s }}'" :class="stageFilter === '{{ $s }}' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-emerald-200'" class="px-3 py-1 rounded-full font-bold hover:bg-emerald-400 hover:text-white transition">{{ ucfirst(str_replace('_',' ',$s)) }}</button>
+                        @endforeach
+                    </div>
                 </div>
 
                 @if($appliedApplications->count() > 0)
@@ -235,7 +248,19 @@
                             </thead>
                             <tbody class="divide-y divide-white/10">
                                 @foreach($appliedApplications as $app)
-                                    <tr class="hover:bg-white/5">
+                                    @php
+                                        // Bucket each application into one or more stages — bars in the listing
+                                        // map to the same buckets via these rules.
+                                        $rowStages = ['applied'];
+                                        if (in_array($app->status, ['Approved','Selected','Joined'])) $rowStages[] = 'screened';
+                                        if ($app->hiring_status === 'Interviewed' || $app->hiring_status === 'Selected' || $app->joined_status === 'Joined') $rowStages[] = 'turned_up';
+                                        if ($app->hiring_status === 'Selected' || $app->joined_status === 'Joined') $rowStages[] = 'selected';
+                                        if ($app->joined_status === 'Joined') $rowStages[] = 'joined';
+                                        $rowStageStr = implode(',', $rowStages);
+                                    @endphp
+                                    <tr class="hover:bg-white/5"
+                                        x-show="stageFilter === '' || '{{ $rowStageStr }}'.split(',').includes(stageFilter)"
+                                        x-transition>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="font-bold text-white">{{ $app->candidate->first_name }} {{ $app->candidate->last_name }}</div>
                                             <div class="text-xs text-slate-300">{{ $app->candidate->email ?? $app->candidate->phone_number }}</div>

@@ -112,13 +112,16 @@
 
                                 <td class="px-6 py-5 align-top">
                                     @foreach(['applied', 'screened', 'turned_up', 'selected', 'joined'] as $status)
-                                        <div class="flex items-center mb-2">
-                                            <span class="text-xs text-blue-200 w-24 uppercase">{{ ucfirst(str_replace('_', ' ', $status)) }}</span>
+                                        <a href="{{ route('partner.jobs.show', $job->id) }}?stage={{ $status }}#applied"
+                                           class="flex items-center mb-2 group transition rounded-md px-1 -mx-1 hover:bg-white/5"
+                                           title="View your {{ str_replace('_', ' ', $status) }} candidates for this job">
+                                            <span class="text-xs text-blue-200 w-24 uppercase group-hover:text-cyan-300">{{ ucfirst(str_replace('_', ' ', $status)) }}</span>
                                             <div class="w-full bg-slate-800 rounded-full h-2.5 mx-2 border border-white/10">
                                                 <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full" style="width: {{ $job->stats->applied > 0 ? ($job->stats->$status / $job->stats->applied) * 100 : 0 }}%"></div>
                                             </div>
-                                            <span class="text-xs font-bold text-white w-6 text-right">{{ $job->stats->$status }}</span>
-                                        </div>
+                                            <span class="text-xs font-bold w-6 text-right {{ $job->stats->$status > 0 ? 'text-emerald-300' : 'text-white' }}">{{ $job->stats->$status }}</span>
+                                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-500 ml-1 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-transform"></i>
+                                        </a>
                                     @endforeach
                                 </td>
 
