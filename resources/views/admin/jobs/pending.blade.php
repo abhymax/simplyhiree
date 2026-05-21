@@ -173,39 +173,28 @@
                                         {{-- Approval Form (Dark Inputs) --}}
                                         <form action="{{ route('admin.jobs.approve', $job) }}" method="POST">
                                             @csrf
-                                            <div class="bg-slate-800/50 rounded-xl p-3 border border-white/10 flex flex-col gap-3 shadow-inner">
+                                            <div class="bg-slate-800/50 rounded-xl p-2.5 border border-white/10 flex flex-col gap-2 shadow-inner">
 
-                                                <div>
-                                                    <label class="block text-[10px] text-emerald-300 uppercase font-bold mb-1 tracking-wider">Partner Payout (₹) *</label>
-                                                    <div class="relative">
-                                                        <span class="absolute left-3 top-2 text-slate-400 text-xs">₹</span>
+                                                <div class="grid grid-cols-3 gap-1.5">
+                                                    <div title="Partner Payout (₹)">
+                                                        <span class="block text-[9px] text-emerald-300 uppercase font-bold mb-0.5 tracking-wider">Payout ₹</span>
                                                         <input type="number" name="payout_amount" min="0" step="1" placeholder="25000" required
-                                                            class="w-full pl-6 pr-2 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                                                            class="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
-                                                </div>
-
-                                                <div>
-                                                    <label class="block text-[10px] text-amber-300 uppercase font-bold mb-1 tracking-wider">Replacement Period (Days) *</label>
-                                                    <div class="relative">
-                                                        <span class="absolute right-3 top-2 text-slate-400 text-[10px] uppercase">Days</span>
+                                                    <div title="Days candidate must stay; partner owes replacement if they leave earlier.">
+                                                        <span class="block text-[9px] text-amber-300 uppercase font-bold mb-0.5 tracking-wider">Repl. Days</span>
                                                         <input type="number" name="replacement_guarantee_days" min="0" max="365" placeholder="90" value="{{ $job->replacement_guarantee_days ?? 90 }}" required
-                                                            class="w-full pl-3 pr-12 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                                                            class="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
-                                                    <p class="text-[10px] text-slate-400 mt-1">Days candidate must stay; partner owes replacement if they leave earlier.</p>
-                                                </div>
-
-                                                <div>
-                                                    <label class="block text-[10px] text-cyan-300 uppercase font-bold mb-1 tracking-wider">Payout Release After (Days) *</label>
-                                                    <div class="relative">
-                                                        <span class="absolute right-3 top-2 text-slate-400 text-[10px] uppercase">Days</span>
+                                                    <div title="Days after joining when partner's payout matures and is paid.">
+                                                        <span class="block text-[9px] text-cyan-300 uppercase font-bold mb-0.5 tracking-wider">Payout Days</span>
                                                         <input type="number" name="minimum_stay_days" min="0" max="365" placeholder="30" value="{{ $job->minimum_stay_days ?? 30 }}" required
-                                                            class="w-full pl-3 pr-12 py-1.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                                                            class="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
-                                                    <p class="text-[10px] text-slate-400 mt-1">Days after joining when partner's payout matures and is paid.</p>
                                                 </div>
 
                                                 <div class="flex gap-2">
-                                                    <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white py-2 rounded-lg font-bold text-xs shadow-lg shadow-emerald-900/50 transition transform hover:scale-[1.02] flex items-center justify-center gap-1">
+                                                    <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white py-1.5 rounded font-bold text-xs shadow shadow-emerald-900/40 transition flex items-center justify-center gap-1">
                                                         <i class="fa-solid fa-check"></i> Approve
                                                     </button>
                                                     
