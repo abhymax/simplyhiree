@@ -239,34 +239,49 @@ class PartnerController extends Controller
         // --- Eager Load ---
         // Using 'category' based on previous fixes (ensure Job model has category() or jobCategory())
         $jobs = $query->with([
-            'jobApplications' => function ($query) use ($partner) {
-                $query->whereHas('candidate', function ($subQuery) use ($partner) {
-                    $subQuery->where('partner_id', $partner->id);
-                });
-            },
+            // Job-wide stats — every application on the job, used to compute
+            // the "how popular is this job" funnel in the listing.
+            'jobApplications',
             'experienceLevel',
             'educationLevel',
-            'category' // Changed to 'category' to align with Model alias fix
+            'category'
         ])
         ->latest()
         ->paginate(10)
         ->appends($request->query());
 
-        // --- Calculate Stats AND strip fields partners should never see ---
-        $jobs->each(function ($job) {
+        $jobs->each(function ($job) use ($partner) {
+            $allApps = $job->jobApplications;
+
+            // Job-wide funnel — every partner's submissions combined.
+            // Gives a real signal of how competitive the role is.
             $stats = [
-                'applied' => $job->jobApplications->count(),
-                'screened' => $job->jobApplications->where('status', 'Approved')->count(),
-                'turned_up' => $job->jobApplications->where('hiring_status', 'Interviewed')->count(),
-                'selected' => $job->jobApplications->where('hiring_status', 'Selected')->count(),
-                'joined' => $job->jobApplications->where('joined_status', 'Joined')->count(),
+                'applied'   => $allApps->count(),
+                'screened'  => $allApps->where('status', 'Approved')->count(),
+                'turned_up' => $allApps->whereIn('hiring_status', ['Interviewed', 'Selected'])->count() + $allApps->where('joined_status', 'Joined')->count(),
+                'selected'  => $allApps->where('hiring_status', 'Selected')->count() + $allApps->where('joined_status', 'Joined')->count(),
+                'joined'    => $allApps->where('joined_status', 'Joined')->count(),
             ];
-            $job->stats = (object)$stats;
+            $job->stats = (object) $stats;
+
+            // The partner's own funnel — used for the click-through label
+            // and the stage chip count.
+            $mine = \App\Models\JobApplication::where('job_id', $job->id)
+                ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partner->id))
+                ->get();
+            $job->my_stats = (object) [
+                'applied'   => $mine->count(),
+                'screened'  => $mine->where('status', 'Approved')->count(),
+                'turned_up' => $mine->whereIn('hiring_status', ['Interviewed', 'Selected'])->count() + $mine->where('joined_status', 'Joined')->count(),
+                'selected'  => $mine->where('hiring_status', 'Selected')->count() + $mine->where('joined_status', 'Joined')->count(),
+                'joined'    => $mine->where('joined_status', 'Joined')->count(),
+            ];
+
             // Hide client/billing fields. Partners only need to see the
             // partner-payout amount, never the full deal value.
             $job->makeHidden(['user_id', 'invoice_amount']);
-            foreach ($job->jobApplications as $app) {
-                $app->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat']);
+            foreach ($allApps as $app) {
+                $app->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat', 'candidate_id', 'candidate']);
             }
         });
 

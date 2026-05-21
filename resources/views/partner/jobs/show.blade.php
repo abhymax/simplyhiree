@@ -54,10 +54,15 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row lg:flex-col gap-4 w-full lg:w-auto items-start lg:items-end">
-                    <div class="bg-slate-900/50 rounded-2xl p-4 border border-white/10 text-center w-full sm:w-auto min-w-[220px]">
+                    <div class="bg-slate-900/50 rounded-2xl p-4 border border-white/10 text-center w-full sm:w-auto min-w-[260px]">
                         <p class="text-xs text-blue-200 uppercase font-bold tracking-wider mb-1">Partner Payout</p>
                         <p class="text-3xl font-bold text-emerald-300">₹{{ number_format($job->payout_amount) }}</p>
-                        <p class="text-xs text-slate-300 mt-1">Credit: {{ $job->minimum_stay_days }} days</p>
+                        <p class="text-xs text-slate-300 mt-1">Released {{ $job->minimum_stay_days ?? 0 }} days after joining</p>
+                        <div class="mt-3 pt-3 border-t border-white/10">
+                            <p class="text-[10px] text-amber-200 uppercase font-bold tracking-wider">Replacement Period</p>
+                            <p class="text-lg font-extrabold text-amber-200">{{ $job->replacement_guarantee_days ?? 0 }} days</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">If candidate leaves earlier, replacement required.</p>
+                        </div>
                     </div>
 
                     <a href="{{ route('partner.candidates.check') }}" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-lg transition">

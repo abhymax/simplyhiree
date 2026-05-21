@@ -114,12 +114,18 @@
                                     @foreach(['applied', 'screened', 'turned_up', 'selected', 'joined'] as $status)
                                         <a href="{{ route('partner.jobs.show', $job->id) }}?stage={{ $status }}#applied"
                                            class="flex items-center mb-2 group transition rounded-md px-1 -mx-1 hover:bg-white/5"
-                                           title="View your {{ str_replace('_', ' ', $status) }} candidates for this job">
+                                           title="Total {{ str_replace('_', ' ', $status) }} candidates on this job (your share: {{ $job->my_stats->$status }})">
                                             <span class="text-xs text-blue-200 w-24 uppercase group-hover:text-cyan-300">{{ ucfirst(str_replace('_', ' ', $status)) }}</span>
-                                            <div class="w-full bg-slate-800 rounded-full h-2.5 mx-2 border border-white/10">
-                                                <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full" style="width: {{ $job->stats->applied > 0 ? ($job->stats->$status / $job->stats->applied) * 100 : 0 }}%"></div>
+                                            <div class="w-full bg-slate-800 rounded-full h-2.5 mx-2 border border-white/10 overflow-hidden flex">
+                                                {{-- Job-wide funnel (blue) --}}
+                                                <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5" style="width: {{ $job->stats->applied > 0 ? ($job->stats->$status / $job->stats->applied) * 100 : 0 }}%"></div>
                                             </div>
-                                            <span class="text-xs font-bold w-6 text-right {{ $job->stats->$status > 0 ? 'text-emerald-300' : 'text-white' }}">{{ $job->stats->$status }}</span>
+                                            <div class="flex items-baseline gap-1 w-14 justify-end">
+                                                <span class="text-xs font-bold {{ $job->stats->$status > 0 ? 'text-white' : 'text-slate-500' }}">{{ $job->stats->$status }}</span>
+                                                @if($job->my_stats->$status > 0)
+                                                    <span class="text-[10px] font-extrabold text-emerald-300" title="You contributed {{ $job->my_stats->$status }}">({{ $job->my_stats->$status }})</span>
+                                                @endif
+                                            </div>
                                             <i class="fa-solid fa-chevron-right text-[10px] text-slate-500 ml-1 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-transform"></i>
                                         </a>
                                     @endforeach
@@ -128,9 +134,11 @@
                                 <td class="px-6 py-5 align-top">
                                     <div class="text-xs uppercase text-blue-200 font-bold">Payout</div>
                                     <div class="text-3xl font-black text-emerald-300">₹{{ number_format($job->payout_amount, 0) }}</div>
-                                    <div class="text-xs text-slate-300 mb-3">after {{ $job->minimum_stay_days ?? 0 }} days</div>
-
-                                    <div class="space-y-2">
+                                    <div class="text-xs text-slate-300">released {{ $job->minimum_stay_days ?? 0 }} days after joining</div>
+                                    <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-200 border border-amber-400/30" title="If the candidate leaves before this, partner must provide a replacement or refund.">
+                                        <i class="fa-solid fa-rotate"></i> Replacement: {{ $job->replacement_guarantee_days ?? 0 }} days
+                                    </div>
+                                    <div class="space-y-2 mt-3">
                                         <a href="{{ route('partner.jobs.show', $job->id) }}" class="fx-btn block text-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm">View Details</a>
                                         <a href="{{ route('partner.jobs.showApplyForm', $job->id) }}" class="fx-btn block text-center px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black text-sm">Apply Now</a>
                                     </div>
