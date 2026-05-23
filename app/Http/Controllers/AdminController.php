@@ -692,13 +692,34 @@ class AdminController extends Controller
     public function updatePartnerPlan(Request $request, \App\Models\PartnerPlan $plan)
     {
         $validated = $request->validate([
+            'subtitle'                 => 'nullable|string|max:255',
             'monthly_submission_limit' => 'nullable|integer|min:1',
-            'max_team_members' => 'required|integer|min:1',
-            'can_view_premium_jobs' => 'boolean',
-            'price' => 'required|numeric|min:0',
+            'max_team_members'         => 'required|integer|min:1',
+            'price'                    => 'required|numeric|min:0',
+            'price_max'                => 'nullable|numeric|min:0',
+            'price_suffix'             => 'nullable|string|max:40',
+            'commission_min'           => 'nullable|numeric|min:0|max:100',
+            'commission_max'           => 'nullable|numeric|min:0|max:100',
+            'accent_color'             => 'nullable|in:slate,blue,purple,rose,emerald',
+            'sort_order'               => 'nullable|integer|min:0',
+            'features'                 => 'nullable|string',
+            'non_features'             => 'nullable|string',
         ]);
 
+        // Convert line-separated textareas into clean arrays
+        $linesToArr = function ($txt) {
+            if (!$txt) return [];
+            return collect(preg_split('/\r?\n/', $txt))
+                ->map(fn ($l) => trim($l))
+                ->filter()
+                ->values()
+                ->all();
+        };
+
+        $validated['features']              = $linesToArr($validated['features'] ?? null);
+        $validated['non_features']          = $linesToArr($validated['non_features'] ?? null);
         $validated['can_view_premium_jobs'] = $request->has('can_view_premium_jobs');
+        $validated['is_most_popular']       = $request->has('is_most_popular');
 
         $plan->update($validated);
 

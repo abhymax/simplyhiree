@@ -23,7 +23,16 @@ class PartnerController extends Controller
             ->where('status', 'pending')
             ->latest()
             ->first();
-        return view('partner.upgrade', ['partner' => $partner, 'pendingRequest' => $existing]);
+
+        // Pull plans from the DB so superadmin edits on /admin/partner-plans
+        // reflect here immediately.
+        $plans = \App\Models\PartnerPlan::orderBy('sort_order')->orderBy('price')->get();
+
+        return view('partner.upgrade', [
+            'partner'        => $partner,
+            'pendingRequest' => $existing,
+            'plans'          => $plans,
+        ]);
     }
 
     public function requestPlanChange(Request $request)

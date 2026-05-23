@@ -44,57 +44,48 @@
         @endif
 
         @php
-            $cards = [
-                ['key'=>'Free','label'=>'🟢 Free','price'=>'₹0','priceSub'=>'/month','badge'=>'Entry / Freshers','frame'=>'bg-slate-900/60 border border-white/15','features'=>[
-                    '✔ 5–10 job submissions / month',
-                    '✔ 20–30% commission per closure',
-                    '✔ Basic profile visibility',
-                    '<span class="opacity-50">✘ Bulk hiring projects</span>',
-                    '<span class="opacity-50">✘ Priority support</span>',
-                ]],
-                ['key'=>'Basic','label'=>'🔵 Basic','price'=>'₹499<span class="text-base font-semibold">–999</span>','priceSub'=>'/month','badge'=>'Starter Paid · Serious Freelancers','frame'=>'bg-slate-900/60 border border-blue-400/30','features'=>[
-                    '✔ 30–50 job submissions / month',
-                    '✔ 15–20% commission per closure',
-                    '✔ WhatsApp support group',
-                    '✔ Medium profile visibility boost',
-                    '✔ Early access (2–4 hrs before Free)',
-                ]],
-                ['key'=>'Pro','label'=>'🟣 Pro','price'=>'₹1,999<span class="text-base font-semibold">–2,999</span>','priceSub'=>'/month','badge'=>'High Performer · Experienced Recruiters','frame'=>'bg-gradient-to-br from-purple-800/40 to-fuchsia-700/40 border-2 border-purple-400/60 shadow-2xl shadow-purple-500/20','popular'=>true,'features'=>[
-                    '✔ <strong>Unlimited</strong> job submissions',
-                    '✔ 10–15% commission (lowest)',
-                    '✔ Dedicated Account Manager',
-                    '✔ Priority payouts',
-                    '✔ Bulk hiring projects access',
-                    '✔ Featured profile (top listing)',
-                ]],
-                ['key'=>'Enterprise','label'=>'🔴 Enterprise','price'=>'₹5,000<span class="text-base font-semibold">–15,000</span>','priceSub'=>'/month (custom)','badge'=>'Big Vendors · Agencies','frame'=>'bg-slate-900/60 border border-rose-400/40','features'=>[
-                    '✔ Dedicated hiring projects',
-                    '✔ Direct client connection',
-                    '✔ Unlimited team logins',
-                    '✔ Zero / very-low commission',
-                    '✔ SLA-based hiring contracts',
-                    '✔ Dashboard + reporting',
-                ]],
+            // Map DB accent_color → Tailwind classes for the card frame and dot
+            $accentMap = [
+                'slate'   => ['frame'=>'bg-slate-900/60 border border-white/15',                                                              'dot'=>'bg-emerald-400'],
+                'blue'    => ['frame'=>'bg-slate-900/60 border border-blue-400/30',                                                            'dot'=>'bg-blue-400'],
+                'purple'  => ['frame'=>'bg-gradient-to-br from-purple-800/40 to-fuchsia-700/40 border-2 border-purple-400/60 shadow-2xl shadow-purple-500/20', 'dot'=>'bg-purple-400'],
+                'rose'    => ['frame'=>'bg-slate-900/60 border border-rose-400/40',                                                            'dot'=>'bg-rose-400'],
+                'emerald' => ['frame'=>'bg-slate-900/60 border border-emerald-400/40',                                                         'dot'=>'bg-emerald-400'],
             ];
+            // Cached ordered plan-name list for upgrade/downgrade detection
+            $planOrder = $plans->pluck('name')->all();
         @endphp
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-            @foreach($cards as $card)
-                @php $isCurrent = $currentPlan === $card['key']; @endphp
-                <div class="{{ $card['frame'] }} backdrop-blur-xl rounded-3xl p-6 flex flex-col relative {{ $isCurrent ? 'ring-2 ring-white/40' : '' }}">
-                    @if(!empty($card['popular']))
+            @foreach($plans as $plan)
+                @php
+                    $isCurrent = $currentPlan === $plan->name;
+                    $accent = $accentMap[$plan->accent_color] ?? $accentMap['slate'];
+                @endphp
+                <div class="{{ $accent['frame'] }} backdrop-blur-xl rounded-3xl p-6 flex flex-col relative {{ $isCurrent ? 'ring-2 ring-white/40' : '' }}">
+                    @if($plan->is_most_popular)
                         <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-400 text-slate-900 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider">Most Popular</div>
                     @endif
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold uppercase text-[11px] tracking-wider">{{ $card['label'] }}</span>
+                        <span class="font-bold uppercase text-[11px] tracking-wider text-white inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full {{ $accent['dot'] }}"></span> {{ $plan->name }}
+                        </span>
                         @if($isCurrent)<span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
                     </div>
-                    <div class="text-4xl font-extrabold text-white">{!! $card['price'] !!}</div>
-                    <div class="text-sm mb-1">{{ $card['priceSub'] }}</div>
-                    <div class="text-xs opacity-70 mb-5">{{ $card['badge'] }}</div>
-                    <ul class="text-sm space-y-2 flex-1">
-                        @foreach($card['features'] as $f)
-                            <li>{!! $f !!}</li>
+                    <div class="text-4xl font-extrabold text-white">
+                        ₹{{ number_format((float) $plan->price) }}@if($plan->price_max && (float) $plan->price_max > (float) $plan->price)<span class="text-base font-semibold">–{{ number_format((float) $plan->price_max) }}</span>@endif
+                    </div>
+                    <div class="text-sm mb-1 text-white/70">{{ $plan->price_suffix ?: '/month' }}</div>
+                    @if($plan->subtitle)
+                        <div class="text-xs text-white/60 mb-5">{{ $plan->subtitle }}</div>
+                    @endif
+
+                    <ul class="text-sm space-y-2 flex-1 text-white">
+                        @foreach((array) $plan->features as $f)
+                            <li><span class="text-emerald-300 font-bold">✔</span> {{ $f }}</li>
+                        @endforeach
+                        @foreach((array) $plan->non_features as $f)
+                            <li class="text-white/40"><span>✘</span> {{ $f }}</li>
                         @endforeach
                     </ul>
 
@@ -103,11 +94,11 @@
                     @elseif($pendingRequest)
                         <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed" title="Cancel your pending request first">Request Pending</button>
                     @else
-                        <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $card['key'] }}? A SimplyHiree manager will contact you.');" class="mt-6">
+                        <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $plan->name }}? A SimplyHiree manager will contact you.');" class="mt-6">
                             @csrf
-                            <input type="hidden" name="requested_plan" value="{{ $card['key'] }}">
+                            <input type="hidden" name="requested_plan" value="{{ $plan->name }}">
                             <button type="submit" class="w-full bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-extrabold py-3 rounded-xl transition">
-                                @if(array_search($card['key'], ['Free','Basic','Pro','Enterprise']) < array_search($currentPlan, ['Free','Basic','Pro','Enterprise']))
+                                @if(array_search($plan->name, $planOrder) !== false && array_search($currentPlan, $planOrder) !== false && array_search($plan->name, $planOrder) < array_search($currentPlan, $planOrder))
                                     Request Downgrade
                                 @else
                                     Request Upgrade
@@ -119,7 +110,8 @@
             @endforeach
         </div>
 
-        <p class="text-center text-blue-200 text-sm mt-8">
+        <p class="text-center text-white text-sm mt-8 bg-white/5 border border-white/10 rounded-xl py-3 px-4">
+            <i class="fa-solid fa-info-circle text-cyan-300 mr-1"></i>
             All requests are reviewed by a SimplyHiree manager. You'll be contacted by phone or email shortly after submitting.
         </p>
     </div>
