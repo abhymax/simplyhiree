@@ -80,28 +80,55 @@
                         <div class="text-xs text-white/60 mb-5">{{ $plan->subtitle }}</div>
                     @endif
 
-                    <ul class="text-sm space-y-2 flex-1 text-white">
+                    <ul class="text-sm space-y-2.5 flex-1 text-white">
                         @foreach((array) $plan->features as $f)
-                            <li><span class="text-emerald-300 font-bold">✔</span> {{ $f }}</li>
+                            <li class="flex items-start gap-2.5 group cursor-default transition-all duration-200 hover:translate-x-1">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-center group-hover:bg-emerald-500/30 group-hover:border-emerald-300 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all">
+                                    <i class="fa-solid fa-check text-[10px] text-emerald-300 group-hover:text-emerald-200"></i>
+                                </span>
+                                <span class="flex-1 group-hover:text-white">{{ $f }}</span>
+                            </li>
                         @endforeach
                         @foreach((array) $plan->non_features as $f)
-                            <li class="text-white/40"><span>✘</span> {{ $f }}</li>
+                            <li class="flex items-start gap-2.5 text-white/40 group cursor-default">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-rose-500/10 border border-rose-400/30 flex items-center justify-center">
+                                    <i class="fa-solid fa-xmark text-[10px] text-rose-300/70"></i>
+                                </span>
+                                <span class="flex-1 line-through decoration-rose-400/30">{{ $f }}</span>
+                            </li>
                         @endforeach
                     </ul>
 
                     @if($isCurrent)
-                        <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed">Current Plan</button>
+                        <button disabled class="mt-6 w-full font-extrabold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                                style="background:#475569; color:#cbd5e1;">
+                            <i class="fa-solid fa-check-circle"></i> Current Plan
+                        </button>
                     @elseif($pendingRequest)
-                        <button disabled class="mt-6 w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl cursor-not-allowed" title="Cancel your pending request first">Request Pending</button>
+                        <button disabled class="mt-6 w-full font-extrabold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                                style="background:#475569; color:#cbd5e1;"
+                                title="Cancel your pending request first">
+                            <i class="fa-regular fa-clock"></i> Request Pending
+                        </button>
                     @else
+                        @php
+                            $isDowngrade = array_search($plan->name, $planOrder) !== false
+                                && array_search($currentPlan, $planOrder) !== false
+                                && array_search($plan->name, $planOrder) < array_search($currentPlan, $planOrder);
+                        @endphp
                         <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $plan->name }}? A SimplyHiree manager will contact you.');" class="mt-6">
                             @csrf
                             <input type="hidden" name="requested_plan" value="{{ $plan->name }}">
-                            <button type="submit" class="w-full bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-extrabold py-3 rounded-xl transition">
-                                @if(array_search($plan->name, $planOrder) !== false && array_search($currentPlan, $planOrder) !== false && array_search($plan->name, $planOrder) < array_search($currentPlan, $planOrder))
-                                    Request Downgrade
+                            <button type="submit"
+                                    class="w-full font-extrabold py-3 rounded-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 hover:scale-[1.02]"
+                                    style="{{ $isDowngrade
+                                        ? 'background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: #1e293b; box-shadow: 0 10px 25px -8px rgba(245,158,11,.5), inset 0 1px 0 rgba(255,255,255,.35);'
+                                        : 'background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%); color: #0f172a; box-shadow: 0 10px 25px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.45);' }}"
+                                    onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+                                @if($isDowngrade)
+                                    <i class="fa-solid fa-arrow-down"></i> Request Downgrade
                                 @else
-                                    Request Upgrade
+                                    <i class="fa-solid fa-arrow-up"></i> Request Upgrade
                                 @endif
                             </button>
                         </form>
