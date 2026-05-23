@@ -1580,7 +1580,10 @@ class AdminController extends Controller
     public function planRequestApprove(\Illuminate\Http\Request $request, \App\Models\PlanChangeRequest $planChangeRequest)
     {
         $data = $request->validate(['admin_notes' => 'nullable|string|max:1000']);
+
         // Apply the plan change to the partner
+        $partner = \App\Models\User::find($planChangeRequest->partner_id);
+        $oldPlan = $partner?->partner_plan ?? '—';
         \App\Models\User::where('id', $planChangeRequest->partner_id)->update([
             'partner_plan' => $planChangeRequest->requested_plan,
         ]);
@@ -1590,7 +1593,29 @@ class AdminController extends Controller
             'actioned_at'         => now(),
             'actioned_by_user_id' => auth()->id(),
         ]);
-        return back()->with('success', "Plan changed to {$planChangeRequest->requested_plan} for {$planChangeRequest->partner?->name}.");
+
+        // Branded confirmation email to the partner
+        if ($partner && $partner->email) {
+            try {
+                $planRow = \App\Models\PartnerPlan::where('name', $planChangeRequest->requested_plan)->first();
+                \Illuminate\Support\Facades\Mail::send('partner.email_plan_approved', [
+                    'partner'     => $partner,
+                    'oldPlan'     => $oldPlan,
+                    'newPlan'     => $planChangeRequest->requested_plan,
+                    'monthlyCap'  => $planRow?->monthly_submission_limit,
+                    'maxTeam'     => $planRow?->max_team_members ?? 1,
+                    'premiumJobs' => (bool) ($planRow?->can_view_premium_jobs),
+                    'adminNotes'  => $data['admin_notes'] ?? null,
+                ], function ($m) use ($partner, $planChangeRequest) {
+                    $m->to($partner->email, $partner->name)
+                      ->subject('🎉 Your plan has been upgraded to ' . $planChangeRequest->requested_plan . ' — SimplyHiree');
+                });
+            } catch (\Throwable $e) {
+                \Log::warning('Plan approval email failed for partner ' . $partner->id . ': ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Plan changed to {$planChangeRequest->requested_plan} for {$partner?->name}. Confirmation email sent.");
     }
 
     public function planRequestReject(\Illuminate\Http\Request $request, \App\Models\PlanChangeRequest $planChangeRequest)

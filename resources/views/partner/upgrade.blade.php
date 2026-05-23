@@ -62,50 +62,52 @@
                     $isCurrent = $currentPlan === $plan->name;
                     $accent = $accentMap[$plan->accent_color] ?? $accentMap['slate'];
                 @endphp
-                <div class="{{ $accent['frame'] }} backdrop-blur-xl rounded-3xl p-6 flex flex-col relative {{ $isCurrent ? 'ring-2 ring-white/40' : '' }}">
+                <div class="{{ $accent['frame'] }} backdrop-blur-xl rounded-2xl p-5 flex flex-col relative {{ $isCurrent ? 'ring-2 ring-white/40' : '' }}">
                     @if($plan->is_most_popular)
                         <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-400 text-slate-900 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider">Most Popular</div>
                     @endif
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center justify-between mb-3">
                         <span class="font-bold uppercase text-[11px] tracking-wider text-white inline-flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full {{ $accent['dot'] }}"></span> {{ $plan->name }}
                         </span>
                         @if($isCurrent)<span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
                     </div>
-                    <div class="text-4xl font-extrabold text-white">
+                    <div class="text-3xl font-extrabold text-white leading-none">
                         ₹{{ number_format((float) $plan->price) }}@if($plan->price_max && (float) $plan->price_max > (float) $plan->price)<span class="text-base font-semibold">–{{ number_format((float) $plan->price_max) }}</span>@endif
                     </div>
-                    <div class="text-sm mb-1 text-white/70">{{ $plan->price_suffix ?: '/month' }}</div>
+                    <div class="text-xs mb-0.5 text-white/70 mt-1">{{ $plan->price_suffix ?: '/month' }}</div>
                     @if($plan->subtitle)
-                        <div class="text-xs text-white/60 mb-5">{{ $plan->subtitle }}</div>
+                        <div class="text-[11px] text-white/60 mb-3.5">{{ $plan->subtitle }}</div>
                     @endif
 
-                    <ul class="text-sm space-y-2.5 flex-1 text-white">
+                    <ul class="text-[13px] space-y-3 flex-1 text-white">
                         @foreach((array) $plan->features as $f)
                             <li class="flex items-start gap-2.5 group cursor-default transition-all duration-200 hover:translate-x-1">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-center group-hover:bg-emerald-500/30 group-hover:border-emerald-300 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all">
-                                    <i class="fa-solid fa-check text-[10px] text-emerald-300 group-hover:text-emerald-200"></i>
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all"
+                                      style="background:#10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.25), 0 4px 10px -2px rgba(16,185,129,.55);">
+                                    <i class="fa-solid fa-check text-[10px]" style="color:#ffffff;"></i>
                                 </span>
-                                <span class="flex-1 group-hover:text-white">{{ $f }}</span>
+                                <span class="flex-1 leading-snug group-hover:text-white">{{ $f }}</span>
                             </li>
                         @endforeach
                         @foreach((array) $plan->non_features as $f)
-                            <li class="flex items-start gap-2.5 text-white/40 group cursor-default">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-rose-500/10 border border-rose-400/30 flex items-center justify-center">
-                                    <i class="fa-solid fa-xmark text-[10px] text-rose-300/70"></i>
+                            <li class="flex items-start gap-2.5 group cursor-default">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                                      style="background:#ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.25), 0 4px 10px -2px rgba(239,68,68,.5);">
+                                    <i class="fa-solid fa-xmark text-[10px]" style="color:#ffffff;"></i>
                                 </span>
-                                <span class="flex-1 line-through decoration-rose-400/30">{{ $f }}</span>
+                                <span class="flex-1 leading-snug text-white/50 line-through decoration-rose-400/40">{{ $f }}</span>
                             </li>
                         @endforeach
                     </ul>
 
                     @if($isCurrent)
-                        <button disabled class="mt-6 w-full font-extrabold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                        <button disabled class="mt-4 w-full font-bold py-2.5 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                                 style="background:#475569; color:#cbd5e1;">
                             <i class="fa-solid fa-check-circle"></i> Current Plan
                         </button>
                     @elseif($pendingRequest)
-                        <button disabled class="mt-6 w-full font-extrabold py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                        <button disabled class="mt-4 w-full font-bold py-2.5 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                                 style="background:#475569; color:#cbd5e1;"
                                 title="Cancel your pending request first">
                             <i class="fa-regular fa-clock"></i> Request Pending
@@ -120,7 +122,7 @@
                             @csrf
                             <input type="hidden" name="requested_plan" value="{{ $plan->name }}">
                             <button type="submit"
-                                    class="w-full font-extrabold py-3 rounded-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 hover:scale-[1.02]"
+                                    class="w-full font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 hover:scale-[1.02] text-sm"
                                     style="{{ $isDowngrade
                                         ? 'background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: #1e293b; box-shadow: 0 10px 25px -8px rgba(245,158,11,.5), inset 0 1px 0 rgba(255,255,255,.35);'
                                         : 'background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%); color: #0f172a; box-shadow: 0 10px 25px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.45);' }}"
