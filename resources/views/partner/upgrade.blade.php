@@ -72,18 +72,21 @@
                         </span>
                         @if($isCurrent)<span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
                     </div>
-                    <div class="text-3xl font-extrabold text-white leading-none">
-                        ₹{{ number_format((float) $plan->price) }}@if($plan->price_max && (float) $plan->price_max > (float) $plan->price)<span class="text-base font-semibold">–{{ number_format((float) $plan->price_max) }}</span>@endif
+                    {{-- Fixed-height pricing block so feature lists across all 4 cards start at exactly the same Y --}}
+                    <div style="min-height: 76px;">
+                        <div class="text-3xl font-extrabold text-white leading-none">
+                            ₹{{ number_format((float) $plan->price) }}@if($plan->price_max && (float) $plan->price_max > (float) $plan->price)<span class="text-base font-semibold">–{{ number_format((float) $plan->price_max) }}</span>@endif
+                        </div>
+                        <div class="text-xs text-white/70 mt-1">{{ $plan->price_suffix ?: '/month' }}</div>
+                        @if($plan->subtitle)
+                            <div class="text-[11px] text-white/60 mt-1.5 leading-tight">{{ $plan->subtitle }}</div>
+                        @endif
                     </div>
-                    <div class="text-xs mb-0.5 text-white/70 mt-1">{{ $plan->price_suffix ?: '/month' }}</div>
-                    @if($plan->subtitle)
-                        <div class="text-[11px] text-white/60 mb-3.5">{{ $plan->subtitle }}</div>
-                    @endif
 
-                    <ul class="text-[13px] space-y-3 flex-1 text-white">
+                    <ul class="text-[13px] space-y-2.5 mt-3 flex-1 text-white">
                         @foreach((array) $plan->features as $f)
-                            <li class="flex items-start gap-2.5 group cursor-default transition-all duration-200 hover:translate-x-1">
-                                <span class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all"
+                            <li class="flex items-start gap-3.5 group cursor-default transition-all duration-200 hover:translate-x-1">
+                                <span class="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full flex items-center justify-center transition-all"
                                       style="background:#10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.25), 0 4px 10px -2px rgba(16,185,129,.55);">
                                     <i class="fa-solid fa-check text-[10px]" style="color:#ffffff;"></i>
                                 </span>
@@ -91,8 +94,8 @@
                             </li>
                         @endforeach
                         @foreach((array) $plan->non_features as $f)
-                            <li class="flex items-start gap-2.5 group cursor-default">
-                                <span class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                            <li class="flex items-start gap-3.5 group cursor-default">
+                                <span class="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full flex items-center justify-center"
                                       style="background:#ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.25), 0 4px 10px -2px rgba(239,68,68,.5);">
                                     <i class="fa-solid fa-xmark text-[10px]" style="color:#ffffff;"></i>
                                 </span>
@@ -102,12 +105,12 @@
                     </ul>
 
                     @if($isCurrent)
-                        <button disabled class="mt-4 w-full font-bold py-2.5 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                        <button disabled class="mt-3 w-full font-bold py-2 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                                 style="background:#475569; color:#cbd5e1;">
                             <i class="fa-solid fa-check-circle"></i> Current Plan
                         </button>
                     @elseif($pendingRequest)
-                        <button disabled class="mt-4 w-full font-bold py-2.5 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                        <button disabled class="mt-3 w-full font-bold py-2 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                                 style="background:#475569; color:#cbd5e1;"
                                 title="Cancel your pending request first">
                             <i class="fa-regular fa-clock"></i> Request Pending
@@ -118,11 +121,11 @@
                                 && array_search($currentPlan, $planOrder) !== false
                                 && array_search($plan->name, $planOrder) < array_search($currentPlan, $planOrder);
                         @endphp
-                        <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $plan->name }}? A SimplyHiree manager will contact you.');" class="mt-6">
+                        <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $plan->name }}? A SimplyHiree manager will contact you.');" class="mt-3">
                             @csrf
                             <input type="hidden" name="requested_plan" value="{{ $plan->name }}">
                             <button type="submit"
-                                    class="w-full font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 hover:scale-[1.02] text-sm"
+                                    class="w-full font-bold py-2 rounded-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 hover:scale-[1.02] text-sm"
                                     style="{{ $isDowngrade
                                         ? 'background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: #1e293b; box-shadow: 0 10px 25px -8px rgba(245,158,11,.5), inset 0 1px 0 rgba(255,255,255,.35);'
                                         : 'background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%); color: #0f172a; box-shadow: 0 10px 25px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.45);' }}"
