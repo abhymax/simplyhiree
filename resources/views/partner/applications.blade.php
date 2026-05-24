@@ -54,8 +54,8 @@
         @endphp
 
         {{-- Status pill tabs --}}
-        <div class="mb-4 -mx-1 overflow-x-auto pb-1">
-            <div class="flex items-center gap-2 px-1 min-w-max">
+        <div class="mb-5 -mx-1 overflow-x-auto pb-2">
+            <div class="flex items-center gap-3 px-1 min-w-max">
                 @foreach($tabs as $t)
                     @php
                         $isActive = (string) $activeStatus === (string) $t['key'];
@@ -63,10 +63,10 @@
                         $activeCls  = $colorMap[$t['color']];
                     @endphp
                     <a href="{{ route('partner.applications', $linkParams) }}"
-                       class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-bold border whitespace-nowrap transition
-                              {{ $isActive ? $activeCls.' shadow-lg scale-105' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white' }}">
-                        {{ $t['label'] }}
-                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold {{ $isActive ? 'bg-white/20' : 'bg-slate-800/60 text-slate-300' }}">{{ $t['count'] }}</span>
+                       class="inline-flex items-center gap-2.5 pl-4 pr-2 py-2 rounded-full text-xs font-bold border whitespace-nowrap transition
+                              {{ $isActive ? $activeCls.' shadow-lg' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white' }}">
+                        <span class="leading-none">{{ $t['label'] }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full text-[11px] font-extrabold leading-none {{ $isActive ? 'bg-white/25 text-white' : 'bg-slate-800/70 text-slate-200' }}">{{ $t['count'] }}</span>
                     </a>
                 @endforeach
             </div>
