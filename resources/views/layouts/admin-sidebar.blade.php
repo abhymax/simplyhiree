@@ -1,5 +1,13 @@
 {{-- Vertical sidebar for Superadmin / Manager. Fixed 256px on lg+,
      slide-in panel on small screens triggered by the topbar hamburger. --}}
+<style>
+    .sidebar-nav::-webkit-scrollbar          { width: 4px; }
+    .sidebar-nav::-webkit-scrollbar-track    { background: transparent; }
+    .sidebar-nav::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.18); border-radius: 4px; }
+    .sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.38); }
+    /* Firefox */
+    .sidebar-nav { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+</style>
 <div x-data="{ open: false }">
     {{-- Mobile topbar --}}
     <div class="admin-mobile-only fixed top-0 left-0 right-0 z-50 bg-slate-900 border-b border-white/10 h-14 flex items-center justify-between px-3">
@@ -25,7 +33,7 @@
             <button type="button" @click="open = false" class="admin-mobile-only text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-3 space-y-0.5">
+        <nav class="flex-1 overflow-y-auto py-3 space-y-0.5 sidebar-nav">
             @php
                 $links = [
                     ['route'=>'admin.dashboard',              'label'=>'Dashboard',           'icon'=>'fa-gauge-high',          'active'=>['admin.dashboard','dashboard']],
