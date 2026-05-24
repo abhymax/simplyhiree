@@ -1113,17 +1113,35 @@ class ClientController extends Controller
     {
         $client = Auth::user();
 
-        $hires = JobApplication::where('hiring_status', 'Selected')
+        $query = JobApplication::where('hiring_status', 'Selected')
             ->whereNotNull('joining_date')
             ->whereHas('job', fn ($q) => $q->where('user_id', $client->id))
-            ->with(['job.user', 'candidate', 'candidateUser'])
-            ->latest('joining_date')
-            ->paginate(25)
-            ->withQueryString();
+            ->with(['job.user', 'candidate', 'candidateUser']);
 
+        // Filters
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('candidate', fn ($qq) => $qq->where('first_name', 'like', "%$search%")
+                                                       ->orWhere('last_name', 'like', "%$search%")
+                                                       ->orWhere('email', 'like', "%$search%"))
+                  ->orWhereHas('candidateUser', fn ($qq) => $qq->where('name', 'like', "%$search%")
+                                                              ->orWhere('email', 'like', "%$search%"))
+                  ->orWhereHas('job', fn ($qq) => $qq->where('title', 'like', "%$search%"));
+            });
+        }
+        if ($jobId = $request->input('job_id')) {
+            $query->where('job_id', $jobId);
+        }
+        if ($from = $request->input('date_from')) {
+            $query->whereDate('joining_date', '>=', $from);
+        }
+        if ($to = $request->input('date_to')) {
+            $query->whereDate('joining_date', '<=', $to);
+        }
+
+        $hires = $query->latest('joining_date')->paginate(25)->withQueryString();
         $billingData = $hires->through(fn ($app) => $app->billingSnapshot());
 
-        // Optional status filter
         $statusFilter = $request->input('status');
         if ($statusFilter) {
             $billingData->setCollection(
@@ -1131,17 +1149,65 @@ class ClientController extends Controller
             );
         }
 
-        // Tally per bucket
-        $allOnPage = $billingData->getCollection();
+        // Status counts across the WHOLE filtered dataset (not just current page)
+        // so the chips display accurate totals.
+        $allFiltered = (clone $query)->get()->map(fn ($a) => $a->billingSnapshot());
         $counts = [
-            'Paid'         => $allOnPage->where('status', 'Paid')->count(),
-            'Overdue'      => $allOnPage->where('status', 'Overdue')->count(),
-            'Raised'       => $allOnPage->where('status', 'Raised')->count(),
-            'Due to Raise' => $allOnPage->where('status', 'Due to Raise')->count(),
-            'Maturing'     => $allOnPage->where('status', 'Maturing')->count(),
+            'Paid'         => $allFiltered->where('status', 'Paid')->count(),
+            'Overdue'      => $allFiltered->where('status', 'Overdue')->count(),
+            'Raised'       => $allFiltered->where('status', 'Raised')->count(),
+            'Due to Raise' => $allFiltered->where('status', 'Due to Raise')->count(),
+            'Maturing'     => $allFiltered->where('status', 'Maturing')->count(),
         ];
 
-        return view('client.billing.index', compact('billingData', 'counts', 'statusFilter'));
+        // Summary numbers
+        $summary = [
+            'outstanding'    => $allFiltered->whereIn('status', ['Raised', 'Overdue', 'Due to Raise'])->sum('invoice_amount'),
+            'paid_total'     => $allFiltered->where('status', 'Paid')->sum('invoice_amount'),
+            'maturing_total' => $allFiltered->where('status', 'Maturing')->sum('invoice_amount'),
+            'overdue_count'  => $allFiltered->where('status', 'Overdue')->count(),
+        ];
+
+        // Dropdown options
+        $clientJobs = Job::where('user_id', $client->id)
+            ->whereHas('jobApplications', fn ($q) => $q->where('hiring_status', 'Selected')->whereNotNull('joining_date'))
+            ->orderBy('title')
+            ->get(['id', 'title']);
+
+        return view('client.billing.index', compact('billingData', 'counts', 'statusFilter', 'summary', 'clientJobs'));
+    }
+
+    /**
+     * Client confirms they've paid an invoice. Records paid_at and an
+     * optional payment reference (UTR / cheque no / transaction id).
+     */
+    public function markBillingPaid(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'paid_at'           => 'required|date|before_or_equal:today',
+            'payment_reference' => 'nullable|string|max:255',
+        ]);
+
+        $application->update([
+            'payment_status' => 'paid',
+            'paid_at'        => Carbon::parse($validated['paid_at']),
+            'client_notes'   => trim(($application->client_notes ?? '').' [PAID: '.($validated['payment_reference'] ?? 'no ref').' on '.$validated['paid_at'].']'),
+        ]);
+
+        return redirect()->back()->with('success', 'Payment recorded successfully.');
+    }
+
+    public function unmarkBillingPaid(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->update(['payment_status' => null, 'paid_at' => null]);
+        return redirect()->back()->with('success', 'Payment status reverted.');
     }
 
     private function notifyAdminAndPartner($notification, JobApplication $application)

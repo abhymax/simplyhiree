@@ -292,6 +292,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/profile/company', [ClientProfileController::class, 'update'])->name('profile.update');
         
         Route::get('/billing', [ClientController::class, 'billing'])->name('billing');
+        Route::post('/billing/{application}/mark-paid', [ClientController::class, 'markBillingPaid'])->name('billing.markPaid');
+        Route::post('/billing/{application}/unmark-paid', [ClientController::class, 'unmarkBillingPaid'])->name('billing.unmarkPaid');
 
         // Vendor management
         Route::get('/vendors', [\App\Http\Controllers\ClientVendorController::class, 'browse'])->name('vendors.browse');

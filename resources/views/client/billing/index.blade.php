@@ -5,10 +5,46 @@
     <div class="absolute top-0 right-0 w-96 h-96 bg-amber-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
     <div class="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
 
-    <div class="relative z-10 max-w-7xl mx-auto">
-        <div class="mb-8 border-b border-white/10 pb-6">
+    <div class="relative z-10 max-w-7xl mx-auto" x-data="{ payRow: null, viewRow: null }">
+
+        <div class="mb-6 border-b border-white/10 pb-6">
             <h1 class="text-4xl font-extrabold tracking-tight drop-shadow-lg">Billing</h1>
             <p class="text-blue-200 mt-1">Track invoice maturity, raised invoices, and payment status for every successful hire.</p>
+        </div>
+
+        @if(session('success'))
+            <div class="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 rounded-xl">
+                <i class="fa-solid fa-check mr-2"></i> {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 px-4 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl">
+                <i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- Summary cards --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-rose-500/20 to-rose-700/20 border border-rose-400/40 rounded-2xl p-5 shadow-lg">
+                <div class="flex items-center gap-2 text-rose-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-exclamation"></i> Outstanding</div>
+                <div class="text-3xl font-extrabold text-white mt-2">₹{{ number_format($summary['outstanding'], 0) }}</div>
+                <div class="text-rose-200 text-xs mt-1">{{ ($counts['Raised'] ?? 0) + ($counts['Overdue'] ?? 0) + ($counts['Due to Raise'] ?? 0) }} invoice(s)</div>
+            </div>
+            <div class="bg-gradient-to-br from-amber-500/20 to-orange-700/20 border border-amber-400/40 rounded-2xl p-5 shadow-lg">
+                <div class="flex items-center gap-2 text-amber-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-fire"></i> Overdue</div>
+                <div class="text-3xl font-extrabold text-white mt-2">{{ $summary['overdue_count'] }}</div>
+                <div class="text-amber-200 text-xs mt-1">Need immediate action</div>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-500/20 to-green-700/20 border border-emerald-400/40 rounded-2xl p-5 shadow-lg">
+                <div class="flex items-center gap-2 text-emerald-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-check"></i> Total Paid</div>
+                <div class="text-3xl font-extrabold text-white mt-2">₹{{ number_format($summary['paid_total'], 0) }}</div>
+                <div class="text-emerald-200 text-xs mt-1">{{ $counts['Paid'] ?? 0 }} hire(s)</div>
+            </div>
+            <div class="bg-gradient-to-br from-slate-500/20 to-blue-700/20 border border-slate-400/40 rounded-2xl p-5 shadow-lg">
+                <div class="flex items-center gap-2 text-slate-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-hourglass-half"></i> Maturing</div>
+                <div class="text-3xl font-extrabold text-white mt-2">₹{{ number_format($summary['maturing_total'], 0) }}</div>
+                <div class="text-slate-300 text-xs mt-1">{{ $counts['Maturing'] ?? 0 }} hire(s)</div>
+            </div>
         </div>
 
         @php
@@ -19,13 +55,42 @@
                 'Overdue'      => 'bg-rose-500/20 text-rose-200 border-rose-400/40',
                 'Paid'         => 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40',
             ];
+            $fld = 'h-10 bg-slate-900/60 border border-white/20 rounded-lg text-white text-sm px-3 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400';
         @endphp
+
+        {{-- Filter bar --}}
+        <form method="GET" action="{{ route('client.billing') }}"
+              class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <input type="hidden" name="status" value="{{ $statusFilter }}">
+            <div class="lg:col-span-2 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate or job" class="{{ $fld }} w-full pl-9">
+            </div>
+            <select name="job_id" class="{{ $fld }}">
+                <option value="" class="bg-slate-900">All Jobs</option>
+                @foreach($clientJobs as $j)
+                    <option value="{{ $j->id }}" class="bg-slate-900" {{ (string) request('job_id') === (string) $j->id ? 'selected' : '' }}>
+                        {{ \Illuminate\Support\Str::limit($j->title, 28) }}
+                    </option>
+                @endforeach
+            </select>
+            <input type="date" name="date_from" value="{{ request('date_from') }}" title="Joined from" class="{{ $fld }} [color-scheme:dark]">
+            <input type="date" name="date_to" value="{{ request('date_to') }}" title="Joined to" class="{{ $fld }} [color-scheme:dark]">
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-sm">
+                    <i class="fa-solid fa-filter mr-1"></i> Filter
+                </button>
+                @if(request()->anyFilled(['search', 'job_id', 'date_from', 'date_to', 'status']))
+                    <a href="{{ route('client.billing') }}" class="bg-rose-500 hover:bg-rose-400 text-white rounded-lg px-3 inline-flex items-center"><i class="fa-solid fa-xmark"></i></a>
+                @endif
+            </div>
+        </form>
 
         {{-- Status filter chips --}}
         <div class="flex flex-wrap gap-2 mb-6">
-            <a href="{{ route('client.billing') }}" class="px-3 py-1.5 rounded-full text-xs font-bold border {{ $statusFilter ? 'bg-white/10 text-blue-100 border-white/20' : 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40' }}">All</a>
+            <a href="{{ route('client.billing', request()->except(['status', 'page'])) }}" class="px-3 py-1.5 rounded-full text-xs font-bold border {{ $statusFilter ? 'bg-white/10 text-blue-100 border-white/20' : 'bg-cyan-500/20 text-cyan-200 border-cyan-400/40' }}">All</a>
             @foreach(['Maturing','Due to Raise','Raised','Overdue','Paid'] as $b)
-                <a href="{{ route('client.billing', ['status' => $b]) }}"
+                <a href="{{ route('client.billing', array_merge(request()->except('page'), ['status' => $b])) }}"
                    class="px-3 py-1.5 rounded-full text-xs font-bold border {{ $statusFilter === $b ? ($colors[$b] ?? 'bg-white/10 text-blue-100 border-white/20') : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10' }}">
                     {{ $b }} <span class="ml-1 opacity-70">{{ $counts[$b] ?? 0 }}</span>
                 </a>
@@ -45,10 +110,12 @@
                             <th class="px-5 py-4">Invoice Due</th>
                             <th class="px-5 py-4">Payment Due</th>
                             <th class="px-5 py-4">Status</th>
+                            <th class="px-5 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/10">
                         @forelse($billingData as $row)
+                            @php $app = $row['application']; @endphp
                             <tr class="hover:bg-white/5">
                                 <td class="px-5 py-4 font-bold text-white">{{ $row['candidate_name'] }}</td>
                                 <td class="px-5 py-4 text-blue-100">{{ $row['job_title'] }}</td>
@@ -68,9 +135,89 @@
                                         <div class="text-[10px] text-emerald-200 mt-1">on {{ $row['paid_at']->format('d M, Y') }}</div>
                                     @endif
                                 </td>
+                                <td class="px-5 py-4 text-right">
+                                    <div class="inline-flex items-center gap-1.5">
+                                        <button type="button" @click="viewRow = viewRow === {{ $app->id }} ? null : {{ $app->id }}"
+                                                class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg border border-white/20 transition" title="View">
+                                            <i class="fa-regular fa-eye"></i>
+                                        </button>
+                                        @if(in_array($row['status'], ['Raised', 'Overdue', 'Due to Raise']))
+                                            <button type="button" @click="payRow = payRow === {{ $app->id }} ? null : {{ $app->id }}"
+                                                    class="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold rounded-lg transition" title="Mark Paid">
+                                                <i class="fa-solid fa-check"></i> Mark Paid
+                                            </button>
+                                        @elseif($row['status'] === 'Paid')
+                                            <form action="{{ route('client.billing.unmarkPaid', $app) }}" method="POST" onsubmit="return confirm('Revert this payment status?')">
+                                                @csrf
+                                                <button type="submit" class="px-2.5 py-1.5 bg-amber-500/30 hover:bg-amber-500/50 text-amber-100 text-xs font-bold rounded-lg border border-amber-400/40 transition" title="Revert payment">
+                                                    <i class="fa-solid fa-rotate-left"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {{-- Inline View drawer --}}
+                            <tr x-show="viewRow === {{ $app->id }}" x-cloak>
+                                <td colspan="9" class="px-5 py-4 bg-slate-900/80 border-t border-cyan-400/30">
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                                        <div>
+                                            <div class="text-cyan-300 text-[10px] font-bold uppercase">Fee Type</div>
+                                            <div class="text-white font-bold">{{ $row['billing_type'] ?? '—' }}</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-cyan-300 text-[10px] font-bold uppercase">Fee Rate</div>
+                                            <div class="text-white font-bold">
+                                                @if($row['fee_percent']) {{ $row['fee_percent'] }}%
+                                                @elseif($row['fee_amount_flat']) ₹{{ number_format($row['fee_amount_flat']) }} flat
+                                                @else — @endif
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="text-cyan-300 text-[10px] font-bold uppercase">Replacement Window</div>
+                                            <div class="text-white font-bold">{{ $row['replacement_days'] ?? '—' }} days</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-cyan-300 text-[10px] font-bold uppercase">Invoice Raised On</div>
+                                            <div class="text-white font-bold">{{ $row['invoice_generated_at']?->format('d M, Y') ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    @if($app->client_notes)
+                                        <div class="mt-3 text-xs bg-white/5 border border-white/10 rounded p-2 text-blue-100 italic">{{ $app->client_notes }}</div>
+                                    @endif
+                                </td>
+                            </tr>
+
+                            {{-- Inline Mark-Paid form --}}
+                            <tr x-show="payRow === {{ $app->id }}" x-cloak>
+                                <td colspan="9" class="px-5 py-4 bg-slate-900/90 border-t border-emerald-400/30">
+                                    <form action="{{ route('client.billing.markPaid', $app) }}" method="POST" class="flex flex-col md:flex-row md:items-end gap-3">
+                                        @csrf
+                                        <div>
+                                            <label class="block text-emerald-200 text-[10px] font-bold uppercase tracking-wider mb-1">Paid On *</label>
+                                            <input type="date" name="paid_at" required max="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}"
+                                                   class="bg-slate-800 border border-white/20 rounded text-white text-sm px-3 py-2 [color-scheme:dark]">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-emerald-200 text-[10px] font-bold uppercase tracking-wider mb-1">Reference / UTR (optional)</label>
+                                            <input type="text" name="payment_reference" maxlength="255" placeholder="e.g. UTR1234567890 or Cheque #001234"
+                                                   class="w-full bg-slate-800 border border-white/20 rounded text-white text-sm px-3 py-2">
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button type="button" @click="payRow = null" class="px-4 py-2 text-sm text-slate-300 hover:text-white">Cancel</button>
+                                            <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold text-sm rounded-lg">
+                                                <i class="fa-solid fa-check mr-1"></i> Confirm Payment
+                                            </button>
+                                        </div>
+                                    </form>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="px-6 py-16 text-center text-blue-200">No billable records yet.</td></tr>
+                            <tr><td colspan="9" class="px-6 py-16 text-center text-blue-200">
+                                <i class="fa-solid fa-receipt text-4xl text-blue-300 mb-3"></i>
+                                <p class="font-bold">No billable records match your filters.</p>
+                            </td></tr>
                         @endforelse
                     </tbody>
                 </table>
