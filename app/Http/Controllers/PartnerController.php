@@ -155,17 +155,58 @@ class PartnerController extends Controller
     /**
      * Show the applications related to this partner.
      */
-    public function applications()
+    public function applications(Request $request)
     {
         $partner = Auth::user();
 
-        // Retrieve applications where the candidate belongs to the logged-in partner
-        $applications = JobApplication::whereHas('candidate', function ($query) use ($partner) {
-                                    $query->where('partner_id', $partner->id);
-                                })
-                                ->with(['job', 'candidate'])
-                                ->latest()
-                                ->paginate(20);
+        $query = JobApplication::whereHas('candidate', function ($q) use ($partner) {
+                        $q->where('partner_id', $partner->id);
+                    })
+                    ->with(['job', 'candidate']);
+
+        // Search by candidate name/email or job title
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('candidate', function ($q2) use ($search) {
+                    $q2->where('first_name', 'like', "%{$search}%")
+                       ->orWhere('last_name', 'like', "%{$search}%")
+                       ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('job', function ($q2) use ($search) {
+                    $q2->where('title', 'like', "%{$search}%")
+                       ->orWhere('company_name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Status filter — map display status back to DB columns
+        if ($status = $request->input('status')) {
+            $statusMap = [
+                'Pending Review'      => fn($q) => $q->where('status', 'Pending Review'),
+                'Approved'            => fn($q) => $q->where('status', 'Approved'),
+                'Rejected'            => fn($q) => $q->where('status', 'Rejected'),
+                'Interview Scheduled' => fn($q) => $q->where('hiring_status', 'Interview Scheduled'),
+                'Interviewed'         => fn($q) => $q->where('hiring_status', 'Interviewed'),
+                'No-Show'             => fn($q) => $q->where('hiring_status', 'No-Show'),
+                'Client Rejected'     => fn($q) => $q->where('hiring_status', 'Client Rejected'),
+                'Selected'            => fn($q) => $q->where('hiring_status', 'Selected')->whereNull('selected_by_admin_id'),
+                'Joined'              => fn($q) => $q->where('joined_status', 'Joined'),
+                'Left'                => fn($q) => $q->where('joined_status', 'Left'),
+                'Did Not Join'        => fn($q) => $q->where('joined_status', 'Did Not Join'),
+            ];
+            if (isset($statusMap[$status])) {
+                ($statusMap[$status])($query);
+            }
+        }
+
+        // Date range filter
+        if ($from = $request->input('date_from')) {
+            $query->whereDate('job_applications.created_at', '>=', $from);
+        }
+        if ($to = $request->input('date_to')) {
+            $query->whereDate('job_applications.created_at', '<=', $to);
+        }
+
+        $applications = $query->latest()->paginate(20)->withQueryString();
 
         // Strip fields partners must not see (client billing, deal value, etc.)
         $applications->getCollection()->each(function ($app) {
