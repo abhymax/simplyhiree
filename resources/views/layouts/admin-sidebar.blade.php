@@ -33,7 +33,7 @@
             <button type="button" @click="open = false" class="admin-mobile-only text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-3 space-y-0.5 sidebar-nav">
+        <nav class="flex-1 min-h-0 overflow-y-auto py-3 space-y-0.5 sidebar-nav">
             @php
                 $links = [
                     ['route'=>'admin.dashboard',              'label'=>'Dashboard',           'icon'=>'fa-gauge-high',          'active'=>['admin.dashboard','dashboard']],
