@@ -896,7 +896,7 @@ class AdminController extends Controller
 
     public function pendingJobs()
     {
-        $pendingJobs = Job::where('status', 'pending_approval')->with(['user', 'educationLevel'])->latest()->paginate(20);
+        $pendingJobs = Job::where('status', 'pending_approval')->with(['user', 'educationLevel', 'experienceLevel'])->latest()->paginate(20);
         $deactivationRequests = Job::whereNotNull('deactivation_requested_at')
             ->with(['user'])
             ->latest('deactivation_requested_at')
