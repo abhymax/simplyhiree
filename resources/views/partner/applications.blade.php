@@ -30,44 +30,70 @@
 
         {{-- Filter bar --}}
         <form method="GET" action="{{ route('partner.applications') }}" class="mb-6">
-            <div class="bg-slate-900/50 backdrop-blur border border-white/15 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-end">
-                <div class="flex-1 min-w-0">
-                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Search</label>
-                    <input type="text" name="search" value="{{ request('search') }}"
-                           placeholder="Candidate name, email or job title…"
-                           class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+            <div class="bg-slate-900/50 backdrop-blur border border-white/15 rounded-2xl p-5 space-y-4">
+                {{-- Row 1: Search + Status + Client + Job --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Search</label>
+                        <input type="text" name="search" value="{{ request('search') }}"
+                               placeholder="Candidate name or email…"
+                               class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Status</label>
+                        <select name="status" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                            <option value="">All Statuses</option>
+                            @foreach(['Pending Review','Approved','Interview Scheduled','Interviewed','No-Show','Selected','Client Rejected','Joined','Left','Did Not Join','Rejected'] as $s)
+                                <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Client</label>
+                        <select name="client" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                            <option value="">All Clients</option>
+                            @foreach($filterClients as $c)
+                                <option value="{{ $c }}" {{ request('client') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Job</label>
+                        <select name="job_id" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                            <option value="">All Jobs</option>
+                            @foreach($filterJobs as $j)
+                                <option value="{{ $j->id }}" {{ request('job_id') == $j->id ? 'selected' : '' }}>
+                                    {{ $j->title }}{{ $j->is_company_confidential ? '' : ' — ' . $j->company_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <div class="w-full sm:w-52">
-                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Status</label>
-                    <select name="status" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                        <option value="">All Statuses</option>
-                        @foreach(['Pending Review','Approved','Interview Scheduled','Interviewed','No-Show','Selected','Client Rejected','Joined','Left','Did Not Join','Rejected'] as $s)
-                            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ $s }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="w-full sm:w-40">
-                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">From</label>
-                    <input type="date" name="date_from" value="{{ request('date_from') }}"
-                           class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                </div>
-                <div class="w-full sm:w-40">
-                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">To</label>
-                    <input type="date" name="date_to" value="{{ request('date_to') }}"
-                           class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                </div>
-                <div class="flex gap-2 shrink-0">
-                    <button type="submit"
-                            class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-900 transition-all hover:-translate-y-0.5"
-                            style="background: linear-gradient(135deg,#22d3ee,#0ea5e9); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
-                        <i class="fa-solid fa-filter mr-1"></i> Filter
-                    </button>
-                    @if(request()->hasAny(['search','status','date_from','date_to']))
-                        <a href="{{ route('partner.applications') }}"
-                           class="px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all">
-                            <i class="fa-solid fa-xmark"></i>
-                        </a>
-                    @endif
+                {{-- Row 2: Date range + actions --}}
+                <div class="flex flex-wrap gap-4 items-end">
+                    <div class="w-44">
+                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">From</label>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}"
+                               class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    </div>
+                    <div class="w-44">
+                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">To</label>
+                        <input type="date" name="date_to" value="{{ request('date_to') }}"
+                               class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    </div>
+                    <div class="flex gap-2 ml-auto">
+                        <button type="submit"
+                                class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-900 transition-all hover:-translate-y-0.5"
+                                style="background: linear-gradient(135deg,#22d3ee,#0ea5e9); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
+                            <i class="fa-solid fa-filter mr-1.5"></i> Apply Filters
+                        </button>
+                        @if(request()->hasAny(['search','status','client','job_id','date_from','date_to']))
+                            <a href="{{ route('partner.applications') }}"
+                               class="px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-xmark"></i> Clear
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
         </form>

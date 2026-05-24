@@ -159,26 +159,25 @@ class PartnerController extends Controller
     {
         $partner = Auth::user();
 
-        $query = JobApplication::whereHas('candidate', function ($q) use ($partner) {
-                        $q->where('partner_id', $partner->id);
-                    })
+        // Base scope: only this partner's candidates
+        $baseScope = fn($q) => $q->where('partner_id', $partner->id);
+
+        $query = JobApplication::whereHas('candidate', $baseScope)
                     ->with(['job', 'candidate']);
 
-        // Search by candidate name/email or job title
+        // Search by candidate name/email
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('candidate', function ($q2) use ($search) {
-                    $q2->where('first_name', 'like', "%{$search}%")
-                       ->orWhere('last_name', 'like', "%{$search}%")
-                       ->orWhere('email', 'like', "%{$search}%");
-                })->orWhereHas('job', function ($q2) use ($search) {
-                    $q2->where('title', 'like', "%{$search}%")
-                       ->orWhere('company_name', 'like', "%{$search}%");
-                });
+            $query->whereHas('candidate', function ($q) use ($search) {
+                $q->where('partner_id', Auth::id() ? Auth::user()->id : 0)
+                  ->where(function ($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
             });
         }
 
-        // Status filter — map display status back to DB columns
+        // Status filter
         if ($status = $request->input('status')) {
             $statusMap = [
                 'Pending Review'      => fn($q) => $q->where('status', 'Pending Review'),
@@ -198,6 +197,16 @@ class PartnerController extends Controller
             }
         }
 
+        // Job filter
+        if ($jobId = $request->input('job_id')) {
+            $query->where('job_id', $jobId);
+        }
+
+        // Client filter (company_name on job)
+        if ($client = $request->input('client')) {
+            $query->whereHas('job', fn($q) => $q->where('company_name', $client));
+        }
+
         // Date range filter
         if ($from = $request->input('date_from')) {
             $query->whereDate('job_applications.created_at', '>=', $from);
@@ -208,13 +217,31 @@ class PartnerController extends Controller
 
         $applications = $query->latest()->paginate(20)->withQueryString();
 
-        // Strip fields partners must not see (client billing, deal value, etc.)
+        // Strip fields partners must not see
         $applications->getCollection()->each(function ($app) {
             $app->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat']);
             if ($app->job) $app->job->makeHidden(['user_id', 'invoice_amount']);
         });
 
-        return view('partner.applications', ['applications' => $applications]);
+        // Dropdown data: jobs and clients this partner has applications for
+        $partnerJobIds = JobApplication::whereHas('candidate', $baseScope)
+                            ->whereNotNull('job_id')
+                            ->pluck('job_id')
+                            ->unique();
+
+        $filterJobs = \App\Models\Job::whereIn('id', $partnerJobIds)
+                        ->select('id', 'title', 'company_name', 'is_company_confidential')
+                        ->orderBy('title')
+                        ->get();
+
+        $filterClients = $filterJobs->where('is_company_confidential', false)
+                            ->pluck('company_name')
+                            ->filter()
+                            ->unique()
+                            ->sort()
+                            ->values();
+
+        return view('partner.applications', compact('applications', 'filterJobs', 'filterClients'));
     }
 
     public function showApplication(\App\Models\JobApplication $application)
