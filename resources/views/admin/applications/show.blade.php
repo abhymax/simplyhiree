@@ -318,12 +318,48 @@
                                 </div>
                             </div>
 
-                            {{-- Metadata --}}
-                            @if($application->interview_at)
+                            {{-- Interview Rounds Timeline --}}
+                            @if($application->interviewRounds->isNotEmpty())
+                            <div class="p-4 bg-blue-600/15 rounded-2xl border border-blue-500/30">
+                                <p class="text-xs text-blue-300 font-bold uppercase mb-3"><i class="fa-solid fa-list-ol mr-1"></i> Interview Rounds ({{ $application->interviewRounds->count() }})</p>
+                                <div class="space-y-3">
+                                    @foreach($application->interviewRounds as $r)
+                                        @php
+                                            $statusBg = [
+                                                'Scheduled' => 'bg-indigo-500/20 text-indigo-100 border-indigo-400/40',
+                                                'Appeared'  => 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40',
+                                                'No-Show'   => 'bg-amber-500/20 text-amber-100 border-amber-400/40',
+                                                'Cancelled' => 'bg-slate-500/20 text-slate-100 border-slate-400/40',
+                                            ][$r->status] ?? 'bg-slate-500/20 text-slate-100 border-slate-400/40';
+                                        @endphp
+                                        <div class="bg-slate-900/40 border border-white/10 rounded-xl p-3">
+                                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                                <span class="px-2 py-0.5 rounded bg-blue-600/40 text-blue-100 border border-blue-400/40 text-xs font-bold">Round {{ $r->round_number }}</span>
+                                                <span class="px-2 py-0.5 rounded text-xs font-bold border {{ $statusBg }}">{{ $r->status }}</span>
+                                                <span class="px-2 py-0.5 rounded text-xs font-bold border bg-white/10 text-blue-100 border-white/20">{{ $r->mode }}</span>
+                                                @if($r->recommendation)
+                                                    <span class="px-2 py-0.5 rounded text-xs font-bold border bg-cyan-500/15 text-cyan-100 border-cyan-400/30">{{ $r->recommendation }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="text-xs text-blue-200">
+                                                <i class="fa-regular fa-calendar mr-1"></i> {{ $r->scheduled_at->format('M d, Y - h:i A') }}
+                                                @if($r->interviewer_name) · {{ $r->interviewer_name }}@endif
+                                            </div>
+                                            @if($r->rating)
+                                                <div class="text-xs text-amber-300 mt-1">{{ str_repeat('★', $r->rating) }}{{ str_repeat('☆', 5 - $r->rating) }}</div>
+                                            @endif
+                                            @if($r->feedback)
+                                                <div class="mt-2 bg-white/5 border border-white/10 rounded p-2 text-xs text-blue-100 italic">"{{ $r->feedback }}"</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @elseif($application->interview_at)
                             <div class="p-4 bg-blue-600/20 rounded-2xl border border-blue-500/30">
                                 <p class="text-xs text-blue-300 font-bold uppercase mb-1">Interview Scheduled</p>
                                 <p class="text-white font-bold flex items-center gap-2">
-                                    <i class="fa-regular fa-calendar text-blue-400"></i> 
+                                    <i class="fa-regular fa-calendar text-blue-400"></i>
                                     {{ \Carbon\Carbon::parse($application->interview_at)->format('M d, Y - h:i A') }}
                                 </p>
                             </div>

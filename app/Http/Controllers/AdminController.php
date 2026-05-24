@@ -1373,7 +1373,7 @@ class AdminController extends Controller
 
     public function showApplication(JobApplication $application)
     {
-        $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser.profile']);
+        $application->load(['candidate', 'job', 'candidate.partner', 'candidateUser.profile', 'interviewRounds']);
         return view('admin.applications.show', compact('application'));
     }
 

@@ -311,8 +311,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- INTERVIEW & HIRING WORKFLOW ---
         
         // 1. New Interview
-        Route::get('/applications/{application}/interview/create', [ClientController::class, 'showInterviewForm'])->name('applications.interview.create'); 
+        Route::get('/applications/{application}/interview/create', [ClientController::class, 'showInterviewForm'])->name('applications.interview.create');
         Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])->name('applications.interview.store');
+
+        // Multi-round interviews
+        Route::post('/applications/{application}/rounds', [ClientController::class, 'scheduleInterviewRound'])->name('applications.rounds.store');
+        Route::patch('/rounds/{round}', [ClientController::class, 'updateInterviewRound'])->name('rounds.update');
+        Route::post('/rounds/{round}/appeared', [ClientController::class, 'markRoundAppeared'])->name('rounds.appeared');
+        Route::post('/rounds/{round}/noshow', [ClientController::class, 'markRoundNoShow'])->name('rounds.noshow');
+        Route::post('/rounds/{round}/feedback', [ClientController::class, 'submitRoundFeedback'])->name('rounds.feedback');
 
         // 2. Edit Existing Interview
         Route::get('/applications/{application}/interview/edit', [ClientController::class, 'editInterviewDetails'])->name('applications.interview.edit');

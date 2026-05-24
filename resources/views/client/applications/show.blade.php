@@ -124,6 +124,42 @@
                 </div>
             </div>
 
+            {{-- Interview Rounds Timeline --}}
+            @if($application->interviewRounds->isNotEmpty())
+            <div class="lg:col-span-3 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+                <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4"><i class="fa-solid fa-list-ol mr-1"></i> Interview Rounds ({{ $application->interviewRounds->count() }})</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach($application->interviewRounds as $r)
+                        @php
+                            $bg = [
+                                'Scheduled' => 'border-indigo-400/40 bg-indigo-500/10',
+                                'Appeared'  => 'border-emerald-400/40 bg-emerald-500/10',
+                                'No-Show'   => 'border-amber-400/40 bg-amber-500/10',
+                                'Cancelled' => 'border-slate-400/40 bg-slate-500/10',
+                            ][$r->status] ?? 'border-slate-400/40 bg-slate-500/10';
+                        @endphp
+                        <div class="border rounded-xl p-3 {{ $bg }}">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white text-sm">Round {{ $r->round_number }}</span>
+                                <span class="text-[10px] uppercase font-bold text-blue-100 bg-white/10 border border-white/20 px-2 py-0.5 rounded">{{ $r->status }}</span>
+                            </div>
+                            <div class="text-xs text-blue-100">{{ $r->scheduled_at->format('d M Y, h:i A') }}</div>
+                            <div class="text-xs text-slate-300">{{ $r->mode }}@if($r->interviewer_name) · {{ $r->interviewer_name }}@endif</div>
+                            @if($r->recommendation)
+                                <div class="mt-1 inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-cyan-500/15 text-cyan-100 border-cyan-400/30">{{ $r->recommendation }}</div>
+                            @endif
+                            @if($r->rating)
+                                <div class="text-amber-300 text-xs mt-1">{{ str_repeat('★', $r->rating) }}{{ str_repeat('☆', 5 - $r->rating) }}</div>
+                            @endif
+                            @if($r->feedback)
+                                <div class="mt-2 bg-white/5 border border-white/10 rounded p-2 text-[11px] text-blue-100 italic line-clamp-3">"{{ $r->feedback }}"</div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             {{-- Profile --}}
             <div class="lg:col-span-3 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
                 <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4"><i class="fa-solid fa-user mr-1"></i> Candidate Profile</h3>

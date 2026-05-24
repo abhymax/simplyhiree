@@ -101,26 +101,46 @@
                         <span class="w-2 h-2 mt-1.5 rounded-full bg-blue-400 shrink-0"></span>
                         <div><span class="font-semibold text-white">Submitted</span><span class="text-blue-300 ml-2">{{ $application->created_at->format('d M Y') }}</span></div>
                     </div>
-                    @if($application->interview_at)
+                    @forelse($application->interviewRounds as $r)
+                        @php
+                            $dotColor = [
+                                'Scheduled' => 'bg-indigo-400',
+                                'Appeared'  => 'bg-emerald-400',
+                                'No-Show'   => 'bg-amber-400',
+                                'Cancelled' => 'bg-slate-400',
+                            ][$r->status] ?? 'bg-slate-400';
+                        @endphp
                         <div class="flex items-start gap-3">
-                            <span class="w-2 h-2 mt-1.5 rounded-full bg-indigo-400 shrink-0"></span>
-                            <div>
-                                <span class="font-semibold text-white">Interview Scheduled</span>
-                                <span class="text-blue-300 ml-2">{{ $application->interview_at->format('d M Y, h:i A') }}</span>
-                                @if($application->meeting_link)
-                                    <div class="mt-0.5 text-cyan-300 text-xs"><i class="fa-solid fa-video mr-1"></i>{{ $application->meeting_provider ?? 'Online' }}</div>
-                                @elseif($application->interview_location)
-                                    <div class="mt-0.5 text-cyan-300 text-xs"><i class="fa-solid fa-location-dot mr-1"></i>{{ $application->interview_location }}</div>
+                            <span class="w-2 h-2 mt-1.5 rounded-full {{ $dotColor }} shrink-0"></span>
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-semibold text-white">Round {{ $r->round_number }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border bg-white/10 text-blue-100 border-white/20">{{ $r->mode }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border bg-white/10 text-cyan-100 border-white/20">{{ $r->status }}</span>
+                                    @if($r->recommendation)
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border bg-cyan-500/15 text-cyan-100 border-cyan-400/30">{{ $r->recommendation }}</span>
+                                    @endif
+                                </div>
+                                <div class="text-blue-300 text-xs mt-0.5">{{ $r->scheduled_at->format('d M Y, h:i A') }}@if($r->interviewer_name) · with {{ $r->interviewer_name }}@endif</div>
+                                @if($r->rating)
+                                    <div class="text-amber-300 text-xs mt-0.5">{{ str_repeat('★', $r->rating) }}{{ str_repeat('☆', 5 - $r->rating) }}</div>
+                                @endif
+                                @if($r->feedback)
+                                    <div class="mt-1 bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs text-blue-100 italic">"{{ $r->feedback }}"</div>
                                 @endif
                             </div>
                         </div>
-                    @endif
-                    @if($application->hiring_status === 'Interviewed' || $application->hiring_status === 'No-Show')
-                        <div class="flex items-start gap-3">
-                            <span class="w-2 h-2 mt-1.5 rounded-full {{ $application->hiring_status === 'No-Show' ? 'bg-amber-400' : 'bg-violet-400' }} shrink-0"></span>
-                            <span class="font-semibold text-white">{{ $application->hiring_status }}</span>
-                        </div>
-                    @endif
+                    @empty
+                        @if($application->interview_at)
+                            <div class="flex items-start gap-3">
+                                <span class="w-2 h-2 mt-1.5 rounded-full bg-indigo-400 shrink-0"></span>
+                                <div>
+                                    <span class="font-semibold text-white">Interview Scheduled</span>
+                                    <span class="text-blue-300 ml-2">{{ $application->interview_at->format('d M Y, h:i A') }}</span>
+                                </div>
+                            </div>
+                        @endif
+                    @endforelse
                     @if(in_array($application->hiring_status, ['Selected', 'Client Rejected']))
                         <div class="flex items-start gap-3">
                             <span class="w-2 h-2 mt-1.5 rounded-full {{ $application->hiring_status === 'Selected' ? 'bg-cyan-400' : 'bg-rose-400' }} shrink-0"></span>

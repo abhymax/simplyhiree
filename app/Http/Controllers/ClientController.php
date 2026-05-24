@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\InterviewRound;
 use App\Models\User;
 // Added missing models for Job Creation
 use App\Models\JobCategory; 
@@ -541,7 +542,7 @@ class ClientController extends Controller
 
         $approvedApplications = JobApplication::where('job_id', $job->id)
                                             ->where('status', 'Approved')
-                                            ->with(['candidate', 'candidateUser'])
+                                            ->with(['candidate', 'candidateUser', 'interviewRounds'])
                                             ->latest()
                                             ->paginate(20);
 
@@ -556,7 +557,7 @@ class ClientController extends Controller
         if ($application->job->user_id !== Auth::id()) {
             abort(403, 'You can only view applicants who applied to your own jobs.');
         }
-        $application->load(['job', 'candidate.partner', 'candidateUser.profile']);
+        $application->load(['job', 'candidate.partner', 'candidateUser.profile', 'interviewRounds']);
         return view('client.applications.show', ['application' => $application]);
     }
 
@@ -789,6 +790,139 @@ class ClientController extends Controller
         return redirect()->back()->with('success', 'Candidate marked as \'No-Show\'.');
     }
     
+    // --- MULTI-ROUND INTERVIEWS ---
+
+    /**
+     * Schedule the next interview round (auto-numbered, capped at 5).
+     */
+    public function scheduleInterviewRound(Request $request, JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $existing = $application->interviewRounds()->count();
+        if ($existing >= InterviewRound::MAX_ROUNDS) {
+            return redirect()->back()->with('error', 'Maximum '.InterviewRound::MAX_ROUNDS.' rounds reached.');
+        }
+
+        $validated = $request->validate([
+            'scheduled_at'     => 'required|date|after:now',
+            'mode'             => 'required|in:Online,In-person,Phone',
+            'meeting_link'     => 'nullable|url|max:500',
+            'location'         => 'nullable|string|max:255',
+            'interviewer_name' => 'nullable|string|max:255',
+        ]);
+
+        $round = $application->interviewRounds()->create([
+            'round_number'     => $existing + 1,
+            'scheduled_at'     => Carbon::parse($validated['scheduled_at']),
+            'mode'             => $validated['mode'],
+            'meeting_link'     => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
+            'location'         => $validated['mode'] === 'In-person' ? $validated['location'] : null,
+            'interviewer_name' => $validated['interviewer_name'] ?? null,
+            'status'           => 'Scheduled',
+        ]);
+
+        // Mirror to legacy columns so existing notifications / queries still work
+        $application->update([
+            'hiring_status'      => 'Interview Scheduled',
+            'interview_at'       => $round->scheduled_at,
+            'meeting_link'       => $round->meeting_link,
+            'interview_location' => $round->location,
+        ]);
+
+        $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
+
+        return redirect()->back()->with('success', "Round {$round->round_number} scheduled.");
+    }
+
+    public function updateInterviewRound(Request $request, InterviewRound $round)
+    {
+        $application = $round->application;
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'scheduled_at'     => 'required|date',
+            'mode'             => 'required|in:Online,In-person,Phone',
+            'meeting_link'     => 'nullable|url|max:500',
+            'location'         => 'nullable|string|max:255',
+            'interviewer_name' => 'nullable|string|max:255',
+        ]);
+
+        $round->update([
+            'scheduled_at'     => Carbon::parse($validated['scheduled_at']),
+            'mode'             => $validated['mode'],
+            'meeting_link'     => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
+            'location'         => $validated['mode'] === 'In-person' ? $validated['location'] : null,
+            'interviewer_name' => $validated['interviewer_name'] ?? null,
+        ]);
+
+        // If editing the latest round, mirror back to legacy columns
+        $latest = $application->interviewRounds()->latest('round_number')->first();
+        if ($latest && $latest->id === $round->id) {
+            $application->update([
+                'interview_at'       => $round->scheduled_at,
+                'meeting_link'       => $round->meeting_link,
+                'interview_location' => $round->location,
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Round {$round->round_number} updated.");
+    }
+
+    public function markRoundAppeared(InterviewRound $round)
+    {
+        if ($round->application->job->user_id !== Auth::id()) abort(403);
+        $round->update(['status' => 'Appeared']);
+        $round->application->update(['hiring_status' => 'Interviewed']);
+        return redirect()->back()->with('success', "Round {$round->round_number}: marked as appeared.");
+    }
+
+    public function markRoundNoShow(InterviewRound $round)
+    {
+        if ($round->application->job->user_id !== Auth::id()) abort(403);
+        $round->update(['status' => 'No-Show']);
+        $round->application->update(['hiring_status' => 'No-Show']);
+        return redirect()->back()->with('success', "Round {$round->round_number}: marked as no-show.");
+    }
+
+    public function submitRoundFeedback(Request $request, InterviewRound $round)
+    {
+        if ($round->application->job->user_id !== Auth::id()) abort(403);
+
+        $validated = $request->validate([
+            'feedback'       => 'nullable|string|max:5000',
+            'rating'         => 'nullable|integer|min:1|max:5',
+            'recommendation' => 'required|in:Pass to Next Round,Select Candidate,Reject',
+        ]);
+
+        $round->update([
+            'feedback'              => $validated['feedback'] ?? null,
+            'rating'                => $validated['rating'] ?? null,
+            'recommendation'        => $validated['recommendation'],
+            'feedback_submitted_at' => now(),
+            'status'                => $round->status === 'Scheduled' ? 'Appeared' : $round->status,
+        ]);
+
+        // Mirror to legacy columns
+        $round->application->update([
+            'interview_feedback'        => $validated['feedback'] ?? $round->application->interview_feedback,
+            'interview_rating'          => $validated['rating'] ?? $round->application->interview_rating,
+            'interview_recommendation'  => $validated['recommendation'],
+            'interview_feedback_at'     => now(),
+        ]);
+
+        // Auto-reject if recommendation is Reject
+        if ($validated['recommendation'] === 'Reject') {
+            $round->application->update(['hiring_status' => 'Client Rejected']);
+        }
+
+        return redirect()->back()->with('success', "Round {$round->round_number} feedback saved.");
+    }
+
     // --- SELECTION ---
 
     public function showSelectForm(JobApplication $application)

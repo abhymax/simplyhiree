@@ -77,6 +77,14 @@ class JobApplication extends Model
     }
 
     /**
+     * Multi-round interview history (up to 5 rounds per application).
+     */
+    public function interviewRounds()
+    {
+        return $this->hasMany(InterviewRound::class)->orderBy('round_number');
+    }
+
+    /**
      * Get the candidate (from the 'users' table - Direct Applicants).
      */
     public function candidateUser()

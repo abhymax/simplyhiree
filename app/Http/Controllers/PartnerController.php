@@ -312,7 +312,7 @@ class PartnerController extends Controller
             abort(403);
         }
 
-        $application->load(['job', 'candidate']);
+        $application->load(['job', 'candidate', 'interviewRounds']);
         $application->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat']);
 
         return view('partner.application-show', compact('application'));

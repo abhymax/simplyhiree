@@ -128,30 +128,140 @@
                                     @endif
                                 </td>
 
-                                <td class="px-6 py-5 align-top text-right">
-                                    @if(empty($app->hiring_status))
-                                        <div class="flex justify-end gap-2">
-                                            <a href="{{ route('client.applications.interview.create', $app) }}" class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Interview</a>
-                                            <form action="{{ route('client.applications.reject', $app) }}" method="POST" onsubmit="return confirm('Reject this candidate?');">
-                                                @csrf
+                                <td class="px-6 py-5 align-top text-right" x-data="{ openRound: null, openFeedback: null, schedule: false }">
+                                    @php
+                                        $rounds          = $app->interviewRounds;
+                                        $latestRound     = $rounds->last();
+                                        $roundCount      = $rounds->count();
+                                        $maxRounds       = 5;
+                                        $canScheduleNew  = $roundCount < $maxRounds
+                                            && !in_array($app->hiring_status, ['Selected', 'Client Rejected'])
+                                            && empty($app->joined_status)
+                                            && (!$latestRound || in_array($latestRound->status, ['Appeared', 'No-Show', 'Cancelled']))
+                                            && (!$latestRound || $latestRound->recommendation !== 'Reject');
+                                        $canSelectNow    = $latestRound
+                                            && $latestRound->feedback_submitted_at
+                                            && !in_array($latestRound->recommendation, ['Reject'])
+                                            && empty($app->joined_status)
+                                            && $app->hiring_status !== 'Selected';
+                                    @endphp
+
+                                    {{-- Round timeline --}}
+                                    @if($roundCount > 0)
+                                        <div class="mb-3 space-y-1.5">
+                                            @foreach($rounds as $r)
+                                                @php
+                                                    $statusColors = [
+                                                        'Scheduled' => 'bg-indigo-500/20 text-indigo-100 border-indigo-400/40',
+                                                        'Appeared'  => 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40',
+                                                        'No-Show'   => 'bg-amber-500/20 text-amber-100 border-amber-400/40',
+                                                        'Cancelled' => 'bg-slate-500/20 text-slate-100 border-slate-400/40',
+                                                    ];
+                                                    $cls = $statusColors[$r->status] ?? 'bg-slate-500/20 text-slate-100 border-slate-400/40';
+                                                @endphp
+                                                <div class="flex items-center justify-end gap-2 text-[11px]">
+                                                    <span class="px-2 py-0.5 rounded font-bold bg-blue-600/30 text-blue-100 border border-blue-400/40">R{{ $r->round_number }}</span>
+                                                    <span class="text-slate-300">{{ $r->scheduled_at->format('d M, h:i A') }}</span>
+                                                    <span class="text-slate-400">·</span>
+                                                    <span class="text-slate-300">{{ $r->mode }}</span>
+                                                    <span class="px-2 py-0.5 rounded border font-bold {{ $cls }}">{{ $r->status }}</span>
+                                                    @if($r->recommendation)
+                                                        <span class="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-100 border border-cyan-400/30 text-[10px]">{{ $r->recommendation }}</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    {{-- Action buttons based on latest round state --}}
+                                    @if(empty($app->joined_status) && $app->hiring_status !== 'Client Rejected')
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            @if($latestRound && $latestRound->status === 'Scheduled')
+                                                @if($latestRound->meeting_link)
+                                                    <a href="{{ $latestRound->meeting_link }}" target="_blank" class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-solid fa-video"></i> Join R{{ $latestRound->round_number }}</a>
+                                                @endif
+                                                <form action="{{ route('client.rounds.appeared', $latestRound) }}" method="POST">@csrf
+                                                    <button type="submit" class="fx-btn bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Appeared</button>
+                                                </form>
+                                                <form action="{{ route('client.rounds.noshow', $latestRound) }}" method="POST">@csrf
+                                                    <button type="submit" class="fx-btn bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2 px-3 rounded-lg">No-Show</button>
+                                                </form>
+                                            @elseif($latestRound && in_array($latestRound->status, ['Appeared','No-Show']) && !$latestRound->feedback_submitted_at)
+                                                <button type="button" @click="openFeedback = openFeedback === {{ $latestRound->id }} ? null : {{ $latestRound->id }}"
+                                                        class="fx-btn bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-regular fa-clipboard"></i> R{{ $latestRound->round_number }} Feedback</button>
+                                            @endif
+
+                                            @if($canSelectNow)
+                                                <a href="{{ route('client.applications.select.show', $app) }}" class="fx-btn bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-solid fa-user-check"></i> Select Candidate</a>
+                                            @endif
+
+                                            @if($canScheduleNew)
+                                                <button type="button" @click="schedule = !schedule"
+                                                        class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg">
+                                                    <i class="fa-solid fa-calendar-plus"></i> Schedule Round {{ $roundCount + 1 }}
+                                                </button>
+                                            @endif
+
+                                            <form action="{{ route('client.applications.reject', $app) }}" method="POST" onsubmit="return confirm('Reject this candidate?');">@csrf
                                                 <button type="submit" class="fx-btn bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Reject</button>
                                             </form>
                                         </div>
-                                    @elseif($app->hiring_status == 'Interview Scheduled')
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            @if($app->meeting_link)
-                                                <a href="{{ $app->meeting_link }}" target="_blank" class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-solid fa-video"></i> Join</a>
-                                            @endif
-                                            <a href="{{ route('client.applications.interview.edit', $app) }}" class="fx-btn bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Edit</a>
-                                            <form action="{{ route('client.applications.interview.appeared', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Appeared</button></form>
-                                            <form action="{{ route('client.applications.interview.noshow', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2 px-3 rounded-lg">No-Show</button></form>
+
+                                        {{-- Schedule new round form --}}
+                                        @if($canScheduleNew)
+                                        <div x-show="schedule" x-cloak x-transition class="mt-3 bg-slate-900/80 border border-emerald-400/30 rounded-lg p-3 text-left">
+                                            <form action="{{ route('client.applications.rounds.store', $app) }}" method="POST" x-data="{ mode: 'Online' }">
+                                                @csrf
+                                                <div class="text-emerald-200 text-xs font-bold uppercase tracking-wider mb-2">Schedule Round {{ $roundCount + 1 }}</div>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    <input type="datetime-local" name="scheduled_at" required min="{{ now()->format('Y-m-d\TH:i') }}" class="w-full bg-slate-800 border border-white/20 text-white text-xs rounded p-2">
+                                                    <select name="mode" x-model="mode" required class="w-full bg-slate-800 border border-white/20 text-white text-xs rounded p-2">
+                                                        <option value="Online">Online</option>
+                                                        <option value="In-person">In-person</option>
+                                                        <option value="Phone">Phone</option>
+                                                    </select>
+                                                    <input type="url" name="meeting_link" x-show="mode === 'Online'" placeholder="Meeting link (https://...)" class="w-full bg-slate-800 border border-white/20 text-white text-xs rounded p-2">
+                                                    <input type="text" name="location" x-show="mode === 'In-person'" x-cloak placeholder="Office address" class="w-full bg-slate-800 border border-white/20 text-white text-xs rounded p-2">
+                                                    <input type="text" name="interviewer_name" placeholder="Interviewer (optional)" class="w-full bg-slate-800 border border-white/20 text-white text-xs rounded p-2 md:col-span-2">
+                                                </div>
+                                                <div class="flex gap-2 mt-2 justify-end">
+                                                    <button type="button" @click="schedule = false" class="text-xs text-slate-300 hover:text-white px-3 py-1.5">Cancel</button>
+                                                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold px-4 py-1.5 rounded">Schedule</button>
+                                                </div>
+                                            </form>
                                         </div>
-                                    @elseif($app->hiring_status == 'Interviewed' || $app->hiring_status == 'No-Show')
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <a href="{{ route('client.applications.feedback.create', $app) }}" class="fx-btn bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-2 px-3 rounded-lg"><i class="fa-regular fa-clipboard"></i> {{ $app->interview_feedback ? 'Edit Feedback' : 'Add Feedback' }}</a>
-                                            <a href="{{ route('client.applications.select.show', $app) }}" class="fx-btn bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Select</a>
-                                            <form action="{{ route('client.applications.reject', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Reject</button></form>
+                                        @endif
+
+                                        {{-- Feedback form for latest round --}}
+                                        @if($latestRound && in_array($latestRound->status, ['Appeared','No-Show']) && !$latestRound->feedback_submitted_at)
+                                        <div x-show="openFeedback === {{ $latestRound->id }}" x-cloak x-transition class="mt-3 bg-slate-900/80 border border-cyan-400/30 rounded-lg p-3 text-left">
+                                            <form action="{{ route('client.rounds.feedback', $latestRound) }}" method="POST">
+                                                @csrf
+                                                <div class="text-cyan-200 text-xs font-bold uppercase tracking-wider mb-2">Round {{ $latestRound->round_number }} Feedback</div>
+                                                <textarea name="feedback" rows="3" maxlength="5000" placeholder="Interview notes (optional)" class="w-full bg-slate-800 border border-white/20 text-white text-xs rounded p-2 mb-2"></textarea>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <select name="rating" class="bg-slate-800 border border-white/20 text-white text-xs rounded p-2">
+                                                        <option value="">Rating (optional)</option>
+                                                        @for($i = 1; $i <= 5; $i++)
+                                                            <option value="{{ $i }}">{{ $i }} ★</option>
+                                                        @endfor
+                                                    </select>
+                                                    <select name="recommendation" required class="bg-slate-800 border border-white/20 text-white text-xs rounded p-2">
+                                                        <option value="">Recommendation *</option>
+                                                        @if($roundCount < $maxRounds)
+                                                            <option value="Pass to Next Round">Pass to Next Round</option>
+                                                        @endif
+                                                        <option value="Select Candidate">Select Candidate</option>
+                                                        <option value="Reject">Reject</option>
+                                                    </select>
+                                                </div>
+                                                <div class="flex gap-2 mt-2 justify-end">
+                                                    <button type="button" @click="openFeedback = null" class="text-xs text-slate-300 hover:text-white px-3 py-1.5">Cancel</button>
+                                                    <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-xs font-bold px-4 py-1.5 rounded">Save Feedback</button>
+                                                </div>
+                                            </form>
                                         </div>
+                                        @endif
                                     @elseif($app->hiring_status == 'Selected' && empty($app->joined_status))
                                         <div class="flex justify-end gap-2">
                                             <a href="{{ route('client.applications.select.edit', $app) }}" class="fx-btn bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Edit Join</a>
