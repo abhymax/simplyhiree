@@ -250,6 +250,7 @@ class PartnerController extends Controller
                 'Joined'              => fn($q) => $q->where('joined_status', 'Joined'),
                 'Left'                => fn($q) => $q->where('joined_status', 'Left'),
                 'Did Not Join'        => fn($q) => $q->where('joined_status', 'Did Not Join'),
+                'Did Not Join / Left' => fn($q) => $q->whereIn('joined_status', ['Left', 'Did Not Join']),
             ];
             if (isset($statusMap[$status])) {
                 ($statusMap[$status])($query);
@@ -300,7 +301,39 @@ class PartnerController extends Controller
                             ->sort()
                             ->values();
 
-        return view('partner.applications', compact('applications', 'filterJobs', 'filterClients'));
+        // Status pill counts — computed against the SAME filters except status itself,
+        // so the user sees how many records fall into each bucket given their other choices.
+        $countsBase = JobApplication::whereHas('candidate', $baseScope);
+        if ($search = $request->input('search')) {
+            $countsBase->whereHas('candidate', function ($q) use ($search) {
+                $q->where('partner_id', $partner->id)
+                  ->where(function ($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+        if ($jobId = $request->input('job_id')) $countsBase->where('job_id', $jobId);
+        if ($client = $request->input('client')) $countsBase->whereHas('job', fn($q) => $q->where('company_name', $client));
+        if ($from = $request->input('date_from')) $countsBase->whereDate('job_applications.created_at', '>=', $from);
+        if ($to = $request->input('date_to')) $countsBase->whereDate('job_applications.created_at', '<=', $to);
+
+        $statusCounts = [
+            'all'                 => (clone $countsBase)->count(),
+            'Pending Review'      => (clone $countsBase)->where('status', 'Pending Review')->count(),
+            'Approved'            => (clone $countsBase)->where('status', 'Approved')->whereNull('hiring_status')->count(),
+            'Interview Scheduled' => (clone $countsBase)->where('hiring_status', 'Interview Scheduled')->count(),
+            'Interviewed'         => (clone $countsBase)->where('hiring_status', 'Interviewed')->count(),
+            'Selected'            => (clone $countsBase)->where('hiring_status', 'Selected')->whereNull('joined_status')->count(),
+            'Joined'              => (clone $countsBase)->where('joined_status', 'Joined')->count(),
+            'Rejected'            => (clone $countsBase)->where(function ($q) {
+                                        $q->where('status', 'Rejected')->orWhere('hiring_status', 'Client Rejected');
+                                    })->count(),
+            'Did Not Join / Left' => (clone $countsBase)->whereIn('joined_status', ['Left', 'Did Not Join'])->count(),
+        ];
+
+        return view('partner.applications', compact('applications', 'filterJobs', 'filterClients', 'statusCounts'));
     }
 
     public function showApplication(\App\Models\JobApplication $application)

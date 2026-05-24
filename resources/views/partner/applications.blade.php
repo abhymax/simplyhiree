@@ -28,74 +28,83 @@
             </div>
         </div>
 
-        {{-- Filter bar --}}
-        <form method="GET" action="{{ route('partner.applications') }}" class="mb-6">
-            <div class="bg-slate-900/50 backdrop-blur border border-white/15 rounded-2xl p-5 space-y-4">
-                {{-- Row 1: Search + Status + Client + Job --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Search</label>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                               placeholder="Candidate name or email…"
-                               class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Status</label>
-                        <select name="status" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                            <option value="">All Statuses</option>
-                            @foreach(['Pending Review','Approved','Interview Scheduled','Interviewed','No-Show','Selected','Client Rejected','Joined','Left','Did Not Join','Rejected'] as $s)
-                                <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ $s }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Client</label>
-                        <select name="client" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                            <option value="">All Clients</option>
-                            @foreach($filterClients as $c)
-                                <option value="{{ $c }}" {{ request('client') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">Job</label>
-                        <select name="job_id" class="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                            <option value="">All Jobs</option>
-                            @foreach($filterJobs as $j)
-                                <option value="{{ $j->id }}" {{ request('job_id') == $j->id ? 'selected' : '' }}>
-                                    {{ $j->title }}{{ $j->is_company_confidential ? '' : ' — ' . $j->company_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                {{-- Row 2: Date range + actions --}}
-                <div class="flex flex-wrap gap-4 items-end">
-                    <div class="w-44">
-                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">From</label>
-                        <input type="date" name="date_from" value="{{ request('date_from') }}"
-                               class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                    </div>
-                    <div class="w-44">
-                        <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1.5">To</label>
-                        <input type="date" name="date_to" value="{{ request('date_to') }}"
-                               class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                    </div>
-                    <div class="flex gap-2 ml-auto">
-                        <button type="submit"
-                                class="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-900 transition-all hover:-translate-y-0.5"
-                                style="background: linear-gradient(135deg,#22d3ee,#0ea5e9); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
-                            <i class="fa-solid fa-filter mr-1.5"></i> Apply Filters
-                        </button>
-                        @if(request()->hasAny(['search','status','client','job_id','date_from','date_to']))
-                            <a href="{{ route('partner.applications') }}"
-                               class="px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all flex items-center gap-1.5">
-                                <i class="fa-solid fa-xmark"></i> Clear
-                            </a>
-                        @endif
-                    </div>
-                </div>
+        @php
+            $activeStatus = request('status');
+            $kept = request()->only(['search', 'job_id', 'client', 'date_from', 'date_to']);
+            $tabs = [
+                ['key' => null,                 'label' => 'All',                 'count' => $statusCounts['all'],                 'color' => 'cyan'],
+                ['key' => 'Pending Review',     'label' => 'Candidate Applied',   'count' => $statusCounts['Pending Review'],      'color' => 'amber'],
+                ['key' => 'Approved',           'label' => 'To Be Lined Up',      'count' => $statusCounts['Approved'],            'color' => 'emerald'],
+                ['key' => 'Interview Scheduled','label' => 'Interview Scheduled', 'count' => $statusCounts['Interview Scheduled'], 'color' => 'indigo'],
+                ['key' => 'Interviewed',        'label' => 'Interviewed',         'count' => $statusCounts['Interviewed'],         'color' => 'violet'],
+                ['key' => 'Selected',           'label' => 'Selected',            'count' => $statusCounts['Selected'],            'color' => 'sky'],
+                ['key' => 'Joined',             'label' => 'Joined',              'count' => $statusCounts['Joined'],              'color' => 'emerald'],
+                ['key' => 'Did Not Join / Left','label' => 'DNJ / Left',          'count' => $statusCounts['Did Not Join / Left'], 'color' => 'rose'],
+                ['key' => 'Rejected',           'label' => 'Rejected',            'count' => $statusCounts['Rejected'],            'color' => 'rose'],
+            ];
+            $colorMap = [
+                'cyan'    => 'bg-cyan-500/20 text-cyan-100 border-cyan-400/60',
+                'amber'   => 'bg-amber-500/20 text-amber-100 border-amber-400/60',
+                'emerald' => 'bg-emerald-500/20 text-emerald-100 border-emerald-400/60',
+                'indigo'  => 'bg-indigo-500/20 text-indigo-100 border-indigo-400/60',
+                'violet'  => 'bg-violet-500/20 text-violet-100 border-violet-400/60',
+                'sky'     => 'bg-sky-500/20 text-sky-100 border-sky-400/60',
+                'rose'    => 'bg-rose-500/20 text-rose-100 border-rose-400/60',
+            ];
+        @endphp
+
+        {{-- Status pill tabs --}}
+        <div class="mb-4 -mx-1 overflow-x-auto pb-1">
+            <div class="flex items-center gap-2 px-1 min-w-max">
+                @foreach($tabs as $t)
+                    @php
+                        $isActive = (string) $activeStatus === (string) $t['key'];
+                        $linkParams = array_merge($kept, $t['key'] ? ['status' => $t['key']] : []);
+                        $activeCls  = $colorMap[$t['color']];
+                    @endphp
+                    <a href="{{ route('partner.applications', $linkParams) }}"
+                       class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-bold border whitespace-nowrap transition
+                              {{ $isActive ? $activeCls.' shadow-lg scale-105' : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white' }}">
+                        {{ $t['label'] }}
+                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold {{ $isActive ? 'bg-white/20' : 'bg-slate-800/60 text-slate-300' }}">{{ $t['count'] }}</span>
+                    </a>
+                @endforeach
             </div>
+        </div>
+
+        {{-- Compact filter row --}}
+        <form method="GET" action="{{ route('partner.applications') }}" class="flex flex-wrap items-center gap-2 mb-5">
+            <input type="hidden" name="status" value="{{ $activeStatus }}">
+            @php $fld = 'h-9 bg-slate-900/60 border border-white/15 rounded-md text-white text-sm px-2.5 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400'; @endphp
+
+            <div class="relative flex-1 min-w-[200px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-white/60 text-xs pointer-events-none"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate name or email" class="{{ $fld }} w-full pl-8">
+            </div>
+            <select name="job_id" class="{{ $fld }} max-w-[200px]">
+                <option value="" class="bg-slate-900">All Jobs</option>
+                @foreach($filterJobs as $j)
+                    <option value="{{ $j->id }}" class="bg-slate-900" {{ request('job_id') == $j->id ? 'selected' : '' }}>
+                        {{ \Illuminate\Support\Str::limit($j->title, 24) }}
+                    </option>
+                @endforeach
+            </select>
+            <select name="client" class="{{ $fld }} max-w-[180px]">
+                <option value="" class="bg-slate-900">All Clients</option>
+                @foreach($filterClients as $c)
+                    <option value="{{ $c }}" class="bg-slate-900" {{ request('client') === $c ? 'selected' : '' }}>{{ \Illuminate\Support\Str::limit($c, 20) }}</option>
+                @endforeach
+            </select>
+            <input type="date" name="date_from" value="{{ request('date_from') }}" title="From" class="{{ $fld }} w-[150px] [color-scheme:dark]">
+            <span class="text-slate-400 text-xs">to</span>
+            <input type="date" name="date_to" value="{{ request('date_to') }}" title="To" class="{{ $fld }} w-[150px] [color-scheme:dark]">
+            <button type="submit" class="h-9 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-md text-sm">
+                <i class="fa-solid fa-filter mr-1"></i> Filter
+            </button>
+            @if(request()->anyFilled(['search','client','job_id','date_from','date_to']))
+                <a href="{{ route('partner.applications', $activeStatus ? ['status' => $activeStatus] : []) }}" title="Clear filters"
+                   class="h-9 w-9 bg-rose-500 hover:bg-rose-400 text-white rounded-md inline-flex items-center justify-center"><i class="fa-solid fa-xmark"></i></a>
+            @endif
         </form>
 
         <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl">
