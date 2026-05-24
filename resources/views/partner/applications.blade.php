@@ -63,7 +63,8 @@
                         $activeCls  = $colorMap[$t['color']];
                     @endphp
                     <a href="{{ route('partner.applications', $linkParams) }}"
-                       class="inline-flex items-center gap-3 pl-5 pr-2.5 py-2 rounded-full text-xs font-bold border whitespace-nowrap transition
+                       style="padding-left: 1.5rem !important; padding-right: 1rem !important;"
+                       class="inline-flex items-center gap-3 py-2 rounded-full text-xs font-bold border whitespace-nowrap transition
                               {{ $isActive ? $activeCls.' shadow-lg' : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10 hover:text-white' }}">
                         <span class="leading-none">{{ $t['label'] }}</span>
                         <span class="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-2 rounded-full text-[11px] font-extrabold leading-none border {{ $isActive ? 'bg-white/30 text-white border-white/30' : 'bg-white/15 text-white border-white/20' }}">{{ $t['count'] }}</span>
@@ -78,9 +79,10 @@
             @php $fld = 'h-9 bg-slate-900/60 border border-white/15 rounded-md text-white text-sm px-2.5 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400'; @endphp
 
             <div class="relative flex-1 min-w-[200px]">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 text-sm pointer-events-none z-10"></i>
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none z-10"></i>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate name or email"
-                       class="h-9 w-full bg-slate-900/60 border border-white/15 rounded-md text-white text-sm pl-11 pr-3 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
+                       style="padding-left: 2.75rem !important;"
+                       class="h-9 w-full bg-slate-900/60 border border-white/15 rounded-md text-white text-sm pr-3 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
             </div>
             <select name="job_id" class="{{ $fld }} max-w-[200px]">
                 <option value="" class="bg-slate-900">All Jobs</option>
