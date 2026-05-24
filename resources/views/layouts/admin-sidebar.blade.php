@@ -1,12 +1,20 @@
 {{-- Vertical sidebar for Superadmin / Manager. Fixed 256px on lg+,
      slide-in panel on small screens triggered by the topbar hamburger. --}}
 <style>
-    .sidebar-nav::-webkit-scrollbar          { width: 4px; }
-    .sidebar-nav::-webkit-scrollbar-track    { background: transparent; }
-    .sidebar-nav::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.18); border-radius: 4px; }
-    .sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.38); }
-    /* Firefox */
-    .sidebar-nav { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+    /* Force the sidebar nav to scroll WITHIN itself, leaving header & footer fixed.
+       Uses inline calc() instead of flex-1+min-h-0 so it works regardless of
+       Tailwind compilation state. 64px header + ~150px footer = ~214px reserved. */
+    .sidebar-nav {
+        height: calc(100vh - 64px - 150px) !important;
+        max-height: calc(100vh - 64px - 150px) !important;
+        overflow-y: scroll !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.35) rgba(255,255,255,0.05);
+    }
+    .sidebar-nav::-webkit-scrollbar          { width: 8px; -webkit-appearance: none; }
+    .sidebar-nav::-webkit-scrollbar-track    { background: rgba(255,255,255,0.05); }
+    .sidebar-nav::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.35); border-radius: 4px; }
+    .sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.6); }
 </style>
 <div x-data="{ open: false }">
     {{-- Mobile topbar --}}
