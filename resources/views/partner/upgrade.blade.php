@@ -5,7 +5,7 @@
     <div class="absolute top-0 right-0 w-96 h-96 bg-yellow-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
     <div class="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
 
-    <div class="relative z-10 max-w-7xl mx-auto">
+    <div class="relative z-10 max-w-6xl mx-auto">
         <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Choose Your Plan</h1>
             <p class="text-blue-200 mt-2">Higher tiers = lower commission, faster payouts, and access to exclusive bulk-hiring projects.</p>
@@ -56,7 +56,7 @@
             $planOrder = $plans->pluck('name')->all();
         @endphp
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             @foreach($plans as $plan)
                 @php
                     $isCurrent = $currentPlan === $plan->name;
@@ -72,18 +72,20 @@
                         </span>
                         @if($isCurrent)<span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase">Current</span>@endif
                     </div>
-                    {{-- Fixed-height pricing block so feature lists across all 4 cards start at exactly the same Y --}}
-                    <div style="min-height: 76px;">
-                        <div class="text-3xl font-extrabold text-white leading-none">
+                    {{-- Fixed-height pricing block: price on left, /month + subtitle stacked on the right --}}
+                    <div class="flex items-center gap-2.5" style="min-height: 56px;">
+                        <div class="text-3xl font-extrabold text-white leading-none shrink-0">
                             ₹{{ number_format((float) $plan->price) }}@if($plan->price_max && (float) $plan->price_max > (float) $plan->price)<span class="text-base font-semibold">–{{ number_format((float) $plan->price_max) }}</span>@endif
                         </div>
-                        <div class="text-xs text-white/70 mt-1">{{ $plan->price_suffix ?: '/month' }}</div>
-                        @if($plan->subtitle)
-                            <div class="text-[11px] text-white/60 mt-1.5 leading-tight">{{ $plan->subtitle }}</div>
-                        @endif
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[11px] text-white/70 leading-tight">{{ $plan->price_suffix ?: '/month' }}</div>
+                            @if($plan->subtitle)
+                                <div class="text-[11px] text-white/60 leading-tight mt-0.5">{{ $plan->subtitle }}</div>
+                            @endif
+                        </div>
                     </div>
 
-                    <ul class="text-[13px] space-y-2.5 mt-3 flex-1 text-white">
+                    <ul class="text-[13px] space-y-2 mt-3 flex-1 text-white">
                         @foreach((array) $plan->features as $f)
                             <li class="flex items-start gap-3.5 group cursor-default transition-all duration-200 hover:translate-x-1">
                                 <span class="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full flex items-center justify-center transition-all"
