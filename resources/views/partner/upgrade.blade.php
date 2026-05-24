@@ -87,7 +87,7 @@
 
                     <ul class="text-[13px] space-y-2 mt-3 flex-1 text-white">
                         @foreach((array) $plan->features as $f)
-                            <li class="flex items-start gap-3.5 group cursor-default transition-all duration-200 hover:translate-x-1">
+                            <li class="flex items-start gap-2 group cursor-default transition-all duration-200 hover:translate-x-1">
                                 <span class="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full flex items-center justify-center transition-all"
                                       style="background:#10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.25), 0 4px 10px -2px rgba(16,185,129,.55);">
                                     <i class="fa-solid fa-check text-[10px]" style="color:#ffffff;"></i>
@@ -96,7 +96,7 @@
                             </li>
                         @endforeach
                         @foreach((array) $plan->non_features as $f)
-                            <li class="flex items-start gap-3.5 group cursor-default">
+                            <li class="flex items-start gap-2 group cursor-default">
                                 <span class="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full flex items-center justify-center"
                                       style="background:#ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.25), 0 4px 10px -2px rgba(239,68,68,.5);">
                                     <i class="fa-solid fa-xmark text-[10px]" style="color:#ffffff;"></i>
