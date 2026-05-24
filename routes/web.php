@@ -354,6 +354,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/team', [\App\Http\Controllers\PartnerTeamController::class, 'store'])->name('team.store');
         Route::patch('/team/{user}', [\App\Http\Controllers\PartnerTeamController::class, 'update'])->name('team.update');
         Route::patch('/team/{user}/toggle', [\App\Http\Controllers\PartnerTeamController::class, 'toggle'])->name('team.toggle');
+        Route::delete('/team/{user}', [\App\Http\Controllers\PartnerTeamController::class, 'destroy'])->name('team.destroy');
 
         // Plan / upgrade
         Route::get('/upgrade', [PartnerController::class, 'upgrade'])->name('upgrade');

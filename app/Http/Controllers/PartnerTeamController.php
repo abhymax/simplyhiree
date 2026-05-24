@@ -143,7 +143,19 @@ class PartnerTeamController extends Controller
         $owner = $this->requireOwner();
         if ((int) $user->parent_partner_id !== (int) $owner->id) abort(403);
 
-        $user->update(['status' => $user->status === 'active' ? 'restricted' : 'active']);
-        return back()->with('success', "Member is now {$user->status}.");
+        $newStatus = $user->status === 'active' ? 'restricted' : 'active';
+        $user->update(['status' => $newStatus]);
+        $label = $newStatus === 'active' ? 'enabled' : 'disabled';
+        return back()->with('success', "{$user->name} has been {$label}.");
+    }
+
+    public function destroy(User $user)
+    {
+        $owner = $this->requireOwner();
+        if ((int) $user->parent_partner_id !== (int) $owner->id) abort(403);
+
+        // Archive: blocks login, preserves all historical submission data
+        $user->update(['status' => 'archived']);
+        return back()->with('success', "{$user->name} has been archived. Their login is now disabled and their submission history is preserved.");
     }
 }
