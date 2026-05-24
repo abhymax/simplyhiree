@@ -1329,6 +1329,30 @@ class AdminController extends Controller
         }, $fileName, $headers);
     }
 
+    public function bulkApproveApplications(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return redirect()->back()->with('error', 'No applications selected.');
+        }
+
+        $applications = JobApplication::whereIn('id', $ids)
+            ->where('status', 'Pending Review')
+            ->with(['job', 'candidate.partner', 'candidateUser'])
+            ->get();
+
+        if ($applications->isEmpty()) {
+            return redirect()->back()->with('error', 'No pending-review applications found in your selection.');
+        }
+
+        foreach ($applications as $application) {
+            $application->update(['status' => 'Approved']);
+            $this->notifyApplicationStakeholder($application, true);
+        }
+
+        return redirect()->back()->with('success', $applications->count() . ' application(s) approved successfully.');
+    }
+
     public function approveApplication(JobApplication $application)
     {
         $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);

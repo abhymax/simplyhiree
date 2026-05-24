@@ -123,8 +123,12 @@
                     </div>
                 @endif
 
-                {{-- Tracker Download form lives standalone (not wrapping the table) because the table rows now contain their own forms (admin-select-on-behalf), and HTML disallows nested forms.  Checkboxes inside the table associate themselves via form="tracker-form". --}}
+                {{-- Standalone forms (outside table to avoid nested-form issues). Row checkboxes link via form="tracker-form" / form="bulk-approve-form". --}}
                 <form method="POST" action="{{ route('admin.applications.tracker-export') }}" id="tracker-form">
+                    @csrf
+                </form>
+                <form method="POST" action="{{ route('admin.applications.bulk-approve') }}" id="bulk-approve-form"
+                      onsubmit="return confirm('Approve all selected applications? Only Pending Review ones will be affected.')">
                     @csrf
                 </form>
 
@@ -139,9 +143,13 @@
                             <span class="text-blue-100 font-semibold">Selected: <span id="tracker-count" class="text-cyan-300 font-bold">0</span></span>
                             <span class="text-slate-400 text-xs hidden md:inline">(Max 200 per export)</span>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap justify-end">
+                            <button type="submit" form="bulk-approve-form" id="bulk-approve-submit" disabled
+                                class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition border border-emerald-500/40 disabled:border-white/10">
+                                <i class="fa-solid fa-check-double"></i> Bulk Approve
+                            </button>
                             <button type="submit" form="tracker-form" id="tracker-submit" disabled
-                                class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition border border-emerald-400/40 disabled:border-white/10">
+                                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition border border-blue-400/40 disabled:border-white/10">
                                 <i class="fa-solid fa-file-arrow-down"></i> Tracker Download
                             </button>
                         </div>
@@ -178,7 +186,9 @@
                                 @endphp
                                 <tr class="group hover:bg-white/10 transition-all duration-200 transform hover:scale-[1.005] cursor-default border-l-4 border-transparent hover:border-cyan-400">
                                     <td class="px-4 py-5 align-top">
+                                        {{-- Associate with both forms so IDs are sent to whichever button is clicked --}}
                                         <input type="checkbox" form="tracker-form" name="ids[]" value="{{ $application->id }}" class="tracker-row-cb h-4 w-4 rounded border-white/30 bg-slate-800 text-cyan-500 focus:ring-cyan-400">
+                                        <input type="checkbox" form="bulk-approve-form" name="ids[]" value="{{ $application->id }}" class="bulk-row-cb hidden">
                                     </td>
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
@@ -349,30 +359,41 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const MAX = 200;
-        const selectAll = document.getElementById('tracker-select-all');
-        const submit    = document.getElementById('tracker-submit');
-        const counter   = document.getElementById('tracker-count');
-        const form      = document.getElementById('tracker-form');
-        if (!form) return;
-        // Row checkboxes are now OUTSIDE the form (linked via form="tracker-form")
-        const rowCbs    = () => Array.from(document.querySelectorAll('.tracker-row-cb'));
+        const selectAll      = document.getElementById('tracker-select-all');
+        const trackerSubmit  = document.getElementById('tracker-submit');
+        const bulkSubmit     = document.getElementById('bulk-approve-submit');
+        const counter        = document.getElementById('tracker-count');
+        const trackerForm    = document.getElementById('tracker-form');
+        const bulkForm       = document.getElementById('bulk-approve-form');
+
+        if (!trackerForm) return;
+
+        // Visible checkboxes (tracker-form); hidden mirrors (bulk-approve-form)
+        const rowCbs     = () => Array.from(document.querySelectorAll('.tracker-row-cb'));
+        const bulkMirror = () => Array.from(document.querySelectorAll('.bulk-row-cb'));
 
         const updateState = () => {
             const checked = rowCbs().filter(c => c.checked);
-            counter.textContent = checked.length;
-            submit.disabled = checked.length === 0;
-            if (checked.length > MAX) {
-                submit.disabled = true;
-                counter.classList.add('text-rose-300');
-                counter.classList.remove('text-cyan-300');
-            } else {
-                counter.classList.remove('text-rose-300');
-                counter.classList.add('text-cyan-300');
-            }
+            const count   = checked.length;
+
+            // Keep hidden bulk-form mirrors in sync
+            bulkMirror().forEach(m => {
+                m.checked = rowCbs().find(c => c.value === m.value)?.checked ?? false;
+            });
+
+            counter.textContent = count;
+
+            const overMax = count > MAX;
+            trackerSubmit.disabled = count === 0 || overMax;
+            bulkSubmit.disabled    = count === 0;
+
+            counter.classList.toggle('text-rose-300', overMax);
+            counter.classList.toggle('text-cyan-300', !overMax);
+
             if (selectAll) {
                 const all = rowCbs();
-                selectAll.checked = all.length > 0 && checked.length === all.length;
-                selectAll.indeterminate = checked.length > 0 && checked.length < all.length;
+                selectAll.checked       = all.length > 0 && count === all.length;
+                selectAll.indeterminate = count > 0 && count < all.length;
             }
         };
 
@@ -384,18 +405,10 @@
         }
         rowCbs().forEach(c => c.addEventListener('change', updateState));
 
-        form.addEventListener('submit', (e) => {
+        trackerForm.addEventListener('submit', (e) => {
             const checked = rowCbs().filter(c => c.checked);
-            if (checked.length === 0) {
-                e.preventDefault();
-                alert('Select at least one candidate.');
-                return;
-            }
-            if (checked.length > MAX) {
-                e.preventDefault();
-                alert('You can export at most ' + MAX + ' candidates at a time. You selected ' + checked.length + '.');
-                return;
-            }
+            if (checked.length === 0) { e.preventDefault(); alert('Select at least one candidate.'); return; }
+            if (checked.length > MAX) { e.preventDefault(); alert('Max ' + MAX + ' per export. You selected ' + checked.length + '.'); return; }
         });
 
         updateState();
