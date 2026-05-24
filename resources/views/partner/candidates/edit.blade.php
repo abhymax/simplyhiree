@@ -6,10 +6,12 @@
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
 
     <div class="relative z-10 max-w-5xl mx-auto">
-        <div class="mb-5">
-            <a href="{{ route('partner.candidates.index') }}" class="inline-flex items-center gap-2 text-blue-200 hover:text-white font-semibold">
-                <i class="fa-solid fa-arrow-left"></i> Back to Candidates
+        <div class="mb-5 flex items-center gap-4">
+            <a href="{{ route('partner.candidates.show', $candidate->id) }}" class="inline-flex items-center gap-2 text-blue-200 hover:text-white font-semibold">
+                <i class="fa-solid fa-arrow-left"></i> Back to Profile
             </a>
+            <span class="text-white/30">|</span>
+            <a href="{{ route('partner.candidates.index') }}" class="text-blue-300 hover:text-white text-sm">All Candidates</a>
         </div>
 
         <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl overflow-hidden">

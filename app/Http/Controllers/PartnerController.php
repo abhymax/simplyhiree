@@ -596,14 +596,46 @@ class PartnerController extends Controller
         return redirect()->route('partner.candidates.index')->with('success', 'Candidate added successfully!');
     }
 
-    public function listCandidates()
+    public function listCandidates(Request $request)
     {
         $partner = Auth::user();
-        $candidates = Candidate::where('partner_id', $partner->id)
-                               ->latest()
-                               ->paginate(20);
 
-        return view('partner.candidates.index', ['candidates' => $candidates]);
+        $query = Candidate::where('partner_id', $partner->id);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        if ($exp = $request->input('experience')) {
+            $query->where('experience_status', $exp);
+        }
+
+        if ($location = $request->input('location')) {
+            $query->where('location', 'like', "%{$location}%");
+        }
+
+        $candidates = $query->latest()->paginate(20)->withQueryString();
+
+        $locations = Candidate::where('partner_id', $partner->id)
+                        ->whereNotNull('location')
+                        ->distinct()
+                        ->orderBy('location')
+                        ->pluck('location');
+
+        return view('partner.candidates.index', compact('candidates', 'locations'));
+    }
+
+    public function showCandidate(Candidate $candidate)
+    {
+        if ($candidate->partner_id !== Auth::id()) {
+            abort(403);
+        }
+        return view('partner.candidates.show', compact('candidate'));
     }
 
     public function editCandidate(Candidate $candidate)
@@ -664,7 +696,7 @@ class PartnerController extends Controller
 
         $candidate->update($validatedData);
 
-        return redirect()->route('partner.candidates.index')->with('success', 'Candidate updated successfully!');
+        return redirect()->route('partner.candidates.show', $candidate->id)->with('success', 'Candidate updated successfully!');
     }
 
     public function showApplyForm(Job $job)

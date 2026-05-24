@@ -373,6 +373,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/candidates', [PartnerController::class, 'storeCandidate'])->name('candidates.store'); 
         
         Route::get('/candidates', [PartnerController::class, 'listCandidates'])->name('candidates.index');
+        Route::get('/candidates/{candidate}', [PartnerController::class, 'showCandidate'])->name('candidates.show');
         Route::get('/candidates/{candidate}/edit', [PartnerController::class, 'editCandidate'])->name('candidates.edit');
         Route::patch('/candidates/{candidate}', [PartnerController::class, 'updateCandidate'])->name('candidates.update');
         
