@@ -217,6 +217,21 @@ class PartnerController extends Controller
         return view('partner.applications', ['applications' => $applications]);
     }
 
+    public function showApplication(\App\Models\JobApplication $application)
+    {
+        $partner = Auth::user();
+
+        // Ensure this application's candidate belongs to this partner
+        if (!$application->candidate || $application->candidate->partner_id !== $partner->id) {
+            abort(403);
+        }
+
+        $application->load(['job', 'candidate']);
+        $application->makeHidden(['client_notes', 'final_ctc', 'invoice_amount', 'fee_percent', 'fee_flat']);
+
+        return view('partner.application-show', compact('application'));
+    }
+
     /**
      * List available jobs with filtering and visibility checks.
      */

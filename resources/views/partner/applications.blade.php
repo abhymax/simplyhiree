@@ -107,13 +107,13 @@
                             @endphp
                             <tr class="fx-row">
                                 <td class="px-6 py-5">
-                                    <div class="flex items-center gap-4">
-                                        <div class="h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white ring-2 ring-white/20">{{ $initial }}</div>
+                                    <a href="{{ route('partner.applications.show', $application->id) }}" class="flex items-center gap-4 group">
+                                        <div class="h-11 w-11 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white ring-2 ring-white/20 group-hover:ring-cyan-400 transition-all">{{ $initial }}</div>
                                         <div>
-                                            <div class="font-bold text-white">{{ $name }}</div>
+                                            <div class="font-bold text-white group-hover:text-cyan-300 transition-colors">{{ $name }}</div>
                                             <div class="text-cyan-200 text-xs">{{ $application->candidate->email ?? 'N/A' }}</div>
                                         </div>
-                                    </div>
+                                    </a>
                                 </td>
                                 <td class="px-6 py-5">
                                     @if($application->job)
