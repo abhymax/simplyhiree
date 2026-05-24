@@ -551,6 +551,15 @@ class ClientController extends Controller
         ]);
     }
     
+    public function showApplicantDetail(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403, 'You can only view applicants who applied to your own jobs.');
+        }
+        $application->load(['job', 'candidate.partner', 'candidateUser.profile']);
+        return view('client.applications.show', ['application' => $application]);
+    }
+
     public function rejectApplicant(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {

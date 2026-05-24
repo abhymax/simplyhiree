@@ -279,6 +279,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/applications/{application}/request-replacement', [ClientController::class, 'requestCandidateReplacement'])->name('applications.request-replacement');
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
         Route::get('/applications', [ClientController::class, 'listAllApplications'])->name('applications.index');
+        Route::get('/applications/{application}', [ClientController::class, 'showApplicantDetail'])->name('applications.show');
 
         // Broadcast to my connected vendors
         Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');

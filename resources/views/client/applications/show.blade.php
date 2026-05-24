@@ -1,0 +1,170 @@
+@extends('layouts.app')
+
+@section('content')
+@php
+    $candidate     = $application->candidate;
+    $candidateUser = $application->candidateUser;
+    $name = $candidate
+        ? trim(($candidate->first_name ?? '').' '.($candidate->last_name ?? ''))
+        : ($candidateUser->name ?? 'Candidate');
+    $email     = $candidate->email ?? $candidateUser->email ?? '—';
+    $phone     = $candidate->phone_number ?? $candidateUser->profile->phone_number ?? '—';
+    $location  = $candidate->location ?? $candidateUser->profile->location ?? '—';
+    $resume    = $candidate->resume_path ?? $candidateUser->profile->resume_path ?? null;
+    $initial   = strtoupper(substr($name ?: 'C', 0, 1));
+    $partner   = $candidate?->partner;
+    $skills    = $candidate->skills ?? null;
+    $exp       = $candidate->experience_status ?? null;
+    $education = $candidate->education_level ?? null;
+    $ctcRaw    = $candidate->expected_ctc ?? null;
+    $ctcNum    = is_numeric($ctcRaw) ? (float) $ctcRaw : (float) preg_replace('/[^0-9.]/', '', (string) $ctcRaw);
+@endphp
+
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen blur-[120px] opacity-30 animate-pulse"></div>
+    <div class="absolute bottom-0 left-0 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen blur-[120px] opacity-30"></div>
+
+    <div class="relative z-10 max-w-6xl mx-auto">
+
+        {{-- Back link --}}
+        <a href="{{ route('client.jobs.applicants', $application->job_id) }}"
+           class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Applicants
+        </a>
+
+        {{-- Hero card --}}
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex items-center gap-5">
+                    <div class="h-20 w-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg ring-4 ring-white/10">{{ $initial }}</div>
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{{ $name }}</h1>
+                        <div class="mt-2 flex flex-wrap gap-3 text-sm">
+                            <span class="text-blue-100"><i class="fa-regular fa-envelope mr-1.5 text-cyan-300"></i> {{ $email }}</span>
+                            <span class="text-blue-100"><i class="fa-solid fa-phone mr-1.5 text-cyan-300"></i> {{ $phone }}</span>
+                            <span class="text-blue-100"><i class="fa-solid fa-location-dot mr-1.5 text-cyan-300"></i> {{ $location }}</span>
+                        </div>
+                        <div class="mt-2 text-[11px] text-slate-300">
+                            {{ $application->application_code ?? 'SH-APP-'.str_pad($application->id, 6, '0', STR_PAD_LEFT) }}
+                            @if($candidate)
+                                · {{ $candidate->candidate_code ?? '' }}
+                            @endif
+                            · Applied {{ $application->created_at->format('M d, Y') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-2">
+                    @if($resume)
+                        <a href="{{ asset('storage/'.$resume) }}" target="_blank"
+                           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg transition">
+                            <i class="fa-solid fa-file-arrow-down"></i> Download CV
+                        </a>
+                    @endif
+                    @if($partner)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-600/30 border border-purple-400/40 text-purple-100 text-xs font-bold">
+                            <i class="fa-solid fa-handshake"></i> Sourced by {{ $partner->name }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-700/50 border border-slate-500/40 text-slate-100 text-xs font-bold">
+                            <i class="fa-solid fa-globe"></i> Direct Application
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {{-- Applied Job --}}
+            <div class="lg:col-span-1 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+                <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3"><i class="fa-solid fa-briefcase mr-1"></i> Applied For</h3>
+                <div class="font-extrabold text-white text-lg leading-tight">{{ $application->job->title ?? 'Deleted Job' }}</div>
+                <div class="text-blue-200 text-sm mt-1">{{ $application->job->company_name ?? '—' }}</div>
+                <div class="text-blue-100 text-xs mt-3 space-y-1">
+                    <div><i class="fa-solid fa-location-dot text-rose-400 mr-1.5"></i> {{ $application->job->location ?? '—' }}</div>
+                    <div><i class="fa-solid fa-tag text-amber-400 mr-1.5"></i> {{ $application->job->job_type ?? '—' }}</div>
+                </div>
+            </div>
+
+            {{-- Status --}}
+            <div class="lg:col-span-2 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+                <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3"><i class="fa-solid fa-list-check mr-1"></i> Hiring Pipeline</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                        <div class="text-[10px] uppercase font-bold text-slate-300">Application</div>
+                        <div class="text-white font-bold mt-1">{{ $application->status ?? '—' }}</div>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                        <div class="text-[10px] uppercase font-bold text-slate-300">Hiring</div>
+                        <div class="text-white font-bold mt-1">{{ $application->hiring_status ?: 'Pending Action' }}</div>
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                        <div class="text-[10px] uppercase font-bold text-slate-300">Joining</div>
+                        <div class="text-white font-bold mt-1">{{ $application->joined_status ?: '—' }}</div>
+                    </div>
+                    @if($application->interview_at)
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                            <div class="text-[10px] uppercase font-bold text-slate-300">Interview</div>
+                            <div class="text-white font-bold mt-1">{{ $application->interview_at->format('M d, Y g:i A') }}</div>
+                        </div>
+                    @endif
+                    @if($application->joining_date)
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                            <div class="text-[10px] uppercase font-bold text-slate-300">Joining Date</div>
+                            <div class="text-white font-bold mt-1">{{ $application->joining_date->format('M d, Y') }}</div>
+                        </div>
+                    @endif
+                    @if($application->left_at)
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                            <div class="text-[10px] uppercase font-bold text-slate-300">Left On</div>
+                            <div class="text-white font-bold mt-1">{{ $application->left_at->format('M d, Y') }}</div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Profile --}}
+            <div class="lg:col-span-3 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+                <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4"><i class="fa-solid fa-user mr-1"></i> Candidate Profile</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                    <div>
+                        <div class="text-slate-300 text-[10px] uppercase font-bold">Experience</div>
+                        <div class="text-white">{{ $exp ?? '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-300 text-[10px] uppercase font-bold">Education</div>
+                        <div class="text-white">{{ $education ?? '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-300 text-[10px] uppercase font-bold">Expected CTC</div>
+                        <div class="text-white">{{ $ctcRaw ? '₹'.number_format($ctcNum, 2) : '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-300 text-[10px] uppercase font-bold">Current Location</div>
+                        <div class="text-white">{{ $location }}</div>
+                    </div>
+                </div>
+
+                @if($skills)
+                    <div class="mt-5">
+                        <div class="text-slate-300 text-[10px] uppercase font-bold mb-2">Skills</div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach(array_filter(array_map('trim', preg_split('/[,;]+/', $skills))) as $skill)
+                                <span class="bg-cyan-500/20 border border-cyan-400/40 text-cyan-100 text-xs font-bold px-3 py-1 rounded-full">{{ $skill }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if($application->interview_feedback)
+                    <div class="mt-6 pt-5 border-t border-white/10">
+                        <div class="text-slate-300 text-[10px] uppercase font-bold mb-1">Your Interview Feedback</div>
+                        <p class="text-blue-100 text-sm italic">"{{ $application->interview_feedback }}"</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

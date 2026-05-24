@@ -54,14 +54,14 @@
                             @endphp
                             <tr class="fx-row">
                                 <td class="px-6 py-5 align-top">
-                                    <div class="flex items-center gap-3">
-                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center font-bold ring-2 ring-white/20">{{ $initial }}</div>
+                                    <a href="{{ route('client.applications.show', $app) }}" class="flex items-center gap-3 group">
+                                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center font-bold ring-2 ring-white/20 group-hover:ring-cyan-400 transition">{{ $initial }}</div>
                                         <div>
-                                            <div class="font-bold text-white">{{ $name }}</div>
+                                            <div class="font-bold text-white group-hover:text-cyan-300 transition-colors">{{ $name }}</div>
                                             <div class="text-xs text-cyan-200">{{ $app->candidate->email ?? $app->candidateUser->email ?? 'N/A' }}</div>
                                             <div class="text-xs text-blue-200">{{ $app->candidate->phone_number ?? '' }}</div>
                                         </div>
-                                    </div>
+                                    </a>
                                 </td>
 
                                 <td class="px-6 py-5 align-top text-sm text-blue-100">
