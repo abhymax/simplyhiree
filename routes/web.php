@@ -350,6 +350,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/applications/{application}', [PartnerController::class, 'showApplication'])->name('applications.show');
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
         Route::get('/wallet', [PartnerController::class, 'wallet'])->name('wallet');
+        Route::get('/replacements', [PartnerController::class, 'replacements'])->name('replacements');
 
         // Team management
         Route::get('/team', [\App\Http\Controllers\PartnerTeamController::class, 'index'])->name('team.index');

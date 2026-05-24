@@ -139,17 +139,75 @@ class PartnerController extends Controller
             ->count();
 
         // Replacement requests raised by clients for this partner's candidates
+        $partnerOwnerId = $partner->parent_partner_id ?? $partner->id;
         $replacementRequests = JobApplication::with(['job', 'candidate'])
             ->whereNotNull('replacement_requested_at')
-            ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partner->id))
+            ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partnerOwnerId))
             ->latest('replacement_requested_at')
             ->limit(10)
             ->get();
 
+        // Pop-up modal: show once per login session if there are open requests
+        $showReplacementModal = $replacementRequests->isNotEmpty()
+            && !session()->has('replacement_modal_shown');
+        if ($showReplacementModal) {
+            session()->put('replacement_modal_shown', true);
+        }
+
         return view('partner.dashboard', [
-            'partner'             => $partner,
-            'todayInterviews'     => $todayInterviews,
-            'replacementRequests' => $replacementRequests,
+            'partner'              => $partner,
+            'todayInterviews'      => $todayInterviews,
+            'replacementRequests'  => $replacementRequests,
+            'showReplacementModal' => $showReplacementModal,
+        ]);
+    }
+
+    /**
+     * Dedicated page listing every replacement request for this partner's
+     * candidates so the team can action them in one place.
+     */
+    public function replacements(Request $request)
+    {
+        $partner = Auth::user();
+        $partnerOwnerId = $partner->parent_partner_id ?? $partner->id;
+
+        $query = JobApplication::with(['job', 'candidate'])
+            ->whereNotNull('replacement_requested_at')
+            ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partnerOwnerId));
+
+        // Optional filters
+        if ($status = $request->input('status')) {
+            if ($status === 'open') {
+                $query->whereNull('replacement_resolved_at');
+            } elseif ($status === 'resolved') {
+                $query->whereNotNull('replacement_resolved_at');
+            }
+        }
+        if ($jobId = $request->input('job_id')) {
+            $query->where('job_id', $jobId);
+        }
+        if ($search = $request->input('search')) {
+            $query->whereHas('candidate', function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $requests = $query->latest('replacement_requested_at')->paginate(20)->withQueryString();
+
+        $jobs = JobApplication::whereNotNull('replacement_requested_at')
+            ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partnerOwnerId))
+            ->with('job:id,title')
+            ->get()
+            ->pluck('job')
+            ->unique('id')
+            ->filter()
+            ->values();
+
+        return view('partner.replacements', [
+            'requests' => $requests,
+            'jobs'     => $jobs,
         ]);
     }
 

@@ -1,6 +1,66 @@
 @extends('layouts.app')
 
 @section('content')
+
+{{-- Replacement Requests pop-up (shows once per login session) --}}
+@if(!empty($showReplacementModal) && $showReplacementModal && $replacementRequests->isNotEmpty())
+<div id="replacement-modal"
+     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+     role="dialog" aria-modal="true">
+    <div class="bg-gradient-to-br from-slate-900 to-indigo-950 border border-amber-400/40 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <div class="px-6 py-4 border-b border-amber-400/30 bg-amber-500/10 flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300">
+                    <i class="fa-solid fa-rotate text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-extrabold text-lg leading-tight">Replacement Requests</h3>
+                    <p class="text-amber-100/80 text-xs mt-0.5">
+                        {{ $replacementRequests->count() }} candidate{{ $replacementRequests->count() === 1 ? '' : 's' }} need replacement
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="document.getElementById('replacement-modal').remove()"
+                    class="text-slate-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition flex-shrink-0"
+                    aria-label="Close">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="px-6 py-4 max-h-72 overflow-y-auto">
+            <ul class="divide-y divide-white/10">
+                @foreach($replacementRequests->take(5) as $rr)
+                    <li class="py-3">
+                        <div class="text-white font-bold text-sm">
+                            {{ trim(($rr->candidate->first_name ?? '').' '.($rr->candidate->last_name ?? '')) ?: 'Candidate' }}
+                            <span class="text-amber-200/80 font-medium">left</span>
+                            <span class="text-white">{{ $rr->job->title ?? '—' }}</span>
+                        </div>
+                        <div class="text-blue-200/80 text-[11px] mt-0.5">
+                            Requested {{ $rr->replacement_requested_at->diffForHumans() }}
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+            @if($replacementRequests->count() > 5)
+                <p class="mt-2 text-xs text-amber-200/80 italic">
+                    + {{ $replacementRequests->count() - 5 }} more &mdash; see the Replacements page.
+                </p>
+            @endif
+        </div>
+        <div class="px-6 py-4 border-t border-white/10 bg-slate-900/50 flex flex-col sm:flex-row gap-2 justify-end">
+            <button type="button" onclick="document.getElementById('replacement-modal').remove()"
+                    class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-xl transition border border-white/20">
+                Close
+            </button>
+            <a href="{{ route('partner.replacements') }}"
+               class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 text-sm font-bold rounded-xl transition shadow-lg inline-flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-right"></i> View All Replacements
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
 <style>
     .fx-card {
         transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background-color .25s ease;

@@ -100,6 +100,9 @@
                         <x-nav-link :href="route('partner.candidates.index')" :active="request()->routeIs('partner.candidates.index')" class="text-slate-600 hover:text-indigo-600">
                             My Candidates
                         </x-nav-link>
+                        <x-nav-link :href="route('partner.replacements')" :active="request()->routeIs('partner.replacements')" class="text-slate-600 hover:text-indigo-600">
+                            Replacements
+                        </x-nav-link>
                         @if(auth()->user()->isPartnerOwner())
                             <x-nav-link :href="route('partner.wallet')" :active="request()->routeIs('partner.wallet')" class="text-slate-600 hover:text-indigo-600">
                                 Wallet
@@ -270,6 +273,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('partner.candidates.index')" :active="request()->routeIs('partner.candidates.index')">
                     My Candidates
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('partner.replacements')" :active="request()->routeIs('partner.replacements')">
+                    Replacements
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('partner.profile.business')" :active="request()->routeIs('partner.profile.business')">
                     My Account
