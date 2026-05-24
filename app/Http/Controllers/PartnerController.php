@@ -88,6 +88,7 @@ class PartnerController extends Controller
     public function wallet()
     {
         $partner = Auth::user();
+        if (!$partner->canSeeCommercials()) abort(403, 'Access restricted.');
 
         $myApps = JobApplication::whereHas('candidate', fn ($q) => $q->where('partner_id', $partner->id))
             ->with(['job', 'candidate', 'partnerCreditNote']);
@@ -460,6 +461,7 @@ class PartnerController extends Controller
     public function earnings()
     {
         $partner = Auth::user();
+        if (!$partner->canSeeCommercials()) abort(403, 'Access restricted.');
 
         $placements = JobApplication::where('joined_status', 'Joined')
                                     ->whereHas('candidate', function ($query) use ($partner) {

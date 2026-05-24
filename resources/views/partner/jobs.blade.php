@@ -132,12 +132,14 @@
                                 </td>
 
                                 <td class="px-6 py-5 align-top">
+                                    @if(Auth::user()->canSeeCommercials())
                                     <div class="text-xs uppercase text-blue-200 font-bold">Payout</div>
                                     <div class="text-3xl font-black text-emerald-300">₹{{ number_format($job->payout_amount, 0) }}</div>
                                     <div class="text-xs text-slate-300">released {{ $job->minimum_stay_days ?? 0 }} days after joining</div>
                                     <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-200 border border-amber-400/30" title="If the candidate leaves before this, partner must provide a replacement or refund.">
                                         <i class="fa-solid fa-rotate"></i> Replacement: {{ $job->replacement_guarantee_days ?? 0 }} days
                                     </div>
+                                    @endif
                                     <div class="space-y-2 mt-3">
                                         <a href="{{ route('partner.jobs.show', $job->id) }}" class="fx-btn block text-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm">View Details</a>
                                         <a href="{{ route('partner.jobs.showApplyForm', $job->id) }}" class="fx-btn block text-center px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black text-sm">Apply Now</a>
