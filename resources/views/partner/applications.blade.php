@@ -63,10 +63,10 @@
                         $activeCls  = $colorMap[$t['color']];
                     @endphp
                     <a href="{{ route('partner.applications', $linkParams) }}"
-                       class="inline-flex items-center gap-2 pl-3.5 pr-1.5 py-1 rounded-full text-xs font-bold border whitespace-nowrap transition
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border whitespace-nowrap transition
                               {{ $isActive ? $activeCls.' shadow-lg' : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10 hover:text-white' }}">
                         <span class="leading-none">{{ $t['label'] }}</span>
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-xs font-extrabold leading-none {{ $isActive ? 'bg-white text-slate-900' : 'bg-slate-950/70 text-white border border-white/20' }}">{{ $t['count'] }}</span>
+                        <span class="text-xs font-extrabold leading-none {{ $isActive ? 'text-white' : 'text-cyan-300' }}">{{ $t['count'] }}</span>
                     </a>
                 @endforeach
             </div>
