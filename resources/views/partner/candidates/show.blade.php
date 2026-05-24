@@ -137,7 +137,7 @@
 
             {{-- Applications --}}
             @php
-                $apps = $candidate->applications()->with('job')->latest()->get() ?? collect();
+                $apps = $candidate->jobApplications()->with('job')->latest()->get();
             @endphp
             @if($apps->count())
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:col-span-2">
