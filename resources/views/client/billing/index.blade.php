@@ -23,27 +23,27 @@
             </div>
         @endif
 
-        {{-- Summary cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-rose-500/20 to-rose-700/20 border border-rose-400/40 rounded-2xl p-5 shadow-lg">
-                <div class="flex items-center gap-2 text-rose-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-exclamation"></i> Outstanding</div>
-                <div class="text-3xl font-extrabold text-white mt-2">₹{{ number_format($summary['outstanding'], 0) }}</div>
-                <div class="text-rose-200 text-xs mt-1">{{ ($counts['Raised'] ?? 0) + ($counts['Overdue'] ?? 0) + ($counts['Due to Raise'] ?? 0) }} invoice(s)</div>
+        {{-- Summary cards: flat, compact, no gloss --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+            <div class="bg-slate-900/40 border border-rose-400/30 rounded-lg px-4 py-3">
+                <div class="flex items-center gap-1.5 text-rose-300 text-[11px] font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> Outstanding</div>
+                <div class="text-2xl font-bold text-white mt-1">₹{{ number_format($summary['outstanding'], 0) }}</div>
+                <div class="text-slate-400 text-[11px]">{{ ($counts['Raised'] ?? 0) + ($counts['Overdue'] ?? 0) + ($counts['Due to Raise'] ?? 0) }} invoice(s)</div>
             </div>
-            <div class="bg-gradient-to-br from-amber-500/20 to-orange-700/20 border border-amber-400/40 rounded-2xl p-5 shadow-lg">
-                <div class="flex items-center gap-2 text-amber-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-fire"></i> Overdue</div>
-                <div class="text-3xl font-extrabold text-white mt-2">{{ $summary['overdue_count'] }}</div>
-                <div class="text-amber-200 text-xs mt-1">Need immediate action</div>
+            <div class="bg-slate-900/40 border border-amber-400/30 rounded-lg px-4 py-3">
+                <div class="flex items-center gap-1.5 text-amber-300 text-[11px] font-bold uppercase tracking-wider"><i class="fa-solid fa-fire text-[10px]"></i> Overdue</div>
+                <div class="text-2xl font-bold text-white mt-1">{{ $summary['overdue_count'] }}</div>
+                <div class="text-slate-400 text-[11px]">Needs action</div>
             </div>
-            <div class="bg-gradient-to-br from-emerald-500/20 to-green-700/20 border border-emerald-400/40 rounded-2xl p-5 shadow-lg">
-                <div class="flex items-center gap-2 text-emerald-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-check"></i> Total Paid</div>
-                <div class="text-3xl font-extrabold text-white mt-2">₹{{ number_format($summary['paid_total'], 0) }}</div>
-                <div class="text-emerald-200 text-xs mt-1">{{ $counts['Paid'] ?? 0 }} hire(s)</div>
+            <div class="bg-slate-900/40 border border-emerald-400/30 rounded-lg px-4 py-3">
+                <div class="flex items-center gap-1.5 text-emerald-300 text-[11px] font-bold uppercase tracking-wider"><i class="fa-solid fa-check text-[10px]"></i> Total Paid</div>
+                <div class="text-2xl font-bold text-white mt-1">₹{{ number_format($summary['paid_total'], 0) }}</div>
+                <div class="text-slate-400 text-[11px]">{{ $counts['Paid'] ?? 0 }} hire(s)</div>
             </div>
-            <div class="bg-gradient-to-br from-slate-500/20 to-blue-700/20 border border-slate-400/40 rounded-2xl p-5 shadow-lg">
-                <div class="flex items-center gap-2 text-slate-200 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-hourglass-half"></i> Maturing</div>
-                <div class="text-3xl font-extrabold text-white mt-2">₹{{ number_format($summary['maturing_total'], 0) }}</div>
-                <div class="text-slate-300 text-xs mt-1">{{ $counts['Maturing'] ?? 0 }} hire(s)</div>
+            <div class="bg-slate-900/40 border border-slate-400/30 rounded-lg px-4 py-3">
+                <div class="flex items-center gap-1.5 text-slate-300 text-[11px] font-bold uppercase tracking-wider"><i class="fa-solid fa-hourglass-half text-[10px]"></i> Maturing</div>
+                <div class="text-2xl font-bold text-white mt-1">₹{{ number_format($summary['maturing_total'], 0) }}</div>
+                <div class="text-slate-400 text-[11px]">{{ $counts['Maturing'] ?? 0 }} hire(s)</div>
             </div>
         </div>
 
@@ -55,35 +55,34 @@
                 'Overdue'      => 'bg-rose-500/20 text-rose-200 border-rose-400/40',
                 'Paid'         => 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40',
             ];
-            $fld = 'h-10 bg-slate-900/60 border border-white/20 rounded-lg text-white text-sm px-3 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400';
+            $fld = 'h-9 bg-slate-900/60 border border-white/15 rounded-md text-white text-sm px-2.5 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400';
         @endphp
 
-        {{-- Filter bar --}}
-        <form method="GET" action="{{ route('client.billing') }}"
-              class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+        {{-- Compact single-row filter bar --}}
+        <form method="GET" action="{{ route('client.billing') }}" class="flex flex-wrap items-center gap-2 mb-3">
             <input type="hidden" name="status" value="{{ $statusFilter }}">
-            <div class="lg:col-span-2 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate or job" class="{{ $fld }} w-full pl-9">
+            <div class="relative flex-1 min-w-[180px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-white/60 text-xs pointer-events-none"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate or job" class="{{ $fld }} w-full pl-8">
             </div>
-            <select name="job_id" class="{{ $fld }}">
+            <select name="job_id" class="{{ $fld }} max-w-[180px]">
                 <option value="" class="bg-slate-900">All Jobs</option>
                 @foreach($clientJobs as $j)
                     <option value="{{ $j->id }}" class="bg-slate-900" {{ (string) request('job_id') === (string) $j->id ? 'selected' : '' }}>
-                        {{ \Illuminate\Support\Str::limit($j->title, 28) }}
+                        {{ \Illuminate\Support\Str::limit($j->title, 22) }}
                     </option>
                 @endforeach
             </select>
-            <input type="date" name="date_from" value="{{ request('date_from') }}" title="Joined from" class="{{ $fld }} [color-scheme:dark]">
-            <input type="date" name="date_to" value="{{ request('date_to') }}" title="Joined to" class="{{ $fld }} [color-scheme:dark]">
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-sm">
-                    <i class="fa-solid fa-filter mr-1"></i> Filter
-                </button>
-                @if(request()->anyFilled(['search', 'job_id', 'date_from', 'date_to', 'status']))
-                    <a href="{{ route('client.billing') }}" class="bg-rose-500 hover:bg-rose-400 text-white rounded-lg px-3 inline-flex items-center"><i class="fa-solid fa-xmark"></i></a>
-                @endif
-            </div>
+            <input type="date" name="date_from" value="{{ request('date_from') }}" title="Joined from" class="{{ $fld }} w-[150px] [color-scheme:dark]">
+            <span class="text-slate-400 text-xs">to</span>
+            <input type="date" name="date_to" value="{{ request('date_to') }}" title="Joined to" class="{{ $fld }} w-[150px] [color-scheme:dark]">
+            <button type="submit" class="h-9 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-md text-sm">
+                <i class="fa-solid fa-filter mr-1"></i> Filter
+            </button>
+            @if(request()->anyFilled(['search', 'job_id', 'date_from', 'date_to', 'status']))
+                <a href="{{ route('client.billing') }}" title="Clear filters"
+                   class="h-9 w-9 bg-rose-500 hover:bg-rose-400 text-white rounded-md inline-flex items-center justify-center"><i class="fa-solid fa-xmark"></i></a>
+            @endif
         </form>
 
         {{-- Status filter chips --}}
