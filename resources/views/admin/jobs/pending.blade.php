@@ -94,7 +94,7 @@
                         </thead>
                         <tbody class="divide-y divide-white/10 text-white">
                             @forelse ($jobs as $job)
-                                <tr class="group hover:bg-white/5 transition-all duration-200 cursor-default">
+                                <tr class="group hover:bg-white/5 transition-all duration-200">
                                     
                                     {{-- JOB DETAILS --}}
                                     <td class="px-6 py-6 align-top">
@@ -103,8 +103,8 @@
                                                 <i class="fa-solid fa-briefcase text-lg"></i>
                                             </div>
                                             <div>
-                                                <div class="font-bold text-white text-lg leading-tight mb-1">{{ $job->title }}</div>
-                                                <div class="text-cyan-200 font-bold text-sm flex items-center gap-1.5">
+                                                <a href="{{ route('admin.jobs.show', $job) }}" class="font-bold text-white text-lg leading-tight mb-1 hover:text-cyan-300 transition-colors">{{ $job->title }}</a>
+                                                <div class="text-cyan-200 font-bold text-sm flex items-center gap-1.5 mt-1">
                                                     <i class="fa-solid fa-building"></i> {{ $job->company_name }}
                                                 </div>
                                                 <div class="text-slate-400 text-xs mt-2 flex flex-wrap gap-2">
