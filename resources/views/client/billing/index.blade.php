@@ -62,8 +62,9 @@
         <form method="GET" action="{{ route('client.billing') }}" class="flex flex-wrap items-center gap-2 mb-3">
             <input type="hidden" name="status" value="{{ $statusFilter }}">
             <div class="relative flex-1 min-w-[180px]">
-                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-white/60 text-xs pointer-events-none"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate or job" class="{{ $fld }} w-full pl-8">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-xs pointer-events-none z-10"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate or job"
+                       class="h-9 w-full bg-slate-900/60 border border-white/15 rounded-md text-white text-sm pl-9 pr-3 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
             </div>
             <select name="job_id" class="{{ $fld }} max-w-[180px]">
                 <option value="" class="bg-slate-900">All Jobs</option>

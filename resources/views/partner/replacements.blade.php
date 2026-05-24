@@ -26,8 +26,9 @@
               class="mb-6 bg-white/5 border border-white/10 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-3 backdrop-blur-md">
             @php $fld = 'h-10 bg-slate-900/60 border border-white/20 rounded-lg text-white text-sm px-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400'; @endphp
             <div class="sm:col-span-2 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate name or email" class="{{ $fld }} w-full pl-9">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none z-10"></i>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate name or email"
+                       class="h-10 w-full bg-slate-900/60 border border-white/20 rounded-lg text-white text-sm pl-10 pr-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
             </div>
             <select name="job_id" class="{{ $fld }}">
                 <option value="" class="bg-slate-900">All Jobs</option>
