@@ -123,19 +123,27 @@
                                     <td class="px-6 py-6 align-top">
                                         <div class="space-y-2 text-sm text-blue-100">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-slate-400 text-xs w-8 uppercase font-bold">Exp</span> 
+                                                <span class="text-slate-400 text-xs w-8 uppercase font-bold">Exp</span>
                                                 <span class="bg-indigo-500/20 text-indigo-200 px-2 py-0.5 rounded text-xs border border-indigo-500/30">
-                                                    {{ $job->experienceLevel->name ?? 'Not Specified' }}
+                                                    @if($job->min_experience !== null || $job->max_experience !== null)
+                                                        {{ $job->min_experience ?? 0 }}–{{ $job->max_experience ?? '?' }} yrs
+                                                    @elseif($job->experienceLevel)
+                                                        {{ $job->experienceLevel->name }}
+                                                    @else
+                                                        Not Specified
+                                                    @endif
                                                 </span>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-slate-400 text-xs w-8 uppercase font-bold">Edu</span>
                                                 <span>{{ $job->educationLevel->name ?? 'Not Specified' }}</span>
                                             </div>
+                                            @if($job->min_age || $job->max_age)
                                             <div class="flex items-center gap-2">
                                                 <span class="text-slate-400 text-xs w-8 uppercase font-bold">Age</span>
-                                                <span>{{ $job->min_age ?? 'N/A' }} - {{ $job->max_age ?? 'N/A' }} yrs</span>
+                                                <span>{{ $job->min_age ?? '—' }}–{{ $job->max_age ?? '—' }} yrs</span>
                                             </div>
+                                            @endif
                                             <div class="flex items-center gap-2">
                                                 <span class="text-slate-400 text-xs w-8 uppercase font-bold">Gen</span>
                                                 <span>{{ $job->gender_preference ?? 'Any' }}</span>

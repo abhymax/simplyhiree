@@ -195,6 +195,20 @@
                         </div>
 
                         <div>
+                            <label class="block text-sm font-medium text-white">Age Range (optional)</label>
+                            <div class="flex space-x-2">
+                                <div class="w-1/2">
+                                    <input type="number" name="min_age" placeholder="Min Age" value="{{ old('min_age', $job->min_age ?? '') }}" min="18" max="80" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                                    @error('min_age') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="number" name="max_age" placeholder="Max Age" value="{{ old('max_age', $job->max_age ?? '') }}" min="18" max="80" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                                    @error('max_age') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
                             <label class="block text-sm font-medium text-white">Education <span class="text-rose-300">*</span></label>
                             <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                                 @foreach($educationLevels as $edu)
