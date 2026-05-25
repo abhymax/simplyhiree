@@ -32,18 +32,24 @@ echo "==> Target commit: $NEW_COMMIT"
 echo "==> Resetting working tree to origin/$BRANCH..."
 git reset --hard "origin/$BRANCH"
 
-echo "==> Installing dependencies..."
-COMPOSER_ALLOW_SUPERUSER=1 $COMPOSER_BIN install \
-  --no-dev \
-  --optimize-autoloader \
-  --no-interaction \
-  --prefer-dist
+echo "==> Installing dependencies (if composer available)..."
+if command -v "$COMPOSER_BIN" >/dev/null 2>&1; then
+  COMPOSER_ALLOW_SUPERUSER=1 $COMPOSER_BIN install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --prefer-dist
+else
+  echo "!! WARNING: composer not found on PATH — skipping dependency install."
+  echo "!! If composer.lock changed in this deploy, dependencies will be out of date."
+fi
 
 echo "==> Clearing and rebuilding caches..."
 $PHP_BIN artisan optimize:clear
 $PHP_BIN artisan config:cache
 $PHP_BIN artisan route:cache
 $PHP_BIN artisan view:cache
+$PHP_BIN artisan event:cache
 
 echo "==> Disabling maintenance mode before health check..."
 $PHP_BIN artisan up || true
@@ -58,16 +64,19 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "302" ]; then
 
   git reset --hard "$CURRENT_COMMIT"
 
-  COMPOSER_ALLOW_SUPERUSER=1 $COMPOSER_BIN install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --prefer-dist
+  if command -v "$COMPOSER_BIN" >/dev/null 2>&1; then
+    COMPOSER_ALLOW_SUPERUSER=1 $COMPOSER_BIN install \
+      --no-dev \
+      --optimize-autoloader \
+      --no-interaction \
+      --prefer-dist
+  fi
 
   $PHP_BIN artisan optimize:clear
   $PHP_BIN artisan config:cache
   $PHP_BIN artisan route:cache
   $PHP_BIN artisan view:cache
+  $PHP_BIN artisan event:cache
   $PHP_BIN artisan up || true
 
   exit 1

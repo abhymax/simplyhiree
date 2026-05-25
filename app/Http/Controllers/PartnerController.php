@@ -302,7 +302,8 @@ class PartnerController extends Controller
                             ->values();
 
         // Status pill counts — computed against the SAME filters except status itself,
-        // so the user sees how many records fall into each bucket given their other choices.
+        // in a single aggregated query using CASE WHEN buckets (was 9 separate count
+        // queries, each cloning a whereHas EXISTS subquery — major bottleneck).
         $countsBase = JobApplication::whereHas('candidate', $baseScope);
         if ($search = $request->input('search')) {
             $countsBase->whereHas('candidate', function ($q) use ($search) {
@@ -319,18 +320,28 @@ class PartnerController extends Controller
         if ($from = $request->input('date_from')) $countsBase->whereDate('job_applications.created_at', '>=', $from);
         if ($to = $request->input('date_to')) $countsBase->whereDate('job_applications.created_at', '<=', $to);
 
+        $row = $countsBase->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'Pending Review' THEN 1 ELSE 0 END) as pending_review,
+            SUM(CASE WHEN status = 'Approved' AND hiring_status IS NULL THEN 1 ELSE 0 END) as approved,
+            SUM(CASE WHEN hiring_status = 'Interview Scheduled' THEN 1 ELSE 0 END) as interview_scheduled,
+            SUM(CASE WHEN hiring_status = 'Interviewed' THEN 1 ELSE 0 END) as interviewed,
+            SUM(CASE WHEN hiring_status = 'Selected' AND joined_status IS NULL THEN 1 ELSE 0 END) as selected_status,
+            SUM(CASE WHEN joined_status = 'Joined' THEN 1 ELSE 0 END) as joined_status_count,
+            SUM(CASE WHEN status = 'Rejected' OR hiring_status = 'Client Rejected' THEN 1 ELSE 0 END) as rejected,
+            SUM(CASE WHEN joined_status IN ('Left', 'Did Not Join') THEN 1 ELSE 0 END) as dnj_left
+        ")->first();
+
         $statusCounts = [
-            'all'                 => (clone $countsBase)->count(),
-            'Pending Review'      => (clone $countsBase)->where('status', 'Pending Review')->count(),
-            'Approved'            => (clone $countsBase)->where('status', 'Approved')->whereNull('hiring_status')->count(),
-            'Interview Scheduled' => (clone $countsBase)->where('hiring_status', 'Interview Scheduled')->count(),
-            'Interviewed'         => (clone $countsBase)->where('hiring_status', 'Interviewed')->count(),
-            'Selected'            => (clone $countsBase)->where('hiring_status', 'Selected')->whereNull('joined_status')->count(),
-            'Joined'              => (clone $countsBase)->where('joined_status', 'Joined')->count(),
-            'Rejected'            => (clone $countsBase)->where(function ($q) {
-                                        $q->where('status', 'Rejected')->orWhere('hiring_status', 'Client Rejected');
-                                    })->count(),
-            'Did Not Join / Left' => (clone $countsBase)->whereIn('joined_status', ['Left', 'Did Not Join'])->count(),
+            'all'                 => (int) $row->total,
+            'Pending Review'      => (int) $row->pending_review,
+            'Approved'            => (int) $row->approved,
+            'Interview Scheduled' => (int) $row->interview_scheduled,
+            'Interviewed'         => (int) $row->interviewed,
+            'Selected'            => (int) $row->selected_status,
+            'Joined'              => (int) $row->joined_status_count,
+            'Rejected'            => (int) $row->rejected,
+            'Did Not Join / Left' => (int) $row->dnj_left,
         ];
 
         return view('partner.applications', compact('applications', 'filterJobs', 'filterClients', 'statusCounts'));

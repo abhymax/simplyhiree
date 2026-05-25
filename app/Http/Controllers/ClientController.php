@@ -1149,9 +1149,16 @@ class ClientController extends Controller
             );
         }
 
-        // Status counts across the WHOLE filtered dataset (not just current page)
-        // so the chips display accurate totals.
-        $allFiltered = (clone $query)->get()->map(fn ($a) => $a->billingSnapshot());
+        // Status counts across the WHOLE filtered dataset.
+        // Load a slim version (no eager-loaded relations) to avoid pulling
+        // job.user/candidate/candidateUser for every billable row. Status is
+        // computed in PHP because it depends on the resolved commercial
+        // configuration, not a single column, so we still need per-row evaluation
+        // — but with the slim load this stays cheap.
+        $allFiltered = (clone $query)
+            ->setEagerLoads([])
+            ->get()
+            ->map(fn ($a) => $a->billingSnapshot());
         $counts = [
             'Paid'         => $allFiltered->where('status', 'Paid')->count(),
             'Overdue'      => $allFiltered->where('status', 'Overdue')->count(),
@@ -1160,7 +1167,7 @@ class ClientController extends Controller
             'Maturing'     => $allFiltered->where('status', 'Maturing')->count(),
         ];
 
-        // Summary numbers
+        // Summary numbers (computed off the same slim collection)
         $summary = [
             'outstanding'    => $allFiltered->whereIn('status', ['Raised', 'Overdue', 'Due to Raise'])->sum('invoice_amount'),
             'paid_total'     => $allFiltered->where('status', 'Paid')->sum('invoice_amount'),
