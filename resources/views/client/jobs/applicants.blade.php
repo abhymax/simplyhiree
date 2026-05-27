@@ -128,7 +128,7 @@
                                     @endif
                                 </td>
 
-                                <td class="px-6 py-5 align-top text-right relative" x-data="{ openRound: null, openFeedback: null, schedule: false }">
+                                <td class="px-6 py-5 align-top text-right" x-data="{ openRound: null, openFeedback: null, schedule: false }">
                                     @php
                                         $rounds          = $app->interviewRounds;
                                         $latestRound     = $rounds->last();
@@ -209,74 +209,112 @@
 
                                         {{-- Schedule new round form --}}
                                         @if($canScheduleNew)
-                                        <div x-show="schedule" x-cloak x-transition
-                                             class="absolute right-0 mt-2 w-[460px] max-w-[90vw] z-30 bg-slate-900/95 backdrop-blur-md border border-emerald-400/40 rounded-lg p-4 text-left shadow-2xl"
-                                             @click.outside="schedule = false">
-                                            <form action="{{ route('client.applications.rounds.store', $app) }}" method="POST" x-data="{ mode: 'Online' }">
-                                                @csrf
-                                                <div class="flex items-center justify-between mb-3">
-                                                    <div class="text-emerald-200 text-xs font-bold uppercase tracking-wider">Schedule Round {{ $roundCount + 1 }}</div>
-                                                    <button type="button" @click="schedule = false" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-                                                </div>
-                                                <div class="space-y-2.5">
-                                                    <div class="grid grid-cols-5 gap-2">
-                                                        <input type="datetime-local" name="scheduled_at" required min="{{ now()->format('Y-m-d\TH:i') }}"
-                                                               class="col-span-3 w-full bg-slate-800 border border-white/20 text-white text-sm rounded px-3 py-2 [color-scheme:dark]">
-                                                        <select name="mode" x-model="mode" required class="col-span-2 w-full bg-slate-800 border border-white/20 text-white text-sm rounded px-2 py-2">
-                                                            <option value="Online">Online</option>
-                                                            <option value="In-person">In-person</option>
-                                                            <option value="Phone">Phone</option>
-                                                        </select>
+                                        <template x-teleport="body">
+                                        <div x-show="schedule" x-cloak x-transition.opacity
+                                             class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+                                             @keydown.window.escape="schedule = false"
+                                             @click.self="schedule = false">
+                                            <div class="bg-slate-900 border border-emerald-400/40 rounded-2xl p-6 w-full max-w-md shadow-2xl text-left">
+                                                <form action="{{ route('client.applications.rounds.store', $app) }}" method="POST" x-data="{ mode: 'Online' }">
+                                                    @csrf
+                                                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                                                        <h3 class="text-emerald-200 font-bold text-base flex items-center gap-2">
+                                                            <i class="fa-solid fa-calendar-plus"></i> Schedule Round {{ $roundCount + 1 }}
+                                                        </h3>
+                                                        <button type="button" @click="schedule = false" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
                                                     </div>
-                                                    <input type="url" name="meeting_link" x-show="mode === 'Online'" placeholder="Meeting link (https://...)"
-                                                           class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded px-3 py-2">
-                                                    <input type="text" name="location" x-show="mode === 'In-person'" x-cloak placeholder="Office address / venue"
-                                                           class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded px-3 py-2">
-                                                    <input type="text" name="interviewer_name" placeholder="Interviewer name (optional)"
-                                                           class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded px-3 py-2">
-                                                </div>
-                                                <div class="flex gap-2 mt-3 justify-end">
-                                                    <button type="button" @click="schedule = false" class="text-xs text-slate-300 hover:text-white px-3 py-2">Cancel</button>
-                                                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold px-5 py-2 rounded">Schedule</button>
-                                                </div>
-                                            </form>
+                                                    <div class="space-y-3">
+                                                        <div>
+                                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1">Date &amp; Time *</label>
+                                                            <input type="datetime-local" name="scheduled_at" required min="{{ now()->format('Y-m-d\TH:i') }}"
+                                                                   class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5 [color-scheme:dark]">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1">Mode *</label>
+                                                            <select name="mode" x-model="mode" required class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                                                                <option value="Online">Online</option>
+                                                                <option value="In-person">In-person</option>
+                                                                <option value="Phone">Phone</option>
+                                                            </select>
+                                                        </div>
+                                                        <div x-show="mode === 'Online'">
+                                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1">Meeting Link</label>
+                                                            <input type="url" name="meeting_link" placeholder="https://meet.google.com/..."
+                                                                   class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                                                        </div>
+                                                        <div x-show="mode === 'In-person'" x-cloak>
+                                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1">Location</label>
+                                                            <input type="text" name="location" placeholder="Office address / venue"
+                                                                   class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1">Interviewer (optional)</label>
+                                                            <input type="text" name="interviewer_name" placeholder="Interviewer name"
+                                                                   class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex gap-2 mt-5 pt-4 border-t border-white/10 justify-end">
+                                                        <button type="button" @click="schedule = false" class="px-4 py-2 text-sm text-slate-300 hover:text-white">Cancel</button>
+                                                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-sm font-bold px-6 py-2 rounded-lg">Schedule</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
+                                        </template>
                                         @endif
 
                                         {{-- Feedback form for latest round --}}
                                         @if($latestRound && in_array($latestRound->status, ['Appeared','No-Show']) && !$latestRound->feedback_submitted_at)
-                                        <div x-show="openFeedback === {{ $latestRound->id }}" x-cloak x-transition
-                                             class="absolute right-0 mt-2 w-[460px] max-w-[90vw] z-30 bg-slate-900/95 backdrop-blur-md border border-cyan-400/40 rounded-lg p-4 text-left shadow-2xl"
-                                             @click.outside="openFeedback = null">
-                                            <form action="{{ route('client.rounds.feedback', $latestRound) }}" method="POST">
-                                                @csrf
-                                                <div class="flex items-center justify-between mb-3">
-                                                    <div class="text-cyan-200 text-xs font-bold uppercase tracking-wider">Round {{ $latestRound->round_number }} Feedback</div>
-                                                    <button type="button" @click="openFeedback = null" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-                                                </div>
-                                                <textarea name="feedback" rows="3" maxlength="5000" placeholder="Interview notes (optional)" class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded px-3 py-2 mb-2"></textarea>
-                                                <div class="grid grid-cols-2 gap-2">
-                                                    <select name="rating" class="bg-slate-800 border border-white/20 text-white text-sm rounded px-2 py-2">
-                                                        <option value="">Rating (optional)</option>
-                                                        @for($i = 1; $i <= 5; $i++)
-                                                            <option value="{{ $i }}">{{ $i }} ★</option>
-                                                        @endfor
-                                                    </select>
-                                                    <select name="recommendation" required class="bg-slate-800 border border-white/20 text-white text-sm rounded px-2 py-2">
-                                                        <option value="">Recommendation *</option>
-                                                        @if($roundCount < $maxRounds)
-                                                            <option value="Pass to Next Round">Pass to Next Round</option>
-                                                        @endif
-                                                        <option value="Select Candidate">Select Candidate</option>
-                                                        <option value="Reject">Reject</option>
-                                                    </select>
-                                                </div>
-                                                <div class="flex gap-2 mt-2 justify-end">
-                                                    <button type="button" @click="openFeedback = null" class="text-xs text-slate-300 hover:text-white px-3 py-1.5">Cancel</button>
-                                                    <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-xs font-bold px-4 py-1.5 rounded">Save Feedback</button>
-                                                </div>
-                                            </form>
+                                        <template x-teleport="body">
+                                        <div x-show="openFeedback === {{ $latestRound->id }}" x-cloak x-transition.opacity
+                                             class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+                                             @keydown.window.escape="openFeedback = null"
+                                             @click.self="openFeedback = null">
+                                            <div class="bg-slate-900 border border-cyan-400/40 rounded-2xl p-6 w-full max-w-md shadow-2xl text-left">
+                                                <form action="{{ route('client.rounds.feedback', $latestRound) }}" method="POST">
+                                                    @csrf
+                                                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                                                        <h3 class="text-cyan-200 font-bold text-base flex items-center gap-2">
+                                                            <i class="fa-regular fa-clipboard"></i> Round {{ $latestRound->round_number }} Feedback
+                                                        </h3>
+                                                        <button type="button" @click="openFeedback = null" class="text-slate-300 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+                                                    </div>
+                                                    <div class="space-y-3">
+                                                        <div>
+                                                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-200 mb-1">Interview Notes (optional)</label>
+                                                            <textarea name="feedback" rows="4" maxlength="5000" placeholder="What stood out? Strengths, gaps, concerns..."
+                                                                      class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5"></textarea>
+                                                        </div>
+                                                        <div class="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label class="block text-xs font-bold uppercase tracking-wider text-cyan-200 mb-1">Rating</label>
+                                                                <select name="rating" class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                                                                    <option value="">Optional</option>
+                                                                    @for($i = 1; $i <= 5; $i++)
+                                                                        <option value="{{ $i }}">{{ $i }} ★</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-bold uppercase tracking-wider text-cyan-200 mb-1">Recommendation *</label>
+                                                                <select name="recommendation" required class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                                                                    <option value="">Choose...</option>
+                                                                    @if($roundCount < $maxRounds)
+                                                                        <option value="Pass to Next Round">Pass to Next Round</option>
+                                                                    @endif
+                                                                    <option value="Select Candidate">Select Candidate</option>
+                                                                    <option value="Reject">Reject</option>
+                                                                </select>
+                                                            </div>
+                                                    </div>
+                                                    <div class="flex gap-2 mt-5 pt-4 border-t border-white/10 justify-end">
+                                                        <button type="button" @click="openFeedback = null" class="px-4 py-2 text-sm text-slate-300 hover:text-white">Cancel</button>
+                                                        <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-sm font-bold px-6 py-2 rounded-lg">Save Feedback</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
+                                        </template>
                                         @endif
                                     @elseif($app->hiring_status == 'Selected' && empty($app->joined_status))
                                         <div class="flex justify-end gap-2">
