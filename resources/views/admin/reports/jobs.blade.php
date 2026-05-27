@@ -112,7 +112,12 @@
                                             <div class="text-amber-300 font-bold text-sm mt-1 flex items-center gap-1.5" style="color: #fcd34d !important;">
                                                 <i class="fa-solid fa-building"></i> {{ $job->company_name }}
                                             </div>
-                                            <span class="text-xs text-blue-300 mt-1 opacity-70">Posted {{ $job->created_at->format('M d, Y') }}</span>
+                                            <div class="flex items-center gap-2 mt-1.5 text-xs">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800/80 border border-white/10 font-mono font-bold text-cyan-200 text-[11px]">
+                                                    <i class="fa-solid fa-hashtag text-[9px] opacity-70"></i>{{ $job->job_code ?? 'SH-JOB-'.str_pad($job->id, 6, '0', STR_PAD_LEFT) }}
+                                                </span>
+                                                <span class="text-blue-300 opacity-70">Posted {{ $job->created_at->format('M d, Y') }}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     

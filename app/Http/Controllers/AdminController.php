@@ -1940,7 +1940,8 @@ class AdminController extends Controller
             $handle = fopen('php://output', 'w');
 
             fputcsv($handle, [
-                'Job ID',
+                'Job Code',
+                'Internal ID',
                 'Job Title',
                 'Company',
                 'Client',
@@ -1955,6 +1956,7 @@ class AdminController extends Controller
                 $joinedCount = $job->jobApplications->where('joined_status', 'Joined')->count();
 
                 fputcsv($handle, [
+                    $job->job_code ?? ('SH-JOB-' . str_pad((string) $job->id, 6, '0', STR_PAD_LEFT)),
                     $job->id,
                     $job->title,
                     $job->company_name,
