@@ -151,7 +151,13 @@
                         <ul class="space-y-3 text-sm text-slate-100">
                             <li class="flex justify-between gap-3">
                                 <span class="text-slate-300">Age:</span>
-                                <span class="font-medium">{{ $job->min_age ?? 18 }} - {{ $job->max_age ?? 60 }} Years</span>
+                                <span class="font-medium">
+                                    @if($job->min_age || $job->max_age)
+                                        {{ $job->min_age ?? '—' }} - {{ $job->max_age ?? '—' }} Years
+                                    @else
+                                        <span class="text-slate-400 italic">Not specified</span>
+                                    @endif
+                                </span>
                             </li>
                             <li class="flex justify-between gap-3">
                                 <span class="text-slate-300">Gender:</span>

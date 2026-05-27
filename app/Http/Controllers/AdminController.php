@@ -844,6 +844,8 @@ class AdminController extends Controller
             'company_website'       => 'nullable|url',
             'openings'              => 'nullable|integer|min:1',
             'gender_preference'     => 'required|string|in:Any,Male,Female,Other',
+            'min_age'               => 'nullable|integer|min:18|max:80',
+            'max_age'               => 'nullable|integer|min:18|max:80|gte:min_age',
             'is_company_confidential' => 'nullable|boolean',
         ]);
 
@@ -871,6 +873,8 @@ class AdminController extends Controller
             'job_type'             => $validated['job_type'],
             'description'          => $this->sanitizeJobDescription($validated['description']),
             'gender_preference'    => $validated['gender_preference'],
+            'min_age'              => $validated['min_age'] ?? null,
+            'max_age'              => $validated['max_age'] ?? null,
             'min_experience'       => $validated['min_experience'],
             'max_experience'       => $validated['max_experience'],
             'experience_level_id'  => null,

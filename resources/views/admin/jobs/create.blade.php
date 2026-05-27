@@ -143,6 +143,17 @@
                             </select>
                         </div>
 
+                        {{-- Age Range (optional) --}}
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Age Range (optional)</label>
+                            <div class="flex space-x-3">
+                                <input type="number" name="min_age" placeholder="Min Age" value="{{ old('min_age') }}" min="18" max="80" class="w-1/2 bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                                <input type="number" name="max_age" placeholder="Max Age" value="{{ old('max_age') }}" min="18" max="80" class="w-1/2 bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                            </div>
+                            @error('min_age') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                            @error('max_age') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
                         {{-- Education Level --}}
                         <div>
                             <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Education <span class="text-rose-400">*</span></label>

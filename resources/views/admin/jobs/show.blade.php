@@ -126,7 +126,13 @@
                             </div>
                             <div>
                                 <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Age Range</span>
-                                <div class="text-white font-bold text-lg">{{ $job->min_age ?? '18' }} - {{ $job->max_age ?? '60' }} Yrs</div>
+                                <div class="text-white font-bold text-lg">
+                                    @if($job->min_age || $job->max_age)
+                                        {{ $job->min_age ?? '—' }} - {{ $job->max_age ?? '—' }} Yrs
+                                    @else
+                                        <span class="text-slate-400 font-normal italic text-base">Not specified</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
