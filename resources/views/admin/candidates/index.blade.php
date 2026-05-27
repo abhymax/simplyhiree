@@ -46,44 +46,46 @@
         </div>
 
         <style>
-            /* Compact filter inputs */
+            /* Filter inputs — comfortable height, tight max-width */
             .cand-fld {
-                height: 32px !important;
-                max-width: 240px;
-                padding-left: 0.625rem !important;
-                padding-right: 0.625rem !important;
+                height: 38px !important;
+                line-height: 1.2 !important;
+                max-width: 260px;
+                width: 100%;
+                padding: 0.4rem 0.7rem !important;
                 font-size: 0.8125rem !important;
-                background: rgba(15,23,42,0.6) !important;
-                border: 1px solid rgba(255,255,255,0.15) !important;
+                background: rgba(15,23,42,0.7) !important;
+                border: 1px solid rgba(255,255,255,0.18) !important;
                 color: #fff !important;
-                border-radius: 0.375rem !important;
+                border-radius: 0.5rem !important;
                 color-scheme: dark !important;
+                box-sizing: border-box;
             }
             .cand-fld:focus { outline: none; border-color: #22d3ee !important; box-shadow: 0 0 0 1px rgba(34,211,238,0.4); }
+            .cand-fld::placeholder { color: rgba(203,213,225,0.45); }
 
-            /* Force white calendar icon on date inputs (works in Chrome / Edge / Safari) */
-            input.cand-fld[type="date"],
-            input[type="date"].cand-fld {
-                color-scheme: dark !important;
-            }
-            input[type="date"].cand-fld::-webkit-calendar-picker-indicator,
-            .cand-fld::-webkit-calendar-picker-indicator {
-                filter: invert(1) brightness(100) !important;
+            /* GLOBAL rule for the date picker icon — applies to any date input
+               on the page, not just .cand-fld. Specificity-strong with
+               !important so nothing can override it. */
+            input[type="date"] { color-scheme: dark !important; }
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                filter: invert(1) !important;
+                opacity: 0.85 !important;
                 cursor: pointer !important;
-                opacity: 1 !important;
-                background-image: none !important;
             }
+            input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1 !important; }
 
-            /* Make checkboxes white-bordered + visible tick */
+            /* Custom checkbox: cyan-tick on dark bg */
             .cand-cb {
                 appearance: none;
                 -webkit-appearance: none;
                 width: 14px; height: 14px;
-                background: rgba(15,23,42,0.6);
-                border: 1px solid rgba(255,255,255,0.35);
+                background: rgba(15,23,42,0.7);
+                border: 1px solid rgba(255,255,255,0.4);
                 border-radius: 3px;
                 cursor: pointer;
                 position: relative;
+                flex-shrink: 0;
             }
             .cand-cb:checked { background: #22d3ee; border-color: #22d3ee; }
             .cand-cb:checked::after {
@@ -92,8 +94,14 @@
                 color: #0f172a;
                 font-size: 11px;
                 font-weight: 900;
-                top: -3px; left: 1px;
+                top: -3px; left: 1.5px;
             }
+
+            /* Section spacing inside the filter panel */
+            .cand-section { display: flex; flex-direction: column; gap: 10px; }
+            .cand-section > label { display: block; font-size: 10px; font-weight: 700;
+                                    text-transform: uppercase; letter-spacing: 0.06em;
+                                    color: #67e8f9; margin-bottom: 2px; }
         </style>
         @php
             $fld    = 'cand-fld';
@@ -165,12 +173,12 @@
             </div>
 
             {{-- Advanced filters panel --}}
-            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-4">
+            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6">
 
                     {{-- Basic --}}
-                    <div class="space-y-1.5">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Basic</div>
+                    <div class="cand-section">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Basic</div>
                         <input type="date" name="date_from" value="{{ request('date_from') }}" class="{{ $fld }} w-full">
                         <input type="date" name="date_to" value="{{ request('date_to') }}" class="{{ $fld }} w-full">
                         <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
@@ -180,8 +188,8 @@
                     </div>
 
                     {{-- Recruitment --}}
-                    <div class="space-y-1.5">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Recruitment</div>
+                    <div class="cand-section">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Recruitment</div>
                         <input type="text" name="current_company" value="{{ request('current_company') }}" placeholder="Current company" class="{{ $fld }} w-full">
                         <input type="text" name="current_designation" value="{{ request('current_designation') }}" placeholder="Current designation" class="{{ $fld }} w-full">
                         <div class="flex gap-1">
@@ -201,8 +209,8 @@
                     </div>
 
                     {{-- CTC --}}
-                    <div class="space-y-1.5">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">CTC (₹)</div>
+                    <div class="cand-section">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">CTC (₹)</div>
                         <div class="flex gap-1">
                             <input type="number" name="current_ctc_min" value="{{ request('current_ctc_min') }}" placeholder="Current ≥" min="0" class="{{ $fld }} w-1/2">
                             <input type="number" name="current_ctc_max" value="{{ request('current_ctc_max') }}" placeholder="Current ≤" min="0" class="{{ $fld }} w-1/2">
@@ -214,21 +222,21 @@
                     </div>
 
                     {{-- Skills --}}
-                    <div class="space-y-1.5">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Skills</div>
+                    <div class="cand-section">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Skills</div>
                         <input type="text" name="skill" value="{{ request('skill') }}" placeholder="Primary skill (e.g. Laravel)" class="{{ $fld }} w-full">
                     </div>
 
                     {{-- Location --}}
-                    <div class="space-y-1.5">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Location</div>
+                    <div class="cand-section">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Location</div>
                         <input type="text" name="current_location" value="{{ request('current_location') }}" placeholder="Current location" class="{{ $fld }} w-full">
                         <input type="text" name="preferred_location" value="{{ request('preferred_location') }}" placeholder="Preferred location" class="{{ $fld }} w-full">
                     </div>
 
                     {{-- Smart --}}
-                    <div class="space-y-1.5">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Smart</div>
+                    <div class="cand-section">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Smart</div>
                         <select name="partner_id" class="{{ $fld }} w-full">
                             <option value="" class="bg-slate-900">Any recruiter (partner)</option>
                             @foreach($partners as $p)
