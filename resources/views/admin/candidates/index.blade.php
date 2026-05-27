@@ -168,12 +168,6 @@
                     <div class="space-y-2">
                         <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Skills</div>
                         <input type="text" name="skill" value="{{ request('skill') }}" placeholder="Primary skill (e.g. Laravel)" class="{{ $fld }} w-full">
-                        <input type="text" disabled placeholder="Secondary skills (coming soon)"
-                               title="Needs DB column — Phase 2"
-                               class="{{ $fld }} w-full opacity-40 cursor-not-allowed">
-                        <input type="text" disabled placeholder="Certifications (coming soon)"
-                               title="Needs DB column — Phase 2"
-                               class="{{ $fld }} w-full opacity-40 cursor-not-allowed">
                     </div>
 
                     {{-- Location --}}
@@ -181,9 +175,6 @@
                         <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Location</div>
                         <input type="text" name="current_location" value="{{ request('current_location') }}" placeholder="Current location" class="{{ $fld }} w-full">
                         <input type="text" name="preferred_location" value="{{ request('preferred_location') }}" placeholder="Preferred location" class="{{ $fld }} w-full">
-                        <select disabled title="Needs DB column — Phase 2" class="{{ $fld }} w-full opacity-40 cursor-not-allowed">
-                            <option>Work mode (coming soon)</option>
-                        </select>
                     </div>
 
                     {{-- Smart --}}
@@ -200,18 +191,8 @@
                             <option value="yes" class="bg-slate-900" {{ request('resume_uploaded') === 'yes' ? 'selected' : '' }}>Resume uploaded</option>
                             <option value="no"  class="bg-slate-900" {{ request('resume_uploaded') === 'no'  ? 'selected' : '' }}>No resume</option>
                         </select>
-                        <select disabled title="Needs DB column — Phase 2" class="{{ $fld }} w-full opacity-40 cursor-not-allowed">
-                            <option>Status (Active / Blacklisted / Hold) — coming soon</option>
-                        </select>
-                        <select disabled title="Needs DB column — Phase 2" class="{{ $fld }} w-full opacity-40 cursor-not-allowed">
-                            <option>Rating — coming soon</option>
-                        </select>
                     </div>
                 </div>
-
-                <p class="text-[10px] text-slate-500 mt-3 italic">
-                    Disabled filters require new database columns (Phase 2). Hover for details. AI / Boolean search and Resume Score are roadmap items (Phase 3).
-                </p>
             </div>
         </form>
 
