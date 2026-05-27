@@ -106,7 +106,8 @@
                     <div class="px-6 py-4 border-b border-cyan-400/20 flex items-center justify-between gap-3">
                         <h3 class="text-cyan-100 font-extrabold text-lg flex items-center gap-2">
                             <i class="fa-solid fa-rocket"></i> Plan Upgrade Requests
-                            <span class="bg-cyan-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $pendingPlanRequestsCount }} pending</span>
+                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full"
+                                  style="background-color: #22d3ee !important; color: #0f172a !important;">{{ $pendingPlanRequestsCount }} pending</span>
                         </h3>
                         <div class="flex items-center gap-3">
                             <a href="{{ route('admin.plan-requests.index') }}" class="text-cyan-200 hover:text-white text-xs font-bold underline">View all →</a>
@@ -138,7 +139,11 @@
                                         <div class="mt-1 text-cyan-100/80 text-sm italic">"{{ \Illuminate\Support\Str::limit($r->notes, 160) }}"</div>
                                     @endif
                                 </div>
-                                <a href="{{ route('admin.plan-requests.index') }}" class="inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-300 text-slate-900 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+                                <a href="{{ route('admin.plan-requests.index') }}"
+                                   class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap transition"
+                                   style="background-color: #22d3ee !important; color: #0f172a !important;"
+                                   onmouseover="this.style.backgroundColor='#67e8f9'"
+                                   onmouseout="this.style.backgroundColor='#22d3ee'">
                                     <i class="fa-solid fa-headset"></i> Review &amp; Contact
                                 </a>
                             </div>
@@ -156,7 +161,8 @@
                     <div class="px-6 py-4 border-b border-amber-400/20 flex items-center justify-between gap-3">
                         <h3 class="text-amber-100 font-extrabold text-lg flex items-center gap-2">
                             <i class="fa-solid fa-handshake"></i> Vendor Assignment Requests
-                            <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $pendingVendorAssignmentCount }} pending</span>
+                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full"
+                                  style="background-color: #fbbf24 !important; color: #0f172a !important;">{{ $pendingVendorAssignmentCount }} pending</span>
                         </h3>
                         <div class="flex items-center gap-3">
                             <a href="{{ route('admin.vendor-assignment-requests.index') }}" class="text-amber-200 hover:text-white text-xs font-bold underline">View all →</a>
@@ -186,7 +192,11 @@
                                         <div class="mt-1 text-amber-100/80 text-sm italic">"{{ \Illuminate\Support\Str::limit($r->notes, 160) }}"</div>
                                     @endif
                                 </div>
-                                <a href="{{ route('admin.vendor-assignment-requests.show', $r) }}" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+                                <a href="{{ route('admin.vendor-assignment-requests.show', $r) }}"
+                                   class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap transition"
+                                   style="background-color: #fbbf24 !important; color: #0f172a !important;"
+                                   onmouseover="this.style.backgroundColor='#fcd34d'"
+                                   onmouseout="this.style.backgroundColor='#fbbf24'">
                                     <i class="fa-solid fa-user-plus"></i> Assign Vendors
                                 </a>
                             </div>
