@@ -494,6 +494,17 @@ class ClientController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        // Filter by joining status (Joined / Left / Did Not Join) — used by the
+        // dashboard's Total Hires card to drill into hired candidates.
+        if ($request->filled('joined_status')) {
+            $query->where('joined_status', $request->input('joined_status'));
+        }
+
+        // Filter by hiring status (Interview Scheduled / Selected / etc.)
+        if ($request->filled('hiring_status')) {
+            $query->where('hiring_status', $request->input('hiring_status'));
+        }
+
         if ($request->filled('job_id')) {
             $query->where('job_id', (int) $request->input('job_id'));
         }

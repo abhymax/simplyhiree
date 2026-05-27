@@ -201,7 +201,7 @@
 
         {{-- SECTION 3: LIVE METRICS --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
-            <a href="#my-jobs" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+            <a href="{{ route('client.jobs.index', ['status' => 'approved']) }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-slate-400 text-xs font-bold uppercase">Active Jobs</span>
                     <i class="fa-solid fa-briefcase text-blue-400"></i>
@@ -209,7 +209,7 @@
                 <div class="text-2xl font-extrabold text-white">{{ $activeJobs ?? 0 }}</div>
             </a>
 
-            <a href="#my-jobs" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+            <a href="{{ route('client.jobs.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-slate-400 text-xs font-bold uppercase">Total Jobs</span>
                     <i class="fa-solid fa-folder-open text-amber-400"></i>
@@ -225,7 +225,7 @@
                 <div class="text-2xl font-extrabold text-white">{{ $totalApplicants ?? 0 }}</div>
             </a>
 
-            <a href="#my-jobs" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+            <a href="{{ route('client.applications.index', ['joined_status' => 'Joined']) }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-slate-400 text-xs font-bold uppercase">Total Hires</span>
                     <i class="fa-solid fa-user-check text-purple-400"></i>
