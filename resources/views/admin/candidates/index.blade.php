@@ -46,9 +46,10 @@
         </div>
 
         <style>
-            /* Compact filter inputs + white calendar icon on dark date pickers */
+            /* Compact filter inputs */
             .cand-fld {
                 height: 32px !important;
+                max-width: 240px;
                 padding-left: 0.625rem !important;
                 padding-right: 0.625rem !important;
                 font-size: 0.8125rem !important;
@@ -56,11 +57,43 @@
                 border: 1px solid rgba(255,255,255,0.15) !important;
                 color: #fff !important;
                 border-radius: 0.375rem !important;
-                color-scheme: dark;
+                color-scheme: dark !important;
             }
             .cand-fld:focus { outline: none; border-color: #22d3ee !important; box-shadow: 0 0 0 1px rgba(34,211,238,0.4); }
-            .cand-fld::-webkit-calendar-picker-indicator { filter: invert(1) brightness(2); cursor: pointer; opacity: 0.85; }
-            .cand-fld::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+            /* Force white calendar icon on date inputs (works in Chrome / Edge / Safari) */
+            input.cand-fld[type="date"],
+            input[type="date"].cand-fld {
+                color-scheme: dark !important;
+            }
+            input[type="date"].cand-fld::-webkit-calendar-picker-indicator,
+            .cand-fld::-webkit-calendar-picker-indicator {
+                filter: invert(1) brightness(100) !important;
+                cursor: pointer !important;
+                opacity: 1 !important;
+                background-image: none !important;
+            }
+
+            /* Make checkboxes white-bordered + visible tick */
+            .cand-cb {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 14px; height: 14px;
+                background: rgba(15,23,42,0.6);
+                border: 1px solid rgba(255,255,255,0.35);
+                border-radius: 3px;
+                cursor: pointer;
+                position: relative;
+            }
+            .cand-cb:checked { background: #22d3ee; border-color: #22d3ee; }
+            .cand-cb:checked::after {
+                content: '✓';
+                position: absolute;
+                color: #0f172a;
+                font-size: 11px;
+                font-weight: 900;
+                top: -3px; left: 1px;
+            }
         </style>
         @php
             $fld    = 'cand-fld';
@@ -132,8 +165,8 @@
             </div>
 
             {{-- Advanced filters panel --}}
-            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-3">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-4">
 
                     {{-- Basic --}}
                     <div class="space-y-1.5">
@@ -141,7 +174,7 @@
                         <input type="date" name="date_from" value="{{ request('date_from') }}" class="{{ $fld }} w-full">
                         <input type="date" name="date_to" value="{{ request('date_to') }}" class="{{ $fld }} w-full">
                         <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
-                            <input type="checkbox" name="duplicates_only" value="1" {{ request('duplicates_only') ? 'checked' : '' }} class="rounded bg-slate-800 border-white/20 h-3.5 w-3.5">
+                            <input type="checkbox" name="duplicates_only" value="1" {{ request('duplicates_only') ? 'checked' : '' }} class="cand-cb">
                             Duplicates (same email)
                         </label>
                     </div>
@@ -162,7 +195,7 @@
                             @endforeach
                         </select>
                         <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
-                            <input type="checkbox" name="immediate_joiner" value="1" {{ request('immediate_joiner') ? 'checked' : '' }} class="rounded bg-slate-800 border-white/20 h-3.5 w-3.5">
+                            <input type="checkbox" name="immediate_joiner" value="1" {{ request('immediate_joiner') ? 'checked' : '' }} class="cand-cb">
                             Immediate joiner
                         </label>
                     </div>
