@@ -29,3 +29,33 @@ Stack trace:
 #0 {main}
   thrown in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/artisan on line 10
 [08-Oct-2025 10:37:40 UTC] PHP Fatal error:  Cannot redeclare Illuminate\Database\Migrations\Migration@anonymous::up() in /home/mas7415dyn/public_html/simplyhiree.massivedynamics.net.in/database/migrations/2025_10_08_103329_add_role_to_users_table.php on line 29
+[27-May-2026 06:20:43 Asia/Kolkata] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'job_code' in 'where clause' in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php:406
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(406): PDO->prepare('select * from `...')
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(811): Illuminate\Database\Connection->Illuminate\Database\{closure}('select * from `...', Array)
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(778): Illuminate\Database\Connection->runQueryCallback('select * from `...', Array, Object(Closure))
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(397): Illuminate\Database\Connection->run('select * from `...', Array, Object(Closure))
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3188): Illuminate\Database\Connection->select('select * from `...', Array, true)
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3763): Illuminate\Database\Query\Builder->Illuminate\Database\Query\{closure}()
+#7 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns(Array, Object(Closure))
+#8 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(902): Illuminate\Database\Query\Builder->get(Array)
+#9 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels(Array)
+#10 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(366): Illuminate\Database\Eloquent\Builder->get(Array)
+#11 Command line code(6): Illuminate\Database\Eloquent\Builder->first()
+#12 {main}
+
+Next Illuminate\Database\QueryException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'job_code' in 'where clause' (Connection: mysql, SQL: select * from `jobs` where `job_code` = SH-JOB-000070 limit 1) in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(778): Illuminate\Database\Connection->runQueryCallback('select * from `...', Array, Object(Closure))
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(397): Illuminate\Database\Connection->run('select * from `...', Array, Object(Closure))
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3188): Illuminate\Database\Connection->select('select * from `...', Array, true)
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3763): Illuminate\Database\Query\Builder->Illuminate\Database\Query\{closure}()
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns(Array, Object(Closure))
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(902): Illuminate\Database\Query\Builder->get(Array)
+#7 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels(Array)
+#8 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(366): Illuminate\Database\Eloquent\Builder->get(Array)
+#9 Command line code(6): Illuminate\Database\Eloquent\Builder->first()
+#10 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php on line 824

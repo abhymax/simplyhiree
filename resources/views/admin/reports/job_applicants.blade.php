@@ -82,24 +82,25 @@
                                     
                                     {{-- Candidate --}}
                                     <td class="px-6 py-5">
-                                        <div class="flex items-center gap-3">
-                                            <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-1 ring-white/20">
+                                        <a href="{{ route('admin.applications.show', $application->id) }}" class="flex items-center gap-3 group/cand">
+                                            <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md ring-1 ring-white/20 group-hover/cand:ring-cyan-400 transition">
                                                 {{ $initial !== '' ? $initial : 'C' }}
                                             </div>
                                             <div>
-                                                <div class="font-bold text-white text-base">{{ $candidateName }}</div>
+                                                <div class="font-bold text-white text-base group-hover/cand:text-cyan-300 transition-colors">{{ $candidateName }}</div>
                                                 <div class="text-xs text-cyan-200 mt-0.5 flex items-center gap-1"><i class="fa-regular fa-envelope"></i> {{ $candidateEmail }}</div>
                                                 <div class="text-xs text-blue-300 mt-0.5 flex items-center gap-1"><i class="fa-solid fa-phone"></i> {{ $candidatePhone }}</div>
                                             </div>
-                                        </div>
+                                        </a>
                                     </td>
-                                    
+
                                     {{-- Source --}}
                                     <td class="px-6 py-5">
                                         @if($sourcePartner)
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-500/20 text-purple-200 border border-purple-500/30 text-xs font-bold shadow-sm">
+                                            <a href="{{ route('admin.partners.show', $sourcePartner->id) }}"
+                                               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/40 text-purple-200 hover:text-white border border-purple-500/30 hover:border-purple-400 text-xs font-bold shadow-sm transition">
                                                 <i class="fa-solid fa-handshake"></i> {{ $sourcePartner->name }}
-                                            </span>
+                                            </a>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/10 text-xs font-bold">
                                                 <i class="fa-solid fa-globe"></i> Direct
