@@ -315,7 +315,7 @@
                 </a>
                 @endcan
 
-                {{-- Total Candidates --}}
+                {{-- Total Candidates (direct + vendor-uploaded) --}}
                 @can('view_candidate_data')
                 <a href="{{ route('admin.users.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
                     <div class="flex justify-between items-center mb-2">
@@ -323,6 +323,14 @@
                         <i class="fa-solid fa-users text-blue-400"></i>
                     </div>
                     <div class="text-2xl font-extrabold text-white">{{ $totalCandidates }}</div>
+                    <div class="mt-2 pt-2 border-t border-white/10 flex justify-between text-[11px] font-bold">
+                        <span class="text-cyan-300" title="Candidates who signed up themselves">
+                            <i class="fa-solid fa-user-circle mr-1"></i>Direct {{ $directCandidates }}
+                        </span>
+                        <span class="text-purple-300" title="Candidates uploaded by partner agencies">
+                            <i class="fa-solid fa-handshake mr-1"></i>Vendor {{ $vendorCandidates }}
+                        </span>
+                    </div>
                 </a>
                 @endcan
             </div>

@@ -96,7 +96,13 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $totalClients = User::role('client')->count();
         $totalPartners = User::role('partner')->count();
-        $totalCandidates = $this->candidateUsersQuery()->count();
+        // Candidate counts:
+        //  - direct  = users with role 'candidate' (signed up themselves)
+        //  - vendor  = rows in candidates table (uploaded by partner agencies)
+        //  - total   = sum of both
+        $directCandidates  = $this->candidateUsersQuery()->count();
+        $vendorCandidates  = \App\Models\Candidate::count();
+        $totalCandidates   = $directCandidates + $vendorCandidates;
         $pendingJobs = Job::where('status', 'pending_approval')->count();
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
@@ -135,6 +141,8 @@ class AdminController extends Controller
             'totalClients'            => $totalClients,
             'totalPartners'           => $totalPartners,
             'totalCandidates'         => $totalCandidates,
+            'directCandidates'        => $directCandidates,
+            'vendorCandidates'        => $vendorCandidates,
             'pendingJobs'             => $pendingJobs,
             'pendingApplications'     => $pendingApplications,
             'todayInterviews'         => $todayInterviews,
