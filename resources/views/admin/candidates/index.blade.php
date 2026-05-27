@@ -45,8 +45,25 @@
             </span>
         </div>
 
+        <style>
+            /* Compact filter inputs + white calendar icon on dark date pickers */
+            .cand-fld {
+                height: 32px !important;
+                padding-left: 0.625rem !important;
+                padding-right: 0.625rem !important;
+                font-size: 0.8125rem !important;
+                background: rgba(15,23,42,0.6) !important;
+                border: 1px solid rgba(255,255,255,0.15) !important;
+                color: #fff !important;
+                border-radius: 0.375rem !important;
+                color-scheme: dark;
+            }
+            .cand-fld:focus { outline: none; border-color: #22d3ee !important; box-shadow: 0 0 0 1px rgba(34,211,238,0.4); }
+            .cand-fld::-webkit-calendar-picker-indicator { filter: invert(1) brightness(2); cursor: pointer; opacity: 0.85; }
+            .cand-fld::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+        </style>
         @php
-            $fld    = 'h-9 bg-slate-900/60 border border-white/15 rounded-md text-white text-sm px-2.5 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400';
+            $fld    = 'cand-fld';
             $hsList = [
                 'applied'   => ['Applied',             'fa-paper-plane',  'amber'],
                 'screening' => ['Screening',           'fa-magnifying-glass', 'sky'],
@@ -96,9 +113,10 @@
             <input type="hidden" name="hiring_workflow" value="{{ request('hiring_workflow') }}">
             <div class="flex flex-wrap items-center gap-2">
                 <div class="relative flex-1 min-w-[260px]">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 text-sm pointer-events-none z-10"></i>
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none z-10"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, or mobile"
-                           class="h-10 w-full bg-slate-900/60 border border-white/15 rounded-lg text-white text-sm pl-11 pr-3 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
+                           style="padding-left: 2.75rem !important;"
+                           class="h-10 w-full bg-slate-900/60 border border-white/15 rounded-lg text-white text-sm pr-3 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
                 </div>
                 <button type="button" @click="filtersOpen = !filtersOpen"
                         class="h-10 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg text-sm border border-white/20">
@@ -114,25 +132,23 @@
             </div>
 
             {{-- Advanced filters panel --}}
-            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
 
                     {{-- Basic --}}
-                    <div class="space-y-2">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Basic</div>
-                        <input type="date" name="date_from" value="{{ request('date_from') }}" placeholder="Registered from"
-                               class="{{ $fld }} w-full [color-scheme:dark]">
-                        <input type="date" name="date_to" value="{{ request('date_to') }}" placeholder="Registered to"
-                               class="{{ $fld }} w-full [color-scheme:dark]">
-                        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                            <input type="checkbox" name="duplicates_only" value="1" {{ request('duplicates_only') ? 'checked' : '' }} class="rounded bg-slate-800 border-white/20">
-                            Duplicate candidates (same email)
+                    <div class="space-y-1.5">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Basic</div>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" class="{{ $fld }} w-full">
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" class="{{ $fld }} w-full">
+                        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
+                            <input type="checkbox" name="duplicates_only" value="1" {{ request('duplicates_only') ? 'checked' : '' }} class="rounded bg-slate-800 border-white/20 h-3.5 w-3.5">
+                            Duplicates (same email)
                         </label>
                     </div>
 
                     {{-- Recruitment --}}
-                    <div class="space-y-2">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Recruitment</div>
+                    <div class="space-y-1.5">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Recruitment</div>
                         <input type="text" name="current_company" value="{{ request('current_company') }}" placeholder="Current company" class="{{ $fld }} w-full">
                         <input type="text" name="current_designation" value="{{ request('current_designation') }}" placeholder="Current designation" class="{{ $fld }} w-full">
                         <div class="flex gap-1">
@@ -145,15 +161,15 @@
                                 <option value="{{ $np }}" class="bg-slate-900" {{ request('notice_period') === $np ? 'selected' : '' }}>{{ $np }}</option>
                             @endforeach
                         </select>
-                        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                            <input type="checkbox" name="immediate_joiner" value="1" {{ request('immediate_joiner') ? 'checked' : '' }} class="rounded bg-slate-800 border-white/20">
-                            Immediate joiner only
+                        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
+                            <input type="checkbox" name="immediate_joiner" value="1" {{ request('immediate_joiner') ? 'checked' : '' }} class="rounded bg-slate-800 border-white/20 h-3.5 w-3.5">
+                            Immediate joiner
                         </label>
                     </div>
 
                     {{-- CTC --}}
-                    <div class="space-y-2">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">CTC (₹)</div>
+                    <div class="space-y-1.5">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">CTC (₹)</div>
                         <div class="flex gap-1">
                             <input type="number" name="current_ctc_min" value="{{ request('current_ctc_min') }}" placeholder="Current ≥" min="0" class="{{ $fld }} w-1/2">
                             <input type="number" name="current_ctc_max" value="{{ request('current_ctc_max') }}" placeholder="Current ≤" min="0" class="{{ $fld }} w-1/2">
@@ -165,21 +181,21 @@
                     </div>
 
                     {{-- Skills --}}
-                    <div class="space-y-2">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Skills</div>
+                    <div class="space-y-1.5">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Skills</div>
                         <input type="text" name="skill" value="{{ request('skill') }}" placeholder="Primary skill (e.g. Laravel)" class="{{ $fld }} w-full">
                     </div>
 
                     {{-- Location --}}
-                    <div class="space-y-2">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Location</div>
+                    <div class="space-y-1.5">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Location</div>
                         <input type="text" name="current_location" value="{{ request('current_location') }}" placeholder="Current location" class="{{ $fld }} w-full">
                         <input type="text" name="preferred_location" value="{{ request('preferred_location') }}" placeholder="Preferred location" class="{{ $fld }} w-full">
                     </div>
 
                     {{-- Smart --}}
-                    <div class="space-y-2">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Smart</div>
+                    <div class="space-y-1.5">
+                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider mb-0.5">Smart</div>
                         <select name="partner_id" class="{{ $fld }} w-full">
                             <option value="" class="bg-slate-900">Any recruiter (partner)</option>
                             @foreach($partners as $p)
