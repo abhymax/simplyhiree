@@ -22,8 +22,8 @@
                 <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-cyan-300 hover:text-white mb-2 transition text-sm font-bold tracking-wide uppercase">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
                 </a>
-                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">All Applications</h1>
-                <p class="text-blue-200 mt-2 text-lg">Every candidate sent to your jobs.</p>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">{{ $pageTitle ?? 'All Applications' }}</h1>
+                <p class="text-blue-200 mt-2 text-lg">{{ $pageSubtitle ?? 'Every candidate sent to your jobs.' }}</p>
             </div>
             <div class="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl">
                 <p class="text-xs text-blue-300 font-bold uppercase">Total</p>

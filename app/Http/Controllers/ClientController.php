@@ -494,8 +494,7 @@ class ClientController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Filter by joining status (Joined / Left / Did Not Join) — used by the
-        // dashboard's Total Hires card to drill into hired candidates.
+        // Filter by joining status (Joined / Left / Did Not Join)
         if ($request->filled('joined_status')) {
             $query->where('joined_status', $request->input('joined_status'));
         }
@@ -503,6 +502,16 @@ class ClientController extends Controller
         // Filter by hiring status (Interview Scheduled / Selected / etc.)
         if ($request->filled('hiring_status')) {
             $query->where('hiring_status', $request->input('hiring_status'));
+        }
+
+        // Special view modes used by dashboard deep-links — keep the page
+        // heading and the count in sync with the dashboard cards.
+        $pageTitle    = 'All Applications';
+        $pageSubtitle = 'Manage candidate pipeline';
+        if ($request->input('view') === 'hires') {
+            $query->whereIn('hiring_status', ['Selected', 'Joined']);
+            $pageTitle    = 'Hired Candidates';
+            $pageSubtitle = 'Candidates you selected or who have joined';
         }
 
         if ($request->filled('job_id')) {
@@ -538,7 +547,8 @@ class ClientController extends Controller
             ->get();
 
         return view('client.applications.index', compact(
-            'applications', 'jobs', 'partners', 'perPage', 'allowedPerPage'
+            'applications', 'jobs', 'partners', 'perPage', 'allowedPerPage',
+            'pageTitle', 'pageSubtitle'
         ));
     }
 
