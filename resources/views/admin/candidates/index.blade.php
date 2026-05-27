@@ -282,8 +282,9 @@
                                 </td>
                                 <td class="px-5 py-4 text-xs text-blue-100">
                                     <div><i class="fa-solid fa-location-dot text-rose-400 mr-1"></i>{{ $c->location ?? '—' }}</div>
-                                    @if($c->preferred_locations)
-                                        <div class="text-[10px] text-slate-400 mt-0.5">Pref: {{ \Illuminate\Support\Str::limit($c->preferred_locations, 30) }}</div>
+                                    @php $prefLoc = is_array($c->preferred_locations) ? implode(', ', $c->preferred_locations) : (string) $c->preferred_locations; @endphp
+                                    @if($prefLoc)
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Pref: {{ \Illuminate\Support\Str::limit($prefLoc, 30) }}</div>
                                     @endif
                                 </td>
                                 <td class="px-5 py-4">

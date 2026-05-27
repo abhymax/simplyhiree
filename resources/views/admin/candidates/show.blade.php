@@ -88,7 +88,8 @@
                         <div><span class="text-slate-400 text-xs">DOB:</span> <span class="text-white">{{ optional($candidate->date_of_birth ?? $candidate->dob)->format('d M Y') ?? '—' }}</span></div>
                         <div><span class="text-slate-400 text-xs">Marital:</span> <span class="text-white">{{ $candidate->marital_status ?? '—' }}</span></div>
                         <div><span class="text-slate-400 text-xs">Languages:</span> <span class="text-white">{{ $candidate->languages_spoken ?? '—' }}</span></div>
-                        <div><span class="text-slate-400 text-xs">Pref. Loc:</span> <span class="text-white">{{ $candidate->preferred_locations ?? '—' }}</span></div>
+                        @php $prefLoc = is_array($candidate->preferred_locations) ? implode(', ', $candidate->preferred_locations) : (string) ($candidate->preferred_locations ?? ''); @endphp
+                        <div><span class="text-slate-400 text-xs">Pref. Loc:</span> <span class="text-white">{{ $prefLoc ?: '—' }}</span></div>
                     </div>
                 </div>
 
