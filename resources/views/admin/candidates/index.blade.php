@@ -78,12 +78,12 @@
             @endforeach
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs uppercase tracking-wider text-slate-400 font-bold mr-1">Pipeline:</span>
-                <a href="{{ route('admin.candidates.index', collect(request()->query())->except(['hiring_workflow','page'])->all()) }}"
+                <a href="{{ route('admin.candidates.index', request()->except(['hiring_workflow', 'page'])) }}"
                    class="px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap transition {{ !$hsCurrent ? 'bg-cyan-500/25 text-cyan-100 border-cyan-400/50' : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10' }}">
                     All
                 </a>
                 @foreach($hsList as $k => [$label, $icon, $color])
-                    <a href="{{ route('admin.candidates.index', array_merge(request()->except('page')->all(), ['hiring_workflow' => $k])) }}"
+                    <a href="{{ route('admin.candidates.index', array_merge(request()->except('page'), ['hiring_workflow' => $k])) }}"
                        class="px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap transition {{ $hsCurrent === $k ? $hsColor[$color] : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10 hover:text-white' }}">
                         <i class="fa-solid {{ $icon }} mr-1"></i>{{ $label }}
                     </a>
