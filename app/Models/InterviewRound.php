@@ -20,6 +20,7 @@ class InterviewRound extends Model
         'meeting_link',
         'location',
         'interviewer_name',
+        'candidate_message',
         'status',
         'feedback',
         'rating',

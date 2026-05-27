@@ -64,9 +64,11 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1.5">Interviewer Name (optional)</label>
-                <input type="text" name="interviewer_name" value="{{ old('interviewer_name') }}" placeholder="Who's conducting the interview?"
-                       class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-emerald-200 mb-1.5">Message / Instructions for Candidate (optional)</label>
+                <textarea name="candidate_message" rows="4" maxlength="2000"
+                          placeholder="e.g. Please join 5 minutes early. Carry a hard copy of your CV and a valid government ID. Reach Tower B, 2nd floor reception."
+                          class="w-full bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-2.5">{{ old('candidate_message') }}</textarea>
+                <p class="text-[11px] text-blue-300 mt-1">This message will be shown to the candidate alongside the interview details.</p>
             </div>
 
             <div class="flex gap-2 pt-4 border-t border-white/10 justify-end">

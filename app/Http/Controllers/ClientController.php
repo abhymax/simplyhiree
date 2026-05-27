@@ -845,21 +845,21 @@ class ClientController extends Controller
         }
 
         $validated = $request->validate([
-            'scheduled_at'     => 'required|date|after:now',
-            'mode'             => 'required|in:Online,In-person,Phone',
-            'meeting_link'     => 'nullable|url|max:500',
-            'location'         => 'nullable|string|max:255',
-            'interviewer_name' => 'nullable|string|max:255',
+            'scheduled_at'      => 'required|date|after:now',
+            'mode'              => 'required|in:Online,In-person,Phone',
+            'meeting_link'      => 'nullable|url|max:500',
+            'location'          => 'nullable|string|max:255',
+            'candidate_message' => 'nullable|string|max:2000',
         ]);
 
         $round = $application->interviewRounds()->create([
-            'round_number'     => $existing + 1,
-            'scheduled_at'     => Carbon::parse($validated['scheduled_at']),
-            'mode'             => $validated['mode'],
-            'meeting_link'     => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
-            'location'         => $validated['mode'] === 'In-person' ? $validated['location'] : null,
-            'interviewer_name' => $validated['interviewer_name'] ?? null,
-            'status'           => 'Scheduled',
+            'round_number'      => $existing + 1,
+            'scheduled_at'      => Carbon::parse($validated['scheduled_at']),
+            'mode'              => $validated['mode'],
+            'meeting_link'      => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
+            'location'          => $validated['mode'] === 'In-person' ? $validated['location'] : null,
+            'candidate_message' => $validated['candidate_message'] ?? null,
+            'status'            => 'Scheduled',
         ]);
 
         // Mirror to legacy columns so existing notifications / queries still work
@@ -883,19 +883,19 @@ class ClientController extends Controller
         }
 
         $validated = $request->validate([
-            'scheduled_at'     => 'required|date',
-            'mode'             => 'required|in:Online,In-person,Phone',
-            'meeting_link'     => 'nullable|url|max:500',
-            'location'         => 'nullable|string|max:255',
-            'interviewer_name' => 'nullable|string|max:255',
+            'scheduled_at'      => 'required|date',
+            'mode'              => 'required|in:Online,In-person,Phone',
+            'meeting_link'      => 'nullable|url|max:500',
+            'location'          => 'nullable|string|max:255',
+            'candidate_message' => 'nullable|string|max:2000',
         ]);
 
         $round->update([
-            'scheduled_at'     => Carbon::parse($validated['scheduled_at']),
-            'mode'             => $validated['mode'],
-            'meeting_link'     => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
-            'location'         => $validated['mode'] === 'In-person' ? $validated['location'] : null,
-            'interviewer_name' => $validated['interviewer_name'] ?? null,
+            'scheduled_at'      => Carbon::parse($validated['scheduled_at']),
+            'mode'              => $validated['mode'],
+            'meeting_link'      => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
+            'location'          => $validated['mode'] === 'In-person' ? $validated['location'] : null,
+            'candidate_message' => $validated['candidate_message'] ?? null,
         ]);
 
         // If editing the latest round, mirror back to legacy columns

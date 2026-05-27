@@ -122,6 +122,11 @@
                                     @endif
                                 </div>
                                 <div class="text-blue-300 text-xs mt-0.5">{{ $r->scheduled_at->format('d M Y, h:i A') }}@if($r->interviewer_name) · with {{ $r->interviewer_name }}@endif</div>
+                                @if($r->candidate_message)
+                                    <div class="mt-1 bg-amber-500/10 border border-amber-400/30 rounded px-2 py-1.5 text-xs text-amber-100">
+                                        <span class="font-bold text-amber-300 text-[10px] uppercase tracking-wider">Note for candidate:</span><br>{{ $r->candidate_message }}
+                                    </div>
+                                @endif
                                 @if($r->rating)
                                     <div class="text-amber-300 text-xs mt-0.5">{{ str_repeat('★', $r->rating) }}{{ str_repeat('☆', 5 - $r->rating) }}</div>
                                 @endif

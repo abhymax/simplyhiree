@@ -145,6 +145,11 @@
                             </div>
                             <div class="text-xs text-blue-100">{{ $r->scheduled_at->format('d M Y, h:i A') }}</div>
                             <div class="text-xs text-slate-300">{{ $r->mode }}@if($r->interviewer_name) · {{ $r->interviewer_name }}@endif</div>
+                            @if($r->candidate_message)
+                                <div class="mt-1.5 bg-amber-500/10 border border-amber-400/30 rounded p-1.5 text-[11px] text-amber-100 line-clamp-3">
+                                    <span class="font-bold text-amber-300 text-[10px] uppercase">Candidate note:</span> {{ $r->candidate_message }}
+                                </div>
+                            @endif
                             @if($r->recommendation)
                                 <div class="mt-1 inline-block px-2 py-0.5 rounded text-[10px] font-bold border bg-cyan-500/15 text-cyan-100 border-cyan-400/30">{{ $r->recommendation }}</div>
                             @endif

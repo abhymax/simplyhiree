@@ -348,6 +348,11 @@
                                             @if($r->rating)
                                                 <div class="text-xs text-amber-300 mt-1">{{ str_repeat('★', $r->rating) }}{{ str_repeat('☆', 5 - $r->rating) }}</div>
                                             @endif
+                                            @if($r->candidate_message)
+                                                <div class="mt-2 bg-amber-500/10 border border-amber-400/30 rounded p-2 text-xs text-amber-100">
+                                                    <span class="font-bold text-amber-300 text-[10px] uppercase tracking-wider">Note for candidate:</span><br>{{ $r->candidate_message }}
+                                                </div>
+                                            @endif
                                             @if($r->feedback)
                                                 <div class="mt-2 bg-white/5 border border-white/10 rounded p-2 text-xs text-blue-100 italic">"{{ $r->feedback }}"</div>
                                             @endif
