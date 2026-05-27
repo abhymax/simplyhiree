@@ -32,6 +32,23 @@
                 </div>
             </div>
 
+            {{-- FLASH MESSAGES --}}
+            @if(session('success'))
+                <div class="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 rounded-xl text-sm font-semibold">
+                    <i class="fa-solid fa-circle-check mr-2"></i> {{ session('success') }}
+                </div>
+            @endif
+            @if(session('info'))
+                <div class="mb-4 px-4 py-3 bg-blue-500/20 border border-blue-400/40 text-blue-100 rounded-xl text-sm font-semibold">
+                    <i class="fa-solid fa-circle-info mr-2"></i> {{ session('info') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="mb-4 px-4 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold">
+                    <i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ session('error') }}
+                </div>
+            @endif
+
             {{-- MAIN GLASS CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 

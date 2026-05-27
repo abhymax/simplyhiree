@@ -968,8 +968,7 @@ class AdminController extends Controller
     public function destroyJob(Job $job)
     {
         if ($job->archived_at) {
-            return redirect()->route('admin.jobs.archived.show', $job)
-                ->with('info', 'Job is already archived.');
+            return back()->with('info', 'Job is already archived.');
         }
 
         $job->update([
@@ -981,8 +980,11 @@ class AdminController extends Controller
             'deactivation_reason'       => null,
         ]);
 
-        return redirect()->route('admin.jobs.archived')
-            ->with('success', 'Job moved to archive. All applications and candidate data preserved.');
+        // Stay on whichever page the admin came from (Master Job Report,
+        // Pending Jobs, etc.) with the success flash. Archived job will
+        // simply disappear from the list since those pages filter
+        // whereNull('archived_at').
+        return back()->with('success', 'Job moved to archive. All applications and candidate data preserved.');
     }
 
     /**
