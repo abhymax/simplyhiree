@@ -1355,22 +1355,30 @@ class AdminController extends Controller
         return redirect()->back()->with('success', $applications->count() . ' application(s) approved successfully.');
     }
 
-    public function approveApplication(JobApplication $application)
+    public function approveApplication(Request $request, JobApplication $application)
     {
         $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Approved']);
         $this->notifyApplicationStakeholder($application, true);
 
-        return redirect()->back()->with('success', 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' approved.');
+        $msg = 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' approved.';
+        $redirectTo = $request->input('redirect_to');
+        return $redirectTo
+            ? redirect($redirectTo)->with('success', $msg)
+            : back()->with('success', $msg);
     }
 
-    public function rejectApplication(JobApplication $application)
+    public function rejectApplication(Request $request, JobApplication $application)
     {
         $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Rejected']);
         $this->notifyApplicationStakeholder($application, false);
 
-        return redirect()->back()->with('success', 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' rejected.');
+        $msg = 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' rejected.';
+        $redirectTo = $request->input('redirect_to');
+        return $redirectTo
+            ? redirect($redirectTo)->with('success', $msg)
+            : back()->with('success', $msg);
     }
 
     public function showApplication(JobApplication $application)

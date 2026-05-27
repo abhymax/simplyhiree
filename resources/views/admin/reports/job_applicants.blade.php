@@ -177,6 +177,7 @@
                                                 <div class="flex gap-2">
                                                     <form method="POST" action="{{ route('admin.applications.approve', $application->id) }}" onsubmit="return confirm('Approve this candidate\'s CV?');">
                                                         @csrf
+                                                        <input type="hidden" name="redirect_to" value="{{ url()->full() }}">
                                                         <button type="submit"
                                                             class="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition">
                                                             <i class="fa-solid fa-check"></i> Approve CV
@@ -184,6 +185,7 @@
                                                     </form>
                                                     <form method="POST" action="{{ route('admin.applications.reject', $application->id) }}" onsubmit="return confirm('Reject this candidate\'s CV?');">
                                                         @csrf
+                                                        <input type="hidden" name="redirect_to" value="{{ url()->full() }}">
                                                         <button type="submit"
                                                             class="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-400 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition">
                                                             <i class="fa-solid fa-xmark"></i> Reject CV
