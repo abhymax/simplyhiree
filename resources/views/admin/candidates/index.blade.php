@@ -263,7 +263,7 @@
                                     @endif
                                     <div class="mt-1 flex gap-2">
                                         <span class="text-amber-300">{{ $totalExp }}</span>
-                                        @if($c->expected_ctc)<span class="text-emerald-300">₹{{ number_format($c->expected_ctc / 100000, 1) }}L</span>@endif
+                                        @if($c->expected_ctc)<span class="text-emerald-300">₹{{ number_format(((float) $c->expected_ctc) / 100000, 1) }}L</span>@endif
                                     </div>
                                     @if($c->notice_period)
                                         <div class="mt-0.5 text-[10px] text-slate-400">NP: {{ $c->notice_period }}</div>
