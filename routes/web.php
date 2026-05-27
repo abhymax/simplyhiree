@@ -317,10 +317,12 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/applications/{application}/interview', [ClientController::class, 'scheduleInterview'])->name('applications.interview.store');
 
         // Multi-round interviews
+        Route::get('/applications/{application}/rounds/create', [ClientController::class, 'showScheduleRoundForm'])->name('applications.rounds.create');
         Route::post('/applications/{application}/rounds', [ClientController::class, 'scheduleInterviewRound'])->name('applications.rounds.store');
         Route::patch('/rounds/{round}', [ClientController::class, 'updateInterviewRound'])->name('rounds.update');
         Route::post('/rounds/{round}/appeared', [ClientController::class, 'markRoundAppeared'])->name('rounds.appeared');
         Route::post('/rounds/{round}/noshow', [ClientController::class, 'markRoundNoShow'])->name('rounds.noshow');
+        Route::get('/rounds/{round}/feedback', [ClientController::class, 'showRoundFeedbackForm'])->name('rounds.feedback.create');
         Route::post('/rounds/{round}/feedback', [ClientController::class, 'submitRoundFeedback'])->name('rounds.feedback');
 
         // 2. Edit Existing Interview

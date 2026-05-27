@@ -793,6 +793,44 @@ class ClientController extends Controller
     // --- MULTI-ROUND INTERVIEWS ---
 
     /**
+     * Show the schedule-new-round form for a candidate.
+     */
+    public function showScheduleRoundForm(JobApplication $application)
+    {
+        if ($application->job->user_id !== Auth::id()) abort(403);
+
+        $application->load(['candidate', 'job', 'interviewRounds']);
+        $roundCount = $application->interviewRounds->count();
+        if ($roundCount >= InterviewRound::MAX_ROUNDS) {
+            return redirect()->route('client.jobs.applicants', $application->job_id)
+                ->with('error', 'Maximum '.InterviewRound::MAX_ROUNDS.' rounds already scheduled.');
+        }
+
+        return view('client.rounds.schedule', [
+            'application' => $application,
+            'roundNumber' => $roundCount + 1,
+        ]);
+    }
+
+    /**
+     * Show the feedback form for an interview round.
+     */
+    public function showRoundFeedbackForm(InterviewRound $round)
+    {
+        $application = $round->application;
+        if ($application->job->user_id !== Auth::id()) abort(403);
+
+        $application->load(['candidate', 'job', 'interviewRounds']);
+        $roundCount = $application->interviewRounds->count();
+
+        return view('client.rounds.feedback', [
+            'application' => $application,
+            'round'       => $round,
+            'allowNext'   => $roundCount < InterviewRound::MAX_ROUNDS,
+        ]);
+    }
+
+    /**
      * Schedule the next interview round (auto-numbered, capped at 5).
      */
     public function scheduleInterviewRound(Request $request, JobApplication $application)
