@@ -648,8 +648,13 @@ class ClientController extends Controller
     /**
      * Push an immediate WhatsApp + email notification to the candidate
      * with their interview time, company, location/link.
+     *
+     * @param  ?string  $extraNote     Override for the "Note" line in the body / email.
+     *                                 Used by the multi-round flow to surface the round's
+     *                                 candidate_message instead of legacy client_notes.
+     * @param  ?int     $roundNumber   If passed, prepends "Round N" to the subject/body.
      */
-    private function sendInterviewConfirmationToCandidate(JobApplication $application, bool $isUpdate = false): void
+    private function sendInterviewConfirmationToCandidate(JobApplication $application, bool $isUpdate = false, ?string $extraNote = null, ?int $roundNumber = null): void
     {
         $whatsapp = app(AiSensyWhatsAppService::class);
         $cand     = $application->candidate;
@@ -670,7 +675,15 @@ class ClientController extends Controller
             ?: ($application->interview_location ?: 'Details will be shared by the recruiter');
         $verb = $isUpdate ? 'updated' : 'scheduled';
 
-        $body  = ($isUpdate ? "Hi {$name}, your interview time has been updated." : "Hi {$name}, your interview has been scheduled.") . "\n\n";
+        // Round labelling — used by the multi-round flow
+        $roundLabel = $roundNumber ? "Round {$roundNumber}: " : '';
+
+        // Note to surface — prefer the round's candidate_message, fallback to client_notes
+        $noteText = $extraNote ?: $application->client_notes;
+
+        $body  = ($isUpdate
+            ? "Hi {$name}, your {$roundLabel}interview time has been updated."
+            : "Hi {$name}, your {$roundLabel}interview has been scheduled.") . "\n\n";
         $body .= "🏢 Company: {$company}\n";
         $body .= "💼 Role: " . ($job?->title ?? '—') . "\n";
         $body .= "🕒 When: {$time}\n";
@@ -679,8 +692,8 @@ class ClientController extends Controller
         } elseif ($application->interview_location) {
             $body .= "📍 Where: {$application->interview_location}\n";
         }
-        if ($application->client_notes) {
-            $body .= "\n📝 Note: {$application->client_notes}\n";
+        if ($noteText) {
+            $body .= "\n📝 Note: {$noteText}\n";
         }
         $body .= "\nGood luck!\n— SimplyHiree";
 
@@ -690,11 +703,11 @@ class ClientController extends Controller
                 $whatsapp->sendEventAlert(
                     $phone,
                     'interview_scheduled',
-                    'Interview ' . $verb,
+                    'Interview ' . $verb . ($roundNumber ? " — Round {$roundNumber}" : ''),
                     $body,
                     ['template_params' => [
                         $name,
-                        $job?->title ?? 'the role',
+                        ($roundNumber ? "Round {$roundNumber} — " : '') . ($job?->title ?? 'the role'),
                         $company,
                         $time,
                         $application->meeting_link ?: ($application->interview_location ?: 'TBD'),
@@ -711,15 +724,16 @@ class ClientController extends Controller
                 Mail::send('client.interviews.email_confirmation', [
                     'name'         => $name,
                     'company'      => $company,
-                    'role'         => $job?->title ?? '—',
+                    'role'         => ($roundNumber ? "Round {$roundNumber} — " : '') . ($job?->title ?? '—'),
                     'time'         => $time,
                     'meeting_link' => $application->meeting_link,
                     'location'     => $application->interview_location,
-                    'notes'        => $application->client_notes,
+                    'notes'        => $noteText,
                     'isUpdate'     => $isUpdate,
-                ], function ($m) use ($email, $name, $verb) {
-                    $m->to($email, $name)
-                      ->subject('[SimplyHiree] Your interview is ' . $verb);
+                ], function ($m) use ($email, $name, $verb, $roundNumber) {
+                    $subject = '[SimplyHiree] Your interview is ' . $verb;
+                    if ($roundNumber) $subject = "[SimplyHiree] Round {$roundNumber} interview is {$verb}";
+                    $m->to($email, $name)->subject($subject);
                 });
             } catch (\Throwable $e) {
                 \Log::warning('Interview email confirmation failed app=' . $application->id . ': ' . $e->getMessage());
@@ -862,17 +876,28 @@ class ClientController extends Controller
             'status'            => 'Scheduled',
         ]);
 
-        // Mirror to legacy columns so existing notifications / queries still work
+        // Mirror to legacy columns so existing notifications / queries still work,
+        // and clear the reminder flag so the cron picks THIS round up too
         $application->update([
-            'hiring_status'      => 'Interview Scheduled',
-            'interview_at'       => $round->scheduled_at,
-            'meeting_link'       => $round->meeting_link,
-            'interview_location' => $round->location,
+            'hiring_status'              => 'Interview Scheduled',
+            'interview_at'               => $round->scheduled_at,
+            'meeting_link'               => $round->meeting_link,
+            'interview_location'         => $round->location,
+            'interview_reminder_sent_at' => null,
         ]);
 
+        // In-app notification for admin + partner
         $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
 
-        return redirect()->back()->with('success', "Round {$round->round_number} scheduled.");
+        // WhatsApp + email to the candidate (Round N)
+        $this->sendInterviewConfirmationToCandidate(
+            $application->fresh(['job', 'candidate', 'candidateUser.profile']),
+            false,
+            $round->candidate_message,
+            $round->round_number
+        );
+
+        return redirect()->back()->with('success', "Round {$round->round_number} scheduled — candidate notified on WhatsApp + email.");
     }
 
     public function updateInterviewRound(Request $request, InterviewRound $round)
@@ -898,17 +923,28 @@ class ClientController extends Controller
             'candidate_message' => $validated['candidate_message'] ?? null,
         ]);
 
-        // If editing the latest round, mirror back to legacy columns
+        // If editing the latest round, mirror back to legacy columns and re-notify
         $latest = $application->interviewRounds()->latest('round_number')->first();
-        if ($latest && $latest->id === $round->id) {
+        $isLatest = $latest && $latest->id === $round->id;
+        if ($isLatest) {
             $application->update([
-                'interview_at'       => $round->scheduled_at,
-                'meeting_link'       => $round->meeting_link,
-                'interview_location' => $round->location,
+                'interview_at'               => $round->scheduled_at,
+                'meeting_link'               => $round->meeting_link,
+                'interview_location'         => $round->location,
+                'interview_reminder_sent_at' => null,
             ]);
+
+            $this->sendInterviewConfirmationToCandidate(
+                $application->fresh(['job', 'candidate', 'candidateUser.profile']),
+                true,
+                $round->candidate_message,
+                $round->round_number
+            );
         }
 
-        return redirect()->back()->with('success', "Round {$round->round_number} updated.");
+        $msg = "Round {$round->round_number} updated";
+        if ($isLatest) $msg .= ' — candidate re-notified on WhatsApp + email';
+        return redirect()->back()->with('success', $msg . '.');
     }
 
     public function markRoundAppeared(InterviewRound $round)
