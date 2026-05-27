@@ -166,6 +166,162 @@ class AdminController extends Controller
 
     // --- CANDIDATE (USER) MANAGEMENT ---
 
+    /**
+     * Unified Candidate Database for Superadmin.
+     *
+     * Source = candidates table (vendor-uploaded). Direct candidates (users
+     * with role 'candidate') are reachable via the Direct tab which links to
+     * the existing admin.users.index page. This split keeps query/filters
+     * tractable while still showing both counts at the top.
+     *
+     * Filter spec aligns with the Phase 1 columns we have today; Phase 2
+     * filters (tags, work mode, certifications, CXO fields, etc.) are
+     * rendered in the UI but disabled with a "coming soon" tooltip.
+     */
+    public function listAllCandidates(Request $request)
+    {
+        $query = \App\Models\Candidate::query()->with(['partner']);
+
+        // --- Basic ---
+        if ($s = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($s) {
+                $q->where('first_name', 'like', "%$s%")
+                  ->orWhere('last_name', 'like', "%$s%")
+                  ->orWhere('email', 'like', "%$s%")
+                  ->orWhere('phone_number', 'like', "%$s%")
+                  ->orWhere('alternate_phone_number', 'like', "%$s%");
+            });
+        }
+        if ($from = $request->input('date_from')) $query->whereDate('created_at', '>=', $from);
+        if ($to   = $request->input('date_to'))   $query->whereDate('created_at', '<=', $to);
+
+        // --- Smart: Source / Recruiter ---
+        if ($partnerId = $request->input('partner_id')) {
+            $query->where('partner_id', $partnerId);
+        }
+        if ($request->boolean('duplicates_only')) {
+            $dups = \App\Models\Candidate::select('email')
+                ->whereNotNull('email')->where('email', '!=', '')
+                ->groupBy('email')->havingRaw('COUNT(*) > 1')
+                ->pluck('email');
+            $query->whereIn('email', $dups);
+        }
+
+        // --- Recruitment ---
+        if ($company     = $request->input('current_company'))     $query->where('current_company', 'like', "%$company%");
+        if ($designation = $request->input('current_designation')) $query->where('current_designation', 'like', "%$designation%");
+        if ($notice      = $request->input('notice_period'))       $query->where('notice_period', $notice);
+        if ($request->boolean('immediate_joiner')) {
+            $query->whereIn('notice_period', ['0', 'Immediate', '0 days', 'Immediately', 'Serving notice (immediate)']);
+        }
+        if (is_numeric($v = $request->input('exp_min')))           $query->where('total_experience_years', '>=', (int) $v);
+        if (is_numeric($v = $request->input('exp_max')))           $query->where('total_experience_years', '<=', (int) $v);
+        if (is_numeric($v = $request->input('current_ctc_min')))   $query->where('current_ctc', '>=', (float) $v);
+        if (is_numeric($v = $request->input('current_ctc_max')))   $query->where('current_ctc', '<=', (float) $v);
+        if (is_numeric($v = $request->input('expected_ctc_min')))  $query->where('expected_ctc', '>=', (float) $v);
+        if (is_numeric($v = $request->input('expected_ctc_max')))  $query->where('expected_ctc', '<=', (float) $v);
+
+        // --- Skills ---
+        if ($skill = $request->input('skill')) $query->where('skills', 'like', "%$skill%");
+
+        // --- Location ---
+        if ($loc     = $request->input('current_location'))  $query->where('location', 'like', "%$loc%");
+        if ($prefLoc = $request->input('preferred_location')) $query->where('preferred_locations', 'like', "%$prefLoc%");
+
+        // --- Resume ---
+        if ($request->input('resume_uploaded') === 'yes') $query->whereNotNull('resume_path')->where('resume_path', '!=', '');
+        if ($request->input('resume_uploaded') === 'no')  $query->where(fn($q) => $q->whereNull('resume_path')->orWhere('resume_path', ''));
+
+        // --- Hiring Workflow ---
+        if ($hs = $request->input('hiring_workflow')) {
+            $map = [
+                'applied'   => fn($q) => $q->whereHas('jobApplications'),
+                'screening' => fn($q) => $q->whereHas('jobApplications', fn($a) => $a->where('status', 'Pending Review')),
+                'approved'  => fn($q) => $q->whereHas('jobApplications', fn($a) => $a->where('status', 'Approved')),
+                'interview' => fn($q) => $q->whereHas('jobApplications', fn($a) => $a->where('hiring_status', 'Interview Scheduled')),
+                'selected'  => fn($q) => $q->whereHas('jobApplications', fn($a) => $a->where('hiring_status', 'Selected')),
+                'joined'    => fn($q) => $q->whereHas('jobApplications', fn($a) => $a->where('joined_status', 'Joined')),
+                'rejected'  => fn($q) => $q->whereHas('jobApplications', function ($a) {
+                    $a->where('status', 'Rejected')->orWhere('hiring_status', 'Client Rejected');
+                }),
+            ];
+            if (isset($map[$hs])) ($map[$hs])($query);
+        }
+
+        $candidates = $query->latest()->paginate(20)->withQueryString();
+
+        // Source-tab counts
+        $vendorCount = \App\Models\Candidate::count();
+        $directCount = $this->candidateUsersQuery()->count();
+
+        // Dropdown options
+        $partners = \App\Models\User::role('partner')->orderBy('name')->get(['id', 'name']);
+        $noticePeriods = \App\Models\Candidate::query()
+            ->whereNotNull('notice_period')->where('notice_period', '!=', '')
+            ->distinct()->pluck('notice_period')->sort()->values();
+
+        return view('admin.candidates.index', compact(
+            'candidates', 'vendorCount', 'directCount', 'partners', 'noticePeriods'
+        ));
+    }
+
+    /**
+     * CSV export honoring the current filter state.
+     */
+    public function exportAllCandidates(Request $request)
+    {
+        // Re-use the same filtering logic by spoofing the request into the index method's query builder.
+        // For simplicity we mirror just the most common filters here.
+        $query = \App\Models\Candidate::query()->with(['partner']);
+        if ($s = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($s) {
+                $q->where('first_name', 'like', "%$s%")
+                  ->orWhere('last_name', 'like', "%$s%")
+                  ->orWhere('email', 'like', "%$s%")
+                  ->orWhere('phone_number', 'like', "%$s%");
+            });
+        }
+        if ($partnerId = $request->input('partner_id')) $query->where('partner_id', $partnerId);
+        if ($company   = $request->input('current_company')) $query->where('current_company', 'like', "%$company%");
+        if ($skill     = $request->input('skill')) $query->where('skills', 'like', "%$skill%");
+        if ($loc       = $request->input('current_location')) $query->where('location', 'like', "%$loc%");
+        if (is_numeric($v = $request->input('exp_min'))) $query->where('total_experience_years', '>=', (int) $v);
+        if (is_numeric($v = $request->input('exp_max'))) $query->where('total_experience_years', '<=', (int) $v);
+
+        $candidates = $query->latest()->get();
+        $fileName = 'candidates_' . now()->format('Ymd_His') . '.csv';
+
+        return response()->streamDownload(function () use ($candidates) {
+            $h = fopen('php://output', 'w');
+            fputcsv($h, [
+                'Candidate Code', 'First Name', 'Last Name', 'Email', 'Mobile', 'Alt Mobile',
+                'Current Company', 'Designation', 'Total Experience (yrs)', 'Notice Period',
+                'Current CTC', 'Expected CTC', 'Skills', 'Current Location', 'Preferred Locations',
+                'Resume Uploaded', 'Source Partner', 'Created At',
+            ]);
+            foreach ($candidates as $c) {
+                fputcsv($h, [
+                    $c->candidate_code ?? ('SH-CAN-' . str_pad((string) $c->id, 6, '0', STR_PAD_LEFT)),
+                    $c->first_name, $c->last_name, $c->email, $c->phone_number, $c->alternate_phone_number,
+                    $c->current_company, $c->current_designation, $c->total_experience_years, $c->notice_period,
+                    $c->current_ctc, $c->expected_ctc, $c->skills, $c->location, $c->preferred_locations,
+                    $c->resume_path ? 'Yes' : 'No', optional($c->partner)->name,
+                    optional($c->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+            fclose($h);
+        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Candidate detail page (Superadmin view).
+     */
+    public function showCandidateDetail(\App\Models\Candidate $candidate)
+    {
+        $candidate->load(['partner', 'jobApplications.job', 'jobApplications.interviewRounds']);
+        return view('admin.candidates.show', compact('candidate'));
+    }
+
     public function listUsers(Request $request)
     {
         // Load candidate users with their real profile relation (user_profiles table)

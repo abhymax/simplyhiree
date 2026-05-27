@@ -127,6 +127,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             // Manage Sub-Admins
             Route::resource('sub_admins', SubAdminController::class);
             
+            // Candidate database (unified — vendor-uploaded + direct, filterable)
+            Route::get('/candidates', [AdminController::class, 'listAllCandidates'])->name('candidates.index');
+            Route::get('/candidates/export', [AdminController::class, 'exportAllCandidates'])->name('candidates.export');
+            Route::get('/candidates/{candidate}', [AdminController::class, 'showCandidateDetail'])->name('candidates.show');
+
             // User Management
             Route::get('/users', [AdminController::class, 'listUsers'])->name('users.index');
             Route::get('/users/export', [AdminController::class, 'exportUsers'])->name('users.export');

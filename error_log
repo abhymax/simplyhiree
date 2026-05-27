@@ -59,3 +59,7 @@ Stack trace:
 #9 Command line code(6): Illuminate\Database\Eloquent\Builder->first()
 #10 {main}
   thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Connection.php on line 824
+[27-May-2026 04:59:24 UTC] PHP Fatal error:  Uncaught Error: Class "PhpOffice\PhpSpreadsheet\IOFactory" not found in Command line code:4
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 4
