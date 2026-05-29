@@ -386,12 +386,29 @@
                     <span class="text-xs font-bold bg-blue-600/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/10">Active Pipeline</span>
                 </div>
 
-                {{-- Activity Badges (real data) --}}
+                {{-- Activity Badges (real data, colourful icon tiles) --}}
+                @php
+                    $pulseColors = [
+                        'blue'    => ['from-blue-500 to-blue-700',       'shadow-blue-500/30'],
+                        'indigo'  => ['from-indigo-500 to-indigo-700',   'shadow-indigo-500/30'],
+                        'emerald' => ['from-emerald-500 to-emerald-700', 'shadow-emerald-500/30'],
+                        'amber'   => ['from-amber-500 to-orange-600',     'shadow-amber-500/30'],
+                        'rose'    => ['from-rose-500 to-rose-700',        'shadow-rose-500/30'],
+                    ];
+                @endphp
                 <div class="grid grid-cols-3 sm:grid-cols-5 gap-3 pt-2">
                     @foreach($dailyPulse ?? [] as $pulse)
-                        <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
-                            <span class="text-lg font-bold text-white block">{{ $pulse['value'] }}</span>
-                            <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">{{ $pulse['label'] }}</span>
+                        @php $pc = $pulseColors[$pulse['color']] ?? $pulseColors['blue']; @endphp
+                        <div class="group relative text-center p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/15 hover:bg-white/[0.06] transition-all duration-300 overflow-hidden">
+                            {{-- soft glow blob --}}
+                            <div class="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-gradient-to-br {{ $pc[0] }} opacity-10 blur-xl group-hover:opacity-25 transition"></div>
+                            <div class="relative z-10 flex flex-col items-center gap-2">
+                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br {{ $pc[0] }} flex items-center justify-center shadow-lg {{ $pc[1] }} group-hover:scale-110 transition-transform duration-300">
+                                    <i class="fa-solid {{ $pulse['icon'] }} text-white text-sm"></i>
+                                </div>
+                                <span class="text-xl font-extrabold text-white block leading-none">{{ $pulse['value'] }}</span>
+                                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider leading-tight">{{ $pulse['label'] }}</span>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -432,29 +449,48 @@
                         <p class="text-[10px] text-slate-500 mt-0.5">Hiring funnel overview</p>
                     </div>
 
-                    <div class="space-y-2 pt-2">
-                        @php
-                            // Real funnel from controller; width is relative to the top (Submitted) stage
-                            $funnelData = $funnel ?? [];
-                            $funnelTop = max(1, collect($funnelData)->max('count') ?? 0);
-                            $funnelClasses = ['funnel-stage-1','funnel-stage-2','funnel-stage-3','funnel-stage-4','funnel-stage-5'];
-                        @endphp
+                    @php
+                        // Real funnel from controller; each band narrows toward the bottom
+                        $funnelData = $funnel ?? [];
+                        $funnelTop  = max(1, collect($funnelData)->max('count') ?? 0);
+                        // Width steps so the cone always tapers even when counts are equal/zero
+                        $funnelWidths = [100, 84, 68, 52, 36];
+                        $funnelGrad = [
+                            'linear-gradient(135deg,#3b82f6,#2563eb)', // Submitted  - blue
+                            'linear-gradient(135deg,#06b6d4,#0891b2)', // Shortlisted- cyan
+                            'linear-gradient(135deg,#10b981,#059669)', // Interview  - emerald
+                            'linear-gradient(135deg,#14b8a6,#0d9488)', // Offered    - teal
+                            'linear-gradient(135deg,#f59e0b,#ea580c)', // Joined     - amber/orange
+                        ];
+                    @endphp
 
+                    <div class="flex flex-col items-center pt-1 pb-1">
                         @foreach($funnelData as $i => $stg)
                             @php
-                                $w = $funnelTop > 0 ? round($stg['count'] / $funnelTop * 100) : 0;
-                                $w = max($w, 18); // keep label readable even at low counts
+                                $w = $funnelWidths[$i] ?? 30;
+                                $isLast = $i === count($funnelData) - 1;
                             @endphp
-                            <div class="flex items-center gap-4">
-                                <span class="text-xs text-slate-300 font-bold w-20 shrink-0">{{ $stg['label'] }}</span>
-                                <div class="flex-1 bg-slate-950/40 rounded-lg p-0.5">
-                                    <div class="funnel-stage {{ $funnelClasses[$i] ?? 'funnel-stage-5' }} py-2.5 rounded-md flex justify-end items-center px-4 transition-all duration-300"
-                                         style="width: {{ $w }}%">
-                                        <span class="text-xs font-black text-white text-right">{{ $stg['count'] }}</span>
-                                    </div>
-                                </div>
+                            <div class="relative flex items-center justify-center text-white font-bold transition-all duration-300 hover:brightness-110 group"
+                                 style="width: {{ $w }}%; min-width: 120px; height: 46px; background: {{ $funnelGrad[$i] ?? $funnelGrad[4] }};
+                                        clip-path: polygon(6% 0, 94% 0, 86% 100%, 14% 100%);
+                                        margin-top: {{ $i === 0 ? '0' : '-1px' }}; box-shadow: 0 4px 12px -4px rgba(0,0,0,.4);">
+                                <span class="text-[11px] uppercase tracking-wide font-extrabold drop-shadow">{{ $stg['label'] }}</span>
+                                {{-- count chip to the right of the band --}}
+                                <span class="absolute -right-2 translate-x-full text-sm font-black text-white whitespace-nowrap"
+                                      style="right: -0.5rem;">{{ $stg['count'] }}</span>
                             </div>
                         @endforeach
+                    </div>
+
+                    {{-- conversion footnote --}}
+                    @php
+                        $subVal = $funnelData[0]['count'] ?? 0;
+                        $joinVal = $funnelData[count($funnelData)-1]['count'] ?? 0;
+                        $conv = $subVal > 0 ? round($joinVal / $subVal * 100, 1) : 0;
+                    @endphp
+                    <div class="mt-2 text-center text-[10px] text-slate-400 font-semibold">
+                        Overall conversion: <span class="text-emerald-400 font-bold">{{ $conv }}%</span>
+                        ({{ $joinVal }} joined of {{ $subVal }} submitted)
                     </div>
                 </div>
 
