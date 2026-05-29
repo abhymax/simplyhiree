@@ -5,19 +5,19 @@
     /* Absolute exact color and layout replication from JPEG */
     nav.glass-nav { display: none !important; }
     footer { display: none !important; }
-    body { background-color: #1b196d !important; font-family: 'Outfit', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
+    body { background-color: #18125d !important; font-family: 'Outfit', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
     main { padding: 0 !important; }
 
     /* Scrollbar Styling */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1b196d; }
+    ::-webkit-scrollbar-track { background: #18125d; }
     ::-webkit-scrollbar-thumb { background: #111827; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #1f2937; }
 
     /* Left Sidebar - Exact Match */
     .custom-sidebar {
         width: 250px;
-        background-color: #1b196d;
+        background-color: #18125d;
         border-right: 1px solid rgba(59, 130, 246, 0.08);
         display: flex;
         flex-direction: column;
@@ -87,12 +87,12 @@
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-        background-color: #1b196d;
+        background-color: #18125d;
     }
 
     .custom-header {
         height: 70px;
-        background-color: rgba(27, 25, 109, 0.85);
+        background-color: rgba(24, 18, 93, 0.85);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid rgba(59, 130, 246, 0.08);
@@ -195,7 +195,7 @@
     }
 </style>
 
-<div class="min-h-screen bg-[#1b196d] text-[#f8fafc] flex" x-data="{ sidebarOpen: false }">
+<div class="min-h-screen bg-[#18125d] text-[#f8fafc] flex" x-data="{ sidebarOpen: false }">
 
     {{-- 1. LEFT SIDEBAR PANEL --}}
     <aside class="custom-sidebar" :class="sidebarOpen ? 'open' : ''">
