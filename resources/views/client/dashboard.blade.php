@@ -465,11 +465,11 @@
 
                     @php
                         $funnelData = array_values($funnel ?? []);
-                        // 5 data bands taper 100% -> 20%, then a tip triangle 20% -> point.
-                        // Each band's bottom inset == next band's top inset => seamless join.
-                        $edgeInset = [0, 8, 16, 24, 32, 40]; // 6 edges => 5 bands; last band bottom = 20% wide
-                        // Distinct accent colour per stage
-                        $funnelFill = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981'];
+                        // Gentle taper 100% -> 50% across the 5 bands (so every label stays
+                        // readable), then a triangle tip from 50% -> centre point.
+                        $edgeInset = [0, 5, 10, 15, 20, 25]; // 6 edges => 5 bands; last band bottom = 50% wide
+                        // Deeper accent colours -> stronger contrast for white text
+                        $funnelFill = ['#1d4ed8', '#0e7490', '#6d28d9', '#b45309', '#047857'];
                         $tipColor = end($funnelFill); // tip matches the final (Joined) stage
                     @endphp
 
@@ -483,16 +483,16 @@
                             <a href="{{ $stg['link'] ?? '#' }}"
                                class="relative flex items-center justify-center text-white transition hover:brightness-125 group"
                                title="{{ $stg['label'] }}: {{ $stg['count'] }} — click to view"
-                               style="height: 42px; background: {{ $funnelFill[$i] ?? '#10b981' }}; clip-path: {{ $clip }}; margin-top: {{ $i === 0 ? '0' : '-1px' }};">
+                               style="height: 40px; background: {{ $funnelFill[$i] ?? '#047857' }}; clip-path: {{ $clip }}; margin-top: {{ $i === 0 ? '0' : '-1px' }};">
                                 <span class="flex items-center gap-2 text-[11px] font-bold drop-shadow pointer-events-none">
-                                    <span class="uppercase tracking-wide opacity-90">{{ $stg['label'] }}</span>
+                                    <span class="uppercase tracking-wide">{{ $stg['label'] }}</span>
                                     <span class="text-sm font-black">{{ $stg['count'] }}</span>
                                 </span>
                             </a>
                         @endforeach
-                        {{-- Pointed tip: tapers from 20% wide to a centre point --}}
-                        <div style="height: 26px; margin-top: -1px; background: {{ $tipColor }};
-                                    clip-path: polygon(40% 0, 60% 0, 50% 100%);"></div>
+                        {{-- Pointed tip: tapers from the last band's 50% width to a centre point --}}
+                        <div style="height: 38px; margin-top: -1px; background: {{ $tipColor }};
+                                    clip-path: polygon(25% 0, 75% 0, 50% 100%);"></div>
                     </div>
 
                     {{-- conversion footnote --}}
