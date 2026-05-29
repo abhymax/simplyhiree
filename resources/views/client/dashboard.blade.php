@@ -378,66 +378,81 @@
                 </a>
             </div>
 
-            {{-- Row 2: Daily Pulse Submission Trend --}}
-            <div class="glass-card rounded-2xl p-6 sm:p-8 flex flex-col gap-6 w-full">
-                <div class="flex justify-between items-start">
+            {{-- Row 2: Daily Pulse + Submission Trend (compact) --}}
+            <div class="glass-card rounded-2xl p-5 flex flex-col gap-5 w-full">
+                <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
                             <i class="fa-solid fa-heart-pulse text-blue-400"></i> Daily Pulse
                         </h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Your activity summary for today</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">Your activity summary for today</p>
                     </div>
-                    <span class="text-xs font-bold bg-blue-600/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/10">Active Pipeline</span>
+                    <span class="text-[10px] font-bold bg-blue-600/15 text-blue-300 px-2.5 py-1 rounded-full border border-blue-500/20">Active Pipeline</span>
                 </div>
 
-                {{-- Activity Badges (real data, colourful icon tiles) --}}
+                {{-- Compact metric row: solid colour icon + value + label --}}
                 @php
-                    $pulseColors = [
-                        'blue'    => ['from-blue-500 to-blue-700',       'shadow-blue-500/30'],
-                        'indigo'  => ['from-indigo-500 to-indigo-700',   'shadow-indigo-500/30'],
-                        'emerald' => ['from-emerald-500 to-emerald-700', 'shadow-emerald-500/30'],
-                        'amber'   => ['from-amber-500 to-orange-600',     'shadow-amber-500/30'],
-                        'rose'    => ['from-rose-500 to-rose-700',        'shadow-rose-500/30'],
+                    $pulseSolid = [
+                        'blue'    => '#3b82f6',
+                        'indigo'  => '#6366f1',
+                        'emerald' => '#10b981',
+                        'amber'   => '#f59e0b',
+                        'rose'    => '#f43f5e',
                     ];
                 @endphp
-                <div class="grid grid-cols-3 sm:grid-cols-5 gap-3 pt-2">
+                <div class="grid grid-cols-5 gap-2.5">
                     @foreach($dailyPulse ?? [] as $pulse)
-                        @php $pc = $pulseColors[$pulse['color']] ?? $pulseColors['blue']; @endphp
-                        <div class="group relative text-center p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/15 hover:bg-white/[0.06] transition-all duration-300 overflow-hidden">
-                            {{-- soft glow blob --}}
-                            <div class="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-gradient-to-br {{ $pc[0] }} opacity-10 blur-xl group-hover:opacity-25 transition"></div>
-                            <div class="relative z-10 flex flex-col items-center gap-2">
-                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br {{ $pc[0] }} flex items-center justify-center shadow-lg {{ $pc[1] }} group-hover:scale-110 transition-transform duration-300">
-                                    <i class="fa-solid {{ $pulse['icon'] }} text-white text-sm"></i>
-                                </div>
-                                <span class="text-xl font-extrabold text-white block leading-none">{{ $pulse['value'] }}</span>
-                                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider leading-tight">{{ $pulse['label'] }}</span>
+                        @php $sc = $pulseSolid[$pulse['color']] ?? '#3b82f6'; @endphp
+                        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-black/20 border border-white/5 hover:border-white/15 transition">
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background: {{ $sc }};">
+                                <i class="fa-solid {{ $pulse['icon'] }} text-white text-xs"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-lg font-extrabold text-white leading-none">{{ $pulse['value'] }}</div>
+                                <div class="text-[9px] text-slate-400 uppercase font-bold tracking-wide leading-tight mt-1 truncate">{{ $pulse['label'] }}</div>
                             </div>
                         </div>
                     @endforeach
                 </div>
 
-                {{-- Submission Trend (real last-7-days data) --}}
+                {{-- Submission Trend — real SVG line chart --}}
                 @php
                     $trend = $submissionTrend ?? [];
+                    $n = max(count($trend), 1);
                     $trendMax = max(1, collect($trend)->max('count') ?? 0);
                     $trend7Total = collect($trend)->sum('count');
+                    // Build polyline points across a 600x100 viewBox (10px top/bottom padding)
+                    $pts = [];
+                    foreach (array_values($trend) as $idx => $pt) {
+                        $x = $n > 1 ? round($idx / ($n - 1) * 580 + 10, 1) : 300;
+                        $y = round(90 - ($pt['count'] / $trendMax) * 78, 1); // 90 baseline, 78 usable height
+                        $pts[] = ['x' => $x, 'y' => $y, 'c' => $pt['count'], 'l' => $pt['label']];
+                    }
+                    $linePath = collect($pts)->map(fn($p) => $p['x'].','.$p['y'])->implode(' ');
+                    $areaPath = '10,100 '.$linePath.' '.($pts[count($pts)-1]['x'] ?? 590).',100';
                 @endphp
                 <div>
-                    <div class="flex justify-between items-baseline mb-4">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Submission Trend (Last 7 Days)</p>
-                        <span class="text-xs font-bold text-blue-400">{{ $trend7Total }} this week</span>
+                    <div class="flex justify-between items-baseline mb-2">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Submission Trend · Last 7 Days</p>
+                        <span class="text-[10px] font-bold text-blue-400">{{ $trend7Total }} this week</span>
                     </div>
-                    <div class="h-36 bg-slate-950/40 rounded-xl border border-white/5 relative p-4 overflow-hidden">
-                        <div class="h-full flex items-end justify-between gap-2">
-                            @foreach($trend as $pt)
-                                @php $h = $trendMax > 0 ? round($pt['count'] / $trendMax * 100) : 0; @endphp
-                                <div class="flex-1 flex flex-col items-center justify-end h-full gap-1.5 group">
-                                    <span class="text-[10px] font-bold text-blue-300 opacity-0 group-hover:opacity-100 transition">{{ $pt['count'] }}</span>
-                                    <div class="w-full max-w-[34px] rounded-t-md bg-gradient-to-t from-blue-600/40 to-blue-400 transition-all duration-300 hover:from-blue-500 hover:to-cyan-300"
-                                         style="height: {{ max($h, 4) }}%" title="{{ $pt['count'] }} submission(s)"></div>
-                                    <span class="text-[9px] text-slate-500 font-bold uppercase whitespace-nowrap">{{ $pt['label'] }}</span>
-                                </div>
+                    <div class="h-28 bg-black/20 rounded-xl border border-white/5 relative px-2 pt-2">
+                        <svg class="w-full h-[78px]" viewBox="0 0 600 100" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"></stop>
+                                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"></stop>
+                                </linearGradient>
+                            </defs>
+                            <polygon points="{{ $areaPath }}" fill="url(#trendGrad)"></polygon>
+                            <polyline points="{{ $linePath }}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+                            @foreach($pts as $p)
+                                <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="3.5" fill="#0b1020" stroke="#60a5fa" stroke-width="2"></circle>
+                            @endforeach
+                        </svg>
+                        <div class="flex justify-between text-[9px] text-slate-500 font-bold uppercase px-1 mt-1">
+                            @foreach($pts as $p)
+                                <span class="{{ $p['l'] === 'Today' ? 'text-blue-300' : '' }}">{{ $p['l'] }}</span>
                             @endforeach
                         </div>
                     </div>
