@@ -223,9 +223,8 @@
                     ['icon' => 'fa-solid fa-video', 'label' => 'Interviews', 'route' => route('client.interviews.calendar'), 'active' => false],
                     ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.applications.index', ['joined_status' => 'Left']), 'active' => false],
                     ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => false],
-                    ['icon' => 'fa-solid fa-message', 'label' => 'Messages', 'route' => '#', 'active' => false, 'badge' => '12'],
                     ['icon' => 'fa-solid fa-gear', 'label' => 'Settings', 'route' => route('client.profile.company'), 'active' => false],
-                    ['icon' => 'fa-solid fa-circle-question', 'label' => 'Help & Support', 'route' => '#', 'active' => false],
+                    ['icon' => 'fa-solid fa-circle-question', 'label' => 'Help & Support', 'route' => route('support'), 'active' => false],
                 ];
             @endphp
 
@@ -272,11 +271,8 @@
         
         {{-- Header Bar --}}
         <header class="custom-header">
-            {{-- Search & Mobile Toggle --}}
+            {{-- Search --}}
             <div class="flex items-center gap-4 flex-1 max-w-xl">
-                <button class="lg:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition shrink-0" @click="sidebarOpen = true">
-                    <i class="fa-solid fa-bars text-xl"></i>
-                </button>
                 <div class="relative w-full hidden sm:block">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
                     <input type="text" placeholder="Search candidates, jobs, clients..."
@@ -292,12 +288,9 @@
                     <p class="text-xs font-semibold text-white mt-0.5">{{ date('l, M j, Y') }}</p>
                 </div>
 
-                {{-- Notification bell --}}
-                <div class="relative">
-                    <button class="p-2.5 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg border border-white/5 transition">
-                        <i class="fa-solid fa-bell"></i>
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
-                    </button>
+                {{-- Real notifications bell (Livewire) --}}
+                <div class="text-slate-300">
+                    <livewire:notifications-bell />
                 </div>
 
                 {{-- User Avatar --}}
@@ -400,17 +393,15 @@
                         'rose'    => '#f43f5e',
                     ];
                 @endphp
-                <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px;" class="max-[640px]:!grid-cols-2">
+                <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px;">
                     @foreach($dailyPulse ?? [] as $pulse)
                         @php $sc = $pulseSolid[$pulse['color']] ?? '#3b82f6'; @endphp
-                        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-black/20 border border-white/5 hover:border-white/15 transition">
-                            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background: {{ $sc }};">
-                                <i class="fa-solid {{ $pulse['icon'] }} text-white text-xs"></i>
+                        <div class="flex flex-col items-center text-center gap-1.5 px-2 py-3 rounded-xl bg-black/20 border border-white/5 hover:border-white/15 transition">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: {{ $sc }};">
+                                <i class="fa-solid {{ $pulse['icon'] }} text-white text-[11px]"></i>
                             </div>
-                            <div class="min-w-0">
-                                <div class="text-lg font-extrabold text-white leading-none">{{ $pulse['value'] }}</div>
-                                <div class="text-[9px] text-slate-400 uppercase font-bold tracking-wide leading-tight mt-1 truncate">{{ $pulse['label'] }}</div>
-                            </div>
+                            <div class="text-base font-extrabold text-white leading-none">{{ $pulse['value'] }}</div>
+                            <div class="text-[8px] text-slate-400 uppercase font-bold tracking-wide leading-tight">{{ $pulse['label'] }}</div>
                         </div>
                     @endforeach
                 </div>
@@ -883,108 +874,19 @@
 
             </div>
 
-            {{-- Row 7: Trust Cards --}}
-            <div class="pt-4">
-                <h3 class="text-xl font-bold text-white mb-6 text-center">Why Vendors Love SimplyHiree?</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    
-                    <div class="glass-card p-6 rounded-2xl text-center flex flex-col items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg"><i class="fa-solid fa-users-viewfinder"></i></div>
-                        <h4 class="font-bold text-sm text-white">More Business</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">Access to 1000+ active requirements and open vacancies.</p>
-                    </div>
-
-                    <div class="glass-card p-6 rounded-2xl text-center flex flex-col items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg"><i class="fa-solid fa-bolt"></i></div>
-                        <h4 class="font-bold text-sm text-white">Faster Placements</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">AI matching helps you submit the right candidates instantly.</p>
-                    </div>
-
-                    <div class="glass-card p-6 rounded-2xl text-center flex flex-col items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg"><i class="fa-solid fa-eye"></i></div>
-                        <h4 class="font-bold text-sm text-white">Timely Payments</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">Transparent earnings tracker and fast replacement guarantee protection.</p>
-                    </div>
-
-                    <div class="glass-card p-6 rounded-2xl text-center flex flex-col items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg"><i class="fa-solid fa-sliders"></i></div>
-                        <h4 class="font-bold text-sm text-white">Smart Tools</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">Unified workflow panel to manage resumes, rounds, and schedules.</p>
-                    </div>
-
-                </div>
-            </div>
-
-            {{-- Row 8: Mobile Promo Mock --}}
-            <div class="glass-card rounded-2xl p-8 flex flex-col lg:flex-row items-center justify-between gap-8 glow-indigo relative overflow-hidden">
-                <div class="absolute right-0 top-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
-
-                <div class="flex-1 max-w-lg">
-                    <h3 class="text-xl font-black text-white tracking-tight">Access Anywhere, Anytime</h3>
-                    <p class="text-slate-400 mt-2 leading-relaxed text-sm">Download the SimplyHiree App to post vacancies, monitor incoming candidate profiles, schedule video calls, and release invoice payouts instantly from your smartphone.</p>
-                    
-                    <div class="flex items-center gap-4 mt-6">
-                        <div class="w-14 h-14 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow-lg">
-                            <div class="w-full h-full border-2 border-slate-900 bg-slate-900 relative">
-                                <div class="absolute inset-1.5 border border-white flex flex-wrap gap-1 p-0.5 justify-between">
-                                    @for($i = 0; $i < 9; $i++)
-                                        <div class="w-2.5 h-2.5 bg-white rounded-[1px]"></div>
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-white uppercase tracking-wider">Scan to Download</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Compatible with iOS &amp; Android devices</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Mock Phones --}}
-                <div class="flex gap-4 shrink-0 overflow-hidden select-none pointer-events-none">
-                    <div class="w-32 h-56 bg-slate-950 border-4 border-slate-800 rounded-2xl relative shadow-2xl shrink-0 flex flex-col justify-between p-2">
-                        <div class="h-1 w-10 bg-slate-800 rounded-full mx-auto mb-1 shrink-0"></div>
-                        <div class="flex-1 rounded-lg bg-slate-900 p-2 flex flex-col gap-2 overflow-hidden">
-                            <div class="h-3 w-10 bg-blue-600/30 rounded-md"></div>
-                            <div class="grid grid-cols-2 gap-1.5 mt-1">
-                                <div class="h-6 bg-white/5 rounded p-1 flex flex-col justify-between"><div class="h-1 w-4 bg-slate-500 rounded"></div><div class="h-1.5 w-6 bg-white rounded"></div></div>
-                                <div class="h-6 bg-white/5 rounded p-1 flex flex-col justify-between"><div class="h-1 w-4 bg-slate-500 rounded"></div><div class="h-1.5 w-6 bg-white rounded"></div></div>
-                            </div>
-                            <div class="h-10 bg-white/5 rounded-lg mt-2 p-1.5 flex flex-col justify-between">
-                                <div class="h-1 w-8 bg-slate-500 rounded"></div>
-                                <div class="h-1.5 w-12 bg-blue-400 rounded"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="w-32 h-56 bg-slate-950 border-4 border-slate-800 rounded-2xl relative shadow-2xl shrink-0 flex flex-col justify-between p-2 hidden sm:flex">
-                        <div class="h-1 w-10 bg-slate-800 rounded-full mx-auto mb-1 shrink-0"></div>
-                        <div class="flex-1 rounded-lg bg-slate-900 p-2 flex flex-col gap-2 overflow-hidden">
-                            <div class="h-3 w-12 bg-emerald-600/30 rounded-md"></div>
-                            <div class="space-y-1.5 mt-1">
-                                <div class="h-5 bg-white/5 rounded p-1 flex items-center justify-between"><div class="h-1 w-10 bg-white rounded"></div><div class="h-2 bg-emerald-500/20 rounded"></div></div>
-                                <div class="h-5 bg-white/5 rounded p-1 flex items-center justify-between"><div class="h-1 w-8 bg-white rounded"></div><div class="h-2 bg-amber-500/20 rounded"></div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Row 9: Dynamically rendering statistics brand stats footer --}}
-            <div class="pt-4 flex flex-col md:flex-row items-center justify-between border-t border-white/5 gap-6 text-slate-500 text-xs">
+            {{-- Footer --}}
+            <div class="pt-4 flex flex-col md:flex-row items-center justify-between border-t border-white/5 gap-4 text-slate-500 text-xs">
                 <div class="flex items-center gap-3">
                     <div class="font-extrabold text-white text-sm">SimplyHiree</div>
                     <span class="text-slate-600">|</span>
                     <span>Your Growth. Our Platform.</span>
                 </div>
-                <div class="flex flex-wrap items-center gap-6 justify-center">
-                    <div class="flex items-center gap-1.5"><i class="fa-solid fa-users text-blue-500/40"></i> <strong class="text-slate-300 font-bold">1000+</strong> Active Clients</div>
-                    <div class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-500/40"></i> <strong class="text-slate-300 font-bold">50K+</strong> Placements</div>
-                    <div class="flex items-center gap-1.5"><i class="fa-solid fa-handshake text-purple-500/40"></i> <strong class="text-slate-300 font-bold">10K+</strong> Trusted Partners</div>
+                <div class="flex items-center gap-4">
+                    <a href="{{ route('support') }}" class="hover:text-white transition">Help &amp; Support</a>
+                    <a href="{{ route('client.jobs.create') }}" class="font-extrabold text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
+                        Post a New Job <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
-                <a href="{{ route('client.jobs.create') }}" class="font-extrabold text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
-                    Grow your business with SimplyHiree <i class="fa-solid fa-arrow-right"></i>
-                </a>
             </div>
 
         </main>
