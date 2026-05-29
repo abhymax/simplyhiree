@@ -771,7 +771,7 @@
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-xs text-slate-300 font-medium leading-relaxed">{{ $act['text'] }}</p>
-                                    <span class="text-[9px] text-slate-500 font-bold block mt-1 uppercase tracking-wide">{{ $act['time'] }}</span>
+                                    <span class="text-[9px] text-slate-500 font-bold block mt-1 capitalize tracking-wide">{{ $act['time'] }}</span>
                                 </div>
                             </div>
                         @endforeach
@@ -796,7 +796,7 @@
                         @endphp
 
                         @foreach($topJobs as $job)
-                            <a href="{{ route('client.jobs.index') }}" class="flex items-center justify-between gap-3 p-3 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition block cursor-pointer">
+                            <a href="{{ route('client.jobs.index') }}" class="flex items-center justify-between gap-3 p-3 bg-slate-950/50 border border-white/10 rounded-xl hover:bg-slate-950/70 hover:border-white/20 transition block cursor-pointer">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center text-sm"><i class="fa-solid fa-briefcase"></i></div>
                                     <div>
@@ -866,7 +866,7 @@
                     <div class="space-y-2 pt-1">
                         @foreach($perfBars as $bar)
                             <div class="space-y-1">
-                                <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
+                                <div class="flex justify-between text-[11px] font-bold text-slate-300">
                                     <span>{{ $bar['label'] }}</span>
                                     <span class="text-white">{{ $bar['value'] }}%</span>
                                 </div>
