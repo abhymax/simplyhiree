@@ -400,7 +400,7 @@
                         'rose'    => '#f43f5e',
                     ];
                 @endphp
-                <div class="grid grid-cols-5 gap-2.5">
+                <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px;" class="max-[640px]:!grid-cols-2">
                     @foreach($dailyPulse ?? [] as $pulse)
                         @php $sc = $pulseSolid[$pulse['color']] ?? '#3b82f6'; @endphp
                         <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-black/20 border border-white/5 hover:border-white/15 transition">
