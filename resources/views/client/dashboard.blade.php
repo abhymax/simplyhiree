@@ -5,7 +5,11 @@
     /* Absolute exact color and layout replication from JPEG */
     nav.glass-nav { display: none !important; }
     footer { display: none !important; }
-    body { background-color: #18125d !important; font-family: 'Outfit', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
+    html, body { background-color: #18125d !important; font-family: 'Outfit', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
+    /* Neutralise the app layout's light body class + any wrapper bg on this page */
+    body.bg-slate-50 { background-color: #18125d !important; }
+    .flex.flex-col.min-h-screen { background-color: #18125d !important; }
+    main { background-color: #18125d !important; }
     main { padding: 0 !important; }
 
     /* Scrollbar Styling */
