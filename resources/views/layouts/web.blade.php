@@ -23,6 +23,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
     </style>
 </head>
 
