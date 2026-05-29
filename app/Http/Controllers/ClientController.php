@@ -37,13 +37,17 @@ class ClientController extends Controller
         $client = Auth::user();
         
         $jobs = Job::where('user_id', $client->id)
-                    ->with(['educationLevel']) // Removed experienceLevel as we use min/max now
+                    ->with(['educationLevel', 'jobApplications'])
                     ->latest()
                     ->get();
         
         $totalJobs = $jobs->count();
         $activeJobs = $jobs->where('status', 'approved')->count();
-        $totalApplicants = JobApplication::whereIn('job_id', $jobs->pluck('id'))->count();
+        
+        // Count only approved candidate submissions
+        $totalApplicants = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+                                    ->where('status', 'Approved')
+                                    ->count();
         
         $totalHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
                                 ->whereIn('hiring_status', ['Selected', 'Joined'])
@@ -54,20 +58,38 @@ class ClientController extends Controller
             ->whereDate('interview_at', Carbon::today())
             ->count();
 
-        $dueInvoicesCount = 0;
-        $myHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
-            ->where('hiring_status', 'Selected')
-            ->where('payment_status', '!=', 'paid')
+        // Calculate actual outstanding and paid invoice amounts
+        $allBillingSnapshot = JobApplication::where('hiring_status', 'Selected')
             ->whereNotNull('joining_date')
-            ->with('job.user')
-            ->get();
+            ->whereHas('job', fn ($q) => $q->where('user_id', $client->id))
+            ->get()
+            ->map(fn ($a) => $a->billingSnapshot());
 
-        foreach ($myHires as $hire) {
-            $due = $hire->invoiceDueAt();
-            if ($due && ($due->isPast() || $due->isToday())) {
+        $totalOutstandingInvoices = $allBillingSnapshot->whereIn('status', ['Raised', 'Overdue', 'Due to Raise'])->sum('invoice_amount');
+        $totalPaidInvoices = $allBillingSnapshot->where('status', 'Paid')->sum('invoice_amount');
+
+        $dueInvoicesCount = 0;
+        foreach ($allBillingSnapshot as $bill) {
+            if ($bill['status'] === 'Overdue') {
                 $dueInvoicesCount++;
             }
         }
+
+        // Fetch actual recent candidate applications for recent activity feed
+        $recentApplications = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+            ->where('status', 'Approved')
+            ->with(['candidate', 'job'])
+            ->latest()
+            ->take(3)
+            ->get();
+
+        // Fetch actual upcoming scheduled interviews
+        $recentInterviews = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+            ->whereNotNull('interview_at')
+            ->with(['candidate', 'job'])
+            ->latest('interview_at')
+            ->take(2)
+            ->get();
 
         return view('client.dashboard', [
             'client' => $client,
@@ -77,7 +99,11 @@ class ClientController extends Controller
             'totalApplicants' => $totalApplicants,
             'totalHires' => $totalHires,
             'todayInterviews' => $todayInterviews,
-            'dueInvoicesCount' => $dueInvoicesCount
+            'dueInvoicesCount' => $dueInvoicesCount,
+            'totalOutstandingInvoices' => $totalOutstandingInvoices,
+            'totalPaidInvoices' => $totalPaidInvoices,
+            'recentApplications' => $recentApplications,
+            'recentInterviews' => $recentInterviews
         ]);
     }
 
@@ -87,7 +113,9 @@ class ClientController extends Controller
     {
         $clientId = Auth::id();
         $query = \App\Models\Job::where('user_id', $clientId)
-            ->withCount('jobApplications')
+            ->withCount(['jobApplications' => function($q) {
+                $q->where('status', 'Approved');
+            }])
             ->orderBy('created_at', 'desc');
 
         // Map UI status keys → actual DB values so the tabs filter correctly.
@@ -474,7 +502,8 @@ class ClientController extends Controller
         $query = JobApplication::with(['job.category', 'candidate.partner', 'candidateUser'])
             ->whereHas('job', function ($q) use ($clientId) {
                 $q->where('user_id', $clientId);
-            });
+            })
+            ->where('status', 'Approved');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -491,7 +520,12 @@ class ClientController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $status = $request->input('status');
+            if ($status === 'Approved') {
+                $query->where('status', 'Approved')->whereNull('hiring_status');
+            } else {
+                $query->where('hiring_status', $status);
+            }
         }
 
         // Filter by joining status (Joined / Left / Did Not Join)
@@ -677,6 +711,7 @@ class ClientController extends Controller
      */
     private function sendInterviewConfirmationToCandidate(JobApplication $application, bool $isUpdate = false, ?string $extraNote = null, ?int $roundNumber = null): void
     {
+        $application->loadMissing('candidate.partner');
         $whatsapp = app(AiSensyWhatsAppService::class);
         $cand     = $application->candidate;
         $direct   = $application->candidateUser;
@@ -685,7 +720,9 @@ class ClientController extends Controller
             ? trim(($cand->first_name ?? '') . ' ' . ($cand->last_name ?? ''))
             : ($direct?->name ?? 'Candidate');
         $email = $cand?->email ?? $direct?->email ?? null;
-        $phone = $cand?->phone ?? optional($direct?->profile)->phone_number ?? null;
+        $phone = $whatsapp->normalizeIndianPhone($cand?->phone_number ?? optional($direct?->profile)->phone_number ?? null);
+
+        $partnerName = ($cand && $cand->partner) ? $cand->partner->name : null;
 
         $job  = $application->job;
         $company = $job?->company_name ?: (optional($job?->user)->name ?? 'the company');
@@ -712,6 +749,9 @@ class ClientController extends Controller
             $body .= "🔗 Join: {$application->meeting_link}\n";
         } elseif ($application->interview_location) {
             $body .= "📍 Where: {$application->interview_location}\n";
+        }
+        if ($partnerName) {
+            $body .= "📞 Partner Coordinator: {$partnerName}\n";
         }
         if ($noteText) {
             $body .= "\n📝 Note: {$noteText}\n";
@@ -751,6 +791,7 @@ class ClientController extends Controller
                     'location'     => $application->interview_location,
                     'notes'        => $noteText,
                     'isUpdate'     => $isUpdate,
+                    'partnerName'  => $partnerName,
                 ], function ($m) use ($email, $name, $verb, $roundNumber) {
                     $subject = '[SimplyHiree] Your interview is ' . $verb;
                     if ($roundNumber) $subject = "[SimplyHiree] Round {$roundNumber} interview is {$verb}";
@@ -1050,6 +1091,8 @@ class ClientController extends Controller
         $this->stampResolvedInvoice($application->fresh(['job.user']));
 
         $this->notifyAdminAndPartner(new CandidateSelected($application), $application);
+        $this->sendSelectionConfirmationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']), false);
+
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Candidate Selected! Joining date has been set.');
     }
 
@@ -1080,6 +1123,8 @@ class ClientController extends Controller
         ]);
 
         $this->stampResolvedInvoice($application->fresh(['job.user']));
+        $this->notifyAdminAndPartner(new CandidateSelected($application, true), $application);
+        $this->sendSelectionConfirmationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']), true);
 
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Selection details updated successfully!');
     }
@@ -1114,6 +1159,7 @@ class ClientController extends Controller
         }
         $application->update(['joined_status' => 'Joined']);
         $this->notifyAdminAndPartner(new CandidateJoined($application), $application);
+        $this->sendJoinedNotificationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']));
 
         // Redirect the client to the rating page if the candidate came via a partner
         $partnerId = $application->candidate?->partner_id;
@@ -1323,5 +1369,247 @@ class ClientController extends Controller
             $partner = $application->candidate->partner;
             $partner->notify($notification);
         }
+    }
+
+    private function sendSelectionConfirmationToCandidate(JobApplication $application, bool $isUpdate = false): void
+    {
+        $application->loadMissing('candidate.partner');
+        $whatsapp = app(AiSensyWhatsAppService::class);
+        $cand     = $application->candidate;
+        $direct   = $application->candidateUser;
+
+        $name = $cand
+            ? trim(($cand->first_name ?? '') . ' ' . ($cand->last_name ?? ''))
+            : ($direct?->name ?? 'Candidate');
+        $email = $cand?->email ?? $direct?->email ?? null;
+        $phone = $whatsapp->normalizeIndianPhone($cand?->phone_number ?? optional($direct?->profile)->phone_number ?? null);
+
+        $partnerName = ($cand && $cand->partner) ? $cand->partner->name : null;
+
+        $job  = $application->job;
+        $company = $job?->company_name ?: (optional($job?->user)->name ?? 'the company');
+        if ($job && $job->is_company_confidential) $company = 'Confidential (details on call)';
+
+        $joiningDate = $application->joining_date ? $application->joining_date->format('F d, Y') : 'TBD';
+        $ctc = $application->final_ctc ? '₹' . number_format($application->final_ctc, 0) : 'As per offer letter';
+
+        $body  = ($isUpdate
+            ? "Hi {$name}, your selection details for the " . ($job?->title ?? 'role') . " role at {$company} have been revised."
+            : "Congratulations {$name}! You have been selected for the " . ($job?->title ?? 'role') . " role at {$company}.") . "\n\n";
+        $body .= "🏢 Company: {$company}\n";
+        $body .= "💼 Role: " . ($job?->title ?? '—') . "\n";
+        $body .= "📅 Joining Date: {$joiningDate}\n";
+        $body .= "💰 CTC: {$ctc}\n";
+        if ($partnerName) {
+            $body .= "📞 Partner Coordinator: {$partnerName}\n";
+        }
+        if ($application->client_notes) {
+            $body .= "\n📝 Note: {$application->client_notes}\n";
+        }
+        $body .= "\nWe look forward to having you on board!\n— SimplyHiree";
+
+        // --- WhatsApp via AiSensy ---
+        if ($phone) {
+            try {
+                $details = "Role: " . ($job?->title ?? '—') . " | Company: {$company} | Joining Date: {$joiningDate} | CTC: {$ctc}";
+                if ($partnerName) {
+                    $details .= " | Partner: {$partnerName} (Please contact them for onboarding support)";
+                }
+                if ($application->client_notes) {
+                    $notesClean = str_replace(["\r", "\n", "\t"], " ", $application->client_notes);
+                    $notesClean = preg_replace('/\s+/', ' ', $notesClean);
+                    $details .= " | Note: {$notesClean}";
+                }
+
+                $whatsapp->sendEventAlert(
+                    $phone,
+                    'candidate.selected',
+                    'Selection ' . ($isUpdate ? 'Revised' : 'Confirmed'),
+                    $body,
+                    ['template_params' => [
+                        $isUpdate ? 'Revised Offer Details' : 'Candidate Selection',
+                        $details,
+                        now()->format('F d, Y, h:i A')
+                    ]]
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Selection WA confirmation failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
+
+        // --- Email ---
+        if ($email) {
+            try {
+                Mail::send('emails.candidate_selection', [
+                    'name'         => $name,
+                    'company'      => $company,
+                    'role'         => $job?->title ?? '—',
+                    'joining_date' => $joiningDate,
+                    'ctc'          => $ctc,
+                    'notes'        => $application->client_notes,
+                    'isUpdate'     => $isUpdate,
+                    'partnerName'  => $partnerName,
+                ], function ($m) use ($email, $name, $isUpdate) {
+                    $subject = $isUpdate ? '[SimplyHiree] Revised Job Offer Selection' : '[SimplyHiree] Congratulations! You are Selected';
+                    $m->to($email, $name)->subject($subject);
+                });
+            } catch (\Throwable $e) {
+                \Log::warning('Selection email confirmation failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function sendJoinedNotificationToCandidate(JobApplication $application): void
+    {
+        $application->loadMissing('candidate.partner');
+        $whatsapp = app(AiSensyWhatsAppService::class);
+        $cand     = $application->candidate;
+        $direct   = $application->candidateUser;
+
+        $name = $cand
+            ? trim(($cand->first_name ?? '') . ' ' . ($cand->last_name ?? ''))
+            : ($direct?->name ?? 'Candidate');
+        $email = $cand?->email ?? $direct?->email ?? null;
+        $phone = $whatsapp->normalizeIndianPhone($cand?->phone_number ?? optional($direct?->profile)->phone_number ?? null);
+
+        $partnerName = ($cand && $cand->partner) ? $cand->partner->name : null;
+
+        $job  = $application->job;
+        $company = $job?->company_name ?: (optional($job?->user)->name ?? 'the company');
+        if ($job && $job->is_company_confidential) $company = 'Confidential (details on call)';
+
+        $joiningDate = $application->joining_date ? $application->joining_date->format('F d, Y') : 'today';
+        $ctc = $application->final_ctc ? '₹' . number_format($application->final_ctc, 0) : 'As per offer letter';
+
+        $body  = "Welcome aboard {$name}! We are excited to confirm that you have officially joined {$company} for the " . ($job?->title ?? 'role') . " role.\n\n";
+        $body .= "🏢 Company: {$company}\n";
+        $body .= "💼 Role: " . ($job?->title ?? '—') . "\n";
+        $body .= "📅 Joining Date: {$joiningDate}\n";
+        $body .= "💰 CTC: {$ctc}\n";
+        $body .= "\nCongratulations and wishing you a successful career ahead!\n— SimplyHiree";
+
+        // --- WhatsApp via AiSensy ---
+        if ($phone) {
+            try {
+                $details = "Role: " . ($job?->title ?? '—') . " | Company: {$company} | Joining Date: {$joiningDate} | CTC: {$ctc}";
+                if ($partnerName) {
+                    $details .= " | Partner: {$partnerName} (Please contact them for onboarding support)";
+                }
+
+                $whatsapp->sendEventAlert(
+                    $phone,
+                    'candidate.selected',
+                    'Welcome Aboard!',
+                    $body,
+                    ['template_params' => [
+                        'Welcome Aboard!',
+                        $details,
+                        now()->format('F d, Y, h:i A')
+                    ]]
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Joined WA confirmation failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
+
+        // --- Email ---
+        if ($email) {
+            try {
+                Mail::send('emails.candidate_joined', [
+                    'name'         => $name,
+                    'company'      => $company,
+                    'role'         => $job?->title ?? '—',
+                    'joining_date' => $joiningDate,
+                    'ctc'          => $ctc,
+                    'partnerName'  => $partnerName,
+                ], function ($m) use ($email, $name) {
+                    $m->to($email, $name)->subject('[SimplyHiree] Welcome to the Team!');
+                });
+            } catch (\Throwable $e) {
+                \Log::warning('Joined email confirmation failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
+    }
+
+    public function smokeTestJoining()
+    {
+        $whatsapp = app(AiSensyWhatsAppService::class);
+
+        $name = 'Smoke Test Candidate';
+        $email = 'abhymax@gmail.com';
+        $phone = $whatsapp->normalizeIndianPhone('9123732174');
+
+        $company = 'Smoke Test Corp';
+        $jobTitle = 'Senior Software Engineer';
+        $joiningDate = now()->addDays(7)->format('F d, Y');
+        $ctc = '₹1,500,000';
+        $partnerName = 'Smoke Test Partner';
+
+        $body = "Congratulations {$name}! You have been selected for the {$jobTitle} role at {$company}.\n\n";
+        $body .= "🏢 Company: {$company}\n";
+        $body .= "💼 Role: {$jobTitle}\n";
+        $body .= "📅 Joining Date: {$joiningDate}\n";
+        $body .= "💰 CTC: {$ctc}\n";
+        $body .= "\nWe look forward to having you on board!\n— SimplyHiree";
+
+        $waSent = false;
+        $emailSent = false;
+        $waError = null;
+        $emailError = null;
+
+        // --- WhatsApp via AiSensy ---
+        try {
+            $details = "Role: {$jobTitle} | Company: {$company} | Joining Date: {$joiningDate} | CTC: {$ctc} | Partner: {$partnerName} (Please contact them for onboarding support)";
+
+            $res = $whatsapp->sendEventAlert(
+                $phone,
+                'candidate.selected',
+                'Selection Confirmed (Smoke Test)',
+                $body,
+                ['template_params' => [
+                    'Candidate Selection (Smoke Test)',
+                    $details,
+                    now()->format('F d, Y, h:i A')
+                ]]
+            );
+            $waSent = $res['ok'] ?? false;
+            if (!$waSent) $waError = $res['error'] ?? 'Unknown Error';
+        } catch (\Throwable $e) {
+            $waError = $e->getMessage();
+        }
+
+        // --- Email ---
+        try {
+            Mail::send('emails.candidate_selection', [
+                'name'         => $name,
+                'company'      => $company,
+                'role'         => $jobTitle,
+                'joining_date' => $joiningDate,
+                'ctc'          => $ctc,
+                'notes'        => 'This is a smoke test email confirmation.',
+                'isUpdate'     => false,
+                'partnerName'  => $partnerName,
+            ], function ($m) use ($email, $name) {
+                $m->to($email, $name)->subject('[SimplyHiree] [Smoke Test] Congratulations! You are Selected');
+            });
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            $emailError = $e->getMessage();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Smoke test complete.',
+            'whatsapp' => [
+                'recipient' => $phone,
+                'sent' => $waSent,
+                'error' => $waError,
+            ],
+            'email' => [
+                'recipient' => $email,
+                'sent' => $emailSent,
+                'error' => $emailError,
+            ]
+        ]);
     }
 }

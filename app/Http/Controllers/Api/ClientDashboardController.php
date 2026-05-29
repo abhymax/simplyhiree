@@ -30,7 +30,7 @@ class ClientDashboardController extends Controller
             ->where('status', 'approved')
             ->count();
 
-        $applicationsBase = JobApplication::query()->whereIn('job_id', $jobIds);
+        $applicationsBase = JobApplication::query()->whereIn('job_id', $jobIds)->where('status', 'Approved');
         $totalApplicants = (int) (clone $applicationsBase)->count();
         $todayInterviews = (int) (clone $applicationsBase)
             ->whereDate('interview_at', Carbon::today())

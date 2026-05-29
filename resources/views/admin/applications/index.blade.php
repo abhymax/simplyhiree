@@ -1,8 +1,13 @@
 <x-app-layout>
     <style>
         /* Force white calendar icon on date inputs */
-        .date-white::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); cursor: pointer; }
-        .date-white { color-scheme: dark; }
+        .date-white::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1.5) !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
+            display: block !important;
+        }
+        .date-white { color-scheme: dark !important; }
         /* Hide the default disclosure triangle on the Mark Selected details */
         details.admin-select-details > summary::-webkit-details-marker { display: none; }
         details.admin-select-details > summary { list-style: none; }

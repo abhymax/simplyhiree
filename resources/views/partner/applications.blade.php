@@ -19,8 +19,19 @@
                 <a href="{{ route('partner.dashboard') }}" class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase tracking-wider mb-2">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
                 </a>
-                <h1 class="text-4xl font-extrabold tracking-tight">All Applications</h1>
-                <p class="text-blue-100 mt-1">Track your submitted candidates pipeline</p>
+                @if(request('interview_today'))
+                    <h1 class="text-4xl font-extrabold tracking-tight">Today's Scheduled Interviews</h1>
+                    <p class="text-blue-100 mt-1">Candidates with interviews scheduled for today ({{ date('F j, Y') }})</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-200 text-xs font-semibold">
+                            <i class="fa-solid fa-calendar-day"></i> Interviews Today
+                            <a href="{{ route('partner.applications') }}" class="hover:text-white text-blue-400 font-bold ml-1" title="Clear Filter">&times;</a>
+                        </span>
+                    </div>
+                @else
+                    <h1 class="text-4xl font-extrabold tracking-tight">All Applications</h1>
+                    <p class="text-blue-100 mt-1">Track your submitted candidates pipeline</p>
+                @endif
             </div>
             <div class="mt-4 md:mt-0 bg-blue-600 border border-blue-400 rounded-2xl px-5 py-3 shadow-xl">
                 <div class="text-blue-100 text-xs font-bold uppercase">Total Count</div>

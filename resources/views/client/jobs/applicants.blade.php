@@ -174,7 +174,13 @@
                                     @endif
 
                                     {{-- Action buttons based on latest round state --}}
-                                    @if(empty($app->joined_status) && $app->hiring_status !== 'Client Rejected')
+                                    @if($app->hiring_status == 'Selected' && empty($app->joined_status))
+                                        <div class="flex justify-end gap-2">
+                                            <a href="{{ route('client.applications.select.edit', $app) }}" class="fx-btn bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Edit Join</a>
+                                            <form action="{{ route('client.applications.markJoined', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Joined</button></form>
+                                            <form action="{{ route('client.applications.markNotJoined', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg">DID NOT JOINED</button></form>
+                                        </div>
+                                    @elseif(empty($app->joined_status) && $app->hiring_status !== 'Client Rejected')
                                         <div class="flex flex-wrap justify-end gap-2">
                                             @if($latestRound && $latestRound->status === 'Scheduled')
                                                 @if($latestRound->meeting_link)
@@ -205,12 +211,6 @@
                                             <form action="{{ route('client.applications.reject', $app) }}" method="POST" onsubmit="return confirm('Reject this candidate?');">@csrf
                                                 <button type="submit" class="fx-btn bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Reject</button>
                                             </form>
-                                        </div>
-                                    @elseif($app->hiring_status == 'Selected' && empty($app->joined_status))
-                                        <div class="flex justify-end gap-2">
-                                            <a href="{{ route('client.applications.select.edit', $app) }}" class="fx-btn bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Edit Join</a>
-                                            <form action="{{ route('client.applications.markJoined', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg">Joined</button></form>
-                                            <form action="{{ route('client.applications.markNotJoined', $app) }}" method="POST">@csrf <button type="submit" class="fx-btn bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg">DNJ</button></form>
                                         </div>
                                     @elseif($app->joined_status == 'Joined')
                                         <a href="{{ route('client.applications.showLeftForm', $app) }}" class="fx-btn inline-block bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 px-3 rounded-lg">Mark Left</a>

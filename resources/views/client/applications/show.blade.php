@@ -122,6 +122,55 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- Immediate Actions Section --}}
+                <div class="mt-6 pt-5 border-t border-white/10">
+                    <h4 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3"><i class="fa-solid fa-bolt mr-1"></i> Immediate Actions</h4>
+                    <div class="flex flex-wrap gap-3">
+                        @if(empty($application->joined_status) && $application->hiring_status !== 'Client Rejected')
+                            @if($application->hiring_status == 'Selected')
+                                <a href="{{ route('client.applications.select.edit', $application) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg transition">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit Join / CTC
+                                </a>
+                                <form action="{{ route('client.applications.markJoined', $application) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg transition">
+                                        <i class="fa-solid fa-check"></i> Joined
+                                    </button>
+                                </form>
+                                <form action="{{ route('client.applications.markNotJoined', $application) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg transition">
+                                        <i class="fa-solid fa-xmark"></i> DID NOT JOINED
+                                    </button>
+                                </form>
+                            @else
+                                @php
+                                    $rounds = $application->interviewRounds;
+                                    $latestRound = $rounds->last();
+                                    $canSelectNow = $latestRound && $latestRound->feedback_submitted_at && !in_array($latestRound->recommendation, ['Reject']);
+                                @endphp
+                                @if($canSelectNow)
+                                    <a href="{{ route('client.applications.select.show', $application) }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg transition">
+                                        <i class="fa-solid fa-user-check"></i> Select Candidate
+                                    </a>
+                                @endif
+                                <form action="{{ route('client.applications.reject', $application) }}" method="POST" onsubmit="return confirm('Reject this candidate?');">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg transition">
+                                        <i class="fa-solid fa-user-minus"></i> Reject Candidate
+                                    </button>
+                                </form>
+                            @endif
+                        @elseif($application->joined_status == 'Joined')
+                            <a href="{{ route('client.applications.showLeftForm', $application) }}" class="inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg transition">
+                                <i class="fa-solid fa-door-open"></i> Mark Left / Exited
+                            </a>
+                        @else
+                            <span class="text-slate-400 text-xs italic">No actions available for the current state.</span>
+                        @endif
+                    </div>
+                </div>
             </div>
 
             {{-- Interview Rounds Timeline --}}

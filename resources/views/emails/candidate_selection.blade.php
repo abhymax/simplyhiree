@@ -2,33 +2,29 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Interview Confirmation — SimplyHiree</title>
+    <title>Selection Confirmation — SimplyHiree</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding: 40px 0; }
         .card { max-width: 600px; background: #ffffff; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); }
-        .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 32px 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); padding: 32px 40px; text-align: center; }
         .logo { font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
-        .logo span { color: #93c5fd; }
-        .tagline { color: #bfdbfe; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin-top: 4px; }
+        .logo span { color: #60a5fa; }
+        .tagline { color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin-top: 4px; }
         .content { padding: 40px; }
         h1 { color: #1e3a8a; font-size: 22px; font-weight: 800; margin: 0 0 16px 0; letter-spacing: -0.01em; }
         p { font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 16px 0; }
         .details-box { background: #f0f7ff; border: 1px solid #e0f2fe; padding: 24px; border-radius: 12px; margin: 28px 0; }
-        .detail-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #2563eb; font-weight: 800; margin-bottom: 12px; }
+        .detail-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #0284c7; font-weight: 800; margin-bottom: 12px; }
         .detail-row { display: table; width: 100%; margin-bottom: 10px; font-size: 15px; }
         .detail-row:last-child { margin-bottom: 0; }
         .detail-label { display: table-cell; font-weight: 700; width: 120px; color: #1e3a8a; }
         .detail-value { display: table-cell; color: #334155; }
-        .btn-container { text-align: center; margin: 24px 0; }
-        .btn { background: #2563eb; color: #ffffff !important; padding: 12px 30px; border-radius: 10px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); }
+        .alert-box { background: #fcf8e3; border-left: 4px solid #f0ad4e; padding: 16px; border-radius: 8px; margin: 24px 0; font-size: 14px; line-height: 1.5; color: #8a6d3b; }
         .partner-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin: 28px 0; }
         .partner-title { font-size: 14px; font-weight: 700; color: #1e3a8a; margin-bottom: 4px; }
         .partner-text { font-size: 14px; color: #475569; margin: 0; }
-        .tips-list { background: #f8fafc; border: 1px solid #f1f5f9; padding: 20px; border-radius: 10px; margin: 24px 0; }
-        .tips-title { font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.05em; }
-        .tips-list ul { margin: 0; padding-left: 20px; font-size: 14px; color: #64748b; line-height: 1.6; }
         .footer { background: #f1f5f9; padding: 24px 40px; font-size: 12px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; }
         .footer a { color: #2563eb; text-decoration: none; font-weight: 600; }
     </style>
@@ -44,13 +40,13 @@
 
             <!-- Content Area -->
             <div class="content">
-                <h1>{{ $isUpdate ? 'Your Interview Time Was Updated' : 'Your Interview Is Scheduled' }}</h1>
+                <h1>{{ $isUpdate ? 'Revised Selection Details' : 'Congratulations! You are Selected' }}</h1>
                 <p>Hi {{ $name }},</p>
-                <p>{{ $isUpdate ? 'Your interview details have been updated by the employer. Please find the latest schedule below:' : 'We are pleased to inform you that your interview has been scheduled! Please review the details below:' }}</p>
+                <p>{{ $isUpdate ? 'Your selection details for the position have been updated by the employer. Please find the revised details below:' : 'We are thrilled to inform you that you have been selected for the position! Below are the details of your selection:' }}</p>
                 
-                <!-- Interview Details -->
+                <!-- Selection Details -->
                 <div class="details-box">
-                    <div class="detail-title">Interview Details</div>
+                    <div class="detail-title">Offer Details</div>
                     <div class="detail-row">
                         <span class="detail-label">Company:</span>
                         <span class="detail-value">{{ $company }}</span>
@@ -60,31 +56,18 @@
                         <span class="detail-value">{{ $role }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">When:</span>
-                        <span class="detail-value" style="font-weight: 700; color: #1e3a8a;">{{ $time }}</span>
+                        <span class="detail-label">Joining Date:</span>
+                        <span class="detail-value">{{ $joining_date }}</span>
                     </div>
-                    @if(!empty($meeting_link))
-                        <div class="detail-row">
-                            <span class="detail-label">Join Link:</span>
-                            <span class="detail-value"><a href="{{ $meeting_link }}" style="color: #2563eb; word-break: break-all; text-decoration: none; font-weight: 600;">{{ $meeting_link }}</a></span>
-                        </div>
-                    @elseif(!empty($location))
-                        <div class="detail-row">
-                            <span class="detail-label">Where:</span>
-                            <span class="detail-value">{{ $location }}</span>
-                        </div>
-                    @endif
+                    <div class="detail-row">
+                        <span class="detail-label">CTC:</span>
+                        <span class="detail-value">{{ $ctc }}</span>
+                    </div>
                 </div>
 
                 @if(!empty($notes))
-                    <p style="font-weight: 700; margin-bottom: 8px; color: #1e293b;">Note from Recruiter:</p>
+                    <p style="font-weight: 700; margin-bottom: 8px; color: #1e293b;">Note from Employer:</p>
                     <p style="font-style: italic; background: #f8fafc; padding: 14px; border-radius: 8px; border-left: 4px solid #cbd5e1; margin: 0 0 24px 0; color: #475569;">"{{ $notes }}"</p>
-                @endif
-
-                @if(!empty($meeting_link))
-                    <div class="btn-container">
-                        <a href="{{ $meeting_link }}" class="btn">Join Interview Room →</a>
-                    </div>
                 @endif
 
                 <!-- Sourcing Partner Callout -->
@@ -92,22 +75,13 @@
                     <div class="partner-box">
                         <div class="partner-title">Sourcing Partner Coordinator</div>
                         <p class="partner-text">
-                            For interview preparation support or documents check, please get in touch with your partner coordinator <strong>{{ $partnerName }}</strong> directly.
+                            This candidate was sourced by our partner <strong>{{ $partnerName }}</strong>. For further onboarding instructions, documents submission, or next steps, please contact <strong>{{ $partnerName }}</strong> directly.
                         </p>
                     </div>
                 @endif
 
-                <!-- Interview Tips -->
-                <div class="tips-list">
-                    <div class="tips-title">Preparation Checklist</div>
-                    <ul>
-                        <li>Log in 5 minutes early to test your audio & video connection.</li>
-                        <li>Keep a copy of your CV/resume handy for references.</li>
-                        <li>Ensure you are in a quiet, well-lit environment with stable internet.</li>
-                    </ul>
-                </div>
-
-                <p>We wish you the very best of luck in your interview!</p>
+                <p>Please review your SimplyHiree account dashboard for further joining instructions and to coordinate your onboarding.</p>
+                <p>We wish you the very best of luck in your new career journey!</p>
                 
                 <p style="margin: 28px 0 0 0; color: #1e3a8a;">
                     Best regards,<br>

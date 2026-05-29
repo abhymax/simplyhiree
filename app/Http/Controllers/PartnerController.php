@@ -224,6 +224,11 @@ class PartnerController extends Controller
         $query = JobApplication::whereHas('candidate', $baseScope)
                     ->with(['job', 'candidate']);
 
+        // Filter: Interviews Today
+        if ($request->has('interview_today')) {
+            $query->whereDate('interview_at', Carbon::today());
+        }
+
         // Search by candidate name/email
         if ($search = $request->input('search')) {
             $query->whereHas('candidate', function ($q) use ($search) {

@@ -3,7 +3,7 @@
     <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
     <div class="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
 
-    <div class="relative z-10 max-w-7xl mx-auto" x-data="{ filtersOpen: false }">
+    <div class="relative z-10 max-w-7xl mx-auto">
 
         {{-- Header --}}
         <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 border-b border-white/10 pb-5">
@@ -46,11 +46,10 @@
         </div>
 
         <style>
-            /* Filter inputs — comfortable height, tight max-width */
+            /* Filter inputs — comfortable height */
             .cand-fld {
                 height: 38px !important;
                 line-height: 1.2 !important;
-                max-width: 260px;
                 width: 100%;
                 padding: 0.4rem 0.7rem !important;
                 font-size: 0.8125rem !important;
@@ -63,17 +62,6 @@
             }
             .cand-fld:focus { outline: none; border-color: #22d3ee !important; box-shadow: 0 0 0 1px rgba(34,211,238,0.4); }
             .cand-fld::placeholder { color: rgba(203,213,225,0.45); }
-
-            /* GLOBAL rule for the date picker icon — applies to any date input
-               on the page, not just .cand-fld. Specificity-strong with
-               !important so nothing can override it. */
-            input[type="date"] { color-scheme: dark !important; }
-            input[type="date"]::-webkit-calendar-picker-indicator {
-                filter: invert(1) !important;
-                opacity: 0.85 !important;
-                cursor: pointer !important;
-            }
-            input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1 !important; }
 
             /* Custom checkbox: cyan-tick on dark bg */
             .cand-cb {
@@ -96,12 +84,6 @@
                 font-weight: 900;
                 top: -3px; left: 1.5px;
             }
-
-            /* Section spacing inside the filter panel */
-            .cand-section { display: flex; flex-direction: column; gap: 10px; }
-            .cand-section > label { display: block; font-size: 10px; font-weight: 700;
-                                    text-transform: uppercase; letter-spacing: 0.06em;
-                                    color: #67e8f9; margin-bottom: 2px; }
         </style>
         @php
             $fld    = 'cand-fld';
@@ -115,141 +97,82 @@
                 'rejected'  => ['Rejected',            'fa-xmark',        'rose'],
             ];
             $hsCurrent = request('hiring_workflow');
-            $hsColor = [
-                'amber'   => 'bg-amber-500/25 text-amber-100 border-amber-400/50',
-                'sky'     => 'bg-sky-500/25 text-sky-100 border-sky-400/50',
-                'emerald' => 'bg-emerald-500/25 text-emerald-100 border-emerald-400/50',
-                'indigo'  => 'bg-indigo-500/25 text-indigo-100 border-indigo-400/50',
-                'cyan'    => 'bg-cyan-500/25 text-cyan-100 border-cyan-400/50',
-                'rose'    => 'bg-rose-500/25 text-rose-100 border-rose-400/50',
-            ];
         @endphp
 
-        {{-- Hiring workflow pill row --}}
-        <form method="GET" action="{{ route('admin.candidates.index') }}" id="quick-filter-form" class="mb-4">
-            @foreach(request()->except(['hiring_workflow', 'page']) as $k => $v)
-                @if(is_array($v))
-                    @foreach($v as $vv)<input type="hidden" name="{{ $k }}[]" value="{{ $vv }}">@endforeach
-                @else
-                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                @endif
-            @endforeach
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs uppercase tracking-wider text-slate-400 font-bold mr-1">Pipeline:</span>
-                <a href="{{ route('admin.candidates.index', request()->except(['hiring_workflow', 'page'])) }}"
-                   class="px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap transition {{ !$hsCurrent ? 'bg-cyan-500/25 text-cyan-100 border-cyan-400/50' : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10' }}">
-                    All
-                </a>
-                @foreach($hsList as $k => [$label, $icon, $color])
-                    <a href="{{ route('admin.candidates.index', array_merge(request()->except('page'), ['hiring_workflow' => $k])) }}"
-                       class="px-3 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap transition {{ $hsCurrent === $k ? $hsColor[$color] : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10 hover:text-white' }}">
-                        <i class="fa-solid {{ $icon }} mr-1"></i>{{ $label }}
+        {{-- Unified Filter Bar --}}
+        <form method="GET" action="{{ route('admin.candidates.index') }}" class="mb-6 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-2xl p-5 shadow-xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                
+                {{-- Search (Name, Email, Mobile) --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Name / Email / Mobile</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-xs pointer-events-none"></i>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..."
+                               style="padding-left: 2.25rem !important;"
+                               class="cand-fld w-full h-[38px] !max-w-none">
+                    </div>
+                </div>
+
+                {{-- Skill --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Skill</label>
+                    <input type="text" name="skill" value="{{ request('skill') }}" placeholder="e.g. Laravel"
+                           class="cand-fld w-full h-[38px] !max-w-none">
+                </div>
+
+                {{-- Job Role --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Job Role / Designation</label>
+                    <input type="text" name="job_role" value="{{ request('job_role') }}" placeholder="e.g. Developer"
+                           class="cand-fld w-full h-[38px] !max-w-none">
+                </div>
+
+                {{-- Client --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Client</label>
+                    <select name="client_id" class="cand-fld w-full h-[38px] !max-w-none">
+                        <option value="" class="bg-slate-900">All Clients</option>
+                        @foreach($clients as $c)
+                            <option value="{{ $c->id }}" class="bg-slate-900" {{ (string) request('client_id') === (string) $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Vendor --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Vendor / Partner</label>
+                    <select name="partner_id" class="cand-fld w-full h-[38px] !max-w-none">
+                        <option value="" class="bg-slate-900">All Vendors</option>
+                        @foreach($partners as $p)
+                            <option value="{{ $p->id }}" class="bg-slate-900" {{ (string) request('partner_id') === (string) $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Status --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Current Status</label>
+                    <select name="hiring_workflow" class="cand-fld w-full h-[38px] !max-w-none">
+                        <option value="" class="bg-slate-900">All Statuses</option>
+                        @foreach($hsList as $k => [$label, $icon, $color])
+                            <option value="{{ $k }}" class="bg-slate-900" {{ request('hiring_workflow') === $k ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4 border-t border-white/10 pt-4">
+                @if(request()->anyFilled(['search', 'skill', 'job_role', 'client_id', 'partner_id', 'hiring_workflow']))
+                    <a href="{{ route('admin.candidates.index') }}" 
+                       class="px-4 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-400/40 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-xmark"></i> Clear Filters
                     </a>
-                @endforeach
-            </div>
-        </form>
-
-        {{-- Search + filter toggle --}}
-        <form method="GET" action="{{ route('admin.candidates.index') }}" class="mb-4">
-            <input type="hidden" name="hiring_workflow" value="{{ request('hiring_workflow') }}">
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="relative flex-1 min-w-[260px]">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none z-10"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, or mobile"
-                           style="padding-left: 2.75rem !important;"
-                           class="h-10 w-full bg-slate-900/60 border border-white/15 rounded-lg text-white text-sm pr-3 focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
-                </div>
-                <button type="button" @click="filtersOpen = !filtersOpen"
-                        class="h-10 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg text-sm border border-white/20">
-                    <i class="fa-solid fa-sliders mr-1"></i> Advanced Filters
-                </button>
-                <button type="submit" class="h-10 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-sm">
-                    <i class="fa-solid fa-filter mr-1"></i> Apply
-                </button>
-                @if(request()->anyFilled(['search', 'current_company', 'current_designation', 'skill', 'current_location', 'preferred_location', 'partner_id', 'notice_period', 'immediate_joiner', 'duplicates_only', 'resume_uploaded', 'exp_min', 'exp_max', 'current_ctc_min', 'current_ctc_max', 'expected_ctc_min', 'expected_ctc_max', 'date_from', 'date_to', 'hiring_workflow']))
-                    <a href="{{ route('admin.candidates.index') }}" title="Clear all filters"
-                       class="h-10 w-10 bg-rose-500 hover:bg-rose-400 text-white rounded-lg inline-flex items-center justify-center"><i class="fa-solid fa-xmark"></i></a>
                 @endif
-            </div>
-
-            {{-- Advanced filters panel --}}
-            <div x-show="filtersOpen" x-cloak x-transition class="mt-3 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-xl p-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6">
-
-                    {{-- Basic --}}
-                    <div class="cand-section">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Basic</div>
-                        <input type="date" name="date_from" value="{{ request('date_from') }}" class="{{ $fld }} w-full">
-                        <input type="date" name="date_to" value="{{ request('date_to') }}" class="{{ $fld }} w-full">
-                        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
-                            <input type="checkbox" name="duplicates_only" value="1" {{ request('duplicates_only') ? 'checked' : '' }} class="cand-cb">
-                            Duplicates (same email)
-                        </label>
-                    </div>
-
-                    {{-- Recruitment --}}
-                    <div class="cand-section">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Recruitment</div>
-                        <input type="text" name="current_company" value="{{ request('current_company') }}" placeholder="Current company" class="{{ $fld }} w-full">
-                        <input type="text" name="current_designation" value="{{ request('current_designation') }}" placeholder="Current designation" class="{{ $fld }} w-full">
-                        <div class="flex gap-1">
-                            <input type="number" name="exp_min" value="{{ request('exp_min') }}" placeholder="Exp ≥" min="0" max="50" class="{{ $fld }} w-1/2">
-                            <input type="number" name="exp_max" value="{{ request('exp_max') }}" placeholder="Exp ≤" min="0" max="50" class="{{ $fld }} w-1/2">
-                        </div>
-                        <select name="notice_period" class="{{ $fld }} w-full">
-                            <option value="" class="bg-slate-900">Any notice period</option>
-                            @foreach($noticePeriods as $np)
-                                <option value="{{ $np }}" class="bg-slate-900" {{ request('notice_period') === $np ? 'selected' : '' }}>{{ $np }}</option>
-                            @endforeach
-                        </select>
-                        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5">
-                            <input type="checkbox" name="immediate_joiner" value="1" {{ request('immediate_joiner') ? 'checked' : '' }} class="cand-cb">
-                            Immediate joiner
-                        </label>
-                    </div>
-
-                    {{-- CTC --}}
-                    <div class="cand-section">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">CTC (₹)</div>
-                        <div class="flex gap-1">
-                            <input type="number" name="current_ctc_min" value="{{ request('current_ctc_min') }}" placeholder="Current ≥" min="0" class="{{ $fld }} w-1/2">
-                            <input type="number" name="current_ctc_max" value="{{ request('current_ctc_max') }}" placeholder="Current ≤" min="0" class="{{ $fld }} w-1/2">
-                        </div>
-                        <div class="flex gap-1">
-                            <input type="number" name="expected_ctc_min" value="{{ request('expected_ctc_min') }}" placeholder="Expected ≥" min="0" class="{{ $fld }} w-1/2">
-                            <input type="number" name="expected_ctc_max" value="{{ request('expected_ctc_max') }}" placeholder="Expected ≤" min="0" class="{{ $fld }} w-1/2">
-                        </div>
-                    </div>
-
-                    {{-- Skills --}}
-                    <div class="cand-section">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Skills</div>
-                        <input type="text" name="skill" value="{{ request('skill') }}" placeholder="Primary skill (e.g. Laravel)" class="{{ $fld }} w-full">
-                    </div>
-
-                    {{-- Location --}}
-                    <div class="cand-section">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Location</div>
-                        <input type="text" name="current_location" value="{{ request('current_location') }}" placeholder="Current location" class="{{ $fld }} w-full">
-                        <input type="text" name="preferred_location" value="{{ request('preferred_location') }}" placeholder="Preferred location" class="{{ $fld }} w-full">
-                    </div>
-
-                    {{-- Smart --}}
-                    <div class="cand-section">
-                        <div class="text-cyan-300 text-[10px] font-bold uppercase tracking-wider">Smart</div>
-                        <select name="partner_id" class="{{ $fld }} w-full">
-                            <option value="" class="bg-slate-900">Any recruiter (partner)</option>
-                            @foreach($partners as $p)
-                                <option value="{{ $p->id }}" class="bg-slate-900" {{ (string) request('partner_id') === (string) $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
-                            @endforeach
-                        </select>
-                        <select name="resume_uploaded" class="{{ $fld }} w-full">
-                            <option value="" class="bg-slate-900">Resume — any</option>
-                            <option value="yes" class="bg-slate-900" {{ request('resume_uploaded') === 'yes' ? 'selected' : '' }}>Resume uploaded</option>
-                            <option value="no"  class="bg-slate-900" {{ request('resume_uploaded') === 'no'  ? 'selected' : '' }}>No resume</option>
-                        </select>
-                    </div>
-                </div>
+                <button type="submit" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-cyan-900/30">
+                    <i class="fa-solid fa-filter"></i> Apply Filters
+                </button>
             </div>
         </form>
 

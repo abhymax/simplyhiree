@@ -41,7 +41,7 @@
                                     <div class="text-sm text-slate-100">{{ $app->job->title }}</div>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <a href="{{ route('client.jobs.applicants', $app->job_id) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded">
+                                    <a href="{{ route('client.applications.show', $app->id) }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded">
                                         View & Manage
                                     </a>
                                 </td>

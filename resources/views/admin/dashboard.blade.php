@@ -294,7 +294,7 @@
 
                 {{-- Review Apps --}}
                 @can('view_application_data')
-                <a href="{{ route('admin.applications.index') }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
+                <a href="{{ route('admin.applications.index', ['status' => 'Pending Review']) }}" class="bg-white/5 backdrop-blur-md border border-white/5 rounded-2xl p-4 hover:bg-white/10 transition-all">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-slate-400 text-xs font-bold uppercase">Review Apps</span>
                         <i class="fa-solid fa-file-contract text-rose-400"></i>

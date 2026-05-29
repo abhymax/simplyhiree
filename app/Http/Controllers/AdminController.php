@@ -75,7 +75,10 @@ class AdminController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('profile', function ($pq) use ($search) {
+                        $pq->where('phone_number', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -189,37 +192,58 @@ class AdminController extends Controller
                   ->orWhere('last_name', 'like', "%$s%")
                   ->orWhere('email', 'like', "%$s%")
                   ->orWhere('phone_number', 'like', "%$s%")
-                  ->orWhere('alternate_phone_number', 'like', "%$s%");
+                  ->orWhere('alternate_phone_number', 'like', "%$s%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%$s%"]);
             });
         }
         if ($from = $request->input('date_from')) $query->whereDate('created_at', '>=', $from);
         if ($to   = $request->input('date_to'))   $query->whereDate('created_at', '<=', $to);
 
-        // --- Smart: Source / Recruiter ---
+        // --- Smart: Source / Recruiter / Client ---
         if ($partnerId = $request->input('partner_id')) {
             $query->where('partner_id', $partnerId);
         }
-        if ($request->boolean('duplicates_only')) {
-            $dups = \App\Models\Candidate::select('email')
-                ->whereNotNull('email')->where('email', '!=', '')
-                ->groupBy('email')->havingRaw('COUNT(*) > 1')
-                ->pluck('email');
-            $query->whereIn('email', $dups);
+        if ($clientId = $request->input('client_id')) {
+            $query->whereHas('jobApplications.job', function ($jq) use ($clientId) {
+                $jq->where('user_id', $clientId);
+            });
         }
 
         // --- Recruitment ---
         if ($company     = $request->input('current_company'))     $query->where('current_company', 'like', "%$company%");
         if ($designation = $request->input('current_designation')) $query->where('current_designation', 'like', "%$designation%");
+        if ($jobRole     = $request->input('job_role')) {
+            $query->where(function ($q) use ($jobRole) {
+                $q->where('job_role_preference', 'like', "%$jobRole%")
+                  ->orWhere('current_designation', 'like', "%$jobRole%");
+            });
+        }
         if ($notice      = $request->input('notice_period'))       $query->where('notice_period', $notice);
         if ($request->boolean('immediate_joiner')) {
             $query->whereIn('notice_period', ['0', 'Immediate', '0 days', 'Immediately', 'Serving notice (immediate)']);
         }
         if (is_numeric($v = $request->input('exp_min')))           $query->where('total_experience_years', '>=', (int) $v);
         if (is_numeric($v = $request->input('exp_max')))           $query->where('total_experience_years', '<=', (int) $v);
-        if (is_numeric($v = $request->input('current_ctc_min')))   $query->where('current_ctc', '>=', (float) $v);
-        if (is_numeric($v = $request->input('current_ctc_max')))   $query->where('current_ctc', '<=', (float) $v);
-        if (is_numeric($v = $request->input('expected_ctc_min')))  $query->where('expected_ctc', '>=', (float) $v);
-        if (is_numeric($v = $request->input('expected_ctc_max')))  $query->where('expected_ctc', '<=', (float) $v);
+        if (is_numeric($v = $request->input('current_ctc_min'))) {
+            $val = (float) $v;
+            if ($val <= 100) $val *= 100000;
+            $query->where('current_ctc', '>=', $val);
+        }
+        if (is_numeric($v = $request->input('current_ctc_max'))) {
+            $val = (float) $v;
+            if ($val <= 100) $val *= 100000;
+            $query->where('current_ctc', '<=', $val);
+        }
+        if (is_numeric($v = $request->input('expected_ctc_min'))) {
+            $val = (float) $v;
+            if ($val <= 100) $val *= 100000;
+            $query->where('expected_ctc', '>=', $val);
+        }
+        if (is_numeric($v = $request->input('expected_ctc_max'))) {
+            $val = (float) $v;
+            if ($val <= 100) $val *= 100000;
+            $query->where('expected_ctc', '<=', $val);
+        }
 
         // --- Skills ---
         if ($skill = $request->input('skill')) $query->where('skills', 'like', "%$skill%");
@@ -255,13 +279,14 @@ class AdminController extends Controller
         $directCount = $this->candidateUsersQuery()->count();
 
         // Dropdown options
-        $partners = \App\Models\User::role('partner')->orderBy('name')->get(['id', 'name']);
+        $partners = \App\Models\User::role('partner')->where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        $clients = \App\Models\User::role('client')->where('status', 'active')->orderBy('name')->get(['id', 'name']);
         $noticePeriods = \App\Models\Candidate::query()
             ->whereNotNull('notice_period')->where('notice_period', '!=', '')
             ->distinct()->pluck('notice_period')->sort()->values();
 
         return view('admin.candidates.index', compact(
-            'candidates', 'vendorCount', 'directCount', 'partners', 'noticePeriods'
+            'candidates', 'vendorCount', 'directCount', 'partners', 'noticePeriods', 'clients'
         ));
     }
 

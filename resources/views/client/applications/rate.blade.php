@@ -73,7 +73,11 @@
 
                 <div class="flex justify-between items-center pt-2">
                     <a href="{{ route('client.jobs.applicants', $application->job_id) }}" class="text-sm text-slate-300 hover:text-white">Skip for now</a>
-                    <button type="submit" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold rounded-xl shadow-lg shadow-amber-500/20">
+                    <button type="submit" 
+                        style="background: #fbbf24 !important; color: #0f172a !important; font-weight: 800 !important; border: none; padding: 12px 28px; border-radius: 12px; font-size: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);"
+                        onmouseover="this.style.background='#f59e0b'; this.style.transform='translateY(-1px)';"
+                        onmouseout="this.style.background='#fbbf24'; this.style.transform='translateY(0)';"
+                        class="px-6 py-3 font-extrabold rounded-xl shadow-lg">
                         <i class="fa-solid fa-paper-plane mr-1"></i> Submit Rating
                     </button>
                 </div>

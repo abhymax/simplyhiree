@@ -12,10 +12,12 @@ class CandidateSelected extends Notification implements ShouldQueue
     use Queueable;
 
     public JobApplication $application;
+    public bool $isUpdate;
 
-    public function __construct(JobApplication $application)
+    public function __construct(JobApplication $application, bool $isUpdate = false)
     {
         $this->application = $application;
+        $this->isUpdate = $isUpdate;
     }
 
     public function via(object $notifiable): array
@@ -31,10 +33,14 @@ class CandidateSelected extends Notification implements ShouldQueue
                          ? trim(($this->application->candidate->first_name ?? '') . ' ' . ($this->application->candidate->last_name ?? ''))
                          : ($this->application->candidateUser?->name ?? 'Unknown Candidate');
 
+        $msg = $this->isUpdate
+            ? "Notice: Selection details for {$candidateName} (Role: {$jobTitle}) have been revised by {$clientName}."
+            : "Success! {$candidateName} has been selected by {$clientName} for the job {$jobTitle}.";
+
         return [
-            'message'        => "Success! {$candidateName} has been selected by {$clientName} for the job {$jobTitle}.",
+            'message'        => $msg,
             'application_id' => $this->application->id,
-            'icon'           => 'check-circle',
+            'icon'           => $this->isUpdate ? 'refresh' : 'check-circle',
         ];
     }
 }

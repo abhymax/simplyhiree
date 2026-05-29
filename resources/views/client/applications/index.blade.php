@@ -49,7 +49,7 @@
 
                 <select name="status" class="{{ $fld }} min-w-[140px]">
                     <option value="" class="text-gray-400">All Statuses</option>
-                    @foreach(['Pending Review','Approved','Rejected','Interview Scheduled','Selected','Joined'] as $s)
+                    @foreach(['Approved','Interview Scheduled','Selected','Joined'] as $s)
                         <option value="{{ $s }}" class="bg-slate-900" {{ request('status') == $s ? 'selected' : '' }}>{{ $s }}</option>
                     @endforeach
                 </select>
