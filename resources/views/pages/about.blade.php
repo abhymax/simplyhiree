@@ -17,7 +17,7 @@
 </style>
 
 {{-- HERO --}}
-<section class="about-hero relative overflow-hidden pt-48 pb-24 px-6">
+<section class="about-hero relative overflow-hidden px-6" style="padding-top: 200px; padding-bottom: 100px;">
     <div class="blob w-80 h-80 bg-indigo-300 -top-10 -left-10"></div>
     <div class="blob w-72 h-72 bg-sky-300 top-20 right-0"></div>
     <div class="relative z-10 max-w-4xl mx-auto text-center">
