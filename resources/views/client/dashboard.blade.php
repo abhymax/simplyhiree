@@ -465,37 +465,35 @@
 
                     @php
                         $funnelData = array_values($funnel ?? []);
-                        $funnelFill = ['#1d4ed8', '#0e7490', '#6d28d9', '#b45309', '#047857'];
-                        // Trapezoid geometry on a 360-wide viewBox (centre x = 180).
-                        // 5 bands (40px each) taper smoothly, then close to a point.
-                        $halfW = [175, 145, 115, 85, 55, 28]; // half-widths at the 6 edges
-                        $bandH = 40;
+                        // Reference palette: blue shades -> teal -> orange tip
+                        $funnelFill = ['#1e40af', '#2563eb', '#3b82f6', '#0d9488', '#ea580c'];
+                        // Cone centred at cx; tapers from 140 half-width to a point (last band = triangle).
+                        $cx = 150; $halfW = [140, 114, 88, 62, 36, 0]; $bandH = 44;
                     @endphp
 
                     <style>
                         .funnel-svg a { cursor: pointer; }
                         .funnel-svg a polygon { transition: filter .2s ease; }
-                        .funnel-svg a:hover polygon { filter: brightness(1.25); }
+                        .funnel-svg a:hover polygon { filter: brightness(1.18); }
                     </style>
-                    <svg class="funnel-svg w-full" viewBox="0 0 360 236" style="max-height: 240px;">
+                    <svg class="funnel-svg w-full" viewBox="0 0 380 232" style="max-height: 250px;">
                         @foreach($funnelData as $i => $stg)
                             @php
-                                $yTop = $i * $bandH; $yBot = $yTop + $bandH;
-                                $tl = 180 - $halfW[$i];   $tr = 180 + $halfW[$i];
-                                $bl = 180 - $halfW[$i+1]; $br = 180 + $halfW[$i+1];
-                                $textY = $yTop + ($bandH / 2) + 4;
+                                $yTop = $i * $bandH; $yBot = $yTop + $bandH + 1; // +1 overlap removes hairline seams
+                                $tl = $cx - $halfW[$i];   $tr = $cx + $halfW[$i];
+                                $bl = $cx - $halfW[$i+1]; $br = $cx + $halfW[$i+1];
+                                $midY = $yTop + ($bandH / 2) + 4;
                             @endphp
                             <a href="{{ $stg['link'] ?? '#' }}">
                                 <title>{{ $stg['label'] }}: {{ $stg['count'] }} — click to view</title>
                                 <polygon points="{{ $tl }},{{ $yTop }} {{ $tr }},{{ $yTop }} {{ $br }},{{ $yBot }} {{ $bl }},{{ $yBot }}"
-                                         fill="{{ $funnelFill[$i] ?? '#047857' }}"></polygon>
-                                <text x="180" y="{{ $textY }}" text-anchor="middle" fill="#fff" font-size="12" font-weight="700"
-                                      letter-spacing="0.5" style="text-transform:uppercase;">{{ $stg['label'] }}<tspan font-size="14" font-weight="900" dx="6">{{ $stg['count'] }}</tspan></text>
+                                         fill="{{ $funnelFill[$i] ?? '#ea580c' }}"></polygon>
+                                {{-- stage label centred inside the cone --}}
+                                <text x="{{ $cx }}" y="{{ $midY }}" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">{{ $stg['label'] }}</text>
+                                {{-- count right-aligned in its own column --}}
+                                <text x="372" y="{{ $midY }}" text-anchor="end" fill="#fff" font-size="16" font-weight="900">{{ $stg['count'] }}</text>
                             </a>
                         @endforeach
-                        {{-- closing tip to a sharp point --}}
-                        <polygon points="{{ 180 - $halfW[5] }},200 {{ 180 + $halfW[5] }},200 180,232"
-                                 fill="{{ $funnelFill[4] }}"></polygon>
                     </svg>
 
                     {{-- conversion footnote --}}

@@ -17,12 +17,12 @@
 </style>
 
 {{-- HERO --}}
-<section class="about-hero relative overflow-hidden pt-36 pb-24 px-6">
+<section class="about-hero relative overflow-hidden pt-48 pb-24 px-6">
     <div class="blob w-80 h-80 bg-indigo-300 -top-10 -left-10"></div>
     <div class="blob w-72 h-72 bg-sky-300 top-20 right-0"></div>
     <div class="relative z-10 max-w-4xl mx-auto text-center">
         <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white shadow-sm border border-slate-200 text-primary font-bold tracking-wider uppercase text-xs" data-aos="fade-down">
-            <i class="fa-solid fa-sparkles"></i> Our Story
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Our Story
         </span>
         <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mt-6 leading-[1.1]" data-aos="fade-up">
             We're rebuilding <span class="text-gradient">recruitment</span><br class="hidden md:block"> around people, not paperwork
@@ -31,11 +31,16 @@
             SimplyHiree connects companies, recruitment agencies, and candidates on one transparent platform — so the right people meet the right opportunities, faster.
         </p>
         <div class="flex flex-wrap justify-center gap-4 mt-10" data-aos="fade-up" data-aos-delay="200">
-            <a href="/register/candidate" class="px-7 py-3.5 bg-slate-900 text-white rounded-full font-bold hover:bg-primary hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300">
-                Get Started Free
+            <a href="/register/candidate"
+               class="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-bold text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300"
+               style="background: linear-gradient(135deg,#4F46E5,#0EA5E9); box-shadow:0 12px 28px -10px rgba(79,70,229,.6);">
+                <i class="fa-solid fa-rocket"></i> Get Started Free
             </a>
-            <a href="{{ route('contact') }}" class="px-7 py-3.5 bg-white text-slate-900 border border-slate-200 rounded-full font-bold hover:border-primary hover:text-primary transition-all duration-300">
-                Talk to Us
+            <a href="{{ route('contact') }}"
+               class="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-bold transition-all duration-300"
+               style="background:#e0e7ff; color:#4338ca;"
+               onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'">
+                <i class="fa-solid fa-comments"></i> Talk to Us
             </a>
         </div>
     </div>
