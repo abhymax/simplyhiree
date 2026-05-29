@@ -72,7 +72,7 @@
         <div data-aos="fade-right">
             <div class="relative">
                 <div class="absolute -inset-3 bg-gradient-to-br from-indigo-500 to-sky-500 rounded-[2rem] rotate-3 opacity-90"></div>
-                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=80"
+                <img src="/images/about/indian-tech-team.png"
                      alt="The SimplyHiree team" class="relative rounded-[1.6rem] shadow-2xl">
             </div>
         </div>
@@ -139,14 +139,14 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             @foreach([
-                ['name' => 'Aman Yadav',  'role' => 'CEO & Founder',    'img' => 'men/32'],
-                ['name' => 'Surbhi S',    'role' => 'Head of Product',  'img' => 'women/44'],
-                ['name' => 'Abhinab Roy', 'role' => 'Chief Technology Officer', 'img' => 'men/85'],
+                ['name' => 'Aman Yadav',  'role' => 'CEO & Founder',    'img' => '/images/about/aman-yadav-ceo.png'],
+                ['name' => 'Surbhi S',    'role' => 'Head of Product',  'img' => '/images/about/surbhi-s-product.png'],
+                ['name' => 'Abhinab Roy', 'role' => 'Chief Technology Officer', 'img' => '/images/about/abhinab-roy-cto.png'],
             ] as $i => $p)
                 <div class="group bg-white rounded-3xl p-8 text-center shadow-sm hover:shadow-2xl transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ $i * 100 }}">
                     <div class="w-28 h-28 mx-auto mb-5 rounded-full p-1 bg-gradient-to-br from-indigo-500 to-sky-500">
-                        <img src="https://randomuser.me/api/portraits/{{ $p['img'] }}.jpg"
-                             class="w-full h-full object-cover rounded-full grayscale group-hover:grayscale-0 transition-all duration-500">
+                        <img src="{{ $p['img'] }}"
+                             class="w-full h-full object-cover rounded-full">
                     </div>
                     <h3 class="font-bold text-xl text-slate-900">{{ $p['name'] }}</h3>
                     <p class="text-primary text-sm font-semibold mt-1">{{ $p['role'] }}</p>
