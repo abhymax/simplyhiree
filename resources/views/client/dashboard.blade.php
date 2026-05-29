@@ -106,11 +106,11 @@
     }
 
     .custom-main-body {
-        padding: 32px;
+        padding: 28px;
         display: flex;
         flex-direction: column;
-        gap: 32px;
-        max-width: 1400px;
+        gap: 28px;
+        max-width: 1180px;   /* contained, not full-width */
         width: 100%;
         margin: 0 auto;
     }
@@ -386,66 +386,38 @@
                     <span class="text-xs font-bold bg-blue-600/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/10">Active Pipeline</span>
                 </div>
 
-                {{-- Activity Badges --}}
+                {{-- Activity Badges (real data) --}}
                 <div class="grid grid-cols-3 sm:grid-cols-5 gap-3 pt-2">
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
-                        <span class="text-lg font-bold text-white block">{{ $todayInterviews ?? 0 }}</span>
-                        <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">Interviews</span>
-                    </div>
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
-                        <span class="text-lg font-bold text-white block">{{ $totalApplicants ?? 0 }}</span>
-                        <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">Submissions</span>
-                    </div>
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
-                        <span class="text-lg font-bold text-white block">42%</span>
-                        <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">Selection</span>
-                    </div>
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
-                        <span class="text-lg font-bold text-white block">85%</span>
-                        <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">Response</span>
-                    </div>
-                    <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
-                        <span class="text-lg font-bold text-white block">{{ $dueInvoicesCount ?? 0 }}</span>
-                        <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">Follow-ups</span>
-                    </div>
+                    @foreach($dailyPulse ?? [] as $pulse)
+                        <div class="text-center p-3 rounded-xl bg-white/5 border border-white/5">
+                            <span class="text-lg font-bold text-white block">{{ $pulse['value'] }}</span>
+                            <span class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 block">{{ $pulse['label'] }}</span>
+                        </div>
+                    @endforeach
                 </div>
 
-                {{-- Submission Trend --}}
+                {{-- Submission Trend (real last-7-days data) --}}
+                @php
+                    $trend = $submissionTrend ?? [];
+                    $trendMax = max(1, collect($trend)->max('count') ?? 0);
+                    $trend7Total = collect($trend)->sum('count');
+                @endphp
                 <div>
                     <div class="flex justify-between items-baseline mb-4">
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Submission Trend (Last 7 Days)</p>
-                        <span class="text-xs font-bold text-blue-400">{{ $totalApplicants ?? 0 }} Total Applicants</span>
+                        <span class="text-xs font-bold text-blue-400">{{ $trend7Total }} this week</span>
                     </div>
-                    <div class="h-36 bg-slate-950/40 rounded-xl border border-white/5 relative p-4 flex flex-col justify-between overflow-hidden">
-                        <div class="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none opacity-5">
-                            <div class="w-full border-t border-white"></div>
-                            <div class="w-full border-t border-white"></div>
-                            <div class="w-full border-t border-white"></div>
-                        </div>
-
-                        <div class="relative z-10 w-full h-20 mt-4">
-                            <svg class="w-full h-full" viewBox="0 0 600 120" preserveAspectRatio="none">
-                                <defs>
-                                    <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"></stop>
-                                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"></stop>
-                                    </linearGradient>
-                                </defs>
-                                <path d="M 10 95 Q 100 70 200 85 T 400 55 T 585 45 L 585 120 L 10 120 Z" fill="url(#gradient)"></path>
-                                <path d="M 10 95 Q 100 70 200 85 T 400 55 T 585 45" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"></path>
-                                <circle cx="585" cy="45" r="5" fill="#3b82f6" stroke="#ffffff" stroke-width="2"></circle>
-                            </svg>
-                            <span class="absolute right-8 top-12 text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-md shadow-md animate-bounce">May 27 (Today)</span>
-                        </div>
-
-                        <div class="flex justify-between text-[10px] text-slate-500 font-bold uppercase mt-2 px-1">
-                            <span>17 May</span>
-                            <span>18 May</span>
-                            <span>19 May</span>
-                            <span>20 May</span>
-                            <span>21 May</span>
-                            <span>22 May</span>
-                            <span>Today</span>
+                    <div class="h-36 bg-slate-950/40 rounded-xl border border-white/5 relative p-4 overflow-hidden">
+                        <div class="h-full flex items-end justify-between gap-2">
+                            @foreach($trend as $pt)
+                                @php $h = $trendMax > 0 ? round($pt['count'] / $trendMax * 100) : 0; @endphp
+                                <div class="flex-1 flex flex-col items-center justify-end h-full gap-1.5 group">
+                                    <span class="text-[10px] font-bold text-blue-300 opacity-0 group-hover:opacity-100 transition">{{ $pt['count'] }}</span>
+                                    <div class="w-full max-w-[34px] rounded-t-md bg-gradient-to-t from-blue-600/40 to-blue-400 transition-all duration-300 hover:from-blue-500 hover:to-cyan-300"
+                                         style="height: {{ max($h, 4) }}%" title="{{ $pt['count'] }} submission(s)"></div>
+                                    <span class="text-[9px] text-slate-500 font-bold uppercase whitespace-nowrap">{{ $pt['label'] }}</span>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -462,21 +434,22 @@
 
                     <div class="space-y-2 pt-2">
                         @php
-                            $stages = [
-                                ['label' => 'Submitted', 'count' => $totalApplicants ?? 128, 'percent' => 'w-full', 'class' => 'funnel-stage-1'],
-                                ['label' => 'Shortlisted', 'count' => '78', 'percent' => 'w-[85%]', 'class' => 'funnel-stage-2'],
-                                ['label' => 'Interview', 'count' => $todayInterviews ?? 38, 'percent' => 'w-[70%]', 'class' => 'funnel-stage-3'],
-                                ['label' => 'Offered', 'count' => '16', 'percent' => 'w-[55%]', 'class' => 'funnel-stage-4'],
-                                ['label' => 'Joined', 'count' => $totalHires ?? 7, 'percent' => 'w-[40%]', 'class' => 'funnel-stage-5']
-                            ];
+                            // Real funnel from controller; width is relative to the top (Submitted) stage
+                            $funnelData = $funnel ?? [];
+                            $funnelTop = max(1, collect($funnelData)->max('count') ?? 0);
+                            $funnelClasses = ['funnel-stage-1','funnel-stage-2','funnel-stage-3','funnel-stage-4','funnel-stage-5'];
                         @endphp
 
-                        @foreach($stages as $stg)
+                        @foreach($funnelData as $i => $stg)
+                            @php
+                                $w = $funnelTop > 0 ? round($stg['count'] / $funnelTop * 100) : 0;
+                                $w = max($w, 18); // keep label readable even at low counts
+                            @endphp
                             <div class="flex items-center gap-4">
                                 <span class="text-xs text-slate-300 font-bold w-20 shrink-0">{{ $stg['label'] }}</span>
                                 <div class="flex-1 bg-slate-950/40 rounded-lg p-0.5">
-                                    <div class="funnel-stage {{ $stg['class'] }} {{ $stg['percent'] }} py-2.5 rounded-md flex justify-between items-center px-4 transition-all duration-300">
-                                        <span class="text-[10px] font-black text-white"></span>
+                                    <div class="funnel-stage {{ $funnelClasses[$i] ?? 'funnel-stage-5' }} py-2.5 rounded-md flex justify-end items-center px-4 transition-all duration-300"
+                                         style="width: {{ $w }}%">
                                         <span class="text-xs font-black text-white text-right">{{ $stg['count'] }}</span>
                                     </div>
                                 </div>
@@ -485,33 +458,38 @@
                     </div>
                 </div>
 
-                {{-- Right Widget: Top Sourcing Channels --}}
+                {{-- Right Widget: Recruitment Performance (real ratios) --}}
                 <div class="glass-card rounded-2xl p-6 flex flex-col justify-between gap-5">
                     <div>
-                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Sourcing Channel Performance</h4>
-                        <p class="text-[10px] text-slate-500 mt-0.5">Metrics from active recruitment channels</p>
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Recruitment Performance</h4>
+                        <p class="text-[10px] text-slate-500 mt-0.5">Conversion ratios across your pipeline</p>
                     </div>
+
+                    @php
+                        $perf = $performance ?? [];
+                        $perfRows = [
+                            ['label' => 'Selection Ratio',  'value' => $perf['selection_ratio'] ?? 0, 'color' => 'emerald', 'hex' => '#10b981'],
+                            ['label' => 'Interview Rate',   'value' => $perf['interview_rate'] ?? 0,  'color' => 'blue',    'hex' => '#3b82f6'],
+                            ['label' => 'Client Response',  'value' => $perf['response_rate'] ?? 0,   'color' => 'amber',   'hex' => '#f59e0b'],
+                            ['label' => 'Fill Rate',        'value' => $perf['fill_rate'] ?? 0,       'color' => 'purple',  'hex' => '#a855f7'],
+                        ];
+                    @endphp
 
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-medium text-slate-300">Sourcing Partner Networks</span>
-                            <span class="text-xs font-bold text-emerald-400">88% Match</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                            <div class="h-full bg-emerald-500 rounded-full" style="width: 88%"></div>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-medium text-slate-300">Direct Applicant Pool</span>
-                            <span class="text-xs font-bold text-blue-400">65% Match</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                            <div class="h-full bg-blue-500 rounded-full" style="width: 65%"></div>
-                        </div>
+                        @foreach($perfRows as $row)
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-medium text-slate-300">{{ $row['label'] }}</span>
+                                <span class="text-xs font-bold text-{{ $row['color'] }}-400">{{ $row['value'] }}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full" style="width: {{ min($row['value'], 100) }}%; background: {{ $row['hex'] }}"></div>
+                            </div>
+                        @endforeach
                     </div>
 
+                    @php $joinedCount = collect($funnel ?? [])->firstWhere('label', 'Joined')['count'] ?? 0; @endphp
                     <div class="p-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-center text-[10px] font-extrabold text-blue-400 uppercase tracking-wide">
-                        Verified agency sourcing network outperforms direct streams
+                        {{ $joinedCount }} of {{ $totalApplicants ?? 0 }} approved candidates hired
                     </div>
                 </div>
             </div>
@@ -524,36 +502,37 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
                     
-                    {{-- Workspace 1: Candidate Pool --}}
+                    {{-- Workspace 1: Total Submissions --}}
+                    @php $totalSubmitted = collect($funnel ?? [])->firstWhere('label', 'Submitted')['count'] ?? 0; @endphp
                     <div class="glass-card rounded-2xl p-5 workspace-card-blue flex flex-col justify-between min-h-[150px]">
                         <div>
-                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Candidate Pool</p>
-                            <h4 class="text-2xl font-extrabold text-white mt-1">1,280</h4>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Total active network</p>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Submissions</p>
+                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ number_format($totalSubmitted) }}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Candidates sent to your jobs</p>
                         </div>
                         <a href="{{ route('client.vendors.browse') }}" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold text-center transition uppercase">
-                            Start Sourcing
+                            Browse Vendors
                         </a>
                     </div>
 
-                    {{-- Workspace 2: Pending Applications --}}
+                    {{-- Workspace 2: Approved Applications --}}
                     <div class="glass-card rounded-2xl p-5 workspace-card-orange flex flex-col justify-between min-h-[150px]">
                         <div>
                             <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Applications</p>
-                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ $totalApplicants ?? 54 }}</h4>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Pending approved candidates</p>
+                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ $totalApplicants ?? 0 }}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Approved candidates</p>
                         </div>
                         <a href="{{ route('client.applications.index') }}" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[10px] font-bold text-center transition uppercase">
                             Review Applications
                         </a>
                     </div>
 
-                    {{-- Workspace 3: Interviews Scheduled --}}
+                    {{-- Workspace 3: Interviews Today --}}
                     <div class="glass-card rounded-2xl p-5 workspace-card-purple flex flex-col justify-between min-h-[150px]">
                         <div>
                             <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Interviews</p>
-                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ $todayInterviews ?? 38 }}</h4>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Scheduled upcoming boards</p>
+                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ $todayInterviews ?? 0 }}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Scheduled today</p>
                         </div>
                         <a href="{{ route('client.interviews.calendar') }}" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-bold text-center transition uppercase">
                             View Calendar
@@ -770,7 +749,7 @@
                                     <div class="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center text-sm"><i class="fa-solid fa-briefcase"></i></div>
                                     <div>
                                         <h5 class="font-bold text-xs text-white">{{ $job->title }}</h5>
-                                        <p class="text-[9px] text-slate-500 mt-0.5">{{ $job->job_location }} · {{ $job->job_type }}</p>
+                                        <p class="text-[9px] text-slate-500 mt-0.5">{{ $job->location ?? '—' }} · {{ $job->job_type ?? '—' }}</p>
                                     </div>
                                 </div>
                                 <span class="text-[10px] font-extrabold bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 shadow-md shrink-0">{{ $job->jobApplications->where('status', 'Approved')->count() }} Submissions</span>
@@ -792,72 +771,58 @@
                         <span class="text-xs font-bold text-slate-400">This Month</span>
                     </div>
 
-                    {{-- Circular progress ring --}}
+                    @php
+                        $perf = $performance ?? [];
+                        // Overall score = average of the 4 ratios
+                        $overall = (int) round(collect([
+                            $perf['selection_ratio'] ?? 0,
+                            $perf['interview_rate'] ?? 0,
+                            $perf['response_rate'] ?? 0,
+                            $perf['fill_rate'] ?? 0,
+                        ])->avg());
+                        $circumference = 251.2;
+                        $offset = $circumference - ($circumference * min($overall, 100) / 100);
+                        $rating = $overall >= 75 ? 'Excellent' : ($overall >= 50 ? 'Good' : ($overall >= 25 ? 'Fair' : 'Getting Started'));
+                        $perfBars = [
+                            ['label' => 'Selection Ratio', 'value' => $perf['selection_ratio'] ?? 0, 'hex' => '#10b981'],
+                            ['label' => 'Client Response', 'value' => $perf['response_rate'] ?? 0,   'hex' => '#3b82f6'],
+                            ['label' => 'Interview Rate',  'value' => $perf['interview_rate'] ?? 0,  'hex' => '#f59e0b'],
+                            ['label' => 'Fill Rate',       'value' => $perf['fill_rate'] ?? 0,       'hex' => '#a855f7'],
+                        ];
+                    @endphp
+
+                    {{-- Circular progress ring (real overall score) --}}
                     <div class="flex items-center justify-center gap-6 pt-2">
                         <div class="relative w-24 h-24 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/10 rounded-full">
                             <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 96 96">
                                 <circle cx="48" cy="48" r="40" fill="transparent" stroke="#111827" stroke-width="7"></circle>
                                 <circle cx="48" cy="48" r="40" fill="transparent" stroke="#06b6d4" stroke-width="7"
-                                        stroke-dasharray="251.2" stroke-dashoffset="45.2" stroke-linecap="round"></circle>
+                                        stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $offset }}" stroke-linecap="round"></circle>
                             </svg>
                             <div class="text-center relative z-10">
-                                <span class="text-xl font-black text-white block">82%</span>
-                                <span class="text-[8px] text-cyan-400 uppercase font-bold tracking-wider">Excellent</span>
+                                <span class="text-xl font-black text-white block">{{ $overall }}%</span>
+                                <span class="text-[8px] text-cyan-400 uppercase font-bold tracking-wider">{{ $rating }}</span>
                             </div>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-300">You are performing great!</p>
-                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Keep it up to unlock top metrics and earn gold tier placement perks.</p>
+                            <p class="text-xs font-semibold text-slate-300">Your hiring health score</p>
+                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Average across selection, response, interview &amp; fill rates from your live pipeline.</p>
                         </div>
                     </div>
 
-                    {{-- Progress Bars --}}
+                    {{-- Progress Bars (real) --}}
                     <div class="space-y-2 pt-1">
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
-                                <span>Profile Selection Ratio</span>
-                                <span class="text-white">82%</span>
+                        @foreach($perfBars as $bar)
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
+                                    <span>{{ $bar['label'] }}</span>
+                                    <span class="text-white">{{ $bar['value'] }}%</span>
+                                </div>
+                                <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full" style="width: {{ min($bar['value'], 100) }}%; background: {{ $bar['hex'] }}"></div>
+                                </div>
                             </div>
-                            <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500 rounded-full" style="width: 82%"></div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
-                                <span>Response Time</span>
-                                <span class="text-white">90%</span>
-                            </div>
-                            <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-500 rounded-full" style="width: 90%"></div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
-                                <span>Client Satisfaction</span>
-                                <span class="text-white">78%</span>
-                            </div>
-                            <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-500 rounded-full" style="width: 78%"></div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
-                                <span>On-time Submissions</span>
-                                <span class="text-white">85%</span>
-                            </div>
-                            <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
-                                <div class="h-full bg-purple-500 rounded-full" style="width: 85%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Gold Client Banner --}}
-                    <div class="p-2.5 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl border border-blue-500/20 text-center flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-medal text-amber-400 text-xs"></i>
-                        <span class="text-[9px] font-extrabold text-blue-300 uppercase tracking-wider">Top Performer #12 This Month</span>
+                        @endforeach
                     </div>
                 </div>
 
