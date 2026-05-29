@@ -147,11 +147,11 @@ class ClientController extends Controller
             ->count();
 
         $dailyPulse = [
-            ['label' => 'Interviews Today',  'value' => $todayInterviews,          'icon' => 'fa-video',          'color' => 'blue'],
-            ['label' => 'Profiles Submitted','value' => $profilesSubmittedToday,   'icon' => 'fa-file-arrow-up',  'color' => 'indigo'],
-            ['label' => 'Selection Ratio',   'value' => $selectionRatio.'%',       'icon' => 'fa-chart-line',     'color' => 'emerald'],
-            ['label' => 'Client Response',   'value' => $clientResponseRate.'%',   'icon' => 'fa-reply',          'color' => 'amber'],
-            ['label' => 'Pending Follow-ups','value' => $pendingFollowUps,         'icon' => 'fa-rotate',         'color' => 'rose'],
+            ['label' => 'Interviews Today',  'value' => $todayInterviews,          'icon' => 'fa-video',          'color' => 'blue',    'link' => route('client.interviews.calendar')],
+            ['label' => 'Profiles Submitted','value' => $profilesSubmittedToday,   'icon' => 'fa-file-arrow-up',  'color' => 'indigo',  'link' => route('client.applications.index')],
+            ['label' => 'Selection Ratio',   'value' => $selectionRatio.'%',       'icon' => 'fa-chart-line',     'color' => 'emerald', 'link' => route('client.applications.index', ['view' => 'hires'])],
+            ['label' => 'Client Response',   'value' => $clientResponseRate.'%',   'icon' => 'fa-reply',          'color' => 'amber',   'link' => route('client.applications.index')],
+            ['label' => 'Pending Follow-ups','value' => $pendingFollowUps,         'icon' => 'fa-rotate',         'color' => 'rose',    'link' => route('client.applications.index')],
         ];
 
         // --- Top Requirements (jobs ranked by submission count) ---

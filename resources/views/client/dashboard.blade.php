@@ -119,12 +119,12 @@
         margin: 0 auto;
     }
 
-    /* Solid Box Sections matching the JPEG exactly */
+    /* Section cards — slightly translucent so the page bg shows through */
     .glass-card {
-        background-color: #231b80 !important;
+        background-color: rgba(35, 27, 128, 0.55) !important;
         border: 1px solid rgba(59, 130, 246, 0.15) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
     }
 
     /* Card Outlines & Backgrounds (Exact Match) */
@@ -284,8 +284,7 @@
             <div class="flex items-center gap-5">
                 {{-- Date Display --}}
                 <div class="text-right hidden md:block">
-                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">System Calendar</p>
-                    <p class="text-xs font-semibold text-white mt-0.5">{{ date('l, M j, Y') }}</p>
+                    <p class="text-xs font-semibold text-white">{{ date('l, M j, Y') }}</p>
                 </div>
 
                 {{-- Real notifications bell (Livewire) --}}
@@ -385,24 +384,27 @@
 
                 {{-- Compact metric row: solid colour icon + value + label --}}
                 @php
+                    // [solid icon colour, tinted card bg, border tint]
                     $pulseSolid = [
-                        'blue'    => '#3b82f6',
-                        'indigo'  => '#6366f1',
-                        'emerald' => '#10b981',
-                        'amber'   => '#f59e0b',
-                        'rose'    => '#f43f5e',
+                        'blue'    => ['#3b82f6', 'rgba(59,130,246,0.12)',  'rgba(59,130,246,0.30)'],
+                        'indigo'  => ['#6366f1', 'rgba(99,102,241,0.12)',  'rgba(99,102,241,0.30)'],
+                        'emerald' => ['#10b981', 'rgba(16,185,129,0.12)',  'rgba(16,185,129,0.30)'],
+                        'amber'   => ['#f59e0b', 'rgba(245,158,11,0.12)',  'rgba(245,158,11,0.30)'],
+                        'rose'    => ['#f43f5e', 'rgba(244,63,94,0.12)',   'rgba(244,63,94,0.30)'],
                     ];
                 @endphp
                 <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px;">
                     @foreach($dailyPulse ?? [] as $pulse)
-                        @php $sc = $pulseSolid[$pulse['color']] ?? '#3b82f6'; @endphp
-                        <div class="flex flex-col items-center text-center gap-1.5 px-2 py-3 rounded-xl bg-black/20 border border-white/5 hover:border-white/15 transition">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: {{ $sc }};">
+                        @php $sc = $pulseSolid[$pulse['color']] ?? $pulseSolid['blue']; @endphp
+                        <a href="{{ $pulse['link'] ?? '#' }}"
+                           class="flex flex-col items-center text-center gap-1.5 px-2 py-3 rounded-xl transition hover:scale-[1.03] hover:brightness-110"
+                           style="background: {{ $sc[1] }}; border: 1px solid {{ $sc[2] }};">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background: {{ $sc[0] }};">
                                 <i class="fa-solid {{ $pulse['icon'] }} text-white text-[11px]"></i>
                             </div>
                             <div class="text-base font-extrabold text-white leading-none">{{ $pulse['value'] }}</div>
-                            <div class="text-[8px] text-slate-400 uppercase font-bold tracking-wide leading-tight">{{ $pulse['label'] }}</div>
-                        </div>
+                            <div class="text-[10px] text-slate-300 font-semibold leading-tight">{{ $pulse['label'] }}</div>
+                        </a>
                     @endforeach
                 </div>
 
@@ -438,7 +440,9 @@
                             <polygon points="{{ $areaPath }}" fill="url(#trendGrad)"></polygon>
                             <polyline points="{{ $linePath }}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
                             @foreach($pts as $p)
-                                <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="3.5" fill="#0b1020" stroke="#60a5fa" stroke-width="2"></circle>
+                                <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="5" fill="#0b1020" stroke="#60a5fa" stroke-width="2" style="cursor:pointer">
+                                    <title>{{ $p['l'] }}: {{ $p['c'] }} submission{{ $p['c'] == 1 ? '' : 's' }}</title>
+                                </circle>
                             @endforeach
                         </svg>
                         <div class="flex justify-between text-[9px] text-slate-500 font-bold uppercase px-1 mt-1">
@@ -638,7 +642,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5 text-white">
-                            @forelse($jobs as $job)
+                            @forelse($jobs->take(5) as $job)
                                 @php
                                     $jobCode = $job->job_code ?? ('SH-JOB-' . str_pad((string) $job->id, 6, '0', STR_PAD_LEFT));
                                     $jobInitial = strtoupper(substr($job->title, 0, 1)) ?: 'J';
@@ -711,6 +715,13 @@
                         </tbody>
                     </table>
                 </div>
+                @if(($totalJobs ?? 0) > 5)
+                    <div class="p-4 border-t border-white/5 text-center">
+                        <a href="{{ route('client.jobs.index') }}" class="inline-flex items-center gap-2 text-sm font-bold text-blue-400 hover:text-blue-300 transition">
+                            View all {{ $totalJobs }} requirements <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                @endif
             </div>
 
             {{-- Row 6: Detailed Widgets Grid (Exact Copy of JPEG sections & data) --}}
@@ -839,15 +850,15 @@
 
                     {{-- Circular progress ring (real overall score) --}}
                     <div class="flex items-center justify-center gap-6 pt-2">
-                        <div class="relative w-24 h-24 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/10 rounded-full">
+                        <div class="relative w-28 h-28 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/10 rounded-full">
                             <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 96 96">
                                 <circle cx="48" cy="48" r="40" fill="transparent" stroke="#111827" stroke-width="7"></circle>
                                 <circle cx="48" cy="48" r="40" fill="transparent" stroke="#06b6d4" stroke-width="7"
                                         stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $offset }}" stroke-linecap="round"></circle>
                             </svg>
-                            <div class="text-center relative z-10">
-                                <span class="text-xl font-black text-white block">{{ $overall }}%</span>
-                                <span class="text-[8px] text-cyan-400 uppercase font-bold tracking-wider">{{ $rating }}</span>
+                            <div class="text-center relative z-10 px-2 leading-tight">
+                                <span class="text-2xl font-black text-white block leading-none">{{ $overall }}%</span>
+                                <span class="text-[8px] text-cyan-400 font-bold leading-tight block mt-0.5">{{ $rating }}</span>
                             </div>
                         </div>
                         <div>
