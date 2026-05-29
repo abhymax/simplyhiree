@@ -217,7 +217,7 @@
             @php
                 $menu = [
                     ['icon' => 'fa-solid fa-chart-line', 'label' => 'Dashboard', 'route' => route('client.dashboard'), 'active' => true],
-                    ['icon' => 'fa-solid fa-briefcase', 'label' => 'Requirements', 'route' => route('client.jobs.index'), 'active' => false],
+                    ['icon' => 'fa-solid fa-briefcase', 'label' => 'My Jobs', 'route' => route('client.jobs.index'), 'active' => false],
                     ['icon' => 'fa-solid fa-user-group', 'label' => 'Candidates', 'route' => route('client.vendors.browse'), 'active' => false],
                     ['icon' => 'fa-solid fa-file-lines', 'label' => 'Applications', 'route' => route('client.applications.index'), 'active' => false],
                     ['icon' => 'fa-solid fa-video', 'label' => 'Interviews', 'route' => route('client.interviews.calendar'), 'active' => false],
@@ -464,35 +464,30 @@
                     </div>
 
                     @php
-                        // Real funnel from controller; each band narrows toward the bottom
-                        $funnelData = $funnel ?? [];
-                        $funnelTop  = max(1, collect($funnelData)->max('count') ?? 0);
-                        // Width steps so the cone always tapers even when counts are equal/zero
-                        $funnelWidths = [100, 84, 68, 52, 36];
-                        $funnelGrad = [
-                            'linear-gradient(135deg,#3b82f6,#2563eb)', // Submitted  - blue
-                            'linear-gradient(135deg,#06b6d4,#0891b2)', // Shortlisted- cyan
-                            'linear-gradient(135deg,#10b981,#059669)', // Interview  - emerald
-                            'linear-gradient(135deg,#14b8a6,#0d9488)', // Offered    - teal
-                            'linear-gradient(135deg,#f59e0b,#ea580c)', // Joined     - amber/orange
-                        ];
+                        $funnelData = array_values($funnel ?? []);
+                        // Connected trapezoid edges (as % of container width) top->bottom of cone.
+                        // Each band's bottom inset == next band's top inset so they join seamlessly.
+                        $edgeInset = [0, 9, 18, 27, 36, 45]; // 6 edges => 5 bands
+                        // Smooth single-hue ramp (blue -> cyan) so colours stay in sync
+                        $funnelFill = ['#2563eb', '#1d7fd6', '#1593c4', '#0ea5b8', '#06b6d4'];
                     @endphp
 
-                    <div class="flex flex-col items-center pt-1 pb-1">
+                    <div class="flex flex-col items-stretch pt-1">
                         @foreach($funnelData as $i => $stg)
                             @php
-                                $w = $funnelWidths[$i] ?? 30;
-                                $isLast = $i === count($funnelData) - 1;
+                                $tIn = $edgeInset[$i];      $tOut = 100 - $tIn;
+                                $bIn = $edgeInset[$i + 1];   $bOut = 100 - $bIn;
+                                $clip = "polygon({$tIn}% 0, {$tOut}% 0, {$bOut}% 100%, {$bIn}% 100%)";
                             @endphp
-                            <div class="relative flex items-center justify-center text-white font-bold transition-all duration-300 hover:brightness-110 group"
-                                 style="width: {{ $w }}%; min-width: 120px; height: 46px; background: {{ $funnelGrad[$i] ?? $funnelGrad[4] }};
-                                        clip-path: polygon(6% 0, 94% 0, 86% 100%, 14% 100%);
-                                        margin-top: {{ $i === 0 ? '0' : '-1px' }}; box-shadow: 0 4px 12px -4px rgba(0,0,0,.4);">
-                                <span class="text-[11px] uppercase tracking-wide font-extrabold drop-shadow">{{ $stg['label'] }}</span>
-                                {{-- count chip to the right of the band --}}
-                                <span class="absolute -right-2 translate-x-full text-sm font-black text-white whitespace-nowrap"
-                                      style="right: -0.5rem;">{{ $stg['count'] }}</span>
-                            </div>
+                            <a href="{{ $stg['link'] ?? '#' }}"
+                               class="relative flex items-center justify-center text-white transition hover:brightness-125 group"
+                               title="{{ $stg['label'] }}: {{ $stg['count'] }} — click to view"
+                               style="height: 42px; background: {{ $funnelFill[$i] ?? '#06b6d4' }}; clip-path: {{ $clip }}; margin-top: {{ $i === 0 ? '0' : '-1px' }};">
+                                <span class="flex items-center gap-2 text-[11px] font-bold drop-shadow pointer-events-none">
+                                    <span class="uppercase tracking-wide opacity-90">{{ $stg['label'] }}</span>
+                                    <span class="text-sm font-black">{{ $stg['count'] }}</span>
+                                </span>
+                            </a>
                         @endforeach
                     </div>
 
@@ -502,7 +497,7 @@
                         $joinVal = $funnelData[count($funnelData)-1]['count'] ?? 0;
                         $conv = $subVal > 0 ? round($joinVal / $subVal * 100, 1) : 0;
                     @endphp
-                    <div class="mt-2 text-center text-[10px] text-slate-400 font-semibold">
+                    <div class="mt-3 text-center text-[10px] text-slate-400 font-semibold">
                         Overall conversion: <span class="text-emerald-400 font-bold">{{ $conv }}%</span>
                         ({{ $joinVal }} joined of {{ $subVal }} submitted)
                     </div>
@@ -850,15 +845,15 @@
 
                     {{-- Circular progress ring (real overall score) --}}
                     <div class="flex items-center justify-center gap-6 pt-2">
-                        <div class="relative w-28 h-28 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/10 rounded-full">
+                        <div class="relative w-36 h-36 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/10 rounded-full">
                             <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 96 96">
-                                <circle cx="48" cy="48" r="40" fill="transparent" stroke="#111827" stroke-width="7"></circle>
-                                <circle cx="48" cy="48" r="40" fill="transparent" stroke="#06b6d4" stroke-width="7"
-                                        stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $offset }}" stroke-linecap="round"></circle>
+                                <circle cx="48" cy="48" r="42" fill="transparent" stroke="#111827" stroke-width="5"></circle>
+                                <circle cx="48" cy="48" r="42" fill="transparent" stroke="#06b6d4" stroke-width="5"
+                                        stroke-dasharray="{{ 2 * 3.1416 * 42 }}" stroke-dashoffset="{{ (2 * 3.1416 * 42) - ((2 * 3.1416 * 42) * min($overall,100) / 100) }}" stroke-linecap="round"></circle>
                             </svg>
-                            <div class="text-center relative z-10 px-2 leading-tight">
+                            <div class="text-center relative z-10 leading-tight" style="max-width: 88px;">
                                 <span class="text-2xl font-black text-white block leading-none">{{ $overall }}%</span>
-                                <span class="text-[8px] text-cyan-400 font-bold leading-tight block mt-0.5">{{ $rating }}</span>
+                                <span class="text-[9px] text-cyan-300 font-bold leading-tight block mt-1 whitespace-normal">{{ $rating }}</span>
                             </div>
                         </div>
                         <div>
@@ -892,12 +887,7 @@
                     <span class="text-slate-600">|</span>
                     <span>Your Growth. Our Platform.</span>
                 </div>
-                <div class="flex items-center gap-4">
-                    <a href="{{ route('support') }}" class="hover:text-white transition">Help &amp; Support</a>
-                    <a href="{{ route('client.jobs.create') }}" class="font-extrabold text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
-                        Post a New Job <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                </div>
+                <a href="{{ route('support') }}" class="hover:text-white transition">Help &amp; Support</a>
             </div>
 
         </main>

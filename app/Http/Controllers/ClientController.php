@@ -104,11 +104,11 @@ class ClientController extends Controller
         $funnelJoined      = JobApplication::whereIn('job_id', $jobIds)->where('joined_status', 'Joined')->count();
 
         $funnel = [
-            ['label' => 'Submitted',   'count' => $funnelSubmitted],
-            ['label' => 'Shortlisted', 'count' => $funnelShortlisted],
-            ['label' => 'Interview',   'count' => $funnelInterview],
-            ['label' => 'Offered',     'count' => $funnelOffered],
-            ['label' => 'Joined',      'count' => $funnelJoined],
+            ['label' => 'Submitted',   'count' => $funnelSubmitted,   'link' => route('client.applications.index')],
+            ['label' => 'Shortlisted', 'count' => $funnelShortlisted, 'link' => route('client.applications.index', ['status' => 'Approved'])],
+            ['label' => 'Interview',   'count' => $funnelInterview,   'link' => route('client.applications.index', ['hiring_status' => 'Interview Scheduled'])],
+            ['label' => 'Offered',     'count' => $funnelOffered,     'link' => route('client.applications.index', ['hiring_status' => 'Selected'])],
+            ['label' => 'Joined',      'count' => $funnelJoined,      'link' => route('client.applications.index', ['joined_status' => 'Joined'])],
         ];
 
         // --- Submission Trend (last 7 days, real per-day counts) ---
