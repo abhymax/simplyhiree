@@ -96,26 +96,25 @@ class ClientController extends Controller
         // ============================================================
         $jobIds = $jobs->pluck('id');
 
-        // --- Interview / Hiring Funnel (real counts) ---
-        $funnelSubmitted   = JobApplication::whereIn('job_id', $jobIds)->count();
+        // --- Interview / Hiring Funnel (real counts, starting at Shortlisted / Approved by Admin) ---
         $funnelShortlisted = JobApplication::whereIn('job_id', $jobIds)->where('status', 'Approved')->count();
         $funnelInterview   = JobApplication::whereIn('job_id', $jobIds)->where('hiring_status', 'Interview Scheduled')->count();
         $funnelOffered     = JobApplication::whereIn('job_id', $jobIds)->where('hiring_status', 'Selected')->count();
         $funnelJoined      = JobApplication::whereIn('job_id', $jobIds)->where('joined_status', 'Joined')->count();
 
         $funnel = [
-            ['label' => 'Submitted',   'count' => $funnelSubmitted,   'link' => route('client.applications.index')],
             ['label' => 'Shortlisted', 'count' => $funnelShortlisted, 'link' => route('client.applications.index', ['status' => 'Approved'])],
             ['label' => 'Interview',   'count' => $funnelInterview,   'link' => route('client.applications.index', ['hiring_status' => 'Interview Scheduled'])],
             ['label' => 'Offered',     'count' => $funnelOffered,     'link' => route('client.applications.index', ['hiring_status' => 'Selected'])],
             ['label' => 'Joined',      'count' => $funnelJoined,      'link' => route('client.applications.index', ['joined_status' => 'Joined'])],
         ];
 
-        // --- Submission Trend (last 7 days, real per-day counts) ---
+        // --- Interview Activity Trend (last 7 days, real scheduled interviews per-day) ---
         $trendStart = Carbon::today()->subDays(6);
         $rawTrend = JobApplication::whereIn('job_id', $jobIds)
-            ->where('created_at', '>=', $trendStart)
-            ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
+            ->whereNotNull('interview_at')
+            ->where('interview_at', '>=', $trendStart)
+            ->selectRaw('DATE(interview_at) as d, COUNT(*) as c')
             ->groupBy('d')->pluck('c', 'd');
         $submissionTrend = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -126,19 +125,20 @@ class ClientController extends Controller
             ];
         }
 
-        // --- Daily Pulse (real) ---
-        $profilesSubmittedToday = JobApplication::whereIn('job_id', $jobIds)
-            ->whereDate('created_at', Carbon::today())->count();
-        $selectionRatio = $funnelSubmitted > 0
-            ? round(($funnelOffered + $funnelJoined) / $funnelSubmitted * 100)
+        // --- Daily Pulse (real client-relevant metrics) ---
+        $selectionRatio = $funnelShortlisted > 0
+            ? round(($funnelOffered + $funnelJoined) / $funnelShortlisted * 100)
             : 0;
-        // Client response = % of submissions the client has acted on (anything past 'Approved' with a hiring decision)
+        
+        // Client response = % of shortlisted candidates acted on (anything past 'Approved' with a hiring decision)
         $actedOn = JobApplication::whereIn('job_id', $jobIds)
+            ->where('status', 'Approved')
             ->where(function ($q) {
                 $q->whereNotNull('hiring_status')->orWhereNotNull('joined_status');
             })->count();
         $clientResponseRate = $funnelShortlisted > 0 ? round($actedOn / max($funnelShortlisted, 1) * 100) : 0;
         if ($clientResponseRate > 100) $clientResponseRate = 100;
+        
         // Pending follow-ups = approved candidates with no hiring action yet
         $pendingFollowUps = JobApplication::whereIn('job_id', $jobIds)
             ->where('status', 'Approved')
@@ -148,7 +148,7 @@ class ClientController extends Controller
 
         $dailyPulse = [
             ['label' => 'Interviews Today',  'value' => $todayInterviews,          'icon' => 'fa-video',          'color' => 'blue',    'link' => route('client.interviews.calendar')],
-            ['label' => 'Profiles Submitted','value' => $profilesSubmittedToday,   'icon' => 'fa-file-arrow-up',  'color' => 'indigo',  'link' => route('client.applications.index')],
+            ['label' => 'Awaiting Review',   'value' => $pendingFollowUps,         'icon' => 'fa-user-clock',     'color' => 'indigo',  'link' => route('client.applications.index', ['status' => 'Approved'])],
             ['label' => 'Selection Ratio',   'value' => $selectionRatio.'%',       'icon' => 'fa-chart-line',     'color' => 'emerald', 'link' => route('client.applications.index', ['view' => 'hires'])],
             ['label' => 'Offers Extended',   'value' => $funnelOffered,            'icon' => 'fa-handshake',      'color' => 'amber',   'link' => route('client.applications.index', ['hiring_status' => 'Selected'])],
             ['label' => 'Candidates Hired',  'value' => $funnelJoined,             'icon' => 'fa-trophy',         'color' => 'rose',    'link' => route('client.applications.index', ['joined_status' => 'Joined'])],
@@ -160,16 +160,12 @@ class ClientController extends Controller
                 'title'       => $job->title,
                 'company'     => $job->company_name,
                 'location'    => $job->location,
-                'submissions' => $job->jobApplications->count(),
+                'submissions' => $job->jobApplications->where('status', 'Approved')->count(),
                 'id'          => $job->id,
             ];
         })->sortByDesc('submissions')->take(4)->values();
 
         // --- Performance Overview (real ratios) ---
-        $interviewedCount = JobApplication::whereIn('job_id', $jobIds)
-            ->whereIn('hiring_status', ['Interviewed', 'Selected'])
-            ->orWhere(fn($q) => $q->whereIn('job_id', $jobIds)->whereNotNull('joined_status'))
-            ->count();
         $performance = [
             'selection_ratio'   => $selectionRatio,
             'response_rate'     => $clientResponseRate,

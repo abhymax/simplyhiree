@@ -218,7 +218,6 @@
                 $menu = [
                     ['icon' => 'fa-solid fa-chart-line', 'label' => 'Dashboard', 'route' => route('client.dashboard'), 'active' => true],
                     ['icon' => 'fa-solid fa-briefcase', 'label' => 'My Jobs', 'route' => route('client.jobs.index'), 'active' => false],
-                    ['icon' => 'fa-solid fa-user-group', 'label' => 'Candidates', 'route' => route('client.vendors.browse'), 'active' => false],
                     ['icon' => 'fa-solid fa-file-lines', 'label' => 'Applications', 'route' => route('client.applications.index'), 'active' => false],
                     ['icon' => 'fa-solid fa-video', 'label' => 'Interviews', 'route' => route('client.interviews.calendar'), 'active' => false],
                     ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.applications.index', ['joined_status' => 'Left']), 'active' => false],
@@ -255,8 +254,8 @@
                 </div>
                 <form method="POST" action="{{ route('logout') }}" class="m-0 shrink-0">
                     @csrf
-                    <button type="submit" class="text-slate-500 hover:text-red-400 p-1.5 transition">
-                        <i class="fa-solid fa-angle-right"></i>
+                    <button type="submit" class="text-slate-500 hover:text-red-400 p-1.5 transition" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </form>
             </div>
@@ -409,7 +408,7 @@
                     @endforeach
                 </div>
 
-                {{-- Submission Trend — real SVG line chart --}}
+                {{-- Interview Activity Trend — real SVG line chart --}}
                 @php
                     $trend = $submissionTrend ?? [];
                     $n = max(count($trend), 1);
@@ -427,8 +426,8 @@
                 @endphp
                 <div>
                     <div class="flex justify-between items-baseline mb-2">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Submission Trend · Last 7 Days</p>
-                        <span class="text-[10px] font-bold text-blue-400">{{ $trend7Total }} this week</span>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Interview Activity · Last 7 Days</p>
+                        <span class="text-[10px] font-bold text-blue-400">{{ $trend7Total }} interviews this week</span>
                     </div>
                     <div class="h-28 bg-black/20 rounded-xl border border-white/5 relative px-2 pt-2">
                         <svg class="w-full h-[78px]" viewBox="0 0 600 100" preserveAspectRatio="none">
@@ -442,7 +441,7 @@
                             <polyline points="{{ $linePath }}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
                             @foreach($pts as $p)
                                 <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="5" fill="#0b1020" stroke="#60a5fa" stroke-width="2" style="cursor:pointer">
-                                    <title>{{ $p['l'] }}: {{ $p['c'] }} submission{{ $p['c'] == 1 ? '' : 's' }}</title>
+                                    <title>{{ $p['l'] }}: {{ $p['c'] }} interview{{ $p['c'] == 1 ? '' : 's' }} scheduled</title>
                                 </circle>
                             @endforeach
                         </svg>
@@ -467,9 +466,9 @@
                     @php
                         $funnelData = array_values($funnel ?? []);
                         // Reference palette: blue shades -> teal -> orange tip
-                        $funnelFill = ['#1e40af', '#2563eb', '#3b82f6', '#0d9488', '#ea580c'];
+                        $funnelFill = ['#2563eb', '#3b82f6', '#0d9488', '#ea580c'];
                         // Cone centred at cx; tapers from 140 half-width to a point (last band = triangle).
-                        $cx = 150; $halfW = [140, 114, 88, 62, 36, 0]; $bandH = 44;
+                        $cx = 150; $halfW = [140, 105, 70, 35, 0]; $bandH = 55;
                     @endphp
 
                     <style>
@@ -505,24 +504,29 @@
                     @endphp
                     <div class="mt-3 text-center text-[10px] text-slate-400 font-semibold">
                         Overall conversion: <span class="text-emerald-400 font-bold">{{ $conv }}%</span>
-                        ({{ $joinVal }} joined of {{ $subVal }} submitted)
+                        ({{ $joinVal }} joined of {{ $subVal }} shortlisted)
                     </div>
                 </div>
 
-                {{-- Right Widget: Recruitment Performance (real ratios) --}}
+                {{-- Right Widget: Billing & Hiring Analytics --}}
                 <div class="glass-card rounded-2xl p-6 flex flex-col justify-between gap-5">
                     <div>
-                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Recruitment Performance</h4>
-                        <p class="text-[10px] text-slate-500 mt-0.5">Conversion ratios across your pipeline</p>
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Billing &amp; Hiring Analytics</h4>
+                        <p class="text-[10px] text-slate-500 mt-0.5">Financial &amp; performance summary</p>
                     </div>
 
                     @php
-                        $perf = $performance ?? [];
+                        $totalBilled = $totalPaidInvoices + $totalOutstandingInvoices;
+                        $billingPaidPct = $totalBilled > 0 ? (int) round($totalPaidInvoices / $totalBilled * 100) : 0;
+                        $hiringSuccessRate = $funnelShortlisted > 0 ? (int) round($funnelJoined / $funnelShortlisted * 100) : 0;
+                        $reviewRate = $performance['response_rate'] ?? 0;
+                        $interviewRate = $performance['interview_rate'] ?? 0;
+
                         $perfRows = [
-                            ['label' => 'Selection Ratio',  'value' => $perf['selection_ratio'] ?? 0, 'color' => 'emerald', 'hex' => '#10b981'],
-                            ['label' => 'Interview Rate',   'value' => $perf['interview_rate'] ?? 0,  'color' => 'blue',    'hex' => '#3b82f6'],
-                            ['label' => 'Review Rate',  'value' => $perf['response_rate'] ?? 0,   'color' => 'amber',   'hex' => '#f59e0b'],
-                            ['label' => 'Fill Rate',        'value' => $perf['fill_rate'] ?? 0,       'color' => 'purple',  'hex' => '#a855f7'],
+                            ['label' => 'Shortlisted Hired',   'value' => $hiringSuccessRate, 'color' => 'emerald', 'hex' => '#10b981'],
+                            ['label' => 'Invoices Settled',    'value' => $billingPaidPct,    'color' => 'blue',    'hex' => '#3b82f6'],
+                            ['label' => 'Profiles Reviewed',   'value' => $reviewRate,        'color' => 'amber',   'hex' => '#f59e0b'],
+                            ['label' => 'Interviews Scheduled', 'value' => $interviewRate,     'color' => 'purple',  'hex' => '#a855f7'],
                         ];
                     @endphp
 
@@ -538,9 +542,8 @@
                         @endforeach
                     </div>
 
-                    @php $joinedCount = collect($funnel ?? [])->firstWhere('label', 'Joined')['count'] ?? 0; @endphp
                     <div class="p-3 bg-blue-600/10 border border-blue-500/20 rounded-xl text-center text-[10px] font-extrabold text-blue-400 uppercase tracking-wide">
-                        {{ $joinedCount }} of {{ $totalApplicants ?? 0 }} approved candidates hired
+                        {{ $funnelJoined }} of {{ $funnelShortlisted }} shortlisted candidates successfully joined
                     </div>
                 </div>
             </div>
@@ -553,16 +556,15 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
                     
-                    {{-- Workspace 1: Total Submissions --}}
-                    @php $totalSubmitted = collect($funnel ?? [])->firstWhere('label', 'Submitted')['count'] ?? 0; @endphp
+                    {{-- Workspace 1: Successful Hires --}}
                     <div class="glass-card rounded-2xl p-5 workspace-card-blue flex flex-col justify-between min-h-[150px]">
                         <div>
-                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Submissions</p>
-                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ number_format($totalSubmitted) }}</h4>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Candidates sent to your jobs</p>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Successful Hires</p>
+                            <h4 class="text-2xl font-extrabold text-white mt-1">{{ number_format($funnelJoined) }}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Candidates onboarded successfully</p>
                         </div>
-                        <a href="{{ route('client.vendors.browse') }}" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold text-center transition uppercase">
-                            Browse Vendors
+                        <a href="{{ route('client.applications.index', ['joined_status' => 'Joined']) }}" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold text-center transition uppercase">
+                            View Hired
                         </a>
                     </div>
 
@@ -822,30 +824,36 @@
                     </div>
                 </div>
 
-                {{-- Widget 3: Performance Overview (Replicating JPEG data & circular gauge exactly) --}}
+                {{-- Widget 3: Hiring & Billing Success (Replicating JPEG data & circular gauge exactly) --}}
                 <div class="glass-card rounded-2xl p-6 flex flex-col justify-between gap-5 col-span-1 md:col-span-2 xl:col-span-1">
                     <div class="flex justify-between items-baseline">
-                        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Performance Overview</h4>
+                        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Hiring &amp; Billing Success</h4>
                         <span class="text-xs font-bold text-slate-400">This Month</span>
                     </div>
 
                     @php
                         $perf = $performance ?? [];
-                        // Overall score = average of the 4 ratios
+                        $totalBilled = $totalPaidInvoices + $totalOutstandingInvoices;
+                        $billingPaidPct = $totalBilled > 0 ? (int) round($totalPaidInvoices / $totalBilled * 100) : 0;
+                        $hiringSuccessRate = $funnelShortlisted > 0 ? (int) round($funnelJoined / $funnelShortlisted * 100) : 0;
+                        $reviewRate = $perf['response_rate'] ?? 0;
+                        $interviewRate = $perf['interview_rate'] ?? 0;
+
+                        // Overall score = average of the 4 client-centric metrics
                         $overall = (int) round(collect([
-                            $perf['selection_ratio'] ?? 0,
-                            $perf['interview_rate'] ?? 0,
-                            $perf['response_rate'] ?? 0,
-                            $perf['fill_rate'] ?? 0,
+                            $hiringSuccessRate,
+                            $billingPaidPct,
+                            $reviewRate,
+                            $interviewRate,
                         ])->avg());
                         $circumference = 251.2;
                         $offset = $circumference - ($circumference * min($overall, 100) / 100);
                         $rating = $overall >= 75 ? 'Excellent' : ($overall >= 50 ? 'Good' : ($overall >= 25 ? 'Fair' : 'Getting Started'));
                         $perfBars = [
-                            ['label' => 'Selection Ratio', 'value' => $perf['selection_ratio'] ?? 0, 'hex' => '#10b981'],
-                            ['label' => 'Review Rate', 'value' => $perf['response_rate'] ?? 0,   'hex' => '#3b82f6'],
-                            ['label' => 'Interview Rate',  'value' => $perf['interview_rate'] ?? 0,  'hex' => '#f59e0b'],
-                            ['label' => 'Fill Rate',       'value' => $perf['fill_rate'] ?? 0,       'hex' => '#a855f7'],
+                            ['label' => 'Shortlisted Hired',   'value' => $hiringSuccessRate, 'hex' => '#10b981'],
+                            ['label' => 'Invoices Settled',    'value' => $billingPaidPct,    'hex' => '#3b82f6'],
+                            ['label' => 'Profiles Reviewed',   'value' => $reviewRate,        'hex' => '#f59e0b'],
+                            ['label' => 'Interviews Scheduled', 'value' => $interviewRate,     'hex' => '#a855f7'],
                         ];
                     @endphp
 
@@ -863,8 +871,8 @@
                             </div>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-300">Your hiring health score</p>
-                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Average across selection, response, interview &amp; fill rates from your live pipeline.</p>
+                            <p class="text-xs font-semibold text-slate-300">Hiring &amp; Payment health score</p>
+                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Average across candidate conversions, invoice clearings, and interview rates in your workspace.</p>
                         </div>
                     </div>
 
