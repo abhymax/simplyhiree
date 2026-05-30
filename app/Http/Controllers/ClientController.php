@@ -189,6 +189,8 @@ class ClientController extends Controller
             'recentInterviews' => $recentInterviews,
             // Real-data widgets
             'funnel' => $funnel,
+            'funnelShortlisted' => $funnelShortlisted,
+            'funnelJoined' => $funnelJoined,
             'submissionTrend' => $submissionTrend,
             'dailyPulse' => $dailyPulse,
             'topRequirements' => $topRequirements,

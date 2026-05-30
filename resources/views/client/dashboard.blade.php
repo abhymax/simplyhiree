@@ -465,6 +465,8 @@
 
                     @php
                         $funnelData = array_values($funnel ?? []);
+                        $funnelShortlisted = $funnelShortlisted ?? (collect($funnelData)->firstWhere('label', 'Shortlisted')['count'] ?? 0);
+                        $funnelJoined = $funnelJoined ?? (collect($funnelData)->firstWhere('label', 'Joined')['count'] ?? 0);
                         // Reference palette: blue shades -> teal -> orange tip
                         $funnelFill = ['#2563eb', '#3b82f6', '#0d9488', '#ea580c'];
                         // Cone centred at cx; tapers from 140 half-width to a point (last band = triangle).
