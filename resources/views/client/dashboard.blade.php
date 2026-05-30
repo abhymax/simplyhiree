@@ -521,7 +521,7 @@
                         $perfRows = [
                             ['label' => 'Selection Ratio',  'value' => $perf['selection_ratio'] ?? 0, 'color' => 'emerald', 'hex' => '#10b981'],
                             ['label' => 'Interview Rate',   'value' => $perf['interview_rate'] ?? 0,  'color' => 'blue',    'hex' => '#3b82f6'],
-                            ['label' => 'Client Response',  'value' => $perf['response_rate'] ?? 0,   'color' => 'amber',   'hex' => '#f59e0b'],
+                            ['label' => 'Review Rate',  'value' => $perf['response_rate'] ?? 0,   'color' => 'amber',   'hex' => '#f59e0b'],
                             ['label' => 'Fill Rate',        'value' => $perf['fill_rate'] ?? 0,       'color' => 'purple',  'hex' => '#a855f7'],
                         ];
                     @endphp
@@ -843,7 +843,7 @@
                         $rating = $overall >= 75 ? 'Excellent' : ($overall >= 50 ? 'Good' : ($overall >= 25 ? 'Fair' : 'Getting Started'));
                         $perfBars = [
                             ['label' => 'Selection Ratio', 'value' => $perf['selection_ratio'] ?? 0, 'hex' => '#10b981'],
-                            ['label' => 'Client Response', 'value' => $perf['response_rate'] ?? 0,   'hex' => '#3b82f6'],
+                            ['label' => 'Review Rate', 'value' => $perf['response_rate'] ?? 0,   'hex' => '#3b82f6'],
                             ['label' => 'Interview Rate',  'value' => $perf['interview_rate'] ?? 0,  'hex' => '#f59e0b'],
                             ['label' => 'Fill Rate',       'value' => $perf['fill_rate'] ?? 0,       'hex' => '#a855f7'],
                         ];
