@@ -322,16 +322,16 @@
             {{-- Row 1: Core Metrics Cards (Matches color combinations of JPEG exactly) --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 
-                {{-- Metric Card 1: Open Requirements (Indigo) --}}
-                <a href="{{ route('client.jobs.index') }}" class="metric-card-indigo p-6 rounded-2xl relative overflow-hidden group block hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-lg shadow-blue-500/5">
-                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider relative z-10">Open Requirements</p>
-                    <h3 class="text-3xl font-extrabold text-white mt-3 relative z-10">{{ $activeJobs ?? 0 }}</h3>
+                {{-- Metric Card 1: Awaiting Review (candidates needing the client's decision) --}}
+                <a href="{{ route('client.applications.index', ['status' => 'Approved']) }}" class="metric-card-indigo p-6 rounded-2xl relative overflow-hidden group block hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-lg shadow-blue-500/5">
+                    <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider relative z-10">Awaiting Review</p>
+                    <h3 class="text-3xl font-extrabold text-white mt-3 relative z-10">{{ $awaitingReview ?? 0 }}</h3>
                     <div class="flex items-center gap-1.5 text-xs text-blue-400 mt-4 font-semibold relative z-10">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span>Active Job Vacancies</span>
+                        <i class="fa-solid fa-user-clock"></i>
+                        <span>Candidates need your decision</span>
                     </div>
                     {{-- Failsafe absolute positioned background icon --}}
-                    <div class="card-decor-icon text-blue-500"><i class="fa-solid fa-briefcase"></i></div>
+                    <div class="card-decor-icon text-blue-500"><i class="fa-solid fa-user-clock"></i></div>
                 </a>
 
                 {{-- Metric Card 2: Interviews Today (Purple) --}}
