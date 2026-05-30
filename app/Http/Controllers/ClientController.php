@@ -150,8 +150,8 @@ class ClientController extends Controller
             ['label' => 'Interviews Today',  'value' => $todayInterviews,          'icon' => 'fa-video',          'color' => 'blue',    'link' => route('client.interviews.calendar')],
             ['label' => 'Profiles Submitted','value' => $profilesSubmittedToday,   'icon' => 'fa-file-arrow-up',  'color' => 'indigo',  'link' => route('client.applications.index')],
             ['label' => 'Selection Ratio',   'value' => $selectionRatio.'%',       'icon' => 'fa-chart-line',     'color' => 'emerald', 'link' => route('client.applications.index', ['view' => 'hires'])],
-            ['label' => 'Client Response',   'value' => $clientResponseRate.'%',   'icon' => 'fa-reply',          'color' => 'amber',   'link' => route('client.applications.index')],
-            ['label' => 'Pending Follow-ups','value' => $pendingFollowUps,         'icon' => 'fa-rotate',         'color' => 'rose',    'link' => route('client.applications.index')],
+            ['label' => 'Offers Extended',   'value' => $funnelOffered,            'icon' => 'fa-handshake',      'color' => 'amber',   'link' => route('client.applications.index', ['hiring_status' => 'Selected'])],
+            ['label' => 'Candidates Hired',  'value' => $funnelJoined,             'icon' => 'fa-trophy',         'color' => 'rose',    'link' => route('client.applications.index', ['joined_status' => 'Joined'])],
         ];
 
         // --- Top Requirements (jobs ranked by submission count) ---
@@ -184,6 +184,7 @@ class ClientController extends Controller
             'activeJobs' => $activeJobs,
             'totalApplicants' => $totalApplicants,
             'totalHires' => $totalHires,
+            'awaitingReview' => $pendingFollowUps,
             'todayInterviews' => $todayInterviews,
             'dueInvoicesCount' => $dueInvoicesCount,
             'totalOutstandingInvoices' => $totalOutstandingInvoices,

@@ -274,9 +274,10 @@
             {{-- Search --}}
             <div class="flex items-center gap-4 flex-1 max-w-xl">
                 <div class="relative w-full hidden sm:block">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm z-10"></i>
                     <input type="text" placeholder="Search candidates, jobs, clients..."
-                           class="w-full h-10 bg-slate-900/60 border border-white/5 rounded-lg pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 transition">
+                           style="background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.25);"
+                           class="w-full h-10 rounded-lg pl-10 pr-4 text-sm text-white placeholder-slate-300 focus:outline-none focus:border-blue-400 transition">
                 </div>
             </div>
 
