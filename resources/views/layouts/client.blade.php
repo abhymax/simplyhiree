@@ -394,6 +394,16 @@
         {{-- Content Area --}}
         <main class="custom-main-body">
             @yield('client_content')
+
+            {{-- Footer --}}
+            <div class="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="font-extrabold text-white text-sm">SimplyHiree</div>
+                    <span class="text-slate-600">|</span>
+                    <span>Your Growth. Our Platform.</span>
+                </div>
+                <a href="{{ route('support') }}" class="hover:text-white transition">Help &amp; Support</a>
+            </div>
         </main>
     </div>
 
