@@ -493,8 +493,8 @@ class ClientController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if ((string) $job->status !== 'pending_approval') {
-            abort(403, 'Only pending jobs can be edited.');
+        if (!in_array((string) $job->status, ['pending_approval', 'approved'])) {
+            abort(403, 'Only pending or active approved jobs can be edited.');
         }
     }
 
