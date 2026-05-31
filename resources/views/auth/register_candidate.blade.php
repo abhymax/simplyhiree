@@ -1,4 +1,9 @@
 <x-guest-layout>
+    <div class="mb-6">
+        <h2 class="text-2xl font-black text-white tracking-tight">Register as Candidate</h2>
+        <p class="text-slate-400 text-xs mt-1">Accelerate your professional career and land your next dream role.</p>
+    </div>
+
     <form method="POST" action="{{ route('register.candidate') }}">
         @csrf
 

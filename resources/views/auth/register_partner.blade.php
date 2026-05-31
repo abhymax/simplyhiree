@@ -1,4 +1,9 @@
 <x-guest-layout>
+    <div class="mb-6">
+        <h2 class="text-2xl font-black text-white tracking-tight">Register as Staffing Partner</h2>
+        <p class="text-slate-400 text-xs mt-1">Scale your agency placements and serve premier corporate clients.</p>
+    </div>
+
     <form method="POST" action="{{ route('register.partner') }}">
         @csrf
 
