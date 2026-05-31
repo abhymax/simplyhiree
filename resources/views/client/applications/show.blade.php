@@ -29,7 +29,7 @@
         </a>
 
         {{-- Hero card --}}
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-6">
+        <div class="glass-card rounded-3xl p-8 shadow-2xl mb-6">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div class="flex items-center gap-5">
                     <div class="h-20 w-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg ring-4 ring-white/10">{{ $initial }}</div>
@@ -73,7 +73,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {{-- Applied Job --}}
-            <div class="lg:col-span-1 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <div class="lg:col-span-1 glass-card rounded-3xl p-6 shadow-xl">
                 <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3"><i class="fa-solid fa-briefcase mr-1"></i> Applied For</h3>
                 <div class="font-extrabold text-white text-lg leading-tight">{{ $application->job->title ?? 'Deleted Job' }}</div>
                 <div class="text-blue-200 text-sm mt-1">{{ $application->job->company_name ?? '—' }}</div>
@@ -84,35 +84,35 @@
             </div>
 
             {{-- Status --}}
-            <div class="lg:col-span-2 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <div class="lg:col-span-2 glass-card rounded-3xl p-6 shadow-xl">
                 <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3"><i class="fa-solid fa-list-check mr-1"></i> Hiring Pipeline</h3>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                    <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                         <div class="text-[10px] uppercase font-bold text-slate-300">Application</div>
                         <div class="text-white font-bold mt-1">{{ $application->status ?? '—' }}</div>
                     </div>
-                    <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                    <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                         <div class="text-[10px] uppercase font-bold text-slate-300">Hiring</div>
                         <div class="text-white font-bold mt-1">{{ $application->hiring_status ?: 'Pending Action' }}</div>
                     </div>
-                    <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                    <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                         <div class="text-[10px] uppercase font-bold text-slate-300">Joining</div>
                         <div class="text-white font-bold mt-1">{{ $application->joined_status ?: '—' }}</div>
                     </div>
                     @if($application->interview_at)
-                        <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                        <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                             <div class="text-[10px] uppercase font-bold text-slate-300">Interview</div>
                             <div class="text-white font-bold mt-1">{{ $application->interview_at->format('M d, Y g:i A') }}</div>
                         </div>
                     @endif
                     @if($application->joining_date)
-                        <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                        <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                             <div class="text-[10px] uppercase font-bold text-slate-300">Joining Date</div>
                             <div class="text-white font-bold mt-1">{{ $application->joining_date->format('M d, Y') }}</div>
                         </div>
                     @endif
                     @if($application->left_at)
-                        <div class="bg-white/5 border border-white/10 rounded-xl p-3">
+                        <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                             <div class="text-[10px] uppercase font-bold text-slate-300">Left On</div>
                             <div class="text-white font-bold mt-1">{{ $application->left_at->format('M d, Y') }}</div>
                         </div>
@@ -171,7 +171,7 @@
 
             {{-- Interview Rounds Timeline --}}
             @if($application->interviewRounds->isNotEmpty())
-            <div class="lg:col-span-3 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <div class="lg:col-span-3 glass-card rounded-3xl p-6 shadow-xl">
                 <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4"><i class="fa-solid fa-list-ol mr-1"></i> Interview Rounds ({{ $application->interviewRounds->count() }})</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     @foreach($application->interviewRounds as $r)
@@ -202,7 +202,7 @@
                                 <div class="text-amber-300 text-xs mt-1">{{ str_repeat('★', $r->rating) }}{{ str_repeat('☆', 5 - $r->rating) }}</div>
                             @endif
                             @if($r->feedback)
-                                <div class="mt-2 bg-white/5 border border-white/10 rounded p-2 text-[11px] text-blue-100 italic line-clamp-3">"{{ $r->feedback }}"</div>
+                                <div class="mt-2 bg-[#03071a]/50 border border-white/10 rounded p-2 text-[11px] text-blue-100 italic line-clamp-3">"{{ $r->feedback }}"</div>
                             @endif
                         </div>
                     @endforeach
@@ -211,7 +211,7 @@
             @endif
 
             {{-- Profile --}}
-            <div class="lg:col-span-3 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <div class="lg:col-span-3 glass-card rounded-3xl p-6 shadow-xl">
                 <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4"><i class="fa-solid fa-user mr-1"></i> Candidate Profile</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                     <div>

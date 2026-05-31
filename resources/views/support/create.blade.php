@@ -42,8 +42,8 @@
             </div>
         @endif
 
-        <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 md:p-8 shadow-lg">
-            <form method="POST" action="{{ route('support.submit') }}" enctype="multipart/form-data" class="space-y-5">
+        <div class="{{ Auth::check() && Auth::user()->role === 'client' ? 'premium-card' : 'bg-white/10 border border-white/10 backdrop-blur-md rounded-3xl' }} p-6 md:p-8 shadow-lg">
+            <form method="POST" action="{{ route('support.submit') }}" enctype="multipart/form-data" class="space-y-5 {{ Auth::check() && Auth::user()->role === 'client' ? 'premium-form' : '' }}">
                 @csrf
 
                 <div>

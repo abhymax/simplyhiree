@@ -30,10 +30,10 @@
             </div>
         </div>
 
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl">
+        <div class="premium-table-container shadow-2xl">
             <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-sm">
-                    <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
+                <table class="premium-table min-w-full">
+                    <thead>
                         <tr>
                             <th class="px-6 py-5">Candidate</th>
                             <th class="px-6 py-5">Details</th>
@@ -254,7 +254,7 @@
                 </table>
             </div>
 
-            <div class="p-6 border-t border-white/10 bg-slate-900/80">
+            <div class="p-6 border-t border-white/10 bg-[#03071a]/50">
                 {{ $applications->links() }}
             </div>
         </div>

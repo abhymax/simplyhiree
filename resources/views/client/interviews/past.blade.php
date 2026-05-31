@@ -19,18 +19,18 @@
     </div>
 
     {{-- SEARCH/FILTER BAR --}}
-    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-2xl p-3 mb-6">
+    <div class="glass-card rounded-2xl p-4 mb-6 premium-form">
         <form method="GET" action="{{ route('client.interviews.past') }}" class="flex items-center gap-2">
             <div class="relative grow">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-sm pointer-events-none"></i>
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 text-sm pointer-events-none"></i>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by candidate name, email, or job title..."
-                       class="h-10 w-full bg-slate-800 border border-blue-500/30 rounded-lg text-white text-sm pl-9 pr-3 focus:outline-none focus:border-cyan-400 transition">
+                       class="h-10 w-full pl-11 pr-3">
             </div>
-            <button type="submit" class="h-10 px-5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm shadow">
+            <button type="submit" class="h-10 px-5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm shadow transition">
                 <i class="fa-solid fa-filter"></i> Search
             </button>
             @if(request()->filled('search'))
-                <a href="{{ route('client.interviews.past') }}" class="h-10 w-10 bg-rose-500 hover:bg-rose-400 text-white rounded-lg flex items-center justify-center">
+                <a href="{{ route('client.interviews.past') }}" class="h-10 w-10 bg-rose-500 hover:bg-rose-400 text-white rounded-xl flex items-center justify-center transition">
                     <i class="fa-solid fa-xmark"></i>
                 </a>
             @endif
@@ -38,7 +38,7 @@
     </div>
 
     {{-- PAST INTERVIEWS LIST --}}
-    <div class="bg-white/5 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+    <div class="glass-card border !border-white/15 rounded-3xl overflow-hidden shadow-2xl">
         <div class="divide-y divide-white/10">
             @forelse($pastInterviews as $e)
                 @php
@@ -74,13 +74,13 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-3">
                                 <div>
                                     <span class="text-cyan-300 font-bold uppercase block mb-1">Recommendation</span>
-                                    <span class="inline-block px-2.5 py-1 rounded bg-white/5 border border-white/10 text-white font-extrabold text-[10px] uppercase">
+                                    <span class="inline-block px-2.5 py-1 rounded bg-[#03071a]/50 border border-white/10 text-white font-extrabold text-[10px] uppercase">
                                         {{ ucwords(str_replace('_', ' ', $e->interview_recommendation ?? 'No Recommendation')) }}
                                     </span>
                                 </div>
                                 <div>
                                     <span class="text-cyan-300 font-bold uppercase block mb-1">Detailed Feedback</span>
-                                    <p class="italic bg-slate-950/20 border border-white/5 p-3.5 rounded text-slate-200 leading-relaxed">"{{ $e->interview_feedback }}"</p>
+                                    <p class="italic bg-[#03071a]/50 border border-white/10 p-3.5 rounded text-slate-200 leading-relaxed">"{{ $e->interview_feedback }}"</p>
                                 </div>
                             </div>
                         @else
@@ -98,7 +98,7 @@
                                 <span class="text-cyan-300 font-bold uppercase block mb-3"><i class="fa-solid fa-list-ol mr-1"></i> Round History ({{ $e->interviewRounds->count() }})</span>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     @foreach($e->interviewRounds as $r)
-                                        <div class="bg-slate-950/20 border border-white/5 rounded-xl p-3">
+                                        <div class="bg-[#03071a]/50 border border-white/10 rounded-xl p-3">
                                             <div class="flex items-center justify-between mb-1.5">
                                                 <span class="font-bold text-white text-sm">Round {{ $r->round_number }}</span>
                                                 <span class="text-[9px] px-2 py-0.5 rounded bg-white/10 text-blue-200 font-bold uppercase">{{ $r->status }}</span>
@@ -108,7 +108,7 @@
                                                 <div class="text-[10px] font-bold text-cyan-300 mt-2">Recommendation: {{ $r->recommendation }}</div>
                                             @endif
                                             @if($r->feedback)
-                                                <div class="text-xs italic text-slate-300 mt-2 bg-white/5 border border-white/5 p-2 rounded">"{{ $r->feedback }}"</div>
+                                                <div class="text-xs italic text-slate-300 mt-2 bg-[#03071a]/50 border border-white/5 p-2 rounded">"{{ $r->feedback }}"</div>
                                             @endif
                                         </div>
                                     @endforeach
@@ -129,7 +129,7 @@
         </div>
 
         @if($pastInterviews->hasPages())
-            <div class="p-4 border-t border-white/10 bg-slate-900/60">
+            <div class="p-4 border-t border-white/10 bg-[#03071a]/50">
                 {{ $pastInterviews->appends(request()->query())->links() }}
             </div>
         @endif

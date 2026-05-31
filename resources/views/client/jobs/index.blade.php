@@ -6,11 +6,6 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-white/10 pb-6">
             <div>
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
-                        Client Workspace
-                    </span>
-                </div>
                 <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">My Job Postings</h1>
                 <p class="text-blue-200 mt-2 text-lg">Manage all your requirements and track their status.</p>
             </div>
@@ -22,7 +17,7 @@
         </div>
 
         {{-- Status Pills --}}
-        <div class="flex flex-wrap items-center gap-3 mb-8 bg-white/5 backdrop-blur-md p-2 rounded-2xl border border-white/10">
+        <div class="flex flex-wrap items-center gap-3 mb-8 glass-card p-2 rounded-2xl">
             <a href="{{ route('client.jobs.index') }}" class="px-5 py-2 text-sm font-bold rounded-xl transition-all {{ !request('status') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-blue-200 hover:bg-white/10 hover:text-white' }}">
                 All <span class="ml-1.5 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ !request('status') ? 'bg-blue-400/40 text-white border border-blue-300/30' : 'bg-white/10 text-blue-200' }}">{{ $counts['all'] }}</span>
             </a>
@@ -54,7 +49,7 @@
 
         {{-- Job List --}}
         @if($jobs->isEmpty())
-            <div class="bg-white/5 backdrop-blur-md rounded-3xl shadow-xl border border-white/10 p-16 text-center">
+            <div class="glass-card rounded-3xl shadow-xl p-16 text-center">
                 <div class="w-24 h-24 bg-blue-500/10 border border-blue-400/20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <i class="fa-regular fa-folder-open text-5xl text-blue-300"></i>
                 </div>
@@ -69,7 +64,7 @@
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 @foreach($jobs as $job)
-                    <div class="bg-white/5 backdrop-blur-md rounded-2xl shadow-xl border border-white/10 flex flex-col hover:bg-slate-900/40 hover:border-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative group">
+                    <div class="glass-card rounded-2xl shadow-xl flex flex-col hover:border-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative group overflow-hidden">
                         
                         {{-- Top Border color based on status --}}
                         <div class="absolute top-0 left-0 w-full h-1.5 rounded-t-2xl
@@ -131,7 +126,7 @@
                             </div>
                         </div>
                         
-                        <div class="bg-slate-950/40 border-t border-white/5 p-4 flex items-center justify-between gap-3 relative">
+                        <div class="bg-[#03071a]/50 border-t border-white/10 p-4 flex items-center justify-between gap-3 relative">
                             <a href="{{ route('client.jobs.applicants', $job->id) }}" class="flex-1 inline-flex justify-center items-center px-4 py-2.5 bg-blue-600/15 hover:bg-blue-600 border border-blue-500/30 shadow-sm text-xs font-bold rounded-xl text-white transition-all duration-200 gap-2">
                                 <i class="fa-regular fa-eye text-cyan-200"></i> View Candidates
                             </a>
@@ -140,7 +135,7 @@
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
                                 
-                                <div x-show="open" x-transition style="display: none;" class="absolute bottom-full right-0 mb-2 w-48 rounded-2xl shadow-xl bg-slate-800 border border-white/10 ring-1 ring-black/20 divide-y divide-white/5 overflow-hidden z-30">
+                                <div x-show="open" x-transition style="display: none;" class="absolute bottom-full right-0 mb-2 w-48 rounded-2xl shadow-xl glass-card border border-white/15 ring-1 ring-black/20 divide-y divide-white/5 overflow-hidden z-30">
                                     <div class="py-1">
                                         <a href="{{ route('client.jobs.edit', $job->id) }}" class="group flex items-center px-4 py-2.5 text-sm text-slate-200 hover:bg-white/5 hover:text-white">
                                             <i class="fa-solid fa-pen-to-square w-5 text-slate-400 group-hover:text-blue-400"></i> Edit Job

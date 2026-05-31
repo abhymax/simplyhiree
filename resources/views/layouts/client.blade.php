@@ -265,6 +265,186 @@
     .animate-pulse-slow {
         animation: pulse-slow 3s ease-in-out infinite;
     }
+
+    /* PREMIUM DESIGN SYSTEM CLASSES FOR UNIFIED CLIENT VIEWS */
+    /* 1. Premium cards - deep gradient, neon accent top-border, glass hover scale */
+    .premium-card {
+        background: linear-gradient(135deg, rgba(16, 28, 79, 0.75) 0%, rgba(10, 18, 56, 0.85) 100%) !important;
+        border: 1px solid rgba(59, 130, 246, 0.25) !important;
+        border-radius: 1.5rem !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative;
+        overflow: hidden;
+    }
+    .premium-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #06b6d4, #3b82f6, #6366f1);
+        opacity: 0.4;
+        transition: opacity 0.3s;
+    }
+    .premium-card:hover::before {
+        opacity: 1;
+    }
+    .premium-card:hover {
+        border-color: rgba(6, 182, 212, 0.45) !important;
+        box-shadow: 0 30px 50px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+        transform: translateY(-2px);
+    }
+
+    .profile-card {
+        background-color: #0b1437 !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 1.25rem !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .profile-card:hover {
+        border-color: rgba(34, 211, 238, 0.3) !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(6, 182, 212, 0.1) !important;
+    }
+
+    /* 2. Premium inputs and forms - inset shadow dark slate fields, cyan border focus */
+    .premium-form input[type="text"],
+    .premium-form input[type="email"],
+    .premium-form input[type="url"],
+    .premium-form input[type="number"],
+    .premium-form input[type="date"],
+    .premium-form input[type="tel"],
+    .premium-form input[type="password"],
+    .premium-form input[type="search"],
+    .premium-form select,
+    .premium-form textarea {
+        background-color: rgba(3, 7, 26, 0.75) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+        border-radius: 0.75rem !important;
+        padding: 0.65rem 0.85rem !important;
+        font-size: 0.875rem !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    }
+    .premium-form input[type="text"]:focus,
+    .premium-form input[type="email"]:focus,
+    .premium-form input[type="url"]:focus,
+    .premium-form input[type="number"]:focus,
+    .premium-form input[type="date"]:focus,
+    .premium-form input[type="tel"]:focus,
+    .premium-form input[type="password"]:focus,
+    .premium-form input[type="search"]:focus,
+    .premium-form select:focus,
+    .premium-form textarea:focus {
+        outline: none !important;
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+        background-color: rgba(3, 7, 26, 0.9) !important;
+    }
+    .premium-form input::placeholder,
+    .premium-form textarea::placeholder {
+        color: rgba(148, 163, 184, 0.5) !important;
+    }
+    .premium-form input[type="date"] { color-scheme: dark; }
+    .premium-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); }
+    .premium-form select option { background: #0b1437; color: #ffffff; }
+
+    /* File select uploads */
+    .premium-form input[type="file"] {
+        background: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        padding: 0 !important;
+        height: auto !important;
+        box-shadow: none !important;
+    }
+    .premium-form input[type="file"]::file-selector-button {
+        background: #0891b2 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #ffffff !important;
+        border-radius: 0.5rem !important;
+        padding: 0.45rem 0.9rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-in-out !important;
+        margin-right: 0.75rem !important;
+    }
+    .premium-form input[type="file"]::file-selector-button:hover {
+        background: #06b6d4 !important;
+        box-shadow: 0 0 12px rgba(6,182,212,0.3) !important;
+    }
+    .premium-form input[type="file"]::-webkit-file-upload-button {
+        background: #0891b2 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #ffffff !important;
+        border-radius: 0.5rem !important;
+        padding: 0.45rem 0.9rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-in-out !important;
+        margin-right: 0.75rem !important;
+    }
+    .premium-form input[type="file"]::-webkit-file-upload-button:hover {
+        background: #06b6d4 !important;
+        box-shadow: 0 0 12px rgba(6,182,212,0.3) !important;
+    }
+
+    /* Labels - bold soft-slate uppercase headers */
+    .premium-form label:not(.btn-label) {
+        color: #94a3b8 !important;
+        font-size: 0.725rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        margin-bottom: 0.45rem !important;
+        display: block !important;
+    }
+
+    /* 3. Premium tables - rounded border layout, uppercase header rows, hover states */
+    .premium-table-container {
+        background: rgba(7, 13, 36, 0.95) !important;
+        border: 1px solid rgba(59, 130, 246, 0.15) !important;
+        border-radius: 1.5rem !important;
+        overflow: hidden !important;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+    }
+    .premium-table {
+        min-w-full: 100%;
+        text-align: left;
+        font-size: 0.875rem;
+    }
+    .premium-table thead {
+        background: rgba(6, 18, 59, 0.85) !important;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.12) !important;
+    }
+    .premium-table thead th {
+        color: #94a3b8 !important;
+        font-size: 0.725rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        padding: 1.15rem 1.5rem !important;
+    }
+    .premium-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        transition: all 0.22s ease !important;
+    }
+    .premium-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+    .premium-table tbody td {
+        padding: 1.15rem 1.5rem !important;
+        vertical-align: middle !important;
+        color: #f1f5f9 !important;
+    }
 </style>
 
 <div class="min-h-screen bg-[#06123b] text-[#f8fafc] flex" x-data="{ sidebarOpen: false }">

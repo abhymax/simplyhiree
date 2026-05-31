@@ -33,13 +33,13 @@
         @endif
 
         {{-- FILTER BAR --}}
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-2xl p-3 mb-5">
-            <form method="GET" action="{{ route('client.applications.index') }}" class="flex flex-wrap gap-2 items-center">
-                @php $fld = 'h-10 bg-slate-800 border border-blue-500/30 rounded-lg text-white text-sm font-medium px-3'; @endphp
+        <div class="glass-card rounded-2xl p-4 mb-5 premium-form">
+            <form method="GET" action="{{ route('client.applications.index') }}" class="flex flex-wrap gap-3 items-center">
+                @php $fld = 'h-10 px-3 font-medium text-white'; @endphp
 
                 <div class="relative grow min-w-[180px]">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email" class="{{ $fld }} w-full pl-9">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-white/70 text-sm pointer-events-none"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email" class="{{ $fld }} w-full pl-11">
                 </div>
 
                 <select name="status" class="{{ $fld }} min-w-[140px]">
@@ -73,21 +73,21 @@
                     @endforeach
                 </select>
 
-                <button type="submit" class="h-10 px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm shadow flex items-center gap-2">
+                <button type="submit" class="h-10 px-5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm shadow flex items-center gap-2 transition">
                     <i class="fa-solid fa-filter"></i> Filter
                 </button>
 
                 @if(request()->anyFilled(['search','status','job_id','partner_id','date_from','date_to']))
-                    <a href="{{ route('client.applications.index') }}" class="h-10 w-10 bg-rose-500 hover:bg-rose-400 text-white rounded-lg flex items-center justify-center"><i class="fa-solid fa-xmark"></i></a>
+                    <a href="{{ route('client.applications.index') }}" class="h-10 w-10 bg-rose-500 hover:bg-rose-400 text-white rounded-xl flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></a>
                 @endif
             </form>
         </div>
 
         {{-- TABLE --}}
-        <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden">
+        <div class="premium-table-container shadow-2xl">
             <div class="overflow-x-auto">
-                <table class="apps-table min-w-full text-left text-sm">
-                    <thead class="bg-blue-950/50 text-cyan-300 uppercase font-extrabold border-b border-white/10 text-xs tracking-wider">
+                <table class="premium-table min-w-full">
+                    <thead>
                         <tr>
                             <th class="px-6 py-5">Candidate</th>
                             <th class="px-6 py-5">Job Details</th>
@@ -188,7 +188,7 @@
             </div>
 
             @if($applications->hasPages())
-                <div class="p-4 border-t border-white/10 bg-slate-900/60">
+                <div class="p-4 border-t border-white/10 bg-[#03071a]/50">
                     {{ $applications->onEachSide(1)->links() }}
                 </div>
             @endif
