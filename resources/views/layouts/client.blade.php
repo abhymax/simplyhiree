@@ -469,6 +469,7 @@
                     ['icon' => 'fa-solid fa-file-lines', 'label' => 'Applications', 'route' => route('client.applications.index'), 'active' => request()->is('client/applications*') && !request()->has('joined_status')],
                     ['icon' => 'fa-solid fa-video', 'label' => 'Interviews', 'route' => route('client.interviews.calendar'), 'active' => request()->is('client/interviews*')],
                     ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.applications.index', ['joined_status' => 'Left']), 'active' => request()->is('client/applications*') && request('joined_status') === 'Left'],
+                    ['icon' => 'fa-solid fa-handshake', 'label' => 'Sourcing Partners', 'route' => route('client.vendors.browse'), 'active' => request()->is('client/vendors*') || request()->is('client/vendor-performance*')],
                     ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => request()->is('client/billing*')],
                     ['icon' => 'fa-solid fa-gear', 'label' => 'Settings', 'route' => route('client.profile.company'), 'active' => request()->is('client/profile*')],
                     ['icon' => 'fa-solid fa-circle-question', 'label' => 'Help & Support', 'route' => route('support'), 'active' => request()->is('support*')],
