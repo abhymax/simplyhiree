@@ -274,9 +274,6 @@
         
         {{-- Logo Section --}}
         <div class="custom-sidebar-logo">
-            <button @click="sidebarOpen = false" class="lg:hidden text-slate-400 hover:text-white mr-2 text-xl focus:outline-none">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
             <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-extrabold text-sm shadow-md">
                 SH
             </div>
@@ -329,9 +326,6 @@
         <header class="custom-header">
             {{-- Search --}}
             <div class="flex items-center gap-4 flex-1 max-w-xl">
-                <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-slate-400 hover:text-white mr-2 text-xl focus:outline-none">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
                 <div class="relative w-full hidden sm:block">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm z-10"></i>
                     <input type="text" placeholder="Search candidates, jobs, clients..."
