@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" style="background-color: #020512 !important;">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,22 +21,26 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
+            html, body {
+                background-color: #020512 !important;
+                color: #e2e8f0 !important;
+            }
             body {
                 font-family: 'Outfit', sans-serif;
             }
             /* Custom Form Styling Overrides for Breathtaking Premium UI */
             label {
-                color: #94a3b8 !important; /* text-slate-400 */
+                color: #cbd5e1 !important; /* text-slate-300 */
                 font-size: 0.75rem !important;
                 font-weight: 700 !important;
                 text-transform: uppercase !important;
                 letter-spacing: 0.08em !important;
-                margin-bottom: 0.35rem !important;
+                margin-bottom: 0.45rem !important;
                 display: inline-block !important;
             }
             input[type="text"], input[type="email"], input[type="password"], input[type="tel"], select {
-                background-color: rgba(3, 7, 26, 0.65) !important;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                background-color: rgba(3, 7, 26, 0.85) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
                 border-radius: 0.75rem !important;
                 color: #ffffff !important;
                 padding: 0.75rem 1rem !important;
@@ -85,9 +89,16 @@
             button[type="button"]:active {
                 transform: translateY(1px) !important;
             }
+            
+            /* Helper classes to guarantee styling */
+            .glass-card-form {
+                background-color: #0b0f19 !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            }
         </style>
     </head>
-    <body class="font-sans text-slate-200 antialiased bg-slate-950 min-h-screen">
+    <body class="font-sans text-slate-200 antialiased bg-slate-950 min-h-screen" style="background-color: #020512 !important;">
         @php
             $title = 'Welcome back!';
             $slogan = 'Secure Gateway';
@@ -122,7 +133,7 @@
             }
         @endphp
 
-        <div class="min-h-screen lg:grid lg:grid-cols-12 bg-[#020512]">
+        <div class="min-h-screen lg:grid lg:grid-cols-12 bg-[#020512]" style="background-color: #020512 !important;">
             
             {{-- LEFT SIDE PANEL - Premium Slogans & Graphics --}}
             <aside class="lg:col-span-5 hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br {{ $leftBg }} border-r border-white/5 relative overflow-hidden">
@@ -160,7 +171,7 @@
             </aside>
 
             {{-- RIGHT SIDE PANEL - Forms --}}
-            <main class="lg:col-span-7 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto">
+            <main class="lg:col-span-7 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto bg-[#020512]" style="background-color: #020512 !important;">
                 {{-- Mobile Brand Logo --}}
                 <div class="lg:hidden absolute top-6 left-6 flex items-center gap-2">
                     <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-extrabold text-sm shadow-md">
@@ -171,7 +182,7 @@
 
                 <div class="w-full sm:max-w-md my-8">
                     {{-- Standard Guest Form Wrap --}}
-                    <div class="bg-slate-900/30 border border-white/10 rounded-3xl p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+                    <div class="glass-card-form rounded-3xl p-8 relative overflow-hidden">
                         {{-- Inset decorative highlight --}}
                         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
                         
