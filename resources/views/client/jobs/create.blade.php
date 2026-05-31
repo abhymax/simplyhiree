@@ -15,7 +15,7 @@
     .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #60a5fa; }
     .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #60a5fa; }
 
-    /* Force all inputs/selects/textareas inside the blue cards to be dark with white text */
+    /* Force all inputs/selects/textareas inside the form to look incredibly premium and sharp */
     .post-job-form input[type="text"],
     .post-job-form input[type="email"],
     .post-job-form input[type="url"],
@@ -25,42 +25,75 @@
     .post-job-form input[type="search"],
     .post-job-form select,
     .post-job-form textarea {
-        background-color: rgba(2, 6, 23, 0.55) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        background-color: rgba(3, 7, 26, 0.75) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         color: #ffffff !important;
         border-radius: 0.75rem !important;
-        padding: 0.65rem 0.9rem !important;
-        font-size: 0.95rem !important;
-    }
-    .post-job-form input::placeholder,
-    .post-job-form textarea::placeholder {
-        color: rgba(255, 255, 255, 0.55) !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.925rem !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
     }
     .post-job-form input:focus,
     .post-job-form select:focus,
     .post-job-form textarea:focus {
         outline: none !important;
-        border-color: #ffffff !important;
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25) !important;
+        border-color: #06b6d4 !important; /* Premium Cyan focus */
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+        background-color: rgba(3, 7, 26, 0.9) !important;
+    }
+    .post-job-form input::placeholder,
+    .post-job-form textarea::placeholder {
+        color: rgba(148, 163, 184, 0.5) !important;
     }
     .post-job-form input[type="date"] { color-scheme: dark; }
     .post-job-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); }
     /* Dropdown <option> text should be readable when the menu opens (default browser uses page bg) */
-    .post-job-form select option { background: #0f172a; color: #ffffff; }
+    .post-job-form select option { background: #0b1437; color: #ffffff; }
 
-    /* Custom premium card style to stand out from client panel background */
+    /* Custom premium card style: Deep rich navy gradient with subtle top glow and glassmorphism */
     .post-job-card {
-        background-color: #0b1437 !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 1.25rem !important;
-        padding: 1.5rem !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-bottom: 2rem !important;
+        background: linear-gradient(135deg, rgba(16, 28, 79, 0.75) 0%, rgba(10, 18, 56, 0.85) 100%) !important;
+        border: 1px solid rgba(59, 130, 246, 0.25) !important;
+        border-radius: 1.5rem !important;
+        padding: 2.25rem !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        margin-bottom: 2.25rem !important;
+        position: relative;
+        overflow: hidden;
+    }
+    .post-job-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #06b6d4, #3b82f6, #6366f1);
+        opacity: 0.4;
+        transition: opacity 0.3s;
+    }
+    .post-job-card:hover::before {
+        opacity: 1;
     }
     .post-job-card:hover {
-        border-color: rgba(34, 211, 238, 0.3) !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(6, 182, 212, 0.1) !important;
+        border-color: rgba(6, 182, 212, 0.45) !important;
+        box-shadow: 0 30px 50px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+        transform: translateY(-2px);
+    }
+
+    /* Soft, bold label typography to increase scanability and reduce visual clutter */
+    .post-job-form label {
+        color: #94a3b8 !important; /* Soft slate color */
+        font-size: 0.725rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important;
     }
 </style>
 @php
@@ -80,12 +113,9 @@
         {{-- HEADER --}}
         <div class="mb-8 border-b border-white/10 pb-6">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-cyan-300 hover:text-white transition-colors text-sm font-bold tracking-wide uppercase">
+                <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-cyan-400 hover:text-cyan-300 transition-colors text-xs font-extrabold tracking-wider uppercase bg-white/5 border border-white/10 rounded-lg px-3.5 py-1.5 backdrop-blur-md shadow-sm">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Cancel &amp; Return
                 </a>
-                <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-[10px] font-bold uppercase tracking-wider">
-                    Client Workspace
-                </span>
             </div>
             <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">{{ $formTitle }}</h1>
             @if($isEditMode)
@@ -115,9 +145,10 @@
 
                     {{-- Job Specification Card --}}
                     <div class="post-job-card">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
-                            <i class="fa-solid fa-briefcase text-blue-400"></i> Job Specification
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-briefcase text-cyan-400"></i>
+                            <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Job Specification</span>
                         </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-2">
@@ -241,9 +272,10 @@
 
                     {{-- Description & Skills Card --}}
                     <div class="post-job-card">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
-                            <i class="fa-solid fa-align-left text-blue-400"></i> Description &amp; Skills
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-align-left text-cyan-400"></i>
+                            <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Description &amp; Skills</span>
                         </h3>
 
                         <div class="mb-6">
@@ -267,32 +299,36 @@
                     </div>
 
                     {{-- Vendor Assignment Card --}}
-                    @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
-                    <div class="post-job-card" x-data="{ mode: '{{ $currMode }}' }">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
-                            <i class="fa-solid fa-handshake text-blue-400"></i> Vendor Assignment
+                    @php 
+                        $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); 
+                        $currScreen = old('screening_required', $job->screening_required ?? 1);
+                    @endphp
+                    <div class="post-job-card" x-data="{ mode: '{{ $currMode }}', screening_required: '{{ $currScreen }}' }">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                            <span class="w-1.5 h-7 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-handshake text-cyan-400"></i>
+                            <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Vendor Assignment</span>
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='open' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
-                                <input type="radio" name="vendor_assignment_mode" value="open" x-model="mode" class="mt-1">
+                            <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="mode==='open' ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
+                                <input type="radio" name="vendor_assignment_mode" value="open" x-model="mode" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
                                 <div>
                                     <div class="text-white font-bold text-sm">🔓 Open Marketplace</div>
-                                    <div class="text-white/80 text-xs">All active partners can apply</div>
+                                    <div class="text-slate-400 text-xs mt-0.5">All active partners can apply</div>
                                 </div>
                             </label>
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='preferred' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
-                                <input type="radio" name="vendor_assignment_mode" value="preferred" x-model="mode" class="mt-1">
+                            <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="mode==='preferred' ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
+                                <input type="radio" name="vendor_assignment_mode" value="preferred" x-model="mode" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
                                 <div>
                                     <div class="text-white font-bold text-sm">⭐ Preferred Only</div>
-                                    <div class="text-white/80 text-xs">Only my saved Preferred vendors</div>
+                                    <div class="text-slate-400 text-xs mt-0.5">Only my saved Preferred vendors</div>
                                 </div>
                             </label>
-                            <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='selected' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
-                                <input type="radio" name="vendor_assignment_mode" value="selected" x-model="mode" class="mt-1">
+                            <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="mode==='selected' ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
+                                <input type="radio" name="vendor_assignment_mode" value="selected" x-model="mode" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
                                 <div>
                                     <div class="text-white font-bold text-sm">🎯 Selected (Per-Job)</div>
-                                    <div class="text-white/80 text-xs">Pick specific vendors for this job</div>
+                                    <div class="text-slate-400 text-xs mt-0.5">Pick specific vendors for this job</div>
                                 </div>
                             </label>
                         </div>
@@ -340,18 +376,18 @@
                         <div class="mt-5 pt-4 border-t border-white/20">
                             <h4 class="text-white font-bold text-sm mb-3">Application Pipeline</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;">
-                                    <input type="radio" name="screening_required" value="1" {{ old('screening_required', $job->screening_required ?? true) == 1 ? 'checked' : '' }} class="mt-1">
+                                <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="screening_required == 1 ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
+                                    <input type="radio" name="screening_required" value="1" x-model="screening_required" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
                                     <div>
-                                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-shield-halved text-blue-400 mr-1"></i> Screening Required</div>
-                                        <div class="text-white/80 text-xs">Candidates will be screened by SimplyHiree before appearing in your dashboard.</div>
+                                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-shield-halved text-cyan-400 mr-1"></i> Screening Required</div>
+                                        <div class="text-slate-400 text-xs mt-0.5">Candidates will be screened by SimplyHiree before appearing in your dashboard.</div>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;">
-                                    <input type="radio" name="screening_required" value="0" {{ old('screening_required', $job->screening_required ?? true) == 0 ? 'checked' : '' }} class="mt-1">
+                                <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="screening_required == 0 ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
+                                    <input type="radio" name="screening_required" value="0" x-model="screening_required" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
                                     <div>
                                         <div class="text-white font-bold text-sm"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Direct to Client</div>
-                                        <div class="text-white/80 text-xs">Candidates will bypass SimplyHiree screening and go directly to your dashboard.</div>
+                                        <div class="text-slate-400 text-xs mt-0.5">Candidates will bypass SimplyHiree screening and go directly to your dashboard.</div>
                                     </div>
                                 </label>
                             </div>
@@ -437,8 +473,8 @@
             chipbox.querySelectorAll('.loc-chip').forEach(c => c.remove());
             selected.forEach((city, idx) => {
                 const chip = document.createElement('span');
-                chip.className = 'loc-chip inline-flex items-center gap-1.5 rounded-full bg-blue-500/30 border border-blue-400/40 px-3 py-1 text-sm text-white';
-                chip.innerHTML = '<span>' + city.replace(/</g,'&lt;') + '</span><button type="button" aria-label="Remove" class="hover:text-rose-300 leading-none text-base">&times;</button>';
+                chip.className = 'loc-chip inline-flex items-center gap-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/35 px-3 py-1 text-xs font-bold text-cyan-200 shadow-sm transition';
+                chip.innerHTML = '<span>' + city.replace(/</g,'&lt;') + '</span><button type="button" aria-label="Remove" class="hover:text-rose-300 leading-none text-sm font-extrabold">&times;</button>';
                 chip.querySelector('button').addEventListener('click', () => { selected.splice(idx, 1); syncHidden(); renderChips(); });
                 chipbox.insertBefore(chip, search);
             });
