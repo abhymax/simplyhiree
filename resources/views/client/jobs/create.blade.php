@@ -47,6 +47,21 @@
     .post-job-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); }
     /* Dropdown <option> text should be readable when the menu opens (default browser uses page bg) */
     .post-job-form select option { background: #0f172a; color: #ffffff; }
+
+    /* Custom premium card style to stand out from client panel background */
+    .post-job-card {
+        background-color: #0b1437 !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 1.25rem !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 2rem !important;
+    }
+    .post-job-card:hover {
+        border-color: rgba(34, 211, 238, 0.3) !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(6, 182, 212, 0.1) !important;
+    }
 </style>
 @php
     $isEditMode = ($formMode ?? 'create') === 'edit' && isset($job) && $job;
@@ -99,7 +114,7 @@
                     @endif
 
                     {{-- Job Specification Card --}}
-                    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 shadow-2xl mb-8">
+                    <div class="post-job-card">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
                             <i class="fa-solid fa-briefcase text-blue-400"></i> Job Specification
@@ -222,11 +237,10 @@
                         </div>
                     </div>
 
-                    </div>{{-- /Job Specification grid --}}
                     </div>{{-- /Job Specification card --}}
 
                     {{-- Description & Skills Card --}}
-                    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 shadow-2xl mb-8">
+                    <div class="post-job-card">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
                             <i class="fa-solid fa-align-left text-blue-400"></i> Description &amp; Skills
@@ -254,7 +268,7 @@
 
                     {{-- Vendor Assignment Card --}}
                     @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
-                    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 shadow-2xl mb-8" x-data="{ mode: '{{ $currMode }}' }">
+                    <div class="post-job-card" x-data="{ mode: '{{ $currMode }}' }">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
                             <i class="fa-solid fa-handshake text-blue-400"></i> Vendor Assignment
