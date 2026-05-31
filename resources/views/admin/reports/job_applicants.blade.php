@@ -53,7 +53,7 @@
                 
                 {{-- FILTRATION FORM --}}
                 <div class="p-6 bg-slate-950/40 border-b border-white/10">
-                    <form method="GET" action="{{ route('reports.jobs.applicants', $job->id) }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                    <form method="GET" action="{{ route('admin.reports.jobs.applicants', $job->id) }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                         <div>
                             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Search Candidates</label>
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, email, phone..." class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-400 text-sm">
@@ -83,7 +83,7 @@
                             <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-xl text-sm transition">
                                 Filter
                             </button>
-                            <a href="{{ route('reports.jobs.applicants', $job->id) }}" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-sm transition text-center">
+                            <a href="{{ route('admin.reports.jobs.applicants', $job->id) }}" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-sm transition text-center">
                                 Clear
                             </a>
                         </div>
