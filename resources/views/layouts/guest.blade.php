@@ -180,7 +180,7 @@
                     <span class="font-bold text-lg text-white">SimplyHiree</span>
                 </div>
 
-                <div class="w-full sm:max-w-md my-8">
+                <div class="w-full {{ (request()->is('register*') || request()->is('signup*')) ? 'sm:max-w-2xl' : 'sm:max-w-md' }} my-8">
                     {{-- Standard Guest Form Wrap --}}
                     <div class="glass-card-form rounded-3xl p-8 relative overflow-hidden">
                         {{-- Inset decorative highlight --}}
