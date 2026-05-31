@@ -96,21 +96,71 @@ class ClientVendorController extends Controller
     {
         $data = $request->validate([
             'name'    => 'required|string|max:255',
-            'email'   => 'nullable|email|max:255',
-            'phone'   => 'nullable|string|max:20',
+            'email'   => 'required|email|max:255',
+            'phone'   => 'required|string|max:20',
             'company' => 'nullable|string|max:255',
         ]);
-        if (empty($data['email']) && empty($data['phone'])) {
-            return back()->with('error', 'Provide at least an email or a phone number for the invite.');
-        }
 
-        ClientVendorInvitation::create(array_merge($data, [
+        $invitation = ClientVendorInvitation::create(array_merge($data, [
             'client_id'    => Auth::id(),
             'invite_token' => Str::random(40),
             'status'       => 'pending',
         ]));
 
-        return back()->with('success', "Invitation logged. Share the link with {$data['name']} from your invitations list.");
+        $mailSent = false;
+        try {
+            $client = Auth::user();
+            $link = url('/register/partner?invite=' . $invitation->invite_token);
+            
+            \Illuminate\Support\Facades\Mail::send('emails.vendor_invitation', [
+                'vendorName' => $invitation->name,
+                'clientName' => $client->name,
+                'company'    => $invitation->company,
+                'inviteLink' => $link,
+            ], function ($m) use ($invitation, $client) {
+                $m->to($invitation->email, $invitation->name)
+                  ->subject("[SimplyHiree] Invitation to join as Sourcing Partner from " . $client->name);
+            });
+            $mailSent = true;
+        } catch (\Throwable $e) {
+            \Log::error('Vendor invite email fail: ' . $e->getMessage());
+        }
+
+        if ($mailSent) {
+            return back()->with('success', "Invitation logged and branded email sent to {$data['name']} successfully!");
+        } else {
+            return back()->with('success', "Invitation logged successfully. Note: email delivery failed (logged to server logs), but you can manually copy and share the invite link below.");
+        }
+    }
+
+    public function sendInviteEmail(Request $request, ClientVendorInvitation $invitation)
+    {
+        $client = Auth::user();
+        if ($invitation->client_id !== $client->id) {
+            abort(403);
+        }
+
+        if (empty($invitation->email)) {
+            return back()->with('error', 'No email address registered for this invitation.');
+        }
+
+        try {
+            $link = url('/register/partner?invite=' . $invitation->invite_token);
+            
+            \Illuminate\Support\Facades\Mail::send('emails.vendor_invitation', [
+                'vendorName' => $invitation->name,
+                'clientName' => $client->name,
+                'company'    => $invitation->company,
+                'inviteLink' => $link,
+            ], function ($m) use ($invitation, $client) {
+                $m->to($invitation->email, $invitation->name)
+                  ->subject("[SimplyHiree] Invitation to join as Sourcing Partner from " . $client->name);
+            });
+            return back()->with('success', "Branded invitation email sent successfully to {$invitation->name} ({$invitation->email})!");
+        } catch (\Throwable $e) {
+            \Log::error('Vendor invite email fail on resend: ' . $e->getMessage());
+            return back()->with('error', "Could not send email: " . $e->getMessage());
+        }
     }
 
     public function requestAssignmentPage()

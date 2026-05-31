@@ -306,6 +306,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/vendors/{user}/toggle', [\App\Http\Controllers\ClientVendorController::class, 'togglePreferred'])->name('vendors.toggle');
         Route::get('/vendors/invite', [\App\Http\Controllers\ClientVendorController::class, 'invitePage'])->name('vendors.invite');
         Route::post('/vendors/invite', [\App\Http\Controllers\ClientVendorController::class, 'inviteStore'])->name('vendors.invite.store');
+        Route::post('/vendors/invite/{invitation}/email', [\App\Http\Controllers\ClientVendorController::class, 'sendInviteEmail'])->name('vendors.invite.email');
         Route::get('/vendors/assign-request', [\App\Http\Controllers\ClientVendorController::class, 'requestAssignmentPage'])->name('vendors.assign-request');
         Route::post('/vendors/assign-request', [\App\Http\Controllers\ClientVendorController::class, 'requestAssignmentStore'])->name('vendors.assign-request.store');
         Route::get('/vendor-performance', [\App\Http\Controllers\ClientVendorController::class, 'performance'])->name('vendors.performance');
