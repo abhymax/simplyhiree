@@ -942,6 +942,38 @@ class ClientController extends Controller
         return view('client.interviews.calendar', compact('events'));
     }
 
+    /**
+     * Dedicated paginated and searchable past interviews list for client.
+     */
+    public function pastInterviews(\Illuminate\Http\Request $request)
+    {
+        $clientId = Auth::id();
+        $query = JobApplication::with(['job', 'candidate', 'candidateUser', 'interviewRounds'])
+            ->whereHas('job', fn ($q) => $q->where('user_id', $clientId))
+            ->whereNotNull('interview_at')
+            ->where('interview_at', '<', now());
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('candidate', function($c) use ($search) {
+                    $c->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('candidateUser', function($cu) use ($search) {
+                    $cu->where('name', 'like', "%{$search}%")
+                       ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('job', function($j) use ($search) {
+                    $j->where('title', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $pastInterviews = $query->orderBy('interview_at', 'desc')->paginate(10);
+
+        return view('client.interviews.past', compact('pastInterviews'));
+    }
+
     public function markAsAppeared(JobApplication $application)
     {
         if ($application->job->user_id !== Auth::id()) {

@@ -311,6 +311,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/vendor-performance', [\App\Http\Controllers\ClientVendorController::class, 'performance'])->name('vendors.performance');
         Route::get('/interviews/today', [ClientController::class, 'dailySchedule'])->name('interviews.today');
         Route::get('/interviews/calendar', [ClientController::class, 'interviewCalendar'])->name('interviews.calendar');
+        Route::get('/interviews/past', [ClientController::class, 'pastInterviews'])->name('interviews.past');
 
         // Interview feedback (post-interview)
         Route::get('/applications/{application}/feedback', [ClientController::class, 'showInterviewFeedbackForm'])->name('applications.feedback.create');
