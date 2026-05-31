@@ -1,12 +1,15 @@
-@extends('layouts.app')
+@extends(Auth::check() && Auth::user()->role === 'client' ? 'layouts.client' : 'layouts.app')
 
-@section('content')
+@section(Auth::check() && Auth::user()->role === 'client' ? 'client_content' : 'content')
+
+@if(Auth::check() && Auth::user()->role === 'client')
+<div class="relative z-10 max-w-4xl mx-auto">
+@else
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
-
     <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
-
     <div class="relative z-10 max-w-3xl mx-auto">
+@endif
 
         <div class="mb-8 border-b border-white/10 pb-6">
             <div class="flex items-center gap-2 mb-2">
@@ -80,5 +83,7 @@
             Or email us directly at <a href="mailto:{{ env('SUPPORT_EMAIL', 'support@simplyhiree.com') }}" class="text-blue-300 hover:text-white font-semibold">{{ env('SUPPORT_EMAIL', 'support@simplyhiree.com') }}</a>
         </div>
     </div>
+@if(!(Auth::check() && Auth::user()->role === 'client'))
 </div>
+@endif
 @endsection

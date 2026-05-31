@@ -60,15 +60,15 @@
     $existingMaxSalary = $salaryDigits->count() > 1 ? $salaryDigits->get(1) : $salaryDigits->get(0);
 @endphp
 
-    <div class="relative z-10 max-w-5xl mx-auto">
+    <div class="relative z-10 max-w-6xl mx-auto">
 
         {{-- HEADER --}}
         <div class="mb-8 border-b border-white/10 pb-6">
-            <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-blue-300 hover:text-white mb-2 transition-colors text-sm font-bold tracking-wide uppercase">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Cancel &amp; Return
-            </a>
-            <div class="flex items-center gap-2 mb-2">
-                <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-white/80 text-xs font-bold uppercase tracking-wider">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-cyan-300 hover:text-white transition-colors text-sm font-bold tracking-wide uppercase">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Cancel &amp; Return
+                </a>
+                <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-[10px] font-bold uppercase tracking-wider">
                     Client Workspace
                 </span>
             </div>
@@ -76,7 +76,7 @@
             @if($isEditMode)
                 <p class="mt-2 text-amber-300 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> This job is still pending approval, so you can update it. Once approved, editing is locked.</p>
             @else
-                <p class="mt-2 text-white/80">Fill in the details below. The Superadmin will review your job before it goes live to vendors.</p>
+                <p class="mt-2 text-slate-300 font-medium">Fill in the details below. The Superadmin will review your job before it goes live to vendors.</p>
             @endif
         </div>
 
@@ -99,14 +99,14 @@
                     @endif
 
                     {{-- Job Specification Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
+                    <div class="rounded-2xl p-6 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
                             <span class="w-1.5 h-7 bg-white rounded-full"></span>
                             <i class="fa-solid fa-briefcase text-white"></i> Job Specification
                         </h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                        <div class="md:col-span-2">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-2">
+                        <div class="md:col-span-3">
                             <label class="block text-sm font-medium text-white">Job Title <span class="text-rose-300">*</span></label>
                             <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" placeholder="e.g. Senior Accountant">
                             @error('title') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
@@ -135,7 +135,17 @@
                             @error('job_type') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="relative">
+                        <div>
+                            <label class="block text-sm font-medium text-white">Desired Candidate Gender <span class="text-rose-300">*</span></label>
+                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                                @foreach(['Any', 'Male', 'Female', 'Other'] as $genderOption)
+                                    <option value="{{ $genderOption }}" {{ old('gender_preference', $job->gender_preference ?? 'Any') === $genderOption ? 'selected' : '' }} class="text-slate-900">{{ $genderOption }}</option>
+                                @endforeach
+                            </select>
+                            @error('gender_preference') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="relative md:col-span-2">
                             <label class="block text-sm font-medium text-white">Location(s) <span class="text-rose-300">*</span></label>
                             <input type="hidden" name="location" id="job-location" value="{{ old('location', $job->location ?? '') }}">
                             <div id="job-location-chipbox"
@@ -146,22 +156,13 @@
                             </div>
                             <div id="job-location-suggestions"
                                 class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"></div>
-                            <p class="mt-1 text-xs text-white/80/80">Pick one or more cities. You can also type any location not in the list and press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
+                            <p class="mt-1 text-xs text-slate-300">Pick one or more cities. Press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
                             @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-white">Salary Range (INR)</label>
-                            <div class="flex space-x-2">
-                                <div class="w-1/2">
-                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                    @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                    @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
+                            <label class="block text-sm font-medium text-white">Total Openings</label>
+                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                         </div>
 
                         <div>
@@ -179,13 +180,17 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-white">Desired Candidate Gender <span class="text-rose-300">*</span></label>
-                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                @foreach(['Any', 'Male', 'Female', 'Other'] as $genderOption)
-                                    <option value="{{ $genderOption }}" {{ old('gender_preference', $job->gender_preference ?? 'Any') === $genderOption ? 'selected' : '' }} class="text-slate-900">{{ $genderOption }}</option>
-                                @endforeach
-                            </select>
-                            @error('gender_preference') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                            <label class="block text-sm font-medium text-white">Salary Range (INR)</label>
+                            <div class="flex space-x-2">
+                                <div class="w-1/2">
+                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                                    @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                                    @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
 
                         <div>
@@ -214,11 +219,6 @@
                         <div>
                             <label class="block text-sm font-medium text-white">Application Deadline</label>
                             <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" min="{{ date('Y-m-d') }}">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-white">Total Openings</label>
-                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
                         </div>
                     </div>
 

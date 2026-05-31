@@ -62,7 +62,7 @@
                             <p class="text-xs text-slate-400 mt-0.5">The face of your company across SimplyHiree</p>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label>Company Name</label>
                                 <input id="company_name" name="company_name" type="text" value="{{ old('company_name', $profile->company_name ?? $user->name) }}" required />
@@ -70,6 +70,10 @@
                             <div>
                                 <label>Email Address</label>
                                 <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required />
+                            </div>
+                            <div>
+                                <label>Website URL</label>
+                                <input id="website" name="website" type="url" value="{{ old('website', $profile->website ?? '') }}" placeholder="https://www.example.com" />
                             </div>
                         </div>
 
@@ -92,11 +96,6 @@
                                     @endforeach
                                 </select>
                             </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label>Website URL</label>
-                            <input id="website" name="website" type="url" value="{{ old('website', $profile->website ?? '') }}" placeholder="https://www.example.com" />
                         </div>
 
                         <div>
@@ -187,7 +186,7 @@
                             <p class="text-xs text-slate-400 mt-0.5">Where invoices and updates are sent</p>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label>Contact Person Name</label>
                                 <input id="contact_person_name" name="contact_person_name" type="text" value="{{ old('contact_person_name', $profile->contact_person_name ?? '') }}" required />
@@ -196,11 +195,10 @@
                                 <label>Contact Phone</label>
                                 <input id="contact_phone" name="contact_phone" type="text" value="{{ old('contact_phone', $profile->contact_phone ?? '') }}" />
                             </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label>GST / Tax ID (Optional)</label>
-                            <input id="gst_number" name="gst_number" type="text" value="{{ old('gst_number', $profile->gst_number ?? '') }}" />
+                            <div>
+                                <label>GST / Tax ID (Optional)</label>
+                                <input id="gst_number" name="gst_number" type="text" value="{{ old('gst_number', $profile->gst_number ?? '') }}" />
+                            </div>
                         </div>
 
                         <div class="mb-4">
