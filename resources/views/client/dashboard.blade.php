@@ -538,9 +538,9 @@
                                 </circle>
                             @endforeach
                         </svg>
-                        <div class="flex justify-between text-[6px] sm:text-[7px] text-slate-500 font-extrabold px-1 mt-1 tracking-tighter">
+                        <div class="flex justify-between text-[6.5px] sm:text-[7.5px] text-slate-500 font-normal px-1 mt-1 tracking-tighter">
                             @foreach($pts as $p)
-                                <span class="{{ $p['l'] === 'Today' ? 'text-blue-300' : '' }}">{{ $p['l'] }}</span>
+                                <span class="{{ $p['l'] === 'Today' ? 'text-blue-300 font-semibold' : '' }}">{{ $p['l'] }}</span>
                             @endforeach
                         </div>
                     </div>
