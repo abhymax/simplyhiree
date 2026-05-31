@@ -322,6 +322,7 @@ class ClientController extends Controller
             'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
             'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
+            'screening_required' => (bool) ($validated['screening_required'] ?? true),
         ]);
 
         // Resolve the allowed-partner list according to mode
@@ -368,6 +369,7 @@ class ClientController extends Controller
             'minimum_stay_days' => $validated['minimum_stay_days'],
             'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
             'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
+            'screening_required' => (bool) ($validated['screening_required'] ?? true),
             'status' => 'pending_approval',
         ]);
 
@@ -423,6 +425,7 @@ class ClientController extends Controller
             'allowed_partners'       => 'nullable|array',
             'allowed_partners.*'     => 'integer|exists:users,id',
             'is_company_confidential' => 'nullable|boolean',
+            'screening_required' => 'nullable|boolean',
         ]);
     }
 

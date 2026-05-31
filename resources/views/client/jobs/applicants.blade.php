@@ -22,8 +22,8 @@
 
         <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-white/20 pb-6">
             <div>
-                <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase tracking-wider mb-2">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                <a href="javascript:history.back()" class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase tracking-wider mb-2">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back
                 </a>
                 <h1 class="text-4xl font-extrabold tracking-tight">Approved Applicants</h1>
                 <p class="text-blue-100 mt-1">{{ $job->title }}</p>

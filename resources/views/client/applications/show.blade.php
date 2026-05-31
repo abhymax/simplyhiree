@@ -27,9 +27,9 @@
     <div class="relative z-10 max-w-6xl mx-auto">
 
         {{-- Back link --}}
-        <a href="{{ route('client.jobs.applicants', $application->job_id) }}"
+        <a href="javascript:history.back()"
            class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase tracking-wider mb-4">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Applicants
+           <i class="fa-solid fa-arrow-left mr-2"></i> Back
         </a>
 
         {{-- Hero card --}}

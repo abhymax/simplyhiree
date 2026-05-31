@@ -242,23 +242,12 @@
 
         {{-- User Section --}}
         <div class="custom-sidebar-footer">
-            <div class="flex items-center justify-between gap-3 p-1 rounded-xl hover:bg-white/5 transition duration-200">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold uppercase shrink-0">
-                        {{ substr(Auth::user()->name, 0, 1) }}
-                    </div>
-                    <div class="min-w-0">
-                        <h4 class="font-bold text-xs text-white truncate">{{ Auth::user()->name }}</h4>
-                        <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Client</p>
-                    </div>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" class="m-0 shrink-0">
-                    @csrf
-                    <button type="submit" class="text-slate-500 hover:text-red-400 p-1.5 transition" title="Logout">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                    </button>
-                </form>
-            </div>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition duration-200 font-bold text-sm tracking-wider uppercase">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -732,59 +721,46 @@
             {{-- Row 6: Detailed Widgets Grid (Exact Copy of JPEG sections & data) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 
-                {{-- Widget 1: Recent Activities (Dynamic Candidate Submissions & Interviews) --}}
+                {{-- Widget 1: Notifications (Replacing Recent Activities) --}}
                 <div class="glass-card rounded-2xl p-6 flex flex-col gap-5">
                     <div class="flex justify-between items-baseline">
-                        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Recent Activities</h4>
-                        <a href="{{ route('client.applications.index') }}" class="text-xs font-bold text-blue-400 hover:underline">View All</a>
+                        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Notifications</h4>
+                        <a href="#" onclick="alert('Notification page coming soon'); return false;" class="text-xs font-bold text-blue-400 hover:underline">View All</a>
                     </div>
 
                     <div class="space-y-4 pt-1">
                         @php
-                            $activitiesList = collect();
-
-                            if (isset($recentApplications)) {
-                                foreach($recentApplications as $app) {
-                                    $activitiesList->push([
-                                        'icon' => 'fa-user-plus',
-                                        'color' => 'bg-blue-500/20 text-blue-400',
-                                        'text' => 'New profile ' . ($app->candidateUser->name ?? $app->candidate->first_name ?? '') . ' submitted for ' . ($app->job->title ?? ''),
-                                        'time' => $app->created_at->diffForHumans()
-                                    ]);
-                                }
-                            }
-
-                            if (isset($recentInterviews)) {
-                                foreach($recentInterviews as $interview) {
-                                    $activitiesList->push([
-                                        'icon' => 'fa-video',
-                                        'color' => 'bg-purple-500/20 text-purple-400',
-                                        'text' => 'Interview scheduled for ' . ($interview->candidateUser->name ?? $interview->candidate->first_name ?? '') . ' - ' . ($interview->job->title ?? ''),
-                                        'time' => \Carbon\Carbon::parse($interview->interview_at)->diffForHumans()
-                                    ]);
-                                }
-                            }
-
-                            // Fallback if no real activities
-                            if ($activitiesList->isEmpty()) {
-                                $activitiesList = collect([
-                                    ['icon' => 'fa-user-plus', 'color' => 'bg-blue-500/20 text-blue-400', 'text' => 'No recent candidate submissions found.', 'time' => 'System Idle'],
-                                    ['icon' => 'fa-briefcase', 'color' => 'bg-indigo-500/20 text-indigo-400', 'text' => 'Post a new job requirement to start sourcing.', 'time' => 'System Idle']
-                                ]);
-                            }
+                            $notifications = auth()->user()->notifications()->take(5)->get();
                         @endphp
 
-                        @foreach($activitiesList as $act)
+                        @forelse($notifications as $notification)
+                            @php
+                                $icon = $notification->data['icon'] ?? 'circle-info';
+                                $color = 'bg-blue-500/20 text-blue-400';
+                                if($icon == 'check-circle' || $icon == 'user-check') $color = 'bg-green-500/20 text-green-400';
+                                if($icon == 'x-circle' || $icon == 'user-xmark') $color = 'bg-red-500/20 text-red-400';
+                                if($icon == 'calendar-event') $color = 'bg-purple-500/20 text-purple-400';
+                            @endphp
                             <div class="flex gap-3">
-                                <div class="w-8 h-8 rounded-lg {{ $act['color'] }} flex items-center justify-center shrink-0 text-sm">
-                                    <i class="fa-solid {{ $act['icon'] }}"></i>
+                                <div class="w-8 h-8 rounded-lg {{ $color }} flex items-center justify-center shrink-0 text-sm">
+                                    <i class="fa-solid fa-{{ str_replace('circle-check', 'check-circle', str_replace('circle-xmark', 'x-circle', $icon)) }}"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">{{ $act['text'] }}</p>
-                                    <span class="text-[9px] text-slate-500 font-bold block mt-1 capitalize tracking-wide">{{ $act['time'] }}</span>
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">{{ $notification->data['message'] ?? 'New notification' }}</p>
+                                    <span class="text-[9px] text-slate-500 font-bold block mt-1 capitalize tracking-wide">{{ $notification->created_at->diffForHumans() }}</span>
                                 </div>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-slate-500/20 text-slate-400 flex items-center justify-center shrink-0 text-sm">
+                                    <i class="fa-solid fa-bell-slash"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs text-slate-300 font-medium leading-relaxed">No recent notifications.</p>
+                                    <span class="text-[9px] text-slate-500 font-bold block mt-1 capitalize tracking-wide">System Idle</span>
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 
@@ -806,16 +782,18 @@
                         @endphp
 
                         @foreach($topJobs as $job)
-                            <a href="{{ route('client.jobs.index') }}" class="flex items-center justify-between gap-3 p-3 bg-slate-950/50 border border-white/10 rounded-xl hover:bg-slate-950/70 hover:border-white/20 transition block cursor-pointer">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center text-sm"><i class="fa-solid fa-briefcase"></i></div>
-                                    <div>
-                                        <h5 class="font-bold text-xs text-white">{{ $job->title }}</h5>
-                                        <p class="text-[9px] text-slate-500 mt-0.5">{{ $job->location ?? '—' }} · {{ $job->job_type ?? '—' }}</p>
+                            <div class="flex items-center justify-between gap-3 p-3 bg-slate-950/50 border border-white/10 rounded-xl hover:bg-slate-950/70 hover:border-white/20 transition block">
+                                <a href="{{ route('jobs.show', $job->id) }}" class="flex items-center gap-3 flex-1 min-w-0">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-briefcase"></i></div>
+                                    <div class="min-w-0">
+                                        <h5 class="font-bold text-xs text-white truncate hover:text-cyan-300 transition">{{ $job->title }}</h5>
+                                        <p class="text-[9px] text-slate-500 mt-0.5 truncate">{{ $job->location ?? '—' }} · {{ $job->job_type ?? '—' }}</p>
                                     </div>
-                                </div>
-                                <span class="text-[10px] font-extrabold bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 shadow-md shrink-0">{{ $job->jobApplications->where('status', 'Approved')->count() }} Submissions</span>
-                            </a>
+                                </a>
+                                <a href="{{ route('client.jobs.applicants', $job) }}" class="text-[10px] font-extrabold bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 shadow-md shrink-0 transition cursor-pointer">
+                                    {{ $job->jobApplications->where('status', 'Approved')->count() }} Applicants
+                                </a>
+                            </div>
                         @endforeach
 
                         @if($topJobs->isEmpty())

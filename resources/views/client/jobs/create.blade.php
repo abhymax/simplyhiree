@@ -327,6 +327,27 @@
                                 </div>
                             </label>
                         </div>
+
+                        {{-- Screening vs Direct toggle --}}
+                        <div class="mt-5 pt-4 border-t border-white/20">
+                            <h4 class="text-white font-bold text-sm mb-3">Application Pipeline</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;">
+                                    <input type="radio" name="screening_required" value="1" {{ old('screening_required', $job->screening_required ?? true) == 1 ? 'checked' : '' }} class="mt-1">
+                                    <div>
+                                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-shield-halved text-blue-400 mr-1"></i> Screening Required</div>
+                                        <div class="text-white/80 text-xs">Candidates will be screened by SimplyHiree before appearing in your dashboard.</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;">
+                                    <input type="radio" name="screening_required" value="0" {{ old('screening_required', $job->screening_required ?? true) == 0 ? 'checked' : '' }} class="mt-1">
+                                    <div>
+                                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Direct to Client</div>
+                                        <div class="text-white/80 text-xs">Candidates will bypass SimplyHiree screening and go directly to your dashboard.</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Payout settings are managed centrally via the client's
