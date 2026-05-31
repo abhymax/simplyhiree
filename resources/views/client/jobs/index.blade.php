@@ -109,18 +109,18 @@
                                 </div>
                             </div>
 
-                            <div class="space-y-3 mt-5 text-sm text-blue-100/80">
+                            <div class="space-y-3 mt-5 text-sm">
                                 <div class="flex items-start gap-3">
-                                    <div class="w-5 flex justify-center text-blue-300/70 mt-0.5"><i class="fa-solid fa-location-dot"></i></div>
-                                    <span class="truncate">{{ $job->location ?: 'Location not specified' }}</span>
+                                    <div class="w-5 flex justify-center text-blue-400 mt-0.5"><i class="fa-solid fa-location-dot"></i></div>
+                                    <span class="truncate text-blue-100">{{ $job->location ?: 'Location not specified' }}</span>
                                 </div>
                                 <div class="flex items-start gap-3">
-                                    <div class="w-5 flex justify-center text-blue-300/70 mt-0.5"><i class="fa-solid fa-briefcase"></i></div>
-                                    <span>{{ $job->formatted_experience ?? (($job->min_experience ?? '') . '-' . ($job->max_experience ?? '') . ' yrs') }}</span>
+                                    <div class="w-5 flex justify-center text-blue-400 mt-0.5"><i class="fa-solid fa-briefcase"></i></div>
+                                    <span class="text-blue-100">{{ $job->formatted_experience ?? (($job->min_experience ?? '') . '-' . ($job->max_experience ?? '') . ' yrs') }}</span>
                                 </div>
                                 <div class="flex items-start gap-3">
-                                    <div class="w-5 flex justify-center text-blue-300/70 mt-0.5"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                                    <span>{{ $job->salary ?: 'Salary unlisted' }}</span>
+                                    <div class="w-5 flex justify-center text-blue-400 mt-0.5"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                                    <span class="text-blue-100">{{ $job->salary ?: 'Salary unlisted' }}</span>
                                 </div>
                                 <div class="flex items-start gap-3">
                                     <div class="w-5 flex justify-center text-emerald-400 mt-0.5"><i class="fa-solid fa-users"></i></div>
