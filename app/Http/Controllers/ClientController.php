@@ -109,15 +109,15 @@ class ClientController extends Controller
             ['label' => 'Joined',      'count' => $funnelJoined,      'link' => route('client.applications.index', ['joined_status' => 'Joined'])],
         ];
 
-        // --- Interview Activity Trend (last 7 days, real scheduled interviews per-day) ---
-        $trendStart = Carbon::today()->subDays(6);
+        // --- Interview Activity Trend (last 14 days, real scheduled interviews per-day) ---
+        $trendStart = Carbon::today()->subDays(13);
         $rawTrend = JobApplication::whereIn('job_id', $jobIds)
             ->whereNotNull('interview_at')
             ->where('interview_at', '>=', $trendStart)
             ->selectRaw('DATE(interview_at) as d, COUNT(*) as c')
             ->groupBy('d')->pluck('c', 'd');
         $submissionTrend = [];
-        for ($i = 6; $i >= 0; $i--) {
+        for ($i = 13; $i >= 0; $i--) {
             $day = Carbon::today()->subDays($i);
             $submissionTrend[] = [
                 'label' => $day->isToday() ? 'Today' : $day->format('d M'),
