@@ -1,11 +1,9 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
+@section('client_content')
 @php
     $candidateName = trim(($application->candidate->first_name ?? '').' '.($application->candidate->last_name ?? '')) ?: ($application->candidateUser->name ?? 'Candidate');
 @endphp
-
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
 
     <div class="relative z-10 max-w-2xl mx-auto">
 
@@ -79,5 +77,4 @@
             </div>
         </form>
     </div>
-</div>
 @endsection

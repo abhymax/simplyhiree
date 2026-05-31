@@ -1,7 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
+@section('client_content')
     <div class="max-w-4xl mx-auto">
         <div class="mb-6 border-b border-white/10 pb-6">
             <a href="{{ route('client.vendors.browse') }}" class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase"><i class="fa-solid fa-arrow-left mr-2"></i> Back to Vendors</a>
@@ -71,6 +70,4 @@
             </div>
             <div class="p-4 border-t border-white/10">{{ $invitations->links() }}</div>
         </div>
-    </div>
-</div>
 @endsection

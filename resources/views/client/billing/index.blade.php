@@ -1,10 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-amber-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
-    <div class="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
-
+@section('client_content')
     <div class="relative z-10 max-w-7xl mx-auto" x-data="{ payRow: null, viewRow: null }">
 
         <div class="mb-6 border-b border-white/10 pb-6">
@@ -223,7 +219,5 @@
                 </table>
             </div>
             <div class="p-4 border-t border-white/10">{{ $billingData->onEachSide(1)->links() }}</div>
-        </div>
     </div>
-</div>
 @endsection

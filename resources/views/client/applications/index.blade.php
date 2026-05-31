@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
+@section('client_content')
 <style>
     .date-white::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); cursor: pointer; }
     .date-white { color-scheme: dark; }
@@ -9,11 +9,6 @@
     .apps-table .cand-avatar { width: 36px !important; height: 36px !important; font-size: .9rem !important; }
     .status-pill { padding: .35rem .7rem !important; font-size: .7rem !important; gap: .35rem !important; }
 </style>
-
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
-
-    <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[120px] opacity-40 animate-pulse"></div>
-    <div class="absolute bottom-0 left-0 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen filter blur-[120px] opacity-40"></div>
 
     <div class="relative z-10 max-w-7xl mx-auto">
 
@@ -200,5 +195,4 @@
         </div>
 
     </div>
-</div>
 @endsection

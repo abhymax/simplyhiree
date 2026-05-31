@@ -1,16 +1,12 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
+@section('client_content')
 <style>
     .fx-row { transition: all .22s ease; border-left: 4px solid transparent; }
     .fx-row:hover { transform: scale(1.004); background: rgba(255,255,255,.10) !important; border-left-color: #22d3ee; }
     .fx-btn { transition: transform .18s ease, box-shadow .18s ease; }
     .fx-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 24px rgba(59,130,246,.35); }
 </style>
-
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen blur-[120px] opacity-30 animate-pulse"></div>
-    <div class="absolute bottom-0 left-0 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen blur-[120px] opacity-30"></div>
 
     <div class="relative z-10 max-w-7xl mx-auto">
 
@@ -263,5 +259,4 @@
             </div>
         </div>
     </div>
-</div>
 @endsection

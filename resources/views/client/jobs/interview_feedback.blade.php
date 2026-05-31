@@ -1,7 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12">
+@section('client_content')
     <div class="max-w-3xl mx-auto">
         <a href="{{ route('client.jobs.applicants', $application->job_id) }}" class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase mb-3">
             <i class="fa-solid fa-arrow-left mr-2"></i> Back to applicants
@@ -69,7 +68,6 @@
             </form>
         </div>
     </div>
-</div>
 <script>
     function setRating(v) {
         document.getElementById('interview_rating').value = v;

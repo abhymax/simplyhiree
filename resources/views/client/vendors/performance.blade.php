@@ -1,7 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
+@section('client_content')
     <div class="max-w-7xl mx-auto">
 
         <div class="mb-6 border-b border-white/10 pb-6 flex flex-wrap items-end justify-between gap-3">
@@ -76,6 +75,4 @@
                 </table>
             </div>
         </div>
-    </div>
-</div>
 @endsection

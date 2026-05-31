@@ -1,9 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-yellow-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
-
+@section('client_content')
     <div class="relative z-10 max-w-2xl mx-auto">
         <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <div class="text-center mb-6">
@@ -84,5 +81,4 @@
             </form>
         </div>
     </div>
-</div>
 @endsection

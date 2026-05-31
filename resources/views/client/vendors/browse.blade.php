@@ -1,8 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-amber-500 rounded-full mix-blend-screen blur-[140px] opacity-20"></div>
+@section('client_content')
     <div class="relative z-10 max-w-7xl mx-auto">
 
         <div class="flex flex-wrap items-end justify-between gap-3 mb-6 border-b border-white/10 pb-6">
@@ -95,5 +93,4 @@
         </div>
         <div class="mt-6">{{ $vendors->links() }}</div>
     </div>
-</div>
 @endsection

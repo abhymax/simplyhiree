@@ -1,12 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.client')
 
-@section('content')
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
-
-    {{-- DECORATIVE BACKGROUND GLOWS --}}
-    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
-    <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
-
+@section('client_content')
     <div class="relative z-10 max-w-7xl mx-auto">
         
         {{-- HEADER --}}
@@ -171,5 +165,4 @@
         @endif
 
     </div>
-</div>
 @endsection
