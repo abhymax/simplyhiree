@@ -99,10 +99,10 @@
                     @endif
 
                     {{-- Job Specification Card --}}
-                    <div class="rounded-2xl p-6 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
+                    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 shadow-2xl mb-8">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-white rounded-full"></span>
-                            <i class="fa-solid fa-briefcase text-white"></i> Job Specification
+                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-briefcase text-blue-400"></i> Job Specification
                         </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-2">
@@ -226,10 +226,10 @@
                     </div>{{-- /Job Specification card --}}
 
                     {{-- Description & Skills Card --}}
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;">
+                    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 shadow-2xl mb-8">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-white rounded-full"></span>
-                            <i class="fa-solid fa-align-left text-white"></i> Description &amp; Skills
+                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-align-left text-blue-400"></i> Description &amp; Skills
                         </h3>
 
                         <div class="mb-6">
@@ -254,10 +254,10 @@
 
                     {{-- Vendor Assignment Card --}}
                     @php $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); @endphp
-                    <div class="rounded-2xl p-5 shadow-lg" style="background:#0443cd; margin-bottom: 2.5rem;" x-data="{ mode: '{{ $currMode }}' }">
+                    <div class="bg-slate-900/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 shadow-2xl mb-8" x-data="{ mode: '{{ $currMode }}' }">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-white rounded-full"></span>
-                            <i class="fa-solid fa-handshake text-white"></i> Vendor Assignment
+                            <span class="w-1.5 h-7 bg-blue-500 rounded-full"></span>
+                            <i class="fa-solid fa-handshake text-blue-400"></i> Vendor Assignment
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <label class="cursor-pointer flex items-start gap-2 bg-slate-900/40 border border-white/10 rounded-xl px-3 py-3" style="background-color:#0f172a !important;color:#fff !important;" :class="mode==='open' ? 'ring-2 ring-blue-400 border-blue-400/50' : ''">
