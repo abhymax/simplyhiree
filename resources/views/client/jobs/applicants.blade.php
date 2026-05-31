@@ -30,6 +30,36 @@
             </div>
         </div>
 
+        {{-- FILTRATION FORM --}}
+        <div class="bg-slate-900/40 border border-white/10 rounded-2xl p-5 mb-6">
+            <form method="GET" action="{{ route('client.jobs.applicants', $job->id) }}" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Search Candidates</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, email or phone..." class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-400 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Hiring Status</label>
+                    <select name="hiring_status" class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-400 text-sm">
+                        <option value="">All Statuses</option>
+                        <option value="Shortlisted" {{ request('hiring_status') === 'Shortlisted' ? 'selected' : '' }}>Pending Action / Shortlisted</option>
+                        <option value="Interview Scheduled" {{ request('hiring_status') === 'Interview Scheduled' ? 'selected' : '' }}>Interview Scheduled</option>
+                        <option value="Interviewed" {{ request('hiring_status') === 'Interviewed' ? 'selected' : '' }}>Interviewed</option>
+                        <option value="Selected" {{ request('hiring_status') === 'Selected' ? 'selected' : '' }}>Selected</option>
+                        <option value="Joined" {{ request('hiring_status') === 'Joined' ? 'selected' : '' }}>Joined</option>
+                        <option value="Client Rejected" {{ request('hiring_status') === 'Client Rejected' ? 'selected' : '' }}>Rejected</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-xl text-sm transition">
+                        Filter
+                    </button>
+                    <a href="{{ route('client.jobs.applicants', $job->id) }}" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-4 rounded-xl text-sm transition text-center">
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
         <div class="premium-table-container shadow-2xl">
             <div class="overflow-x-auto">
                 <table class="premium-table min-w-full">

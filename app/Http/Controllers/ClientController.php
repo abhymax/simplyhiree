@@ -683,17 +683,47 @@ class ClientController extends Controller
     /**
      * Show the applicants for a specific job.
      */
-    public function showApplicants(Job $job)
+    public function showApplicants(Request $request, Job $job)
     {
         if ($job->user_id !== Auth::id()) {
             abort(403, 'UNAUTHORIZED ACTION.');
         }
 
-        $approvedApplications = JobApplication::where('job_id', $job->id)
-                                            ->where('status', 'Approved')
-                                            ->with(['candidate', 'candidateUser', 'interviewRounds'])
-                                            ->latest()
-                                            ->paginate(20);
+        $query = JobApplication::where('job_id', $job->id)
+                                ->where('status', 'Approved')
+                                ->with(['candidate', 'candidateUser', 'interviewRounds']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('candidate', function($subQ) use ($search) {
+                    $subQ->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('phone_number', 'like', "%{$search}%");
+                })->orWhereHas('candidateUser', function($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('application_code', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('hiring_status')) {
+            $hStatus = $request->input('hiring_status');
+            if ($hStatus === 'Shortlisted') {
+                $query->where(function($q) {
+                    $q->whereIn('hiring_status', ['Shortlisted', 'shortlisted'])
+                      ->orWhereNull('hiring_status')
+                      ->orWhere('hiring_status', '');
+                });
+            } else {
+                $query->where('hiring_status', $hStatus);
+            }
+        }
+
+        $approvedApplications = $query->latest()
+                                      ->paginate(20)
+                                      ->withQueryString();
 
         return view('client.jobs.applicants', [
             'job' => $job,

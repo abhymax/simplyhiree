@@ -1597,9 +1597,43 @@ class AdminController extends Controller
         }
     }
 
-    public function jobApplicantsReport(\App\Models\Job $job)
+    public function jobApplicantsReport(Request $request, \App\Models\Job $job)
     {
-        $applications = $job->jobApplications()->with(['candidate', 'candidate.partner', 'candidateUser.profile'])->latest()->paginate(20);
+        $query = $job->jobApplications()->with(['candidate', 'candidate.partner', 'candidateUser.profile']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('candidate', function($subQ) use ($search) {
+                    $subQ->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('phone_number', 'like', "%{$search}%");
+                })->orWhereHas('candidateUser', function($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('application_code', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('hiring_status')) {
+            $hStatus = $request->input('hiring_status');
+            if ($hStatus === 'Shortlisted') {
+                $query->where(function($q) {
+                    $q->whereIn('hiring_status', ['Shortlisted', 'shortlisted'])
+                      ->orWhereNull('hiring_status')
+                      ->orWhere('hiring_status', '');
+                });
+            } else {
+                $query->where('hiring_status', $hStatus);
+            }
+        }
+
+        $applications = $query->latest()->paginate(20)->withQueryString();
         return view('admin.reports.job_applicants', compact('job', 'applications'));
     }
 
