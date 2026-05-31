@@ -1059,31 +1059,40 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 2. Witty Greeting Templates
+        // 2. Witty Greeting Templates & Consecutive-Uniqueness Logic
         const clientName = "{{ Auth::user()->name }}";
         const timeGreetings = {
             morning: [
                 `Rise and shine, ${clientName}! Let's build a dream team today.`,
                 `Fresh morning, fresh goals. Welcome back, ${clientName}!`,
                 `Ready to discover some premium talent today, ${clientName}?`,
-                `Top of the morning, ${clientName}! Let's check those stats.`
+                `Top of the morning, ${clientName}! Let's check those stats.`,
+                `Morning, ${clientName}! Fresh coffee, fresh candidates. Let's hire!`,
+                `Rise, shine, and recruit! Welcome back, ${clientName}!`,
+                `A stellar morning to you, ${clientName}! The pipeline is looking bright.`
             ],
             afternoon: [
                 `Good afternoon, ${clientName}! Let's convert those interviews into offers.`,
                 `Hope your coffee is strong and your pipeline is stronger, ${clientName}!`,
                 `Welcome back, ${clientName}. Let's make this afternoon count!`,
-                `Post-lunch productivity spike? Let's check the candidates, ${clientName}!`
+                `Post-lunch productivity spike? Let's check the candidates, ${clientName}!`,
+                `Harnessing that afternoon energy, ${clientName}? Let's close some roles!`,
+                `Good afternoon, ${clientName}. Time to make some executive decisions.`
             ],
             evening: [
                 `Good evening, ${clientName}. Wrapping up a great day, or just getting started?`,
                 `Sun is setting but your hiring pipeline is still hot, ${clientName}!`,
-                `A wonderful evening to you, ${clientName}! Let's review the pipeline before we log off.`
+                `A wonderful evening to you, ${clientName}! Let's review the pipeline before we log off.`,
+                `Evening check-in, ${clientName}! Some stellar profiles just arrived.`,
+                `The sun is setting, but the talent hunt never rests, ${clientName}!`
             ],
             night: [
                 `Burning the midnight oil, ${clientName}? The dedication is stellar!`,
                 `Late-night scouting? You're a true hiring champion, ${clientName}.`,
                 `Hustling after hours, ${clientName}? Sleep can wait, talent can't!`,
-                `Quiet night, busy pipeline. Welcome back, ${clientName}.`
+                `Quiet night, busy pipeline. Welcome back, ${clientName}.`,
+                `Night shift recruitment power-hour! Welcome back, ${clientName}!`,
+                `Dedication has a name, and it is ${clientName}. Late-night hiring mode active!`
             ]
         };
 
@@ -1091,24 +1100,29 @@
             rain: [
                 "It is pouring outside, but we're making it rain job offers! 🌧️",
                 "Perfect cozy weather to review some resumes indoors. ☔",
-                "Stormy outside, but your hiring pipeline is smooth sailing! ⛈️"
+                "Stormy outside, but your hiring pipeline is smooth sailing! ⛈️",
+                "Raining cats and dogs outside, but we are raining talent in here! 🌧️"
             ],
             hot: [
                 "It is scorching outside, but your hiring activity is even hotter! 🥵🔥",
                 "Stay cool indoors while we heat up the candidate pipeline! ☀️🥤",
-                "Blazing sun outside, sizzling talent inside! ☀️"
+                "Blazing sun outside, sizzling talent inside! ☀️",
+                "Heat index is high, but your pipeline's success rate is higher! 🌡️"
             ],
             cold: [
                 "Chilly breeze outside! Let's warm up the dashboard. ❄️☕",
-                "Grab a hot beverage while reviewing these heartwarming profiles! 🧣"
+                "Grab a hot beverage while reviewing these heartwarming profiles! 🧣",
+                "Cold weather outside, warm candidates inside! ❄️"
             ],
             cloudy: [
                 "Overcast today, but your hiring vision is crystal clear! ☁️",
-                "Foggy weather? Let's cut through the haze and find that perfect match! 🌫️"
+                "Foggy weather? Let's cut through the haze and find that perfect match! 🌫️",
+                "Cloudy skies can't dampen this sparkling pipeline! 🌥️"
             ],
             clear: [
                 "Clear skies outside, and a clear path to your next hire inside! 🌤️",
-                "What a gorgeous day! Let's match this beautiful weather with some beautiful offers. 🌸"
+                "What a gorgeous day! Let's match this beautiful weather with some beautiful offers. 🌸",
+                "Sunny and beautiful! Time to bring some sunshine to a candidate's inbox. ☀️"
             ]
         };
 
@@ -1126,11 +1140,32 @@
             
             const timeCat = getHourCategory();
             const timeList = timeGreetings[timeCat];
-            const baseGreeting = timeList[Math.floor(Math.random() * timeList.length)];
+            
+            // Get last selected indices from localStorage to guarantee non-repetition
+            const lastTimeKey = `last_g_time_${timeCat}`;
+            const lastTimeIdx = parseInt(localStorage.getItem(lastTimeKey) ?? -1, 10);
+            
+            let availableTimeIndices = Array.from({length: timeList.length}, (_, i) => i);
+            if (timeList.length > 1 && lastTimeIdx >= 0 && lastTimeIdx < timeList.length) {
+                availableTimeIndices = availableTimeIndices.filter(idx => idx !== lastTimeIdx);
+            }
+            const timeIdx = availableTimeIndices[Math.floor(Math.random() * availableTimeIndices.length)];
+            localStorage.setItem(lastTimeKey, timeIdx);
+            const baseGreeting = timeList[timeIdx];
             
             if (weatherCategory && weatherTwists[weatherCategory]) {
                 const twistList = weatherTwists[weatherCategory];
-                const weatherTwist = twistList[Math.floor(Math.random() * twistList.length)];
+                const lastWeatherKey = `last_g_weather_${weatherCategory}`;
+                const lastWeatherIdx = parseInt(localStorage.getItem(lastWeatherKey) ?? -1, 10);
+                
+                let availableWeatherIndices = Array.from({length: twistList.length}, (_, i) => i);
+                if (twistList.length > 1 && lastWeatherIdx >= 0 && lastWeatherIdx < twistList.length) {
+                    availableWeatherIndices = availableWeatherIndices.filter(idx => idx !== lastWeatherIdx);
+                }
+                const weatherIdx = availableWeatherIndices[Math.floor(Math.random() * availableWeatherIndices.length)];
+                localStorage.setItem(lastWeatherKey, weatherIdx);
+                const weatherTwist = twistList[weatherIdx];
+                
                 welcomeEl.innerHTML = `${baseGreeting} <span class="text-blue-400 font-semibold block sm:inline sm:ml-1 text-sm mt-1 sm:mt-0">${weatherTwist}</span>`;
             } else {
                 welcomeEl.innerText = baseGreeting;
