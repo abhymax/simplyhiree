@@ -2,6 +2,32 @@
 
 @section('content')
 
+@if(Auth::check() && Auth::user()->status === 'on_hold')
+<div class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 backdrop-blur-md px-4 select-none pointer-events-auto">
+    <div class="bg-gradient-to-br from-slate-900 to-red-950 border border-red-500/40 rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl animate-fade-in relative">
+        <div class="mx-auto w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mb-6 text-red-400">
+            <i class="fa-solid fa-triangle-exclamation text-4xl animate-bounce"></i>
+        </div>
+        <h2 class="text-2xl font-black text-white tracking-tight mb-3">Account on Hold</h2>
+        <p class="text-red-200/90 text-sm leading-relaxed mb-6">
+            Your profile is on Hold due to lack of any activity.<br>
+            Kindly reach out to us at <a href="mailto:support@simplyhiree.com" class="text-cyan-400 hover:underline font-bold font-mono">support@simplyhiree.com</a> to reactivate your workspace.
+        </p>
+        <div class="flex flex-col gap-3">
+            <a href="mailto:support@simplyhiree.com" class="w-full bg-red-600 hover:bg-red-500 active:scale-[0.98] transition-all text-white font-extrabold py-3 rounded-xl shadow-lg shadow-red-500/20 inline-block text-center decoration-none">
+                Contact Support
+            </a>
+            <form method="POST" action="{{ route('logout') }}" class="m-0 w-full">
+                @csrf
+                <button type="submit" class="w-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white font-bold py-2.5 rounded-xl transition border border-white/15 text-sm">
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Replacement Requests pop-up (shows once per login session) --}}
 @if(!empty($showReplacementModal) && $showReplacementModal && $replacementRequests->isNotEmpty())
 <div id="replacement-modal"
