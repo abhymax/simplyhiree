@@ -9,8 +9,8 @@
     .job-form-section { border: 1px solid rgba(148, 163, 184, .16); background: rgba(2, 10, 33, .28); border-radius: 18px; padding: 1.35rem; }
     .job-section-title { color: #fff; font-size: .88rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; gap: .55rem; margin-bottom: 1.15rem; }
     .job-section-title i { width: 1.9rem; height: 1.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: .6rem; background: rgba(59, 130, 246, .18); color: #67e8f9; }
-    .post-job-shell input:not([type="hidden"]), .post-job-shell select { min-height: 46px; padding: .65rem .8rem; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
-    .post-job-shell input:not([type="hidden"]):focus, .post-job-shell select:focus { border-color: rgba(103, 232, 249, .8) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, .13); outline: none; }
+    .post-job-shell input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), .post-job-shell select { min-height: 46px; padding: .65rem .8rem; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+    .post-job-shell input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):focus, .post-job-shell select:focus { border-color: rgba(103, 232, 249, .8) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, .13); outline: none; }
     .job-flow-card { position: relative; overflow: hidden; border: 1px solid rgba(96, 165, 250, .32); border-radius: 18px; background: linear-gradient(120deg, rgba(30, 64, 175, .3), rgba(15, 23, 42, .48)); }
     .job-flow-option { width: 100%; border: 1px solid rgba(148, 163, 184, .2); border-radius: 14px; background: rgba(2, 6, 23, .38); transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease; cursor: pointer; text-align: left; }
     .job-flow-option.is-active { transform: translateY(-2px); border-color: rgba(56, 189, 248, .75); background: linear-gradient(135deg, rgba(14, 116, 144, .38), rgba(30, 64, 175, .26)); box-shadow: 0 14px 26px rgba(8, 47, 73, .3); }
