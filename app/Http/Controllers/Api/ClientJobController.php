@@ -64,6 +64,16 @@ class ClientJobController extends Controller
                 'gender_preference' => $job->gender_preference ?? 'Any',
                 'description' => $job->description,
                 'openings' => $job->openings,
+                'work_mode' => $job->work_mode,
+                'shift' => $job->shift,
+                'specialization' => $job->specialization,
+                'notice_period' => $job->notice_period,
+                'languages' => $job->languages,
+                'industry' => $job->industry,
+                'department' => $job->department,
+                'reporting_manager' => $job->reporting_manager,
+                'travel_required' => is_null($job->travel_required) ? null : (bool) $job->travel_required,
+                'benefits' => is_array($job->benefits) ? $job->benefits : [],
                 'category' => [
                     'id' => $job->jobCategory?->id ?? $job->category_id,
                     'name' => $job->jobCategory?->name,
@@ -112,6 +122,18 @@ class ClientJobController extends Controller
             'skills_required' => ['nullable', 'string'],
             'company_website' => ['nullable', 'url'],
             'openings' => ['nullable', 'integer', 'min:1'],
+            // Extended job-detail fields (all optional)
+            'work_mode' => ['nullable', 'string', 'in:On-site,Hybrid,Remote,Field Job,Work From Home (WFH)'],
+            'shift' => ['nullable', 'string', 'in:Day Shift,Night Shift,Rotational Shift,Flexible Shift,Weekend Shift'],
+            'specialization' => ['nullable', 'string', 'max:255'],
+            'notice_period' => ['nullable', 'string', 'max:100'],
+            'languages' => ['nullable', 'string', 'max:255'],
+            'industry' => ['nullable', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'reporting_manager' => ['nullable', 'string', 'max:255'],
+            'travel_required' => ['nullable', 'boolean'],
+            'benefits' => ['nullable', 'array'],
+            'benefits.*' => ['string', 'in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation'],
         ]);
 
         $job = Job::create([
@@ -134,6 +156,17 @@ class ClientJobController extends Controller
             'company_website' => $validated['company_website'] ?? null,
             'openings' => $validated['openings'] ?? 1,
             'partner_visibility' => 'all',
+            // Extended job-detail fields
+            'work_mode' => $validated['work_mode'] ?? null,
+            'shift' => $validated['shift'] ?? null,
+            'specialization' => $validated['specialization'] ?? null,
+            'notice_period' => $validated['notice_period'] ?? null,
+            'languages' => $validated['languages'] ?? null,
+            'industry' => $validated['industry'] ?? null,
+            'department' => $validated['department'] ?? null,
+            'reporting_manager' => $validated['reporting_manager'] ?? null,
+            'travel_required' => array_key_exists('travel_required', $validated) ? (bool) $validated['travel_required'] : null,
+            'benefits' => $validated['benefits'] ?? null,
         ]);
 
         $job->load(['jobCategory', 'educationLevel']);

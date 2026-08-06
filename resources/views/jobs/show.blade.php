@@ -254,6 +254,29 @@
                                     <span class="text-blue-200">Gender</span>
                                     <span class="font-semibold text-white">{{ $job->gender_preference ?? 'Any' }}</span>
                                 </div>
+                                @php
+                                    $overviewExtra = array_filter([
+                                        'Work Mode' => $job->work_mode,
+                                        'Shift' => $job->shift,
+                                        'Specialization' => $job->specialization,
+                                        'Notice Period' => $job->notice_period,
+                                        'Languages' => $job->languages,
+                                        'Industry' => $job->industry,
+                                        'Department' => $job->department,
+                                    ], fn ($v) => filled($v));
+                                @endphp
+                                @foreach($overviewExtra as $label => $val)
+                                    <div class="flex justify-between items-center py-2 border-b border-white/10">
+                                        <span class="text-blue-200">{{ $label }}</span>
+                                        <span class="font-semibold text-white text-right">{{ $val }}</span>
+                                    </div>
+                                @endforeach
+                                @if(!is_null($job->travel_required))
+                                    <div class="flex justify-between items-center py-2 border-b border-white/10">
+                                        <span class="text-blue-200">Travel Required</span>
+                                        <span class="font-semibold text-white">{{ $job->travel_required ? 'Yes' : 'No' }}</span>
+                                    </div>
+                                @endif
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Posted On</span>
                                     <span class="font-semibold text-white">{{ $job->created_at->format('M d, Y') }}</span>
@@ -269,6 +292,19 @@
                                 @endif
                             </div>
                         </div>
+
+                        @if(is_array($job->benefits) && count($job->benefits))
+                            <div class="fx-card bg-white/5 border border-white/10 p-6 rounded-2xl">
+                                <h4 class="text-xs font-bold text-cyan-300 uppercase mb-3">Benefits</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($job->benefits as $benefit)
+                                        <span class="text-sm bg-emerald-500/15 text-emerald-100 px-3 py-1 rounded-full border border-emerald-400/30">
+                                            {{ $benefit }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
 
                         @if(!empty($job->job_type_tags))
                             <div class="fx-card bg-white/5 border border-white/10 p-4 rounded-2xl">

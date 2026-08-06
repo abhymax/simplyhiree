@@ -1,4 +1,13 @@
 <x-app-layout>
+    @php
+        $jobTypeOptions = ['Full-time','Part-time','Contract','Contract-to-Hire (C2H)','Internship','Freelance','Temporary','Permanent','Trainee','Consultant'];
+        $workModeOptions = ['On-site','Hybrid','Remote','Field Job','Work From Home (WFH)'];
+        $shiftOptions = ['Day Shift','Night Shift','Rotational Shift','Flexible Shift','Weekend Shift'];
+        $benefitOptions = ['PF','ESIC','Insurance','Food','Transport','Accommodation','Laptop','Mobile','Joining Bonus','Relocation'];
+        $jobBenefits = old('benefits', []);
+        if (!is_array($jobBenefits)) { $jobBenefits = []; }
+        $travelRequiredVal = (string) old('travel_required', '');
+    @endphp
     {{-- FULL PAGE DEEP BLUE WRAPPER --}}
     <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10 relative">
         
@@ -31,7 +40,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.jobs.store') }}" method="POST" x-data="{ visibility: 'all', clientMode: 'simplyhiree' }">
+            <form action="{{ route('admin.jobs.store') }}" method="POST" x-data="{ visibility: 'all', clientMode: 'simplyhiree', candidateSearch: '' }">
                 @csrf
                 
                 {{-- SECTION 1: POSTING CONTEXT --}}
@@ -71,7 +80,7 @@
                                    class="mt-1 h-5 w-5 rounded border-white/40 bg-slate-800 text-blue-500 focus:ring-2 focus:ring-blue-400">
                             <div>
                                 <div class="text-white font-bold text-sm flex items-center gap-2">
-                                    <i class="fa-solid fa-user-secret text-amber-300"></i> Keep company name confidential
+                                    <i class="fa-solid fa-user-secret text-amber-300"></i> Keep Company Name Confidential
                                 </div>
                                 <p class="text-slate-400 text-xs mt-0.5">Vendors and candidates will see this posting as "Confidential" until the company is revealed.</p>
                             </div>
@@ -105,10 +114,9 @@
                             <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Job Type <span class="text-rose-400">*</span></label>
                             <select name="job_type" required class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
                                 <option value="">Select Type...</option>
-                                <option value="Full-time" {{ old('job_type') == 'Full-time' ? 'selected' : '' }}>Full-time</option>
-                                <option value="Part-time" {{ old('job_type') == 'Part-time' ? 'selected' : '' }}>Part-time</option>
-                                <option value="Contract" {{ old('job_type') == 'Contract' ? 'selected' : '' }}>Contract</option>
-                                <option value="Internship" {{ old('job_type') == 'Internship' ? 'selected' : '' }}>Internship</option>
+                                @foreach($jobTypeOptions as $jt)
+                                    <option value="{{ $jt }}" {{ old('job_type') == $jt ? 'selected' : '' }}>{{ $jt }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -204,12 +212,100 @@
                     </div>
                 </div>
 
-                {{-- Payout settings are managed centrally via the client's
-                     commercial contract — section hidden, defaults submitted
-                     invisibly so existing validation passes. --}}
-                <input type="hidden" name="payout_amount"              value="{{ old('payout_amount', 0) }}">
-                <input type="hidden" name="minimum_stay_days"          value="{{ old('minimum_stay_days', 30) }}">
-                <input type="hidden" name="replacement_guarantee_days" value="{{ old('replacement_guarantee_days', 90) }}">
+                {{-- SECTION 2B: ADDITIONAL DETAILS --}}
+                <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 mb-8 shadow-2xl">
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-cyan-400"></i> Additional Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Work Mode</label>
+                            <select name="work_mode" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                                <option value="">Select Work Mode...</option>
+                                @foreach($workModeOptions as $wm)
+                                    <option value="{{ $wm }}" {{ old('work_mode') === $wm ? 'selected' : '' }}>{{ $wm }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Shift</label>
+                            <select name="shift" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                                <option value="">Select Shift...</option>
+                                @foreach($shiftOptions as $sh)
+                                    <option value="{{ $sh }}" {{ old('shift') === $sh ? 'selected' : '' }}>{{ $sh }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Specialization</label>
+                            <input type="text" name="specialization" value="{{ old('specialization') }}" placeholder="e.g. Taxation, Frontend, Cardiology" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Notice Period</label>
+                            <input type="text" name="notice_period" value="{{ old('notice_period') }}" placeholder="e.g. Immediate, 30 days, 60 days" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Languages</label>
+                            <input type="text" name="languages" value="{{ old('languages') }}" placeholder="e.g. English, Hindi, Tamil" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Industry</label>
+                            <input type="text" name="industry" value="{{ old('industry') }}" placeholder="e.g. IT, Manufacturing, Healthcare" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Department</label>
+                            <input type="text" name="department" value="{{ old('department') }}" placeholder="e.g. Finance, Engineering, Sales" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Reporting Manager</label>
+                            <input type="text" name="reporting_manager" value="{{ old('reporting_manager') }}" placeholder="e.g. Head of Finance" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Travel Required</label>
+                            <select name="travel_required" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-12">
+                                <option value="">Not specified</option>
+                                <option value="1" {{ $travelRequiredVal === '1' ? 'selected' : '' }}>Yes</option>
+                                <option value="0" {{ $travelRequiredVal === '0' ? 'selected' : '' }}>No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <label class="block text-xs font-bold text-cyan-300 uppercase mb-3">Benefits</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                            @foreach($benefitOptions as $benefit)
+                                <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-800/60 px-3 py-2.5 cursor-pointer hover:border-cyan-400/40 transition">
+                                    <input type="checkbox" name="benefits[]" value="{{ $benefit }}" @checked(in_array($benefit, $jobBenefits, true)) class="rounded bg-slate-900 border-slate-600 text-cyan-500 focus:ring-cyan-500">
+                                    <span class="text-sm text-slate-200">{{ $benefit }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- SECTION 3: PAYOUT SETTINGS --}}
+                <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/40 backdrop-blur-xl border border-amber-500/30 rounded-3xl p-8 mb-8 shadow-2xl">
+                    <h3 class="text-xl font-bold text-amber-300 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-coins text-amber-400"></i> Payout Settings
+                    </h3>
+                    <p class="text-amber-200/70 text-xs mb-6">Payout amount per successful hire, the maturity period before release, and the replacement-guarantee window.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-amber-200 uppercase mb-2">Payout Amount (₹)</label>
+                            <input type="number" name="payout_amount" value="{{ old('payout_amount') }}" class="w-full bg-slate-900/80 border border-amber-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-12 px-3">
+                            @error('payout_amount') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-200 uppercase mb-2">Maturity Period (Days)</label>
+                            <input type="number" name="minimum_stay_days" value="{{ old('minimum_stay_days', 30) }}" class="w-full bg-slate-900/80 border border-amber-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-12 px-3">
+                            @error('minimum_stay_days') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-amber-200 uppercase mb-2">Replacement Guarantee (Days)</label>
+                            <input type="number" name="replacement_guarantee_days" min="0" max="365" value="{{ old('replacement_guarantee_days', 90) }}" class="w-full bg-slate-900/80 border border-amber-500/30 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition h-12 px-3">
+                            @error('replacement_guarantee_days') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
 
                 {{-- SECTION 4: PARTNER VISIBILITY --}}
                 <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl p-8 mb-8 shadow-2xl">
@@ -247,12 +343,33 @@
                     <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-user-lock text-rose-400"></i> Restricted Candidates
                     </h3>
-                    <p class="text-sm text-blue-200 mb-6">Select candidates who should <strong>NOT</strong> see this job.</p>
+                    <p class="text-sm text-blue-200 mb-4">Select candidates who should <strong>NOT</strong> see this job.</p>
+                    
+                    {{-- Candidate search input --}}
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input type="text" 
+                                   x-model="candidateSearch" 
+                                   placeholder="Search candidates by name or email..." 
+                                   class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition h-10 px-4 pl-10 text-sm">
+                            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </div>
+                            <button type="button" 
+                                    x-show="candidateSearch" 
+                                    @click="candidateSearch = ''" 
+                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
                     
                     <div class="h-48 overflow-y-auto p-4 bg-slate-800/50 rounded-2xl border border-white/10 custom-scrollbar">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             @foreach($candidates as $candidate)
-                                <label class="flex items-center space-x-3 p-2 rounded hover:bg-rose-500/10 transition cursor-pointer group">
+                                <label data-search="{{ strtolower($candidate->first_name . ' ' . $candidate->last_name . ' ' . $candidate->email) }}"
+                                       x-show="!candidateSearch || $el.getAttribute('data-search').includes(candidateSearch.toLowerCase())"
+                                       class="flex items-center space-x-3 p-2 rounded hover:bg-rose-500/10 transition cursor-pointer group">
                                     <input type="checkbox" name="restricted_candidates[]" value="{{ $candidate->id }}" class="rounded bg-slate-900 border-slate-600 text-rose-500 focus:ring-rose-500">
                                     <span class="text-sm text-slate-300 group-hover:text-white">
                                         {{ $candidate->first_name }} {{ $candidate->last_name }} 

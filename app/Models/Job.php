@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 // Importing related models to avoid "Class not found" errors
 use App\Models\User;
@@ -53,6 +54,7 @@ class Job extends Model
         // Finance (per-job billing engine)
         'fee_type',
         'fee_amount',
+        'commercial_source',
         'invoice_release_days',
         'replacement_period_days',
         // Screening & vendor controls
@@ -77,9 +79,20 @@ class Job extends Model
         'max_age',
         'gender_preference',
         'category',       // Text column fallback
-        'job_type_tags', 
-        'is_walkin',      
+        'job_type_tags',
+        'is_walkin',
         'interview_slot',
+        // Extended job-detail fields
+        'work_mode',
+        'shift',
+        'specialization',
+        'notice_period',
+        'languages',
+        'industry',
+        'department',
+        'reporting_manager',
+        'travel_required',
+        'benefits',
     ];
 
     protected $casts = [
@@ -96,6 +109,8 @@ class Job extends Model
         'rpo_monthly_retainer'         => 'decimal:2',
         'rpo_per_position_fee'         => 'decimal:2',
         'rpo_dedicated_recruiter_cost' => 'decimal:2',
+        'travel_required'              => 'boolean',
+        'benefits'                     => 'array',
     ];
 
     /**
@@ -183,6 +198,38 @@ class Job extends Model
     public function allowedPartners(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'job_partner_access', 'job_id', 'partner_id');
+    }
+
+    /**
+     * Limit a query to jobs that the partner account is permitted to access.
+     * Team members inherit the visibility assigned to their account owner.
+     */
+    public function scopeVisibleToPartner(Builder $query, User $partner): Builder
+    {
+        $partnerId = $partner->partnerOwnerId();
+
+        return $query
+            ->where(function (Builder $visibility) use ($partnerId) {
+                $visibility->where('partner_visibility', 'all')
+                    ->orWhereNull('partner_visibility')
+                    ->orWhere(function (Builder $selected) use ($partnerId) {
+                        $selected->where('partner_visibility', 'selected')
+                            ->whereHas('allowedPartners', function (Builder $allowed) use ($partnerId) {
+                                $allowed->whereKey($partnerId);
+                            });
+                    });
+            })
+            ->whereDoesntHave('excludedPartners', function (Builder $excluded) use ($partnerId) {
+                $excluded->whereKey($partnerId);
+            });
+    }
+
+    public function isVisibleToPartner(User $partner): bool
+    {
+        return static::query()
+            ->whereKey($this->getKey())
+            ->visibleToPartner($partner)
+            ->exists();
     }
 
     /**

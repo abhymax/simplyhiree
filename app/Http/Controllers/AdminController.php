@@ -26,6 +26,7 @@ use App\Notifications\ApplicationRejectedByAdmin;
 use App\Notifications\ClientJobApprovedForAdmin;
 use App\Services\SuperadminActivityService;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -98,7 +99,12 @@ class AdminController extends Controller
 
         $totalUsers = User::count();
         $totalClients = User::role('client')->count();
+        $activeClients = User::role('client')->where('status', 'active')->count();
+        $inactiveClients = $totalClients - $activeClients;
         $totalPartners = User::role('partner')->count();
+        $activePartners = User::role('partner')->where('status', 'active')->count();
+        // "restricted" is the platform's enforced blacklist state.
+        $blacklistedPartners = User::role('partner')->where('status', 'restricted')->count();
         // Candidate counts:
         //  - direct  = users with role 'candidate' (signed up themselves)
         //  - vendor  = rows in candidates table (uploaded by partner agencies)
@@ -107,10 +113,64 @@ class AdminController extends Controller
         $vendorCandidates  = \App\Models\Candidate::count();
         $totalCandidates   = $directCandidates + $vendorCandidates;
         $pendingJobs = Job::where('status', 'pending_approval')->count();
+        $openJobs = Job::where('status', 'approved')->count();
+        $closedJobs = Job::where('status', 'closed')->count();
+        $totalSubmissions = JobApplication::count();
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
         // --- Daily Pulse Data ---
         $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())->count();
+        $scheduledInterviews = JobApplication::where('hiring_status', 'Interview Scheduled')
+            ->where('interview_at', '>=', Carbon::now())
+            ->count();
+        $joiningsThisMonth = JobApplication::where('joined_status', 'Joined')
+            ->whereYear('joining_date', Carbon::now()->year)
+            ->whereMonth('joining_date', Carbon::now()->month)
+            ->count();
+
+        $billingApplications = JobApplication::whereIn('joined_status', ['Joined', 'Left'])
+            ->whereNotNull('joining_date')
+            ->with(['job.user'])
+            ->get();
+        $billingSnapshots = $billingApplications->map(fn ($application) => $application->billingSnapshot());
+        $outstandingStatuses = ['Raised', 'Overdue', 'Due to Raise'];
+        $outstandingPayments = (float) $billingSnapshots
+            ->whereIn('status', $outstandingStatuses)
+            ->sum('invoice_amount');
+        $unpaidClients = $billingSnapshots
+            ->whereIn('status', $outstandingStatuses)
+            ->map(fn ($row) => $row['application']->job?->user_id)
+            ->filter()
+            ->unique()
+            ->count();
+
+        $paidBilling = $billingSnapshots->where('status', 'Paid');
+        $revenueThisMonth = (float) $paidBilling
+            ->filter(fn ($row) => $row['paid_at']?->betweenIncluded(Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()))
+            ->sum('invoice_amount');
+        $revenueThisQuarter = (float) $paidBilling
+            ->filter(fn ($row) => $row['paid_at']?->betweenIncluded(Carbon::now()->startOfQuarter(), Carbon::now()->endOfQuarter()))
+            ->sum('invoice_amount');
+        $revenueThisYear = (float) $paidBilling
+            ->filter(fn ($row) => $row['paid_at']?->betweenIncluded(Carbon::now()->startOfYear(), Carbon::now()->endOfYear()))
+            ->sum('invoice_amount');
+
+        $replacementUnderGuarantee = JobApplication::where('joined_status', 'Joined')
+            ->whereNotNull('joining_date')
+            ->with('job')
+            ->get()
+            ->filter(function ($application) {
+                $days = (int) ($application->replacement_window_days
+                    ?? $application->job?->replacement_guarantee_days
+                    ?? 0);
+                if ($days <= 0 || $application->replacement_status === 'closed') {
+                    return false;
+                }
+                $deadline = $application->replacement_deadline
+                    ?? $application->joining_date->copy()->addDays($days);
+                return $deadline->isFuture() || $deadline->isToday();
+            })
+            ->count();
 
         $dueInvoicesCount = 0;
         $unpaidHires = JobApplication::where('hiring_status', 'Selected')
@@ -142,13 +202,28 @@ class AdminController extends Controller
         return view('admin.dashboard', [
             'totalUsers'              => $totalUsers,
             'totalClients'            => $totalClients,
+            'activeClients'           => $activeClients,
+            'inactiveClients'         => $inactiveClients,
+            'unpaidClients'           => $unpaidClients,
             'totalPartners'           => $totalPartners,
+            'activePartners'          => $activePartners,
+            'blacklistedPartners'     => $blacklistedPartners,
             'totalCandidates'         => $totalCandidates,
             'directCandidates'        => $directCandidates,
             'vendorCandidates'        => $vendorCandidates,
             'pendingJobs'             => $pendingJobs,
+            'openJobs'                => $openJobs,
+            'closedJobs'              => $closedJobs,
+            'totalSubmissions'        => $totalSubmissions,
             'pendingApplications'     => $pendingApplications,
             'todayInterviews'         => $todayInterviews,
+            'scheduledInterviews'     => $scheduledInterviews,
+            'joiningsThisMonth'       => $joiningsThisMonth,
+            'revenueThisMonth'        => $revenueThisMonth,
+            'revenueThisQuarter'      => $revenueThisQuarter,
+            'revenueThisYear'         => $revenueThisYear,
+            'outstandingPayments'     => $outstandingPayments,
+            'replacementUnderGuarantee' => $replacementUnderGuarantee,
             'dueInvoicesCount'        => $dueInvoicesCount,
             'pendingPlanRequests'     => $pendingPlanRequests,
             'pendingPlanRequestsCount'=> $pendingPlanRequestsCount,
@@ -207,6 +282,13 @@ class AdminController extends Controller
             $query->whereHas('jobApplications.job', function ($jq) use ($clientId) {
                 $jq->where('user_id', $clientId);
             });
+        }
+        if ($request->boolean('duplicates_only')) {
+            $dups = \App\Models\Candidate::select('email')
+                ->whereNotNull('email')->where('email', '!=', '')
+                ->groupBy('email')->havingRaw('COUNT(*) > 1')
+                ->pluck('email');
+            $query->whereIn('email', $dups);
         }
 
         // --- Recruitment ---
@@ -776,23 +858,33 @@ class AdminController extends Controller
             ];
         }
 
-        \App\Models\ClientCommercial::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'billing_type'       => $validated['billing_type'],
-                'contract_data'      => [
-                    'percentage_based' => $slabs,
-                    'profile_wise'     => $profiles,
-                    'flat'             => $flats,
-                ],
-                'invoice_raise_days' => $validated['invoice_raise_days'],
-                'payment_terms_days' => $validated['payment_terms_days'],
-                'is_gst_applicable'  => (bool) ($request->input('is_gst_applicable') ?? false),
-            ]
-        );
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($user, $validated, $slabs, $profiles, $flats, $request) {
+                \App\Models\ClientCommercial::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'billing_type'       => $validated['billing_type'],
+                        'contract_data'      => [
+                            'percentage_based' => $slabs,
+                            'profile_wise'     => $profiles,
+                            'flat'             => $flats,
+                        ],
+                        'invoice_raise_days' => $validated['invoice_raise_days'],
+                        'payment_terms_days' => $validated['payment_terms_days'],
+                        'is_gst_applicable'  => (bool) ($request->input('is_gst_applicable') ?? false),
+                    ]
+                );
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Commercials could not be saved. Please try again. If the problem continues, contact support.');
+        }
 
         return redirect()->route('admin.clients.commercials.edit', $user)
-            ->with('success', 'Client commercials saved.');
+            ->with('success', 'Commercials updated successfully.');
     }
 
     // --- PARTNER MANAGEMENT ---
@@ -1028,6 +1120,18 @@ class AdminController extends Controller
             'min_age'               => 'nullable|integer|min:18|max:80',
             'max_age'               => 'nullable|integer|min:18|max:80|gte:min_age',
             'is_company_confidential' => 'nullable|boolean',
+            // Extended job-detail fields (all optional)
+            'work_mode'         => 'nullable|string|in:On-site,Hybrid,Remote,Field Job,Work From Home (WFH)',
+            'shift'             => 'nullable|string|in:Day Shift,Night Shift,Rotational Shift,Flexible Shift,Weekend Shift',
+            'specialization'    => 'nullable|string|max:255',
+            'notice_period'     => 'nullable|string|max:100',
+            'languages'         => 'nullable|string|max:255',
+            'industry'          => 'nullable|string|max:255',
+            'department'        => 'nullable|string|max:255',
+            'reporting_manager' => 'nullable|string|max:255',
+            'travel_required'   => 'nullable|boolean',
+            'benefits'          => 'nullable|array',
+            'benefits.*'        => 'string|in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation',
         ]);
 
         $salary = $this->formatSalaryRange(
@@ -1069,6 +1173,17 @@ class AdminController extends Controller
             'company_website'      => $validated['company_website'] ?? null,
             'openings'             => $validated['openings'] ?? 1,
             'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
+            // Extended job-detail fields
+            'work_mode'         => $validated['work_mode'] ?? null,
+            'shift'             => $validated['shift'] ?? null,
+            'specialization'    => $validated['specialization'] ?? null,
+            'notice_period'     => $validated['notice_period'] ?? null,
+            'languages'         => $validated['languages'] ?? null,
+            'industry'          => $validated['industry'] ?? null,
+            'department'        => $validated['department'] ?? null,
+            'reporting_manager' => $validated['reporting_manager'] ?? null,
+            'travel_required'   => array_key_exists('travel_required', $validated) ? (bool) $validated['travel_required'] : null,
+            'benefits'          => $validated['benefits'] ?? null,
         ]);
 
         if ($validated['partner_visibility'] === 'selected' && $request->has('allowed_partners')) {
@@ -1085,6 +1200,137 @@ class AdminController extends Controller
     {
         $job->load(['user', 'experienceLevel', 'educationLevel', 'category']);
         return view('admin.jobs.show', compact('job'));
+    }
+
+    public function editJob(Job $job)
+    {
+        $job->load(['allowedPartners']);
+
+        return view('admin.jobs.edit', [
+            'job' => $job,
+            'clients' => User::role('client')->orderBy('name')->get(),
+            'partners' => User::role('partner')->where('status', 'active')->orderBy('name')->get(),
+            'categories' => Cache::remember('job_categories', 3600, fn () => JobCategory::orderBy('name')->get()),
+            'educationLevels' => Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get()),
+        ]);
+    }
+
+    public function updateJob(Request $request, Job $job)
+    {
+        $validated = $request->validate([
+            'client_id' => 'nullable|exists:users,id',
+            'company_name' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|exists:job_categories,id',
+            'location' => 'required|string|max:255',
+            'salary' => 'nullable|string|max:255',
+            'job_type' => 'required|string|max:100',
+            'description' => 'required|string',
+            'min_experience' => 'required|integer|min:0|max:50',
+            'max_experience' => 'required|integer|gte:min_experience|max:50',
+            'education_level_id' => 'required|exists:education_levels,id',
+            'application_deadline' => 'nullable|date',
+            'status' => 'required|in:pending_approval,approved,on_hold,closed,rejected',
+            'skills_required' => 'nullable|string',
+            'company_website' => 'nullable|url',
+            'openings' => 'required|integer|min:1',
+            'gender_preference' => 'required|in:Any,Male,Female,Other',
+            'min_age' => 'nullable|integer|min:18|max:80',
+            'max_age' => 'nullable|integer|min:18|max:80|gte:min_age',
+            'is_company_confidential' => 'required|boolean',
+            'screening_required' => 'required|boolean',
+            'commercial_source' => 'required|in:simplyhire,manual',
+            'fee_type' => 'nullable|required_if:commercial_source,manual|in:flat,percentage',
+            'fee_amount' => 'nullable|required_if:commercial_source,manual|numeric|min:0',
+            'payout_amount' => 'required|numeric|min:0',
+            'minimum_stay_days' => 'required|integer|min:0|max:3650',
+            'replacement_guarantee_days' => 'nullable|integer|min:0|max:365',
+            'invoice_release_days' => 'nullable|integer|min:0|max:365',
+            'replacement_period_days' => 'nullable|integer|min:0|max:365',
+            'partner_visibility' => 'required|in:all,selected',
+            'allowed_partners' => 'array|required_if:partner_visibility,selected',
+            'allowed_partners.*' => 'integer|exists:users,id',
+            'auto_forward_hours' => 'nullable|integer|min:0|max:720',
+            // Extended job-detail fields (all optional)
+            'work_mode'         => 'nullable|string|in:On-site,Hybrid,Remote,Field Job,Work From Home (WFH)',
+            'shift'             => 'nullable|string|in:Day Shift,Night Shift,Rotational Shift,Flexible Shift,Weekend Shift',
+            'specialization'    => 'nullable|string|max:255',
+            'notice_period'     => 'nullable|string|max:100',
+            'languages'         => 'nullable|string|max:255',
+            'industry'          => 'nullable|string|max:255',
+            'department'        => 'nullable|string|max:255',
+            'reporting_manager' => 'nullable|string|max:255',
+            'travel_required'   => 'nullable|boolean',
+            'benefits'          => 'nullable|array',
+            'benefits.*'        => 'string|in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation',
+        ]);
+
+        $wasApproved = $job->status === 'approved';
+        $manual = $validated['commercial_source'] === 'manual';
+        DB::transaction(function () use ($job, $validated, $manual) {
+            $job->update([
+                'user_id' => $validated['client_id'] ?: null,
+                'company_name' => $validated['company_name'],
+                'title' => $validated['title'],
+                'category_id' => $validated['category_id'],
+                'location' => $validated['location'],
+                'salary' => $validated['salary'] ?? null,
+                'job_type' => $validated['job_type'],
+                'description' => $this->sanitizeJobDescription($validated['description']),
+                'min_experience' => $validated['min_experience'],
+                'max_experience' => $validated['max_experience'],
+                'education_level_id' => $validated['education_level_id'],
+                'application_deadline' => $validated['application_deadline'] ?? null,
+                'status' => $validated['status'],
+                'skills_required' => $validated['skills_required'] ?? null,
+                'company_website' => $validated['company_website'] ?? null,
+                'openings' => $validated['openings'],
+                'gender_preference' => $validated['gender_preference'],
+                'min_age' => $validated['min_age'] ?? null,
+                'max_age' => $validated['max_age'] ?? null,
+                'is_company_confidential' => (bool) $validated['is_company_confidential'],
+                'screening_required' => (bool) $validated['screening_required'],
+                'commercial_source' => $validated['commercial_source'],
+                'fee_type' => $manual ? $validated['fee_type'] : null,
+                'fee_amount' => $manual ? $validated['fee_amount'] : null,
+                'payout_amount' => $validated['payout_amount'],
+                'minimum_stay_days' => $validated['minimum_stay_days'],
+                'replacement_guarantee_days' => $validated['replacement_guarantee_days'] ?? null,
+                'invoice_release_days' => $validated['invoice_release_days'] ?? null,
+                'replacement_period_days' => $validated['replacement_period_days'] ?? null,
+                'partner_visibility' => $validated['partner_visibility'],
+                'vendor_assignment_mode' => $validated['partner_visibility'] === 'selected' ? 'selected' : 'open',
+                'auto_forward_hours' => $validated['auto_forward_hours'] ?? null,
+                // Extended job-detail fields
+                'work_mode'         => $validated['work_mode'] ?? null,
+                'shift'             => $validated['shift'] ?? null,
+                'specialization'    => $validated['specialization'] ?? null,
+                'notice_period'     => $validated['notice_period'] ?? null,
+                'languages'         => $validated['languages'] ?? null,
+                'industry'          => $validated['industry'] ?? null,
+                'department'        => $validated['department'] ?? null,
+                'reporting_manager' => $validated['reporting_manager'] ?? null,
+                'travel_required'   => array_key_exists('travel_required', $validated) ? (bool) $validated['travel_required'] : null,
+                'benefits'          => $validated['benefits'] ?? null,
+            ]);
+
+            $job->allowedPartners()->sync(
+                $validated['partner_visibility'] === 'selected'
+                    ? ($validated['allowed_partners'] ?? [])
+                    : []
+            );
+        });
+
+        if ($validated['status'] === 'approved' && !$wasApproved) {
+            $this->sendJobApprovedNotifications($job);
+        }
+
+        return redirect()->route('admin.jobs.show', $job)->with(
+            'success',
+            $validated['status'] === 'approved'
+                ? 'Live job, commercials, and vendor controls updated. Existing applications were preserved.'
+                : 'Job details, commercials, and vendor controls updated.'
+        );
     }
 
     public function pendingJobs()
@@ -1147,7 +1393,7 @@ class AdminController extends Controller
         }
 
         $actorName = auth()->user()?->name;
-        $superadmins = User::role('Superadmin')->get();
+        $superadmins = User::role(['Superadmin', 'Manager'])->get();
         foreach ($superadmins as $superadmin) {
             $superadmin->notify(new ClientJobApprovedForAdmin($job, $actorName));
         }
@@ -1277,15 +1523,34 @@ class AdminController extends Controller
     public function manageJobExclusions(Job $job)
     {
         $job->load(['educationLevel']);
-        $partners = User::role('partner')->get();
-        $excludedPartnerIds = $job->excludedPartners()->pluck('users.id')->toArray();
-        return view('admin.jobs.manage', ['job' => $job, 'allPartners' => $partners, 'excludedPartnerIds' => $excludedPartnerIds]);
+        $partners = User::role('partner')->where('status', 'active')->with(['partnerProfile'])->orderBy('name')->get();
+        
+        $allowedPartnerIds = $job->allowedPartners()->pluck('users.id')->toArray();
+        if (($job->partner_visibility === 'all' || empty($job->partner_visibility)) && empty($allowedPartnerIds)) {
+            $allowedPartnerIds = $partners->pluck('id')->toArray();
+        }
+        
+        return view('admin.jobs.manage', [
+            'job' => $job, 
+            'allPartners' => $partners, 
+            'allowedPartnerIds' => $allowedPartnerIds
+        ]);
     }
-
+ 
     public function updateJobExclusions(Request $request, Job $job)
     {
-        $job->excludedPartners()->sync($request->input('excluded_partners', []));
-        return redirect()->route('admin.jobs.pending')->with('success', 'Partner exclusions updated successfully.');
+        $allowedIds = $request->input('allowed_partners', []);
+        
+        // Sync to allowedPartners
+        $job->allowedPartners()->sync($allowedIds);
+        
+        // Clear old legacy exclusions completely
+        $job->excludedPartners()->sync([]);
+        
+        // Mark visibility as selected (only allowed list can view)
+        $job->update(['partner_visibility' => 'selected']);
+        
+        return redirect()->route('admin.jobs.pending')->with('success', 'Partner visibility updated successfully.');
     }
 
     // --- APPLICATION MANAGEMENT ---
@@ -1580,6 +1845,35 @@ class AdminController extends Controller
         return view('admin.applications.show', compact('application'));
     }
 
+    public function updateApplicationResume(Request $request, JobApplication $application)
+    {
+        $request->validate([
+            'resume' => 'required|file|mimes:pdf,doc,docx|max:10240', // max 10MB
+        ]);
+
+        $file = $request->file('resume');
+        $path = $file->store('resumes', 'public');
+
+        // Check if there is an agency candidate or direct candidate
+        if ($application->candidate) {
+            $candidate = $application->candidate;
+            // Delete old resume if exists
+            if ($candidate->resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($candidate->resume_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($candidate->resume_path);
+            }
+            $candidate->update(['resume_path' => $path]);
+        } elseif ($application->candidateUser && $application->candidateUser->profile) {
+            $profile = $application->candidateUser->profile;
+            // Delete old resume if exists
+            if ($profile->resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($profile->resume_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($profile->resume_path);
+            }
+            $profile->update(['resume_path' => $path]);
+        }
+
+        return redirect()->back()->with('success', 'Candidate resume updated successfully!');
+    }
+
     private function notifyApplicationStakeholder(JobApplication $application, bool $approved): void
     {
         $notification = $approved
@@ -1597,43 +1891,9 @@ class AdminController extends Controller
         }
     }
 
-    public function jobApplicantsReport(Request $request, \App\Models\Job $job)
+    public function jobApplicantsReport(\App\Models\Job $job)
     {
-        $query = $job->jobApplications()->with(['candidate', 'candidate.partner', 'candidateUser.profile']);
-
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->whereHas('candidate', function($subQ) use ($search) {
-                    $subQ->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%")
-                         ->orWhere('phone_number', 'like', "%{$search}%");
-                })->orWhereHas('candidateUser', function($subQ) use ($search) {
-                    $subQ->where('name', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('application_code', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        if ($request->filled('hiring_status')) {
-            $hStatus = $request->input('hiring_status');
-            if ($hStatus === 'Shortlisted') {
-                $query->where(function($q) {
-                    $q->whereIn('hiring_status', ['Shortlisted', 'shortlisted'])
-                      ->orWhereNull('hiring_status')
-                      ->orWhere('hiring_status', '');
-                });
-            } else {
-                $query->where('hiring_status', $hStatus);
-            }
-        }
-
-        $applications = $query->latest()->paginate(20)->withQueryString();
+        $applications = $job->jobApplications()->with(['candidate', 'candidate.partner', 'candidateUser.profile'])->latest()->paginate(20);
         return view('admin.reports.job_applicants', compact('job', 'applications'));
     }
 
@@ -1895,24 +2155,105 @@ class AdminController extends Controller
 
     public function replacementsIndex(\Illuminate\Http\Request $request)
     {
-        $query = JobApplication::query()
-            ->whereNotNull('replacement_status')
-            ->with(['job.user', 'candidate.partner', 'candidateUser', 'partnerCreditNote', 'replacementApplication.candidate']);
-
-        if ($request->filled('status')) {
-            $query->where('replacement_status', $request->status);
-        }
-
-        $apps = $query->latest('replacement_requested_at')->paginate(25)->withQueryString();
+        $tracked = JobApplication::query()
+            ->whereNotNull('joining_date')
+            ->with(['job.user', 'candidate.partner', 'candidateUser', 'partnerCreditNote', 'replacementApplication.candidate'])
+            ->get()
+            ->filter(function (JobApplication $application) {
+                $days = (int) ($application->replacement_window_days ?? $application->job?->replacement_guarantee_days ?? 0);
+                return $days > 0 || $application->replacement_requested_at || filled($application->replacement_status);
+            })
+            ->map(function (JobApplication $application) {
+                $days = (int) ($application->replacement_window_days ?? $application->job?->replacement_guarantee_days ?? 0);
+                $guaranteeDeadline = $application->joining_date?->copy()->addDays($days);
+                $remaining = $guaranteeDeadline ? max(0, now()->startOfDay()->diffInDays($guaranteeDeadline->copy()->startOfDay(), false)) : 0;
+                $raw = (string) $application->replacement_status;
+                $status = match (true) {
+                    $raw === 'closed' => 'closed',
+                    in_array($raw, ['in_progress', 'replacement_given'], true) => 'in_progress',
+                    in_array($raw, ['window_open', 'credit_pending'], true) || $application->replacement_requested_at !== null => 'pending',
+                    $remaining > 0 && $application->joined_status === 'Joined' => 'under_guarantee',
+                    default => 'expired',
+                };
+                $application->setAttribute('monitor_status', $status);
+                $application->setAttribute('guarantee_deadline_at', $guaranteeDeadline);
+                $application->setAttribute('guarantee_days_remaining', $remaining);
+                $application->setAttribute('replacement_cost_adjustment', (float) ($application->partnerCreditNote?->amount ?? 0));
+                return $application;
+            });
 
         $counts = [
-            'window_open'       => JobApplication::where('replacement_status', 'window_open')->count(),
-            'replacement_given' => JobApplication::where('replacement_status', 'replacement_given')->count(),
-            'credit_pending'    => JobApplication::where('replacement_status', 'credit_pending')->count(),
-            'closed'            => JobApplication::where('replacement_status', 'closed')->count(),
+            'under_guarantee' => $tracked->where('monitor_status', 'under_guarantee')->count(),
+            'pending' => $tracked->where('monitor_status', 'pending')->count(),
+            'in_progress' => $tracked->where('monitor_status', 'in_progress')->count(),
+            'closed' => $tracked->where('monitor_status', 'closed')->count(),
+            'expired' => $tracked->where('monitor_status', 'expired')->count(),
         ];
+        $costSummary = [
+            'pending' => (float) \App\Models\PartnerCreditNote::where('status', 'pending')->sum('amount'),
+            'applied' => (float) \App\Models\PartnerCreditNote::where('status', 'applied')->sum('amount'),
+        ];
+        if ($request->filled('status')) {
+            $tracked = $tracked->where('monitor_status', $request->status);
+        }
+        $tracked = $tracked->sortByDesc(fn ($application) => $application->replacement_requested_at ?? $application->joining_date)->values();
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = 25;
+        $apps = new \Illuminate\Pagination\LengthAwarePaginator(
+            $tracked->forPage($page, $perPage)->values(), $tracked->count(), $perPage, $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        return view('admin.replacements.index', compact('apps', 'counts'));
+        return view('admin.replacements.index', compact('apps', 'counts', 'costSummary'));
+    }
+
+    public function replacementCandidateForm(JobApplication $application)
+    {
+        $application->load(['job', 'candidate.partner', 'replacementApplication.candidate']);
+        $partnerId = $application->candidate?->partner_id;
+        abort_unless($application->replacement_requested_at && $partnerId, 404);
+
+        $candidates = Candidate::where('partner_id', $partnerId)
+            ->whereKeyNot($application->candidate_id)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+
+        return view('admin.replacements.submit', compact('application', 'candidates'));
+    }
+
+    public function replacementCandidateStore(\Illuminate\Http\Request $request, JobApplication $application)
+    {
+        $application->load(['job', 'candidate']);
+        $partnerId = $application->candidate?->partner_id;
+        abort_unless($application->replacement_requested_at && $partnerId && $application->job, 404);
+
+        $data = $request->validate([
+            'candidate_id' => 'required|integer|exists:candidates,id',
+            'interview_at' => $application->job->screening_required ? 'nullable|date' : 'required|date|after:now',
+        ]);
+        $candidate = Candidate::whereKey($data['candidate_id'])->where('partner_id', $partnerId)->firstOrFail();
+
+        $replacement = JobApplication::firstOrCreate(
+            ['job_id' => $application->job_id, 'candidate_id' => $candidate->id],
+            [
+                'status' => $application->job->screening_required ? 'Pending Review' : 'Approved',
+                'hiring_status' => $application->job->screening_required ? null : 'Interview Scheduled',
+                'interview_at' => $application->job->screening_required ? null : Carbon::parse($data['interview_at']),
+                'submitted_by_user_id' => auth()->id(),
+            ]
+        );
+        if ($replacement->id === $application->id) {
+            return back()->with('error', 'The failed hire cannot replace themselves.');
+        }
+
+        $application->update([
+            'replacement_status' => 'in_progress',
+            'replacement_application_id' => $replacement->id,
+        ]);
+        $replacement->update(['replacement_status' => 'replacement_given']);
+
+        return redirect()->route('admin.replacements.index')->with('success', 'Replacement candidate nominated and linked to the case.');
     }
 
     /**
@@ -1949,19 +2290,36 @@ class AdminController extends Controller
         }
 
         $application->update([
-            'replacement_status'         => 'closed',
+            'replacement_status'         => 'in_progress',
             'replacement_application_id' => $repl->id,
         ]);
         // The new application becomes the active hire — tag it for traceability.
         $repl->update(['replacement_status' => 'replacement_given']);
 
-        return back()->with('success', "Replacement linked. Case for application #{$application->id} is now closed.");
+        return back()->with('success', "Replacement linked. Case for application #{$application->id} is now in progress until final closure.");
     }
 
     public function replacementsClose(JobApplication $application)
     {
         $application->update(['replacement_status' => 'closed']);
         return back()->with('success', 'Case manually closed.');
+    }
+
+    public function replacementCostAdjustment(\Illuminate\Http\Request $request, JobApplication $application)
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+        $partner = $application->candidate?->partner;
+        if (!$partner) return back()->with('error', 'This replacement case has no sourcing partner.');
+
+        \App\Models\PartnerCreditNote::updateOrCreate(
+            ['source_application_id' => $application->id],
+            ['partner_id' => $partner->id, 'amount' => $data['amount'], 'status' => 'pending', 'reason' => $data['reason']]
+        );
+
+        return back()->with('success', 'Replacement cost adjustment saved as a pending vendor payout deduction.');
     }
 
     /**
@@ -2128,7 +2486,7 @@ class AdminController extends Controller
 
     public function jobReport(Request $request)
     {
-        $query = Job::with(['user', 'jobApplications.candidate.partner', 'jobApplications.candidateUser'])
+        $query = Job::with(['user', 'allowedPartners', 'jobApplications.candidate.partner', 'jobApplications.candidateUser'])
             ->whereNull('archived_at')
             ->latest();
 

@@ -163,6 +163,39 @@
                                 <span class="text-slate-300">Gender:</span>
                                 <span class="font-medium">{{ $job->gender_preference ?? 'Any' }}</span>
                             </li>
+                            @php
+                                $partnerExtra = array_filter([
+                                    'Work Mode' => $job->work_mode,
+                                    'Shift' => $job->shift,
+                                    'Specialization' => $job->specialization,
+                                    'Notice Period' => $job->notice_period,
+                                    'Languages' => $job->languages,
+                                    'Industry' => $job->industry,
+                                    'Department' => $job->department,
+                                ], fn ($v) => filled($v));
+                            @endphp
+                            @foreach($partnerExtra as $label => $val)
+                            <li class="flex justify-between gap-3">
+                                <span class="text-slate-300">{{ $label }}:</span>
+                                <span class="font-medium text-right">{{ $val }}</span>
+                            </li>
+                            @endforeach
+                            @if(!is_null($job->travel_required))
+                            <li class="flex justify-between gap-3">
+                                <span class="text-slate-300">Travel Required:</span>
+                                <span class="font-medium">{{ $job->travel_required ? 'Yes' : 'No' }}</span>
+                            </li>
+                            @endif
+                            @if(is_array($job->benefits) && count($job->benefits))
+                            <li class="pt-3 border-t border-white/10">
+                                <span class="block text-cyan-200 font-bold text-xs uppercase mb-2">Benefits</span>
+                                <span class="flex flex-wrap gap-2">
+                                    @foreach($job->benefits as $benefit)
+                                        <span class="bg-emerald-500/15 text-emerald-100 text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-400/30">{{ $benefit }}</span>
+                                    @endforeach
+                                </span>
+                            </li>
+                            @endif
                             @if($job->is_walkin && $job->interview_slot)
                             <li class="pt-3 border-t border-white/10">
                                 <span class="block text-cyan-200 font-bold text-xs uppercase mb-1">Walk-in Interview</span>

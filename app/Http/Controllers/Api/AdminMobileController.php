@@ -219,7 +219,7 @@ class AdminMobileController extends Controller
         }
 
         $actorName = auth()->user()?->name;
-        $superadmins = User::role('Superadmin')->get();
+        $superadmins = User::role(['Superadmin', 'Manager'])->get();
         foreach ($superadmins as $superadmin) {
             $superadmin->notify(new ClientJobApprovedForAdmin($job, $actorName));
         }
@@ -543,6 +543,16 @@ class AdminMobileController extends Controller
                 'openings' => $job->openings,
                 'min_experience' => $job->min_experience,
                 'max_experience' => $job->max_experience,
+                'work_mode' => $job->work_mode,
+                'shift' => $job->shift,
+                'specialization' => $job->specialization,
+                'notice_period' => $job->notice_period,
+                'languages' => $job->languages,
+                'industry' => $job->industry,
+                'department' => $job->department,
+                'reporting_manager' => $job->reporting_manager,
+                'travel_required' => is_null($job->travel_required) ? null : (bool) $job->travel_required,
+                'benefits' => is_array($job->benefits) ? $job->benefits : [],
                 'requested_by' => $job->user?->name,
                 'requested_by_email' => $job->user?->email,
                 'created_at' => optional($job->created_at)->toIso8601String(),

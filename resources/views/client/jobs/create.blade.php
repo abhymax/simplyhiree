@@ -3,98 +3,36 @@
 @section('client_content')
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <style>
+    .post-job-shell { max-width: 1040px; }
+    .post-job-surface { background: linear-gradient(145deg, rgba(10, 24, 59, .94), rgba(15, 41, 90, .9)); border: 1px solid rgba(125, 211, 252, .28); box-shadow: 0 28px 60px rgba(2, 6, 23, .35); }
+    .post-job-header { background: linear-gradient(110deg, rgba(37, 99, 235, .24), rgba(139, 92, 246, .16), rgba(6, 182, 212, .12)); }
+    .job-form-section { border: 1px solid rgba(148, 163, 184, .16); background: rgba(2, 10, 33, .28); border-radius: 18px; padding: 1.35rem; }
+    .job-section-title { color: #fff; font-size: .88rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; display: flex; align-items: center; gap: .55rem; margin-bottom: 1.15rem; }
+    .job-section-title i { width: 1.9rem; height: 1.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: .6rem; background: rgba(59, 130, 246, .18); color: #67e8f9; }
+    .post-job-shell input:not([type="hidden"]), .post-job-shell select { min-height: 46px; padding: .65rem .8rem; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+    .post-job-shell input:not([type="hidden"]):focus, .post-job-shell select:focus { border-color: rgba(103, 232, 249, .8) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, .13); outline: none; }
+    .job-flow-card { position: relative; overflow: hidden; border: 1px solid rgba(96, 165, 250, .32); border-radius: 18px; background: linear-gradient(120deg, rgba(30, 64, 175, .3), rgba(15, 23, 42, .48)); }
+    .job-flow-option { width: 100%; border: 1px solid rgba(148, 163, 184, .2); border-radius: 14px; background: rgba(2, 6, 23, .38); transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease; cursor: pointer; text-align: left; }
+    .job-flow-option.is-active { transform: translateY(-2px); border-color: rgba(56, 189, 248, .75); background: linear-gradient(135deg, rgba(14, 116, 144, .38), rgba(30, 64, 175, .26)); box-shadow: 0 14px 26px rgba(8, 47, 73, .3); }
+    .job-flow-option.is-muted { opacity: .5; }
+    #job-flow-badge { align-self: flex-start; height: auto; line-height: 1; white-space: nowrap; }
+    .job-submit-btn { position: relative; overflow: hidden; transition: transform .22s ease, box-shadow .22s ease; }
+    .job-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(37, 99, 235, .35); }
+    .job-submit-btn::after { content: ''; position: absolute; inset: 0 auto 0 -45%; width: 28%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.36), transparent); }
+    .job-submit-btn:hover::after { animation: job-button-sweep .75s ease-out; }
+    @keyframes job-button-sweep { to { left: 125%; } }
+    @media (prefers-reduced-motion: reduce) { .job-flow-option, .job-submit-btn { transition: none; } .job-submit-btn:hover::after { animation: none; } }
     #job-description-editor { min-height: 220px; color: #fff; }
     #job-description-editor .ql-editor { min-height: 200px; font-size: 15px; line-height: 1.6; }
-    #job-description-editor .ql-editor.ql-blank::before { color: rgba(148, 163, 184, 0.55); font-style: normal; }
-    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
-    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
+    #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, 0.55); font-style: normal; }
+    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
+    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
     .ql-snow .ql-stroke { stroke: #cbd5e1; }
     .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
     .ql-snow .ql-picker { color: #cbd5e1; }
-    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.1); }
-    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #60a5fa; }
-    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #60a5fa; }
-
-    /* Force all inputs/selects/textareas inside the form to look incredibly premium and sharp */
-    .post-job-form input[type="text"],
-    .post-job-form input[type="email"],
-    .post-job-form input[type="url"],
-    .post-job-form input[type="number"],
-    .post-job-form input[type="date"],
-    .post-job-form input[type="tel"],
-    .post-job-form input[type="search"],
-    .post-job-form select,
-    .post-job-form textarea {
-        background-color: rgba(3, 7, 26, 0.75) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        color: #ffffff !important;
-        border-radius: 0.75rem !important;
-        padding: 0.75rem 1rem !important;
-        font-size: 0.925rem !important;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-    }
-    .post-job-form input:focus,
-    .post-job-form select:focus,
-    .post-job-form textarea:focus {
-        outline: none !important;
-        border-color: #06b6d4 !important; /* Premium Cyan focus */
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-        background-color: rgba(3, 7, 26, 0.9) !important;
-    }
-    .post-job-form input::placeholder,
-    .post-job-form textarea::placeholder {
-        color: rgba(148, 163, 184, 0.5) !important;
-    }
-    .post-job-form input[type="date"] { color-scheme: dark; }
-    .post-job-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) brightness(1.5); }
-    /* Dropdown <option> text should be readable when the menu opens (default browser uses page bg) */
-    .post-job-form select option { background: #0b1437; color: #ffffff; }
-
-    /* Custom premium card style: Deep rich navy gradient with subtle top glow and glassmorphism */
-    .post-job-card {
-        background: linear-gradient(135deg, rgba(16, 28, 79, 0.75) 0%, rgba(10, 18, 56, 0.85) 100%) !important;
-        border: 1px solid rgba(59, 130, 246, 0.25) !important;
-        border-radius: 1.5rem !important;
-        padding: 2.25rem !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        margin-bottom: 2.25rem !important;
-        position: relative;
-        overflow: hidden;
-    }
-    .post-job-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #06b6d4, #3b82f6, #6366f1);
-        opacity: 0.4;
-        transition: opacity 0.3s;
-    }
-    .post-job-card:hover::before {
-        opacity: 1;
-    }
-    .post-job-card:hover {
-        border-color: rgba(6, 182, 212, 0.45) !important;
-        box-shadow: 0 30px 50px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
-        transform: translateY(-2px);
-    }
-
-    /* Soft, bold label typography to increase scanability and reduce visual clutter */
-    .post-job-form label {
-        color: #94a3b8 !important; /* Soft slate color */
-        font-size: 0.725rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.06em !important;
-        text-transform: uppercase !important;
-        margin-bottom: 0.5rem !important;
-        display: block !important;
-    }
+    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.2); }
+    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #67e8f9; }
+    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #67e8f9; }
 </style>
 @php
     $isEditMode = ($formMode ?? 'create') === 'edit' && isset($job) && $job;
@@ -106,29 +44,23 @@
         ->values();
     $existingMinSalary = $salaryDigits->get(0);
     $existingMaxSalary = $salaryDigits->count() > 1 ? $salaryDigits->get(1) : $salaryDigits->get(0);
+
+    $jobTypeOptions = ['Full-time','Part-time','Contract','Contract-to-Hire (C2H)','Internship','Freelance','Temporary','Permanent','Trainee','Consultant'];
+    $workModeOptions = ['On-site','Hybrid','Remote','Field Job','Work From Home (WFH)'];
+    $shiftOptions = ['Day Shift','Night Shift','Rotational Shift','Flexible Shift','Weekend Shift'];
+    $benefitOptions = ['PF','ESIC','Insurance','Food','Transport','Accommodation','Laptop','Mobile','Joining Bonus','Relocation'];
+    $jobBenefits = old('benefits', $job->benefits ?? []);
+    if (!is_array($jobBenefits)) { $jobBenefits = []; }
+    $travelRequiredVal = old('travel_required', isset($job->travel_required) ? (int) $job->travel_required : '');
+    $travelRequiredVal = ($travelRequiredVal === '' || $travelRequiredVal === null) ? '' : (string) $travelRequiredVal;
 @endphp
 
-    <div class="relative z-10 max-w-6xl mx-auto">
-
-        {{-- HEADER --}}
-        <div class="mb-8 border-b border-white/10 pb-6">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <a href="{{ route('client.dashboard') }}" class="inline-flex items-center text-cyan-400 hover:text-cyan-300 transition-colors text-xs font-extrabold tracking-wider uppercase bg-white/5 border border-white/10 rounded-lg px-3.5 py-1.5 backdrop-blur-md shadow-sm">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Cancel &amp; Return
-                </a>
-            </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">{{ $formTitle }}</h1>
-            @if($isEditMode)
-                <p class="mt-2 text-amber-300 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> This job is still pending approval, so you can update it. Once approved, editing is locked.</p>
-            @else
-                <p class="mt-2 text-slate-300 font-medium">Fill in the details below. The Superadmin will review your job before it goes live to vendors.</p>
-            @endif
-        </div>
+    <div class="post-job-shell relative z-10 mx-auto">
 
         @if ($errors->any())
-            <div class="mb-6 bg-rose-500/10 border border-rose-400/40 text-rose-100 p-4 rounded-2xl backdrop-blur-md">
-                <p class="font-bold flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following errors:</p>
-                <ul class="list-disc ml-6 mt-1 text-sm">
+            <div class="mb-6 bg-rose-500/20 border border-rose-400/40 text-rose-100 p-4 rounded-xl">
+                <p class="font-bold">Please fix the following errors:</p>
+                <ul class="list-disc ml-5 mt-1 text-sm">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -136,31 +68,76 @@
             </div>
         @endif
 
-        <div>
-                <form action="{{ $formAction }}" method="POST" class="post-job-form">
+        <div class="post-job-surface rounded-3xl overflow-hidden">
+            <div class="post-job-header p-6 md:p-8 border-b border-white/10">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 shrink-0 rounded-2xl bg-cyan-400/15 border border-cyan-300/25 text-cyan-200 flex items-center justify-center text-xl"><i class="fa-solid fa-briefcase"></i></div>
+                    <div>
+                <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold uppercase tracking-wider">
+                    Client Workspace
+                </span>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white mt-3">{{ $formTitle }}</h1>
+                <p class="mt-2 text-sm text-blue-100">Define the role, choose its hiring flow, and send it for approval.</p>
+                @if($isEditMode)
+                    <p class="mt-2 text-sm text-amber-200">This job is still pending approval, so you can update it. Once approved by superadmin, editing is locked.</p>
+                @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8">
+                <form action="{{ $formAction }}" method="POST">
                     @csrf
                     @if($isEditMode)
                         @method('PATCH')
                     @endif
 
-                    {{-- Job Specification Card --}}
-                    <div class="post-job-card">
-                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
-                            <i class="fa-solid fa-briefcase text-cyan-400"></i>
-                            <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Job Specification</span>
-                        </h3>
+                    <input type="hidden" name="screening_required" id="job-screening-required" value="{{ old('screening_required', isset($job) ? (int) $job->screening_required : 1) }}">
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-2">
-                        <div class="md:col-span-3">
-                            <label class="block text-sm font-medium text-white">Job Title <span class="text-rose-300">*</span></label>
-                            <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" placeholder="e.g. Senior Accountant">
+                    <section class="job-flow-card mb-6 p-5 md:p-6">
+                        <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between mb-5">
+                            <div>
+                                <p class="text-cyan-200 text-xs font-extrabold uppercase tracking-wider"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> SimplyHiree Smart Routing</p>
+                                <h2 class="mt-1 text-lg font-extrabold text-white">Start with the right candidate journey</h2>
+                                <p id="job-flow-summary" class="mt-1 text-sm text-blue-100">SimplyHiree recommends a flow from the role details; you can override it.</p>
+                            </div>
+                            <span id="job-flow-badge" class="inline-flex items-center justify-center shrink-0 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-100">Analysing role</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button id="screening-flow-card" type="button" class="job-flow-option p-4" aria-pressed="true">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-10 h-10 rounded-xl bg-violet-500/20 text-violet-200 flex items-center justify-center shrink-0"><i class="fa-solid fa-shield-halved"></i></span>
+                                    <div>
+                                        <h3 class="font-bold text-white">Screening Required</h3>
+                                        <p class="mt-1 text-xs leading-relaxed text-slate-300">Vendor submits, SimplyHiree screens, then the client receives qualified candidates for interview.</p>
+                                    </div>
+                                </div>
+                            </button>
+                            <button id="direct-flow-card" type="button" class="job-flow-option p-4" aria-pressed="false">
+                                <div class="flex items-start gap-3">
+                                    <span class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-200 flex items-center justify-center shrink-0"><i class="fa-solid fa-bolt"></i></span>
+                                    <div>
+                                        <h3 class="font-bold text-white">Direct Interview</h3>
+                                        <p class="mt-1 text-xs leading-relaxed text-slate-300">For high-volume or urgent roles, recruiters schedule the interview while submitting each candidate.</p>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                        <p class="mt-4 text-[11px] text-slate-300"><i class="fa-solid fa-circle-info mr-1 text-cyan-300"></i> Click a flow to choose it. SimplyHiree validates the final routing when the job is submitted for approval.</p>
+                    </section>
+
+                    <section class="job-form-section mb-6">
+                        <h2 class="job-section-title"><i class="fa-solid fa-briefcase"></i> Role Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-blue-100">Job Title <span class="text-rose-300">*</span></label>
+                            <input type="text" name="title" value="{{ old('title', $job->title ?? '') }}" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" placeholder="e.g. Senior Accountant">
                             @error('title') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-white">Category <span class="text-rose-300">*</span></label>
-                            <select name="category_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                            <label class="block text-sm font-medium text-blue-100">Category <span class="text-rose-300">*</span></label>
+                            <select name="category_id" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
                                 <option value="" class="text-slate-900">Select Category</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ (string) old('category_id', $job->category_id ?? '') === (string) $cat->id ? 'selected' : '' }} class="text-slate-900">{{ $cat->name }}</option>
@@ -170,20 +147,62 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-white">Job Type <span class="text-rose-300">*</span></label>
-                            <select name="job_type" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                            <label class="block text-sm font-medium text-blue-100">Job Type <span class="text-rose-300">*</span></label>
+                            <select name="job_type" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
                                 <option value="" class="text-slate-900">Select Type</option>
-                                <option value="Full-time" {{ old('job_type', $job->job_type ?? '') == 'Full-time' ? 'selected' : '' }} class="text-slate-900">Full-time</option>
-                                <option value="Part-time" {{ old('job_type', $job->job_type ?? '') == 'Part-time' ? 'selected' : '' }} class="text-slate-900">Part-time</option>
-                                <option value="Contract" {{ old('job_type', $job->job_type ?? '') == 'Contract' ? 'selected' : '' }} class="text-slate-900">Contract</option>
-                                <option value="Internship" {{ old('job_type', $job->job_type ?? '') == 'Internship' ? 'selected' : '' }} class="text-slate-900">Internship</option>
+                                @foreach($jobTypeOptions as $jt)
+                                    <option value="{{ $jt }}" {{ old('job_type', $job->job_type ?? '') == $jt ? 'selected' : '' }} class="text-slate-900">{{ $jt }}</option>
+                                @endforeach
                             </select>
                             @error('job_type') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
+                        <div class="relative">
+                            <label class="block text-sm font-medium text-blue-100">Location(s) <span class="text-rose-300">*</span></label>
+                            <input type="hidden" name="location" id="job-location" value="{{ old('location', $job->location ?? '') }}">
+                            <div id="job-location-chipbox"
+                                class="mt-1 flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 focus-within:border-blue-400">
+                                <input type="text" id="job-location-search" autocomplete="off"
+                                    class="flex-1 min-w-[160px] border-0 bg-transparent text-white placeholder-blue-200/60 focus:outline-none focus:ring-0 p-1"
+                                    placeholder="Type a city, press Enter to add">
+                            </div>
+                            <div id="job-location-suggestions"
+                                class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"></div>
+                            <p class="mt-1 text-xs text-blue-200/80">Pick one or more cities. You can also type any location not in the list and press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
+                            @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
                         <div>
-                            <label class="block text-sm font-medium text-white">Desired Candidate Gender <span class="text-rose-300">*</span></label>
-                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                            <label class="block text-sm font-medium text-blue-100">Salary Range (INR)</label>
+                            <div class="flex space-x-2">
+                                <div class="w-1/2">
+                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                    @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                    @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Experience Range (Years) <span class="text-rose-300">*</span></label>
+                            <div class="flex space-x-2">
+                                <div class="w-1/2">
+                                    <input type="number" name="min_experience" placeholder="Min" value="{{ old('min_experience', $job->min_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" required>
+                                    @error('min_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="number" name="max_experience" placeholder="Max" value="{{ old('max_experience', $job->max_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" required>
+                                    @error('max_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Desired Candidate Gender <span class="text-rose-300">*</span></label>
+                            <select name="gender_preference" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
                                 @foreach(['Any', 'Male', 'Female', 'Other'] as $genderOption)
                                     <option value="{{ $genderOption }}" {{ old('gender_preference', $job->gender_preference ?? 'Any') === $genderOption ? 'selected' : '' }} class="text-slate-900">{{ $genderOption }}</option>
                                 @endforeach
@@ -191,71 +210,9 @@
                             @error('gender_preference') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="relative md:col-span-2">
-                            <label class="block text-sm font-medium text-white">Location(s) <span class="text-rose-300">*</span></label>
-                            <input type="hidden" name="location" id="job-location" value="{{ old('location', $job->location ?? '') }}">
-                            <div id="job-location-chipbox"
-                                class="mt-1 flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 focus-within:border-blue-400" style="background-color:#0f172a !important;color:#fff !important;">
-                                <input type="text" id="job-location-search" autocomplete="off"
-                                    class="flex-1 min-w-[160px] border-0 bg-transparent text-white placeholder-blue-200/60 focus:outline-none focus:ring-0 p-1"
-                                    placeholder="Type a city, press Enter to add">
-                            </div>
-                            <div id="job-location-suggestions"
-                                class="absolute left-0 right-0 top-full z-30 mt-2 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 shadow-2xl ring-1 ring-slate-700"></div>
-                            <p class="mt-1 text-xs text-slate-300">Pick one or more cities. Press <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">Enter</kbd> or <kbd class="px-1 py-0.5 bg-white/10 rounded text-[10px]">,</kbd> to add it.</p>
-                            @error('location') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                        </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-white">Total Openings</label>
-                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-white">Experience Range (Years) <span class="text-rose-300">*</span></label>
-                            <div class="flex space-x-2">
-                                <div class="w-1/2">
-                                    <input type="number" name="min_experience" placeholder="Min" value="{{ old('min_experience', $job->min_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" required>
-                                    @error('min_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="number" name="max_experience" placeholder="Max" value="{{ old('max_experience', $job->max_experience ?? '') }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" required>
-                                    @error('max_experience') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-white">Salary Range (INR)</label>
-                            <div class="flex space-x-2">
-                                <div class="w-1/2">
-                                    <input type="number" name="min_salary" placeholder="Min Salary" value="{{ old('min_salary', $existingMinSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                    @error('min_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="number" name="max_salary" placeholder="Max Salary" value="{{ old('max_salary', $existingMaxSalary) }}" min="0" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                    @error('max_salary') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-white">Age Range (optional)</label>
-                            <div class="flex space-x-2">
-                                <div class="w-1/2">
-                                    <input type="number" name="min_age" placeholder="Min Age" value="{{ old('min_age', $job->min_age ?? '') }}" min="18" max="80" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                    @error('min_age') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="number" name="max_age" placeholder="Max Age" value="{{ old('max_age', $job->max_age ?? '') }}" min="18" max="80" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                    @error('max_age') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-white">Education <span class="text-rose-300">*</span></label>
-                            <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
+                            <label class="block text-sm font-medium text-blue-100">Education <span class="text-rose-300">*</span></label>
+                            <select name="education_level_id" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
                                 @foreach($educationLevels as $edu)
                                     <option value="{{ $edu->id }}" {{ (string) old('education_level_id', $job->education_level_id ?? '') === (string) $edu->id ? 'selected' : '' }} class="text-slate-900">{{ $edu->name }}</option>
                                 @endforeach
@@ -263,154 +220,202 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-white">Application Deadline</label>
-                            <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;" min="{{ date('Y-m-d') }}">
+                            <label class="block text-sm font-medium text-blue-100">Application Deadline</label>
+                            <input type="date" name="application_deadline" value="{{ old('application_deadline', optional($job->application_deadline ?? null)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white" min="{{ date('Y-m-d') }}">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Total Openings</label>
+                            <input type="number" name="openings" value="{{ old('openings', $job->openings ?? 1) }}" min="1" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                        </div>
+                    </div>
+                    </section>
+
+                    <section class="job-form-section mb-6">
+                        <h2 class="job-section-title"><i class="fa-solid fa-sliders"></i> Additional Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Work Mode</label>
+                            <select name="work_mode" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                <option value="" class="text-slate-900">Select Work Mode</option>
+                                @foreach($workModeOptions as $wm)
+                                    <option value="{{ $wm }}" {{ old('work_mode', $job->work_mode ?? '') === $wm ? 'selected' : '' }} class="text-slate-900">{{ $wm }}</option>
+                                @endforeach
+                            </select>
+                            @error('work_mode') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Shift</label>
+                            <select name="shift" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                <option value="" class="text-slate-900">Select Shift</option>
+                                @foreach($shiftOptions as $sh)
+                                    <option value="{{ $sh }}" {{ old('shift', $job->shift ?? '') === $sh ? 'selected' : '' }} class="text-slate-900">{{ $sh }}</option>
+                                @endforeach
+                            </select>
+                            @error('shift') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Specialization</label>
+                            <input type="text" name="specialization" value="{{ old('specialization', $job->specialization ?? '') }}" placeholder="e.g. Taxation, Frontend, Cardiology" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            @error('specialization') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Notice Period</label>
+                            <input type="text" name="notice_period" value="{{ old('notice_period', $job->notice_period ?? '') }}" placeholder="e.g. Immediate, 30 days, 60 days" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            @error('notice_period') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Languages</label>
+                            <input type="text" name="languages" value="{{ old('languages', $job->languages ?? '') }}" placeholder="e.g. English, Hindi, Tamil" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            @error('languages') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Industry</label>
+                            <input type="text" name="industry" value="{{ old('industry', $job->industry ?? '') }}" placeholder="e.g. IT, Manufacturing, Healthcare" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            @error('industry') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Department</label>
+                            <input type="text" name="department" value="{{ old('department', $job->department ?? '') }}" placeholder="e.g. Finance, Engineering, Sales" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            @error('department') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Reporting Manager</label>
+                            <input type="text" name="reporting_manager" value="{{ old('reporting_manager', $job->reporting_manager ?? '') }}" placeholder="e.g. Head of Finance" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                            @error('reporting_manager') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-blue-100">Travel Required</label>
+                            <select name="travel_required" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                                <option value="" class="text-slate-900">Not specified</option>
+                                <option value="1" {{ $travelRequiredVal === '1' ? 'selected' : '' }} class="text-slate-900">Yes</option>
+                                <option value="0" {{ $travelRequiredVal === '0' ? 'selected' : '' }} class="text-slate-900">No</option>
+                            </select>
+                            @error('travel_required') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
-                    </div>{{-- /Job Specification card --}}
-
-                    {{-- Description & Skills Card --}}
-                    <div class="post-job-card">
-                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
-                            <i class="fa-solid fa-align-left text-cyan-400"></i>
-                            <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Description &amp; Skills</span>
-                        </h3>
-
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-white">Job Description <span class="text-rose-300">*</span></label>
-                            <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
-                            <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/10 text-white min-h-[200px]" style="background-color:#0f172a !important;color:#fff !important;"></div>
-                            <p class="mt-1 text-xs text-slate-400">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
-                            @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-white">Skills Required (Comma separated)</label>
-                                <input type="text" name="skills_required" value="{{ old('skills_required', $job->skills_required ?? '') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white">Company Website (Optional)</label>
-                                <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white" style="background-color:#0f172a !important;color:#fff !important;">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Vendor Assignment Card --}}
-                    @php 
-                        $currMode = old('vendor_assignment_mode', $job->vendor_assignment_mode ?? 'open'); 
-                        $currScreen = old('screening_required', $job->screening_required ?? 1);
-                    @endphp
-                    <div class="post-job-card" x-data="{ mode: '{{ $currMode }}', screening_required: '{{ $currScreen }}' }">
-                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
-                            <span class="w-1.5 h-7 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"></span>
-                            <i class="fa-solid fa-handshake text-cyan-400"></i>
-                            <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Vendor Assignment</span>
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="mode==='open' ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
-                                <input type="radio" name="vendor_assignment_mode" value="open" x-model="mode" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
-                                <div>
-                                    <div class="text-white font-bold text-sm">🔓 Open Marketplace</div>
-                                    <div class="text-slate-400 text-xs mt-0.5">All active partners can apply</div>
-                                </div>
-                            </label>
-                            <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="mode==='preferred' ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
-                                <input type="radio" name="vendor_assignment_mode" value="preferred" x-model="mode" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
-                                <div>
-                                    <div class="text-white font-bold text-sm">⭐ Preferred Only</div>
-                                    <div class="text-slate-400 text-xs mt-0.5">Only my saved Preferred vendors</div>
-                                </div>
-                            </label>
-                            <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="mode==='selected' ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
-                                <input type="radio" name="vendor_assignment_mode" value="selected" x-model="mode" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
-                                <div>
-                                    <div class="text-white font-bold text-sm">🎯 Selected (Per-Job)</div>
-                                    <div class="text-slate-400 text-xs mt-0.5">Pick specific vendors for this job</div>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-white/80 text-[11px] uppercase font-bold mb-1">Max Vendors per Job (optional)</label>
-                                <input type="number" name="max_vendors_per_job" min="1" max="50" value="{{ old('max_vendors_per_job', $job->max_vendors_per_job ?? '') }}" placeholder="e.g. 5"
-                                    class="block w-full rounded-xl border border-white/30 bg-blue-950/40 text-white px-3 py-2.5" style="background-color:#0f172a !important;color:#fff !important;">
-                            </div>
-                            <div class="md:col-span-2" x-show="mode === 'selected'" x-cloak>
-                                <label class="block text-white/80 text-[11px] uppercase font-bold mb-1">Pick from Preferred Vendors</label>
-                                @php $preferred = auth()->user()->preferredVendors()->orderBy('name')->get(); @endphp
-                                @if($preferred->isEmpty())
-                                    <p class="text-rose-200 text-xs">You have no preferred vendors yet. <a href="{{ route('client.vendors.browse') }}" class="underline">Browse and add some</a> first.</p>
-                                @else
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1">
-                                        @foreach($preferred as $pv)
-                                            <label class="flex items-center gap-2 text-white text-sm bg-slate-900/60 border border-white/10 rounded-md px-2 py-1.5">
-                                                <input type="checkbox" name="allowed_partners[]" value="{{ $pv->id }}" class="rounded">
-                                                <span>{{ $pv->name }} <span class="text-blue-300 text-xs">(⭐ {{ $pv->avg_rating ?? '—' }})</span></span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Confidentiality toggle --}}
-                        <div class="mt-5 pt-4 border-t border-white/20">
-                            <label class="flex items-start gap-3 cursor-pointer select-none">
-                                <input type="hidden" name="is_company_confidential" value="0">
-                                <input type="checkbox" name="is_company_confidential" value="1"
-                                       {{ old('is_company_confidential', $job->is_company_confidential ?? false) ? 'checked' : '' }}
-                                       class="mt-1 h-5 w-5 rounded border-white/40 bg-blue-950/40 text-white focus:ring-2 focus:ring-white" style="background-color:#0f172a !important;color:#fff !important;">
-                                <div>
-                                    <div class="text-white font-bold text-sm flex items-center gap-2">
-                                        <i class="fa-solid fa-user-secret"></i> Keep company name confidential
-                                    </div>
-                                    <p class="text-white/80 text-xs mt-0.5">Vendors and candidates will see this posting as "Confidential" until you choose to reveal your company.</p>
-                                </div>
-                            </label>
-                        </div>
-
-                        {{-- Screening vs Direct toggle --}}
-                        <div class="mt-5 pt-4 border-t border-white/20">
-                            <h4 class="text-white font-bold text-sm mb-3">Application Pipeline</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="screening_required == 1 ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
-                                    <input type="radio" name="screening_required" value="1" x-model="screening_required" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
-                                    <div>
-                                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-shield-halved text-cyan-400 mr-1"></i> Screening Required</div>
-                                        <div class="text-slate-400 text-xs mt-0.5">Candidates will be screened by SimplyHiree before appearing in your dashboard.</div>
-                                    </div>
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-blue-100 mb-2">Benefits</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                            @foreach($benefitOptions as $benefit)
+                                <label class="flex items-center gap-2 rounded-xl border border-white/15 bg-slate-900/40 px-3 py-2 cursor-pointer hover:border-cyan-300/50 transition">
+                                    <input type="checkbox" name="benefits[]" value="{{ $benefit }}" @checked(in_array($benefit, $jobBenefits, true)) class="h-4 w-4 rounded border-white/30 bg-slate-900 text-cyan-400 focus:ring-cyan-300">
+                                    <span class="text-sm text-blue-100">{{ $benefit }}</span>
                                 </label>
-                                <label class="cursor-pointer flex items-start gap-3 bg-[#03071a] border border-white/10 rounded-xl p-4 transition-all duration-200 hover:bg-slate-900/80" style="background-color:rgba(3, 7, 26, 0.75) !important;" :class="screening_required == 0 ? 'border-cyan-500 ring-2 ring-cyan-400/20 bg-cyan-950/20' : ''">
-                                    <input type="radio" name="screening_required" value="0" x-model="screening_required" class="mt-1 text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-white/20">
-                                    <div>
-                                        <div class="text-white font-bold text-sm"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Direct to Client</div>
-                                        <div class="text-slate-400 text-xs mt-0.5">Candidates will bypass SimplyHiree screening and go directly to your dashboard.</div>
-                                    </div>
-                                </label>
+                            @endforeach
+                        </div>
+                        @error('benefits') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                    </section>
+
+                    <section class="job-form-section mb-6">
+                        <h2 class="job-section-title"><i class="fa-solid fa-file-lines"></i> Role Description</h2>
+                        <label class="block text-sm font-medium text-blue-100">Job Description <span class="text-rose-300">*</span></label>
+                        <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
+                        <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/20 text-white min-h-[200px]"></div>
+                        <p class="mt-1 text-xs text-blue-200/80">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
+                        @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                    </section>
+
+                    <section class="job-form-section mb-6">
+                        <h2 class="job-section-title"><i class="fa-solid fa-list-check"></i> Skills & Presence</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                        <label class="block text-sm font-medium text-blue-100">Skills Required (Comma separated)</label>
+                        <input type="text" name="skills_required" value="{{ old('skills_required', $job->skills_required ?? '') }}" placeholder="e.g. PHP, Laravel, MySQL" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                        </div>
+                        <div>
+                        <label class="block text-sm font-medium text-blue-100">Company Website (Optional)</label>
+                        <input type="url" name="company_website" value="{{ old('company_website', $job->company_website ?? '') }}" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-900/40 text-white">
+                        </div>
+                        </div>
+
+                        <label class="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 transition hover:border-amber-300/60 hover:bg-amber-400/15">
+                            <input type="hidden" name="is_company_confidential" value="0">
+                            <input type="checkbox" name="is_company_confidential" value="1"
+                                   @checked((bool) old('is_company_confidential', $job->is_company_confidential ?? false))
+                                   class="mt-0.5 h-5 w-5 rounded border-amber-200/50 bg-slate-900 text-amber-400 focus:ring-2 focus:ring-amber-300">
+                            <span class="min-w-0">
+                                <span class="flex items-center gap-2 text-sm font-extrabold text-white">
+                                    <i class="fa-solid fa-user-secret text-amber-300"></i>
+                                    Keep Company Name Confidential
+                                </span>
+                                <span class="mt-1 block text-xs leading-relaxed text-amber-100/75">Sourcing partners and candidates will see “Confidential Client” instead of your company name and website.</span>
+                            </span>
+                        </label>
+                        @error('is_company_confidential') <span class="mt-1 block text-xs text-rose-300">{{ $message }}</span> @enderror
+                    </section>
+
+                    <section class="job-form-section mb-6 bg-amber-500/10 border-amber-400/30" x-data="{ commercial: '{{ old('commercial_source', $job->commercial_source ?? 'simplyhire') }}' }">
+                        <h3 class="text-amber-200 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-coins"></i> Commercials</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <label class="cursor-pointer rounded-xl border p-4 transition" :class="commercial === 'simplyhire' ? 'border-cyan-300 bg-cyan-400/15' : 'border-white/15 bg-slate-900/30'">
+                                <input type="radio" name="commercial_source" value="simplyhire" x-model="commercial" class="sr-only">
+                                <span class="font-bold text-white">Continue with SimplyHire commercials</span>
+                                <span class="mt-1 block text-xs text-blue-100">Default. The client commercial set by Admin will apply to this job.</span>
+                            </label>
+                            <label class="cursor-pointer rounded-xl border p-4 transition" :class="commercial === 'manual' ? 'border-amber-300 bg-amber-400/15' : 'border-white/15 bg-slate-900/30'">
+                                <input type="radio" name="commercial_source" value="manual" x-model="commercial" class="sr-only">
+                                <span class="font-bold text-white">Manual commercials</span>
+                                <span class="mt-1 block text-xs text-blue-100">Set an override for this job only.</span>
+                            </label>
+                        </div>
+                        <div x-show="commercial === 'manual'" x-cloak>
+                        <p class="text-amber-100/80 text-xs mb-4">Choose a flat payout or a percentage, then set the release and guarantee terms.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Commercial type</label>
+                                <select name="manual_fee_type" class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5">
+                                    <option value="flat" @selected(old('manual_fee_type', $job->fee_type ?? 'flat') === 'flat')>Flat amount (₹)</option>
+                                    <option value="percentage" @selected(old('manual_fee_type', $job->fee_type ?? '') === 'percentage')>Percentage (%)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Commercial value <span class="text-rose-300">*</span></label>
+                                <input type="number" name="manual_fee_amount" min="0" step="0.01"
+                                    value="{{ old('manual_fee_amount', $job->fee_amount ?? '') }}" placeholder="e.g. 25000 or 8"
+                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                @error('manual_fee_amount') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Maturity Period (Days) <span class="text-rose-300">*</span></label>
+                                <input type="number" name="minimum_stay_days" min="0" max="365"
+                                    value="{{ old('minimum_stay_days', $job->client_payout_days ?? $job->minimum_stay_days ?? 30) }}"
+                                    placeholder="e.g. 30"
+                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                @error('minimum_stay_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-200 uppercase mb-1">Replacement Guarantee (Days) <span class="text-rose-300">*</span></label>
+                                <input type="number" name="replacement_guarantee_days" min="0" max="365"
+                                    value="{{ old('replacement_guarantee_days', $job->replacement_period_days ?? $job->replacement_guarantee_days ?? 90) }}"
+                                    placeholder="e.g. 90"
+                                    class="block w-full rounded-xl border border-amber-400/40 bg-slate-900/60 text-white px-3 py-2.5 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                                @error('replacement_guarantee_days') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    </section>
 
-                    {{-- Payout settings are managed centrally via the client's
-                         commercial contract — hidden from this form to avoid
-                         duplicate / conflicting values. Sensible defaults are
-                         submitted invisibly so existing validation passes. --}}
-                    <input type="hidden" name="payout_amount"              value="{{ old('payout_amount',              $job->payout_amount              ?? 0)  }}">
-                    <input type="hidden" name="minimum_stay_days"          value="{{ old('minimum_stay_days',          $job->minimum_stay_days          ?? 30) }}">
-                    <input type="hidden" name="replacement_guarantee_days" value="{{ old('replacement_guarantee_days', $job->replacement_guarantee_days ?? 90) }}">
-
-                    <div class="flex justify-end items-center gap-3 pt-2">
-                        <a href="{{ route('client.dashboard') }}" class="bg-white/10 border border-white/10 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition backdrop-blur-md">
+                    <div class="flex justify-end">
+                        <a href="{{ route('client.jobs.index') }}" class="bg-white/10 border border-white/20 text-slate-100 font-bold py-3 px-6 rounded-xl hover:bg-white/20 transition mr-4">
                             Cancel
                         </a>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-extrabold py-3 px-8 rounded-xl transition flex items-center gap-2 shadow-lg hover:shadow-blue-500/40">
-                            <i class="fa-solid fa-paper-plane"></i> {{ $submitLabel }}
+                        <button type="submit" class="job-submit-btn bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-bold py-3 px-8 rounded-xl hover:from-cyan-400 hover:to-indigo-400 transition">
+                            {{ $submitLabel }}
                         </button>
                     </div>
                 </form>
+            </div>
         </div>
 
     </div>
@@ -454,6 +459,60 @@
             }
         }
 
+        const titleField = document.querySelector('input[name="title"]');
+        const experienceField = document.querySelector('input[name="min_experience"]');
+        const openingsField = document.querySelector('input[name="openings"]');
+        const screeningField = document.getElementById('job-screening-required');
+        const screeningCard = document.getElementById('screening-flow-card');
+        const directCard = document.getElementById('direct-flow-card');
+        const flowSummary = document.getElementById('job-flow-summary');
+        const flowBadge = document.getElementById('job-flow-badge');
+        let manualFlowChoice = null;
+
+        const applyHiringFlow = function (useDirectFlow, isManual) {
+            if (!screeningField || !screeningCard || !directCard || !flowSummary || !flowBadge) return;
+            screeningField.value = useDirectFlow ? '0' : '1';
+            screeningCard.classList.toggle('is-active', !useDirectFlow);
+            screeningCard.classList.toggle('is-muted', useDirectFlow);
+            directCard.classList.toggle('is-active', useDirectFlow);
+            directCard.classList.toggle('is-muted', !useDirectFlow);
+            screeningCard.setAttribute('aria-pressed', String(!useDirectFlow));
+            directCard.setAttribute('aria-pressed', String(useDirectFlow));
+
+            if (useDirectFlow) {
+                flowBadge.textContent = isManual ? 'Direct Interview selected' : 'Direct Interview recommended';
+                flowBadge.className = 'inline-flex items-center justify-center shrink-0 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-100';
+                flowSummary.textContent = isManual
+                    ? 'Direct Interview is selected. Recruiters must include an interview date and time with every candidate submission.'
+                    : 'High-volume, urgent, or entry-level hiring can move directly to an interview lineup.';
+            } else {
+                flowBadge.textContent = isManual ? 'Screening selected' : 'Screening required';
+                flowBadge.className = 'inline-flex items-center justify-center shrink-0 rounded-full border border-violet-300/30 bg-violet-400/10 px-3 py-1.5 text-xs font-bold text-violet-100';
+                flowSummary.textContent = isManual
+                    ? 'Screening Required is selected. SimplyHiree reviews submitted candidates before your interview pipeline.'
+                    : 'This role benefits from SimplyHiree screening before qualified candidates reach your interview pipeline.';
+            }
+        };
+
+        const updateHiringFlow = function () {
+            if (manualFlowChoice !== null) return;
+            const title = (titleField?.value || '').toLowerCase();
+            const minimumExperience = Number(experienceField?.value || 0);
+            const openings = Number(openingsField?.value || 1);
+            const directTerms = ['bpo', 'telecaller', 'sales executive', 'walk-in', 'walkin', 'urgent'];
+            const useDirectFlow = openings >= 10 || (minimumExperience <= 1 && directTerms.some(function (term) { return title.includes(term); }));
+            applyHiringFlow(useDirectFlow, false);
+        };
+
+        screeningCard?.addEventListener('click', function () { manualFlowChoice = false; applyHiringFlow(false, true); });
+        directCard?.addEventListener('click', function () { manualFlowChoice = true; applyHiringFlow(true, true); });
+
+        [titleField, experienceField, openingsField].filter(Boolean).forEach(function (field) {
+            field.addEventListener('input', updateHiringFlow);
+            field.addEventListener('change', updateHiringFlow);
+        });
+        updateHiringFlow();
+
         const hidden     = document.getElementById('job-location');
         const chipbox    = document.getElementById('job-location-chipbox');
         const search     = document.getElementById('job-location-search');
@@ -473,8 +532,8 @@
             chipbox.querySelectorAll('.loc-chip').forEach(c => c.remove());
             selected.forEach((city, idx) => {
                 const chip = document.createElement('span');
-                chip.className = 'loc-chip inline-flex items-center gap-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/35 px-3 py-1 text-xs font-bold text-cyan-200 shadow-sm transition';
-                chip.innerHTML = '<span>' + city.replace(/</g,'&lt;') + '</span><button type="button" aria-label="Remove" class="hover:text-rose-300 leading-none text-sm font-extrabold">&times;</button>';
+                chip.className = 'loc-chip inline-flex items-center gap-1.5 rounded-full bg-blue-500/30 border border-blue-400/40 px-3 py-1 text-sm text-white';
+                chip.innerHTML = '<span>' + city.replace(/</g,'&lt;') + '</span><button type="button" aria-label="Remove" class="hover:text-rose-300 leading-none text-base">&times;</button>';
                 chip.querySelector('button').addEventListener('click', () => { selected.splice(idx, 1); syncHidden(); renderChips(); });
                 chipbox.insertBefore(chip, search);
             });

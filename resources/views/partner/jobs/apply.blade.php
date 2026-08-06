@@ -8,6 +8,7 @@
     <div class="relative z-10 max-w-7xl mx-auto">
         <form action="{{ route('partner.jobs.submit', $job->id) }}" method="POST" id="applicationForm">
             @csrf
+            @if(!$job->screening_required)<div class="mb-5 rounded-xl border border-amber-300/30 bg-amber-500/10 p-4"><label class="block font-semibold text-amber-100">Interview date & time <span class="text-rose-300">*</span></label><input required name="interview_at" type="datetime-local" min="{{ now()->format('Y-m-d\\TH:i') }}" class="mt-2 rounded border-white/20 bg-slate-900/50 text-white">@error('interview_at')<p class="text-rose-300 text-sm">{{ $message }}</p>@enderror</div>@endif
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -36,7 +37,27 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-200">
                             <div><span class="font-semibold text-blue-100">Experience:</span> {{ $job->formatted_experience }}</div>
                             <div><span class="font-semibold text-blue-100">Education:</span> {{ $job->educationLevel->name ?? 'N/A' }}</div>
-                            <div class="sm:col-span-2"><span class="font-semibold text-blue-100">Skills:</span> {{ $job->skills_required ?? 'N/A' }}</div>
+                            @php
+                                $applyExtra = array_filter([
+                                    'Work Mode' => $job->work_mode,
+                                    'Shift' => $job->shift,
+                                    'Specialization' => $job->specialization,
+                                    'Notice Period' => $job->notice_period,
+                                    'Languages' => $job->languages,
+                                    'Industry' => $job->industry,
+                                    'Department' => $job->department,
+                                ], fn ($v) => filled($v));
+                            @endphp
+                            @foreach($applyExtra as $label => $val)
+                                <div><span class="font-semibold text-blue-100">{{ $label }}:</span> {{ $val }}</div>
+                            @endforeach
+                            @if(!is_null($job->travel_required))
+                                <div><span class="font-semibold text-blue-100">Travel Required:</span> {{ $job->travel_required ? 'Yes' : 'No' }}</div>
+                            @endif
+                            <div class="sm:col-span-2"><span class="font-semibold text-blue-100">Skills:</span> {{ filled($job->skills_required) ? strip_tags(html_entity_decode($job->skills_required)) : 'N/A' }}</div>
+                            @if(is_array($job->benefits) && count($job->benefits))
+                                <div class="sm:col-span-2"><span class="font-semibold text-blue-100">Benefits:</span> {{ implode(', ', $job->benefits) }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -44,8 +65,11 @@
                 <div class="lg:col-span-1">
                     @php
                         $partner = auth()->user();
+                        $teamPoolIds = \App\Models\User::where('id', $partner->partnerOwnerId())
+                            ->orWhere('parent_partner_id', $partner->partnerOwnerId())
+                            ->pluck('id');
                         $alreadyCount = \App\Models\JobApplication::where('job_id', $job->id)
-                            ->whereHas('candidate', fn($q) => $q->where('partner_id', $partner->id))
+                            ->whereHas('candidate', fn($q) => $q->whereIn('partner_id', $teamPoolIds))
                             ->count();
                         $cap = (int) ($job->max_resume_per_vendor ?? 0);
                         $remaining = $cap > 0 ? max(0, $cap - $alreadyCount) : null;
@@ -128,16 +152,34 @@
 
                         <div class="flex-1 overflow-y-auto p-4 space-y-3" id="candidateList">
                             @forelse($candidates as $candidate)
-                                <label class="candidate-item flex items-start p-3 border border-white/10 rounded-xl hover:bg-white/5 cursor-pointer transition relative">
+                                @php
+                                    $alreadyApplied = in_array((int) $candidate->id, $appliedCandidateIds ?? [], true);
+                                    $duplicateBlocked = !in_array($candidate->duplicate_status ?? 'clear', ['clear', 'genuine'], true);
+                                    $selectionBlocked = $alreadyApplied || $duplicateBlocked;
+                                    $cleanSkills = trim(strip_tags(html_entity_decode((string) $candidate->skills)));
+                                @endphp
+                                <label class="candidate-item flex items-start p-3 border rounded-xl transition relative {{ $alreadyApplied ? 'border-rose-400/40 bg-rose-500/10 cursor-not-allowed' : ($duplicateBlocked ? 'border-amber-400/30 bg-amber-500/5 cursor-not-allowed opacity-75' : 'border-white/10 hover:bg-white/5 cursor-pointer') }}">
                                     <div class="flex items-center h-5">
-                                        <input type="checkbox" name="candidate_ids[]" value="{{ $candidate->id }}" class="focus:ring-indigo-500 h-5 w-5 text-indigo-600 border-white/30 rounded bg-slate-900/40">
+                                        <input type="checkbox" name="candidate_ids[]" value="{{ $candidate->id }}" @disabled($selectionBlocked) class="focus:ring-indigo-500 h-5 w-5 text-indigo-600 border-white/30 rounded bg-slate-900/40 disabled:cursor-not-allowed disabled:opacity-40">
                                     </div>
                                     <div class="ml-3 text-sm">
-                                        <div class="font-bold text-white search-name">{{ $candidate->first_name }} {{ $candidate->last_name }}</div>
+                                        <div class="font-bold text-white search-name">
+                                            {{ $candidate->first_name }} {{ $candidate->last_name }}
+                                            @if($alreadyApplied)
+                                                <span class="ml-1 inline-flex items-center rounded-full border border-rose-300/40 bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-rose-100"><i class="fa-solid fa-circle-check mr-1"></i> Already applied</span>
+                                            @elseif($duplicateBlocked)
+                                                <span class="ml-1 rounded bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase text-amber-200">Review required</span>
+                                            @endif
+                                        </div>
                                         <div class="text-slate-300 text-xs">{{ $candidate->email }}</div>
                                         <div class="text-slate-300 text-xs mt-1 search-skills">
-                                            <i class="fa-solid fa-code text-slate-300 mr-1"></i> {{ Str::limit($candidate->skills, 40) }}
+                                            <i class="fa-solid fa-tags text-slate-300 mr-1"></i> {{ filled($cleanSkills) ? Str::limit($cleanSkills, 40) : 'Skills not added' }}
                                         </div>
+                                        @if($alreadyApplied)
+                                            <div class="mt-1 text-[11px] font-medium text-rose-100">This candidate has already been submitted for this job and cannot be selected again.</div>
+                                        @elseif($duplicateBlocked)
+                                            <div class="mt-1 text-[11px] text-amber-200">Submission disabled until Superadmin completes duplicate review.</div>
+                                        @endif
                                     </div>
                                 </label>
                             @empty
@@ -370,7 +412,11 @@
             },
             body: formData
         })
-        .then(response => response.json())
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw { response, data };
+            return data;
+        })
         .then(data => {
             if (data.success) {
                 const candidate = data.candidate;
@@ -383,7 +429,7 @@
                             <div class="font-bold text-white search-name">${candidate.first_name} ${candidate.last_name}</div>
                             <div class="text-slate-300 text-xs">${candidate.email}</div>
                             <div class="text-slate-300 text-xs mt-1 search-skills">
-                                <i class="fa-solid fa-code text-slate-300 mr-1"></i> ${candidate.skills || 'No skills listed'}
+                                <i class="fa-solid fa-tags text-slate-300 mr-1"></i> ${escapeHtml(candidate.skills || 'No skills listed')}
                             </div>
                         </div>
                     </label>
@@ -404,12 +450,21 @@
         .catch(error => {
             console.error('Error:', error);
             modalErrors.classList.remove('hidden');
-            modalErrors.innerHTML = 'An unexpected error occurred. Please check your inputs.';
+            const errors = error?.data?.errors;
+            modalErrors.innerHTML = errors
+                ? Object.values(errors).flat().map(escapeHtml).join('<br>')
+                : escapeHtml(error?.data?.message || 'Unable to save the candidate. Please check the required fields and try again.');
         })
         .finally(() => {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Save Candidate';
         });
+    }
+
+    function escapeHtml(value) {
+        const node = document.createElement('div');
+        node.textContent = value == null ? '' : String(value);
+        return node.innerHTML;
     }
 </script>
 @endsection

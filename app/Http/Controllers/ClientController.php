@@ -18,12 +18,17 @@ use App\Notifications\InterviewScheduled;
 use App\Notifications\CandidateJoined; 
 use App\Notifications\CandidateDidNotJoin;
 use App\Notifications\CandidateLeft;
+use App\Notifications\CandidateLifecycleUpdated;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Mail;
 use App\Services\AiSensyWhatsAppService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Carbon\Carbon;
 use App\Services\SuperadminActivityService;
+use App\Services\InvoiceDocumentService;
 
 class ClientController extends Controller
 {
@@ -36,25 +41,25 @@ class ClientController extends Controller
 
         $client = Auth::user();
         
-        $jobs = Job::where('user_id', $client->id)
+        $allJobs = Job::where('user_id', $client->id)
                     ->with(['educationLevel', 'jobApplications'])
                     ->latest()
                     ->get();
         
-        $totalJobs = $jobs->count();
-        $activeJobs = $jobs->where('status', 'approved')->count();
+        $totalJobs = $allJobs->count();
+        $activeJobs = $allJobs->where('status', 'approved')->count();
         
         // Count only approved candidate submissions
-        $totalApplicants = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+        $totalApplicants = JobApplication::whereIn('job_id', $allJobs->pluck('id'))
                                     ->where('status', 'Approved')
                                     ->count();
         
-        $totalHires = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+        $totalHires = JobApplication::whereIn('job_id', $allJobs->pluck('id'))
                                 ->whereIn('hiring_status', ['Selected', 'Joined'])
                                 ->count();
 
         // --- Daily Pulse Data ---
-        $todayInterviews = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+        $todayInterviews = JobApplication::whereIn('job_id', $allJobs->pluck('id'))
             ->whereDate('interview_at', Carbon::today())
             ->count();
 
@@ -76,7 +81,7 @@ class ClientController extends Controller
         }
 
         // Fetch actual recent candidate applications for recent activity feed
-        $recentApplications = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+        $recentApplications = JobApplication::whereIn('job_id', $allJobs->pluck('id'))
             ->where('status', 'Approved')
             ->with(['candidate', 'job'])
             ->latest()
@@ -84,7 +89,7 @@ class ClientController extends Controller
             ->get();
 
         // Fetch actual upcoming scheduled interviews
-        $recentInterviews = JobApplication::whereIn('job_id', $jobs->pluck('id'))
+        $recentInterviews = JobApplication::whereIn('job_id', $allJobs->pluck('id'))
             ->whereNotNull('interview_at')
             ->with(['candidate', 'job'])
             ->latest('interview_at')
@@ -94,17 +99,27 @@ class ClientController extends Controller
         // ============================================================
         // REAL-DATA WIDGETS (replacing the mock dashboard values)
         // ============================================================
-        $jobIds = $jobs->pluck('id');
+        $jobIds = $allJobs->pluck('id');
 
-        // --- Interview / Hiring Funnel (real counts, starting at Shortlisted / Approved by Admin) ---
-        $funnelShortlisted = JobApplication::whereIn('job_id', $jobIds)->where('status', 'Approved')->count();
-        $funnelInterview   = JobApplication::whereIn('job_id', $jobIds)->where('hiring_status', 'Interview Scheduled')->count();
-        $funnelOffered     = JobApplication::whereIn('job_id', $jobIds)->where('hiring_status', 'Selected')->count();
-        $funnelJoined      = JobApplication::whereIn('job_id', $jobIds)->where('joined_status', 'Joined')->count();
+        // Client-visible pipeline: screened jobs expose only Admin-approved profiles;
+        // direct-interview jobs expose their submissions immediately.
+        $visiblePipeline = JobApplication::whereIn('job_id', $jobIds)->where(function ($visibility) {
+            $visibility->where('status', 'Approved')
+                ->orWhereHas('job', fn ($jobQuery) => $jobQuery->where('screening_required', false));
+        });
+        $funnelApplied     = (clone $visiblePipeline)->count();
+        $funnelShortlisted = (clone $visiblePipeline)->whereIn('hiring_status', ['Shortlisted', 'shortlisted'])->count();
+        $funnelMaybe       = (clone $visiblePipeline)->where('hiring_status', 'Maybe')->count();
+        $funnelInterview   = (clone $visiblePipeline)->whereIn('hiring_status', ['Interview Scheduled', 'Interviewed', 'No-Show'])->count();
+        // Selected is the current system's offer stage: CTC/joining details are recorded here.
+        $funnelOffered     = (clone $visiblePipeline)->where('hiring_status', 'Selected')->count();
+        $funnelJoined      = (clone $visiblePipeline)->where('joined_status', 'Joined')->count();
 
         $funnel = [
-            ['label' => 'Shortlisted', 'count' => $funnelShortlisted, 'link' => route('client.applications.index', ['status' => 'Approved'])],
-            ['label' => 'Interview',   'count' => $funnelInterview,   'link' => route('client.applications.index', ['hiring_status' => 'Interview Scheduled'])],
+            ['label' => 'Applied',     'count' => $funnelApplied,     'link' => route('client.applications.index')],
+            ['label' => 'Shortlisted', 'count' => $funnelShortlisted, 'link' => route('client.applications.index', ['status' => 'Shortlisted'])],
+            ['label' => 'Maybe',       'count' => $funnelMaybe,       'link' => route('client.applications.index', ['status' => 'Maybe'])],
+            ['label' => 'Interviewed', 'count' => $funnelInterview,   'link' => route('client.applications.index', ['hiring_status' => 'Interviewed'])],
             ['label' => 'Offered',     'count' => $funnelOffered,     'link' => route('client.applications.index', ['hiring_status' => 'Selected'])],
             ['label' => 'Joined',      'count' => $funnelJoined,      'link' => route('client.applications.index', ['joined_status' => 'Joined'])],
         ];
@@ -155,7 +170,7 @@ class ClientController extends Controller
         ];
 
         // --- Top Requirements (jobs ranked by submission count) ---
-        $topRequirements = $jobs->map(function ($job) {
+        $topRequirements = $allJobs->map(function ($job) {
             return [
                 'title'       => $job->title,
                 'company'     => $job->company_name,
@@ -172,6 +187,12 @@ class ClientController extends Controller
             'fill_rate'         => $totalJobs > 0 ? round($funnelJoined / max($totalJobs, 1) * 100) : 0,
             'interview_rate'    => $funnelShortlisted > 0 ? round($funnelInterview / max($funnelShortlisted, 1) * 100) : 0,
         ];
+
+        // Retrieve paginated jobs list for dashboard display
+        $jobs = Job::where('user_id', $client->id)
+                    ->with(['educationLevel', 'jobApplications'])
+                    ->latest()
+                    ->paginate(10);
 
         return view('client.dashboard', [
             'client' => $client,
@@ -207,7 +228,18 @@ class ClientController extends Controller
             ->withCount(['jobApplications' => function($q) {
                 $q->where('status', 'Approved');
             }])
-            ->orderBy('created_at', 'desc');
+            ->withCount([
+                'jobApplications as shortlisted_responses_count' => function ($q) {
+                    $q->where('status', 'Approved')
+                        ->whereIn('hiring_status', ['Shortlisted', 'shortlisted']);
+                },
+                'jobApplications as maybe_responses_count' => function ($q) {
+                    $q->where('status', 'Approved')->where('hiring_status', 'Maybe');
+                },
+                'jobApplications as rejected_responses_count' => function ($q) {
+                    $q->where('status', 'Approved')->where('hiring_status', 'Client Rejected');
+                },
+            ]);
 
         // Map UI status keys → actual DB values so the tabs filter correctly.
         // DB stores: approved | pending_approval | on_hold | closed | rejected
@@ -222,7 +254,38 @@ class ClientController extends Controller
             $query->where('status', $filterMap[$request->status]);
         }
 
-        $jobs = $query->paginate(15)->withQueryString();
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where('title', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%'.trim((string) $request->input('location')).'%');
+        }
+
+        if ($request->filled('keywords')) {
+            $keywords = trim((string) $request->input('keywords'));
+            $query->where(function ($jobQuery) use ($keywords) {
+                $jobQuery->where('skills_required', 'like', "%{$keywords}%")
+                    ->orWhere('description', 'like', "%{$keywords}%");
+            });
+        }
+
+        if ($request->input('flow') === 'screening') {
+            $query->where('screening_required', true);
+        } elseif ($request->input('flow') === 'direct') {
+            $query->where('screening_required', false);
+        }
+
+        $sort = $request->input('sort', 'recent');
+        match ($sort) {
+            'oldest' => $query->orderBy('created_at'),
+            'title' => $query->orderBy('title'),
+            'responses' => $query->orderByDesc('job_applications_count'),
+            default => $query->orderByDesc('created_at'),
+        };
+
+        $jobs = $query->paginate(10)->withQueryString();
 
         $base = \App\Models\Job::where('user_id', $clientId);
         $counts = [
@@ -318,12 +381,32 @@ class ClientController extends Controller
             'partner_visibility' => $legacyVisibility,
             'vendor_assignment_mode' => $assignMode,
             'max_vendors_per_job' => $validated['max_vendors_per_job'] ?? null,
-            'payout_amount' => $validated['payout_amount'],
-            'minimum_stay_days' => $validated['minimum_stay_days'],
-            'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
+            'commercial_source' => $validated['commercial_source'],
+            'fee_type' => $validated['commercial_source'] === 'manual' ? $validated['manual_fee_type'] : null,
+            'fee_amount' => $validated['commercial_source'] === 'manual' ? $validated['manual_fee_amount'] : null,
+            // fee_* records the client's job-level commercial proposal.
+            // payout_amount is reserved for the final partner payout set by Admin.
+            'payout_amount' => null,
+            'client_payout_days' => $validated['commercial_source'] === 'manual' ? $validated['minimum_stay_days'] : null,
+            'replacement_period_days' => $validated['commercial_source'] === 'manual' ? $validated['replacement_guarantee_days'] : null,
+            'minimum_stay_days' => $validated['commercial_source'] === 'manual' ? $validated['minimum_stay_days'] : null,
+            'replacement_guarantee_days' => $validated['commercial_source'] === 'manual' ? $validated['replacement_guarantee_days'] : null,
             'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
-            'screening_required' => (bool) ($validated['screening_required'] ?? true),
+            'screening_required' => $this->shouldRequireScreening($validated),
+            // Extended job-detail fields
+            'work_mode'         => $validated['work_mode'] ?? null,
+            'shift'             => $validated['shift'] ?? null,
+            'specialization'    => $validated['specialization'] ?? null,
+            'notice_period'     => $validated['notice_period'] ?? null,
+            'languages'         => $validated['languages'] ?? null,
+            'industry'          => $validated['industry'] ?? null,
+            'department'        => $validated['department'] ?? null,
+            'reporting_manager' => $validated['reporting_manager'] ?? null,
+            'travel_required'   => array_key_exists('travel_required', $validated) ? (bool) $validated['travel_required'] : null,
+            'benefits'          => $validated['benefits'] ?? null,
         ]);
+
+        $this->sendJobPostedCommercialEmails($job, Auth::user());
 
         // Resolve the allowed-partner list according to mode
         if ($assignMode === 'preferred') {
@@ -333,7 +416,11 @@ class ClientController extends Controller
             $job->allowedPartners()->sync($request->input('allowed_partners', []));
         }
 
-        return redirect()->route('client.dashboard')->with('success', 'Job posted successfully! Waiting for admin approval.');
+        return redirect()
+            ->route('client.jobs.index')
+            ->with([
+                'job_posted' => 'Your job has been posted successfully and sent to SimplyHiree for approval. A confirmation email has also been sent.',
+            ]);
     }
 
     public function updateJob(Request $request, Job $job)
@@ -361,16 +448,31 @@ class ClientController extends Controller
             'max_experience' => $validated['max_experience'],
             'experience_level_id' => null,
             'education_level_id' => $validated['education_level_id'],
-            'application_deadline' => $validated['application_deadline'],
+            'application_deadline' => $validated['application_deadline'] ?? null,
             'skills_required' => (string) ($validated['skills_required'] ?? ''),
             'company_website' => (string) ($validated['company_website'] ?? ''),
             'openings' => $validated['openings'] ?? 1,
-            'payout_amount' => $validated['payout_amount'],
-            'minimum_stay_days' => $validated['minimum_stay_days'],
-            'replacement_guarantee_days' => $validated['replacement_guarantee_days'],
+            'commercial_source' => $validated['commercial_source'],
+            'fee_type' => $validated['commercial_source'] === 'manual' ? $validated['manual_fee_type'] : null,
+            'fee_amount' => $validated['commercial_source'] === 'manual' ? $validated['manual_fee_amount'] : null,
+            // Preserve Admin's final partner payout while the edited client
+            // proposal returns to the approval queue.
+            'client_payout_days' => $validated['commercial_source'] === 'manual' ? $validated['minimum_stay_days'] : null,
+            'replacement_period_days' => $validated['commercial_source'] === 'manual' ? $validated['replacement_guarantee_days'] : null,
             'is_company_confidential' => (bool) ($validated['is_company_confidential'] ?? false),
-            'screening_required' => (bool) ($validated['screening_required'] ?? true),
+            'screening_required' => $this->shouldRequireScreening($validated),
             'status' => 'pending_approval',
+            // Extended job-detail fields
+            'work_mode'         => $validated['work_mode'] ?? null,
+            'shift'             => $validated['shift'] ?? null,
+            'specialization'    => $validated['specialization'] ?? null,
+            'notice_period'     => $validated['notice_period'] ?? null,
+            'languages'         => $validated['languages'] ?? null,
+            'industry'          => $validated['industry'] ?? null,
+            'department'        => $validated['department'] ?? null,
+            'reporting_manager' => $validated['reporting_manager'] ?? null,
+            'travel_required'   => array_key_exists('travel_required', $validated) ? (bool) $validated['travel_required'] : null,
+            'benefits'          => $validated['benefits'] ?? null,
         ]);
 
         return redirect()->route('client.dashboard')->with('success', 'Pending job updated successfully.');
@@ -417,16 +519,85 @@ class ClientController extends Controller
             'gender_preference' => 'required|string|in:Any,Male,Female,Other',
             'min_age' => 'nullable|integer|min:18|max:80',
             'max_age' => 'nullable|integer|min:18|max:80|gte:min_age',
-            'payout_amount' => 'required|numeric|min:0',
-            'minimum_stay_days' => 'required|integer|min:0|max:365',
-            'replacement_guarantee_days' => 'required|integer|min:0|max:365',
+            'commercial_source' => 'required|in:simplyhire,manual',
+            'manual_fee_type' => 'required_if:commercial_source,manual|nullable|in:flat,percentage',
+            'manual_fee_amount' => 'required_if:commercial_source,manual|nullable|numeric|min:0',
+            'minimum_stay_days' => 'required_if:commercial_source,manual|nullable|integer|min:0|max:365',
+            'replacement_guarantee_days' => 'required_if:commercial_source,manual|nullable|integer|min:0|max:365',
             'vendor_assignment_mode' => 'nullable|in:open,preferred,selected',
             'max_vendors_per_job'    => 'nullable|integer|min:1|max:50',
             'allowed_partners'       => 'nullable|array',
             'allowed_partners.*'     => 'integer|exists:users,id',
             'is_company_confidential' => 'nullable|boolean',
             'screening_required' => 'nullable|boolean',
+            // Extended job-detail fields (all optional)
+            'work_mode'         => 'nullable|string|in:On-site,Hybrid,Remote,Field Job,Work From Home (WFH)',
+            'shift'             => 'nullable|string|in:Day Shift,Night Shift,Rotational Shift,Flexible Shift,Weekend Shift',
+            'specialization'    => 'nullable|string|max:255',
+            'notice_period'     => 'nullable|string|max:100',
+            'languages'         => 'nullable|string|max:255',
+            'industry'          => 'nullable|string|max:255',
+            'department'        => 'nullable|string|max:255',
+            'reporting_manager' => 'nullable|string|max:255',
+            'travel_required'   => 'nullable|boolean',
+            'benefits'          => 'nullable|array',
+            'benefits.*'        => 'string|in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation',
         ]);
+    }
+
+    private function sendJobPostedCommercialEmails(Job $job, User $client): void
+    {
+        $clientSubject = 'Job posted successfully: '.$job->title;
+        try {
+            Mail::send('emails.job-posted-commercial', [
+                'job' => $job,
+                'client' => $client,
+                'isAdmin' => false,
+                'subjectLine' => $clientSubject,
+                'actionUrl' => route('client.jobs.index'),
+                'actionLabel' => 'View my jobs',
+            ], function ($mail) use ($client, $clientSubject) {
+                $mail->to($client->email, $client->name)->subject($clientSubject);
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        $adminSubject = 'New job awaiting approval: '.$job->title;
+        try {
+            Mail::send('emails.job-posted-commercial', [
+                'job' => $job,
+                'client' => $client,
+                'isAdmin' => true,
+                'subjectLine' => $adminSubject,
+                'actionUrl' => route('admin.jobs.show', $job),
+                'actionLabel' => 'Review job',
+            ], function ($mail) use ($adminSubject) {
+                $mail->to([
+                    'simplyhire1@gmail.com',
+                    'client@simplyhiree.com',
+                ])->subject($adminSubject);
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    private function shouldRequireScreening(array $job): bool
+    {
+        // The client form calculates the platform's recommended route and submits
+        // the validated result so the chosen workflow is persisted with the job.
+        if (array_key_exists('screening_required', $job)) {
+            return (bool) $job['screening_required'];
+        }
+
+        $configured = \App\Models\MarketplaceSetting::where('key', 'screening_mandatory')->first();
+        if ($configured) {
+            return (bool) filter_var($configured->value, FILTER_VALIDATE_BOOLEAN);
+        }
+        $title = strtolower((string) ($job['title'] ?? ''));
+        $directTerms = ['bpo', 'telecaller', 'sales executive', 'walk-in', 'walkin', 'urgent'];
+        return !((int) ($job['openings'] ?? 1) >= 10 || ((int) ($job['min_experience'] ?? 0) <= 1 && collect($directTerms)->contains(fn ($term) => str_contains($title, $term))));
     }
 
     /**
@@ -453,7 +624,7 @@ class ClientController extends Controller
         // commercial row; fall back to the job-level posting value.
         $guaranteeDays = (int) ($application->replacement_window_days
             ?? $application->job->replacement_guarantee_days
-            ?? 0);
+            ?? \App\Models\MarketplaceSetting::valueOf('replacement_period_days', 0));
         if ($guaranteeDays > 0) {
             $tenure = $application->joining_date->diffInDays($application->left_at);
             if ($tenure > $guaranteeDays) {
@@ -597,7 +768,27 @@ class ClientController extends Controller
             ->whereHas('job', function ($q) use ($clientId) {
                 $q->where('user_id', $clientId);
             })
-            ->where('status', 'Approved');
+            // Screened jobs show only Admin-approved profiles; direct jobs show submissions immediately.
+            ->where(function ($visibility) {
+                $visibility->where('status', 'Approved')
+                    ->orWhereHas('job', fn ($jobQuery) => $jobQuery->where('screening_required', false));
+            });
+
+        // Determine base status scoping for the funnel stages
+        $statusParam = $request->input('status');
+        if (in_array($statusParam, [null, '', 'all'], true)) {
+            // All client-visible applications are already Super Admin screened.
+        } elseif (in_array($statusParam, ['screened', 'Approved'], true)) {
+            $query->where(function ($statusQuery) {
+                $statusQuery->whereNull('hiring_status')->orWhere('hiring_status', '');
+            });
+        } elseif ($statusParam === 'Shortlisted') {
+            $query->whereIn('hiring_status', ['Shortlisted', 'shortlisted']);
+        } elseif ($statusParam === 'Maybe') {
+            $query->where('hiring_status', 'Maybe');
+        } elseif ($request->filled('status')) {
+            $query->where('hiring_status', $statusParam);
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -613,15 +804,6 @@ class ClientController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
-            $status = $request->input('status');
-            if ($status === 'Approved') {
-                $query->where('status', 'Approved')->whereNull('hiring_status');
-            } else {
-                $query->where('hiring_status', $status);
-            }
-        }
-
         // Filter by joining status (Joined / Left / Did Not Join)
         if ($request->filled('joined_status')) {
             $query->where('joined_status', $request->input('joined_status'));
@@ -629,7 +811,12 @@ class ClientController extends Controller
 
         // Filter by hiring status (Interview Scheduled / Selected / etc.)
         if ($request->filled('hiring_status')) {
-            $query->where('hiring_status', $request->input('hiring_status'));
+            $hiringStatus = $request->input('hiring_status');
+            if ($hiringStatus === 'Interviewed') {
+                $query->whereIn('hiring_status', ['Interview Scheduled', 'Interviewed', 'No-Show']);
+            } else {
+                $query->where('hiring_status', $hiringStatus);
+            }
         }
 
         // Special view modes used by dashboard deep-links — keep the page
@@ -640,6 +827,10 @@ class ClientController extends Controller
             $query->whereIn('hiring_status', ['Selected', 'Joined']);
             $pageTitle    = 'Hired Candidates';
             $pageSubtitle = 'Candidates you selected or who have joined';
+        }
+        if ($request->input('view') === 'replacements') {
+            $pageTitle = 'Replacements';
+            $pageSubtitle = 'Candidates who left and may need a replacement.';
         }
 
         if ($request->filled('job_id')) {
@@ -652,6 +843,12 @@ class ClientController extends Controller
                 $c->where('partner_id', $pid);
             });
         }
+        if ($request->filled('partner_search')) {
+            $partnerSearch = trim((string) $request->input('partner_search'));
+            $query->whereHas('candidate.partner', function ($partnerQuery) use ($partnerSearch) {
+                $partnerQuery->where('name', 'like', "%{$partnerSearch}%");
+            });
+        }
 
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->input('date_from'));
@@ -660,11 +857,29 @@ class ClientController extends Controller
             $query->whereDate('created_at', '<=', $request->input('date_to'));
         }
 
-        $allowedPerPage = [10, 20, 50, 100];
-        $perPage = (int) $request->input('per_page', 20);
-        if (!in_array($perPage, $allowedPerPage, true)) $perPage = 20;
+        // The initial queue is action-first. Once the client applies any filter
+        // or explicit sort, respect that requested result ordering instead.
+        $hasActiveFilters = $request->anyFilled([
+            'search', 'status', 'job_id', 'partner_id', 'partner_search',
+            'date_from', 'date_to', 'joined_status', 'hiring_status', 'view', 'sort',
+        ]);
+        if (!$hasActiveFilters) {
+            $query->orderByRaw("CASE WHEN status = 'Approved' AND (hiring_status IS NULL OR hiring_status = '') THEN 0 ELSE 1 END");
+        }
 
-        $applications = $query->latest()->paginate($perPage)->withQueryString();
+        $sort = $request->input('sort', 'latest');
+        if ($sort === 'name') {
+            $query->orderByRaw("COALESCE((SELECT CONCAT(first_name, ' ', last_name) FROM candidates WHERE candidates.id = job_applications.candidate_id), (SELECT name FROM users WHERE users.id = job_applications.candidate_user_id), '') ASC");
+        } elseif ($sort === 'modified') {
+            $query->orderByDesc('updated_at');
+        } else {
+            $sort = 'latest';
+            $query->orderByDesc('created_at');
+        }
+
+        $perPage = 10;
+        $allowedPerPage = [10];
+        $applications = $query->paginate($perPage)->withQueryString();
 
         $jobs = Job::where('user_id', $clientId)->select('id', 'title')->orderBy('title')->get();
         $partners = User::role('partner')
@@ -675,9 +890,26 @@ class ClientController extends Controller
             ->get();
 
         return view('client.applications.index', compact(
-            'applications', 'jobs', 'partners', 'perPage', 'allowedPerPage',
+            'applications', 'jobs', 'partners', 'perPage', 'allowedPerPage', 'sort',
             'pageTitle', 'pageSubtitle'
         ));
+    }
+
+    /** Client replacement queue on its own route. */
+    public function replacements(Request $request)
+    {
+        $request->merge(['joined_status' => 'Left', 'view' => 'replacements']);
+        return $this->listAllApplications($request);
+    }
+
+    /**
+     * Full notification history for the current client account.
+     */
+    public function notificationHistory()
+    {
+        $notifications = Auth::user()->notifications()->latest()->paginate(20);
+
+        return view('client.notifications.index', compact('notifications'));
     }
 
     /**
@@ -689,9 +921,29 @@ class ClientController extends Controller
             abort(403, 'UNAUTHORIZED ACTION.');
         }
 
-        $query = JobApplication::where('job_id', $job->id)
-                                ->where('status', 'Approved')
-                                ->with(['candidate', 'candidateUser', 'interviewRounds']);
+        $baseResponses = JobApplication::where('job_id', $job->id);
+        if ($job->screening_required) {
+            $baseResponses->where('status', 'Approved');
+        }
+        $responseCounts = [
+            'all' => (clone $baseResponses)->count(),
+            'shortlisted' => (clone $baseResponses)->whereIn('hiring_status', ['Shortlisted', 'shortlisted'])->count(),
+            'maybe' => (clone $baseResponses)->where('hiring_status', 'Maybe')->count(),
+            'rejected' => (clone $baseResponses)->where('hiring_status', 'Client Rejected')->count(),
+        ];
+
+        $query = (clone $baseResponses)->with(['candidate', 'candidateUser.profile', 'interviewRounds']);
+
+        $responseFilter = $request->input('response', 'all');
+        if ($responseFilter === 'shortlisted') {
+            $query->whereIn('hiring_status', ['Shortlisted', 'shortlisted']);
+        } elseif ($responseFilter === 'maybe') {
+            $query->where('hiring_status', 'Maybe');
+        } elseif ($responseFilter === 'rejected') {
+            $query->where('hiring_status', 'Client Rejected');
+        } else {
+            $responseFilter = 'all';
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -721,19 +973,55 @@ class ClientController extends Controller
             }
         }
 
+        if ($request->filled('resume')) {
+            $resumeFilter = $request->input('resume');
+            if ($resumeFilter === 'has_resume') {
+                $query->where(function ($q) {
+                    $q->whereHas('candidate', function ($subQ) {
+                        $subQ->whereNotNull('resume_path')->where('resume_path', '!=', '');
+                    })->orWhereHas('candidateUser.profile', function ($subQ) {
+                        $subQ->whereNotNull('resume_path')->where('resume_path', '!=', '');
+                    });
+                });
+            } elseif ($resumeFilter === 'no_resume') {
+                $query->where(function ($q) {
+                    $q->where(function ($innerQ) {
+                        $innerQ->whereHas('candidate', function ($subQ) {
+                            $subQ->whereNull('resume_path')->orWhere('resume_path', '');
+                        })->orWhereDoesntHave('candidate');
+                    })->where(function ($innerQ) {
+                        $innerQ->whereHas('candidateUser.profile', function ($subQ) {
+                            $subQ->whereNull('resume_path')->orWhere('resume_path', '');
+                        })->orWhereDoesntHave('candidateUser.profile');
+                    });
+                });
+            }
+        }
+
+        if ($request->filled('source')) {
+            $sourceFilter = $request->input('source');
+            if ($sourceFilter === 'agency') {
+                $query->whereNotNull('candidate_id');
+            } elseif ($sourceFilter === 'direct') {
+                $query->whereNull('candidate_id');
+            }
+        }
+
         $approvedApplications = $query->latest()
                                       ->paginate(20)
                                       ->withQueryString();
 
         return view('client.jobs.applicants', [
             'job' => $job,
-            'applications' => $approvedApplications
+            'applications' => $approvedApplications,
+            'responseCounts' => $responseCounts,
+            'responseFilter' => $responseFilter,
         ]);
     }
     
     public function showApplicantDetail(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== Auth::id() || ($application->job->screening_required && $application->status !== 'Approved')) {
             abort(403, 'You can only view applicants who applied to your own jobs.');
         }
         $application->load(['job', 'candidate.partner', 'candidateUser.profile', 'interviewRounds']);
@@ -748,6 +1036,60 @@ class ClientController extends Controller
         $application->update(['hiring_status' => 'Client Rejected']);
         $this->notifyAdminAndPartner(new CandidateRejectedByClient($application), $application);
         return redirect()->back()->with('success', 'Candidate has been rejected.');
+    }
+
+    public function shortlistApplicant(JobApplication $application)
+    {
+        $this->setApplicantReviewStatus($application, 'Shortlisted');
+        return back()->with('success', 'Candidate moved to Shortlisted.');
+    }
+
+    public function markApplicantMaybe(JobApplication $application)
+    {
+        $this->setApplicantReviewStatus($application, 'Maybe');
+        return back()->with('success', 'Candidate saved to Maybe for later review.');
+    }
+
+    public function clearApplicantReviewStatus(JobApplication $application)
+    {
+        $application->loadMissing('job');
+        if ((int) $application->job?->user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+
+        if (!in_array($application->hiring_status, ['Shortlisted', 'shortlisted', 'Maybe', 'Client Rejected', 'Selected'], true) || !empty($application->joined_status)) {
+            return back()->with('error', 'This decision can no longer be changed from the response queue.');
+        }
+
+        $wasSelected = $application->hiring_status === 'Selected';
+        $application->update($wasSelected ? [
+            'hiring_status' => 'Interviewed',
+            'joining_date' => null,
+            'final_ctc' => null,
+            'invoice_amount' => null,
+            'invoice_generated_at' => null,
+            'finance_offer_status' => null,
+            'offer_updated_at' => null,
+            'offer_updated_by' => null,
+        ] : ['hiring_status' => null]);
+
+        return back()->with('success', $wasSelected ? 'Selection reopened. Candidate moved back to Interviewed.' : 'Candidate moved back to Awaiting review.');
+    }
+
+    private function setApplicantReviewStatus(JobApplication $application, string $status): void
+    {
+        $application->loadMissing('job');
+        if ((int) $application->job?->user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+        if ($application->status !== 'Approved' || !empty($application->joined_status)) {
+            abort(422, 'This candidate is no longer available for review.');
+        }
+        $application->update(['hiring_status' => $status]);
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($application, strtolower($status)),
+            $application
+        );
     }
 
     // --- INTERVIEW SCHEDULING ---
@@ -820,6 +1162,11 @@ class ClientController extends Controller
             'interview_reminder_sent_at' => null,
         ]);
 
+        app(SuperadminActivityService::class)->logApplicationLifecycle($application, 'client.interview_scheduled');
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($application, 'interview_rescheduled'),
+            $application
+        );
         $this->sendInterviewConfirmationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']), true);
         return redirect()->route('client.jobs.applicants', $application->job_id)->with('success', 'Interview updated — candidate has been re-notified.');
     }
@@ -960,7 +1307,7 @@ class ClientController extends Controller
     /**
      * Interview calendar — all upcoming + past interviews this client owns.
      */
-    public function interviewCalendar()
+    public function interviewCalendar(Request $request)
     {
         $clientId = Auth::id();
         $events = JobApplication::with(['job', 'candidate', 'candidateUser'])
@@ -969,7 +1316,69 @@ class ClientController extends Controller
             ->orderBy('interview_at', 'asc')
             ->get();
 
-        return view('client.interviews.calendar', compact('events'));
+        $selectedRange = $request->string('range')->toString();
+        $selectedRange = in_array($selectedRange, ['upcoming', 'today', 'past7', 'all'], true)
+            ? $selectedRange
+            : null;
+        $filteredInterviews = null;
+
+        if ($selectedRange) {
+            $now = now();
+            $todayStart = $now->copy()->startOfDay();
+            $filtered = match ($selectedRange) {
+                'upcoming' => $events->filter(fn (JobApplication $event) => $event->interview_at
+                    && $event->interview_at->gte($todayStart)),
+                'today' => $events->filter(fn (JobApplication $event) => $event->interview_at?->isToday()),
+                'past7' => $events->filter(fn (JobApplication $event) => $event->interview_at
+                    && $event->interview_at->gte($todayStart->copy()->subDays(7))
+                    && $event->interview_at->lt($todayStart)),
+                default => $events,
+            };
+
+            $filtered = $selectedRange === 'upcoming'
+                ? $filtered->sortBy('interview_at')->values()
+                : $filtered->sortByDesc('interview_at')->values();
+            $page = max(1, $request->integer('page', 1));
+            $perPage = 10;
+
+            $filteredInterviews = new \Illuminate\Pagination\LengthAwarePaginator(
+                $filtered->forPage($page, $perPage)->values(),
+                $filtered->count(),
+                $perPage,
+                $page,
+                [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                ]
+            );
+        }
+
+        try {
+            $calendarMonth = $request->filled('month')
+                ? Carbon::createFromFormat('!Y-m', $request->string('month')->toString())->startOfMonth()
+                : now()->startOfMonth();
+        } catch (\Throwable) {
+            $calendarMonth = now()->startOfMonth();
+        }
+
+        $calendarStart = $calendarMonth->copy()->startOfWeek(Carbon::MONDAY);
+        $calendarEnd = $calendarMonth->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+        $calendarDays = collect();
+
+        for ($day = $calendarStart->copy(); $day->lte($calendarEnd); $day->addDay()) {
+            $calendarDays->push($day->copy());
+        }
+
+        $eventsByDate = $events->groupBy(fn (JobApplication $event) => $event->interview_at->format('Y-m-d'));
+
+        return view('client.interviews.calendar', compact(
+            'events',
+            'calendarMonth',
+            'calendarDays',
+            'eventsByDate',
+            'selectedRange',
+            'filteredInterviews'
+        ));
     }
 
     /**
@@ -981,7 +1390,7 @@ class ClientController extends Controller
         $query = JobApplication::with(['job', 'candidate', 'candidateUser', 'interviewRounds'])
             ->whereHas('job', fn ($q) => $q->where('user_id', $clientId))
             ->whereNotNull('interview_at')
-            ->where('interview_at', '<', now());
+            ->where('interview_at', '<', now()->startOfDay());
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -1010,6 +1419,10 @@ class ClientController extends Controller
             abort(403);
         }
         $application->update(['hiring_status' => 'Interviewed']);
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($application, 'interview_appeared'),
+            $application
+        );
         return redirect()->back()->with('success', 'Candidate marked as \'Interviewed\'.');
     }
 
@@ -1019,6 +1432,10 @@ class ClientController extends Controller
             abort(403);
         }
         $application->update(['hiring_status' => 'No-Show']);
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($application, 'interview_no_show'),
+            $application
+        );
         return redirect()->back()->with('success', 'Candidate marked as \'No-Show\'.');
     }
     
@@ -1118,6 +1535,20 @@ class ClientController extends Controller
         return redirect()->back()->with('success', "Round {$round->round_number} scheduled — candidate notified on WhatsApp + email.");
     }
 
+    public function editInterviewRound(InterviewRound $round)
+    {
+        $application = $round->application;
+        if ($application->job->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $application->load(['candidate', 'job', 'interviewRounds']);
+        return view('client.rounds.edit', [
+            'application' => $application,
+            'round'       => $round,
+            'roundNumber' => $round->round_number,
+        ]);
+    }
+
     public function updateInterviewRound(Request $request, InterviewRound $round)
     {
         $application = $round->application;
@@ -1139,6 +1570,7 @@ class ClientController extends Controller
             'meeting_link'      => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
             'location'          => $validated['mode'] === 'In-person' ? $validated['location'] : null,
             'candidate_message' => $validated['candidate_message'] ?? null,
+            'status'            => 'Scheduled', // Reset round status to Scheduled upon edit/reschedule
         ]);
 
         // If editing the latest round, mirror back to legacy columns and re-notify
@@ -1146,6 +1578,7 @@ class ClientController extends Controller
         $isLatest = $latest && $latest->id === $round->id;
         if ($isLatest) {
             $application->update([
+                'hiring_status'              => 'Interview Scheduled', // Ensure mirrored hiring status is scheduled
                 'interview_at'               => $round->scheduled_at,
                 'meeting_link'               => $round->meeting_link,
                 'interview_location'         => $round->location,
@@ -1160,9 +1593,17 @@ class ClientController extends Controller
             );
         }
 
-        $msg = "Round {$round->round_number} updated";
+        app(SuperadminActivityService::class)->logApplicationLifecycle($application, 'client.interview_scheduled');
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($application, 'round_rescheduled', $round->round_number),
+            $application
+        );
+
+        $msg = "Round {$round->round_number} rescheduled successfully";
         if ($isLatest) $msg .= ' — candidate re-notified on WhatsApp + email';
-        return redirect()->back()->with('success', $msg . '.');
+        
+        // Redirect to candidate details page
+        return redirect()->route('client.applications.show', $application->id)->with('success', $msg . '.');
     }
 
     public function markRoundAppeared(InterviewRound $round)
@@ -1170,6 +1611,10 @@ class ClientController extends Controller
         if ($round->application->job->user_id !== Auth::id()) abort(403);
         $round->update(['status' => 'Appeared']);
         $round->application->update(['hiring_status' => 'Interviewed']);
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($round->application, 'interview_appeared', $round->round_number),
+            $round->application
+        );
         return redirect()->back()->with('success', "Round {$round->round_number}: marked as appeared.");
     }
 
@@ -1178,6 +1623,10 @@ class ClientController extends Controller
         if ($round->application->job->user_id !== Auth::id()) abort(403);
         $round->update(['status' => 'No-Show']);
         $round->application->update(['hiring_status' => 'No-Show']);
+        $this->notifySourcingPartner(
+            new CandidateLifecycleUpdated($round->application, 'interview_no_show', $round->round_number),
+            $round->application
+        );
         return redirect()->back()->with('success', "Round {$round->round_number}: marked as no-show.");
     }
 
@@ -1207,12 +1656,30 @@ class ClientController extends Controller
             'interview_feedback_at'     => now(),
         ]);
 
-        // Auto-reject if recommendation is Reject
+        // Auto-reject / select based on recommendation
         if ($validated['recommendation'] === 'Reject') {
             $round->application->update(['hiring_status' => 'Client Rejected']);
+            $message = "Round {$round->round_number} feedback saved. Candidate rejected.";
+            
+            // Trigger rejection notifications for admin and vendor (sourcing partner)
+            $this->notifyAdminAndPartner(new CandidateRejectedByClient($round->application), $round->application);
+        } elseif ($validated['recommendation'] === 'Select Candidate') {
+            $round->application->update([
+                'hiring_status' => 'Selected',
+                'joining_date'  => now()->addDays(15),
+            ]);
+            $message = "Round {$round->round_number} feedback saved. Candidate selected.";
+            
+            // Trigger selection notifications for admin and vendor (sourcing partner)
+            $this->notifyAdminAndPartner(new CandidateSelected($round->application), $round->application);
+            
+            // Trigger selection email and WhatsApp to candidate
+            $this->sendSelectionConfirmationToCandidate($round->application->fresh(['job', 'candidate', 'candidateUser.profile']), false);
+        } else {
+            $message = "Round {$round->round_number} feedback saved. Passed to next round.";
         }
 
-        return redirect()->back()->with('success', "Round {$round->round_number} feedback saved.");
+        return redirect()->route('client.jobs.applicants', $round->application->job_id)->with('success', $message);
     }
 
     // --- SELECTION ---
@@ -1234,14 +1701,14 @@ class ClientController extends Controller
         $validated = $request->validate([
             'joining_date' => 'required|date|after_or_equal:today',
             'final_ctc'    => 'nullable|numeric|min:0',
-            'client_notes' => 'nullable|string|max:1000',
+            'client_notes' => 'nullable|string|max:1000', 'offer_letter' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
         $application->update([
             'hiring_status' => 'Selected',
             'joining_date'  => Carbon::parse($validated['joining_date']),
             'final_ctc'     => $validated['final_ctc'] ?? null,
-            'client_notes'  => $validated['client_notes'] ?? null,
+            'client_notes'  => $validated['client_notes'] ?? null, 'offer_letter_path' => $request->hasFile('offer_letter') ? $request->file('offer_letter')->store('offer-letters','public') : null, 'finance_offer_status' => 'pending_review', 'offer_updated_at' => now(), 'offer_updated_by' => Auth::id(),
         ]);
 
         $this->stampResolvedInvoice($application->fresh(['job.user']));
@@ -1269,13 +1736,13 @@ class ClientController extends Controller
         $validated = $request->validate([
             'joining_date' => 'required|date|after_or_equal:today',
             'final_ctc'    => 'nullable|numeric|min:0',
-            'client_notes' => 'nullable|string|max:1000',
+            'client_notes' => 'nullable|string|max:1000', 'offer_letter' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
         $application->update([
             'joining_date' => Carbon::parse($validated['joining_date']),
             'final_ctc'    => $validated['final_ctc'] ?? $application->final_ctc,
-            'client_notes' => $validated['client_notes'] ?? null,
+            'client_notes' => $validated['client_notes'] ?? null, 'offer_letter_path' => $request->hasFile('offer_letter') ? $request->file('offer_letter')->store('offer-letters','public') : $application->offer_letter_path, 'finance_offer_status' => 'pending_review', 'offer_updated_at' => now(), 'offer_updated_by' => Auth::id(),
         ]);
 
         $this->stampResolvedInvoice($application->fresh(['job.user']));
@@ -1436,24 +1903,11 @@ class ClientController extends Controller
             $query->whereDate('joining_date', '<=', $to);
         }
 
-        $hires = $query->latest('joining_date')->paginate(25)->withQueryString();
-        $billingData = $hires->through(fn ($app) => $app->billingSnapshot());
-
         $statusFilter = $request->input('status');
-        if ($statusFilter) {
-            $billingData->setCollection(
-                $billingData->getCollection()->filter(fn ($row) => $row['status'] === $statusFilter)->values()
-            );
-        }
-
-        // Status counts across the WHOLE filtered dataset.
-        // Load a slim version (no eager-loaded relations) to avoid pulling
-        // job.user/candidate/candidateUser for every billable row. Status is
-        // computed in PHP because it depends on the resolved commercial
-        // configuration, not a single column, so we still need per-row evaluation
-        // — but with the slim load this stays cheap.
+        // Billing status is resolved from commercial terms, so we must filter the
+        // complete result set before building a page of invoices.
         $allFiltered = (clone $query)
-            ->setEagerLoads([])
+            ->latest('joining_date')
             ->get()
             ->map(fn ($a) => $a->billingSnapshot());
         $counts = [
@@ -1472,13 +1926,58 @@ class ClientController extends Controller
             'overdue_count'  => $allFiltered->where('status', 'Overdue')->count(),
         ];
 
+        $displayRows = $statusFilter
+            ? $allFiltered->filter(fn ($row) => $row['status'] === $statusFilter)->values()
+            : $allFiltered->values();
+        $allowedPerPage = [10, 20, 50];
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, $allowedPerPage, true)) $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $billingData = new LengthAwarePaginator(
+            $displayRows->forPage($currentPage, $perPage)->values(),
+            $displayRows->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         // Dropdown options
         $clientJobs = Job::where('user_id', $client->id)
             ->whereHas('jobApplications', fn ($q) => $q->where('hiring_status', 'Selected')->whereNotNull('joining_date'))
             ->orderBy('title')
             ->get(['id', 'title']);
 
-        return view('client.billing.index', compact('billingData', 'counts', 'statusFilter', 'summary', 'clientJobs'));
+        return view('client.billing.index', compact('billingData', 'counts', 'statusFilter', 'summary', 'clientJobs', 'perPage', 'allowedPerPage'));
+    }
+
+    /**
+     * Download a deliberately non-tax demo invoice for a billable placement.
+     * Real issuer, GST and bank details must be configured before issuing a tax invoice.
+     */
+    public function downloadDemoInvoice(JobApplication $application, InvoiceDocumentService $invoiceDocuments)
+    {
+        $application->load(['job.user.clientProfile', 'candidate', 'candidateUser']);
+
+        abort_unless($application->job?->user_id === Auth::id(), 403);
+        abort_unless($application->hiring_status === 'Selected' && $application->joining_date, 422, 'This application is not billable yet.');
+
+        $invoice = $application->billingSnapshot();
+        abort_if((float) ($invoice['invoice_amount'] ?? 0) <= 0, 422, 'Commercials must be configured before a demo invoice can be generated.');
+
+        $document = $invoiceDocuments->build($application, $invoice);
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', false);
+        $options->set('defaultFont', 'DejaVu Sans');
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml(view('invoices.placement-invoice-pdf', compact('document'))->render());
+        $dompdf->setPaper('A4');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str_replace('/', '-', $document['invoiceNumber']).'.pdf"',
+        ]);
     }
 
     /**
@@ -1518,11 +2017,21 @@ class ClientController extends Controller
     {
         $application->load(['job.user', 'candidate.partner', 'candidateUser']);
         
-        $admins = User::role('Superadmin')->get();
+        $admins = User::role(['Superadmin', 'Manager'])->get();
         Notification::send($admins, $notification);
 
-        if ($application->candidate && $application->candidate->partner) {
+        if ($application->candidate && $application->candidate->partner?->hasRole('partner')) {
             $partner = $application->candidate->partner;
+            $partner->notify($notification);
+        }
+    }
+
+    private function notifySourcingPartner($notification, JobApplication $application): void
+    {
+        $application->loadMissing('candidate.partner');
+        $partner = $application->candidate?->partner;
+
+        if ($partner?->hasRole('partner')) {
             $partner->notify($notification);
         }
     }
