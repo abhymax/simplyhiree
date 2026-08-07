@@ -141,18 +141,19 @@ class ClientController extends Controller
         }
 
         // --- Daily Pulse (real client-relevant metrics) ---
-        $selectionRatio = $funnelShortlisted > 0
-            ? round(($funnelOffered + $funnelJoined) / $funnelShortlisted * 100)
-            : 0;
-        
-        // Client response = % of shortlisted candidates acted on (anything past 'Approved' with a hiring decision)
+        // Base ratios on the total client-visible pipeline. 'Shortlisted' is an
+        // optional stage (candidates can be Selected without being Shortlisted),
+        // so using it as the denominator produced >100% figures.
+        $pipelineBase = max(1, $funnelApplied);
+        $selectionRatio = min(100, (int) round(($funnelOffered + $funnelJoined) / $pipelineBase * 100));
+
+        // Client response = % of surfaced candidates the client has acted on.
         $actedOn = JobApplication::whereIn('job_id', $jobIds)
             ->where('status', 'Approved')
             ->where(function ($q) {
                 $q->whereNotNull('hiring_status')->orWhereNotNull('joined_status');
             })->count();
-        $clientResponseRate = $funnelShortlisted > 0 ? round($actedOn / max($funnelShortlisted, 1) * 100) : 0;
-        if ($clientResponseRate > 100) $clientResponseRate = 100;
+        $clientResponseRate = min(100, (int) round($actedOn / $pipelineBase * 100));
         
         // Pending follow-ups = approved candidates with no hiring action yet
         $pendingFollowUps = JobApplication::whereIn('job_id', $jobIds)
@@ -184,9 +185,39 @@ class ClientController extends Controller
         $performance = [
             'selection_ratio'   => $selectionRatio,
             'response_rate'     => $clientResponseRate,
-            'fill_rate'         => $totalJobs > 0 ? round($funnelJoined / max($totalJobs, 1) * 100) : 0,
-            'interview_rate'    => $funnelShortlisted > 0 ? round($funnelInterview / max($funnelShortlisted, 1) * 100) : 0,
+            'fill_rate'         => min(100, $totalJobs > 0 ? (int) round($funnelJoined / max($totalJobs, 1) * 100) : 0),
+            'interview_rate'    => min(100, (int) round($funnelInterview / $pipelineBase * 100)),
         ];
+
+        // --- Sourcing Channel Performance (real: submissions split by channel) ---
+        // Partner/vendor-sourced submissions carry a vendor-pool candidate_id;
+        // direct-registration candidates apply with a candidate_user_id.
+        $channelWin = function ($channelCol) use ($jobIds) {
+            return JobApplication::whereIn('job_id', $jobIds)
+                ->whereNotNull($channelCol)
+                ->where(fn ($q) => $q->where('hiring_status', 'Selected')->orWhere('joined_status', 'Joined'))
+                ->count();
+        };
+        $partnerSubs = JobApplication::whereIn('job_id', $jobIds)->whereNotNull('candidate_id')->count();
+        $directSubs  = JobApplication::whereIn('job_id', $jobIds)->whereNotNull('candidate_user_id')->count();
+        $channelTotal = max(1, $partnerSubs + $directSubs);
+        $sourcingChannels = [
+            [
+                'label' => 'Sourcing Partner Networks',
+                'count' => $partnerSubs,
+                'share' => (int) round($partnerSubs / $channelTotal * 100),
+                'rate'  => $partnerSubs > 0 ? (int) round($channelWin('candidate_id') / $partnerSubs * 100) : 0,
+                'color' => 'emerald',
+            ],
+            [
+                'label' => 'Direct Applicant Pool',
+                'count' => $directSubs,
+                'share' => (int) round($directSubs / $channelTotal * 100),
+                'rate'  => $directSubs > 0 ? (int) round($channelWin('candidate_user_id') / $directSubs * 100) : 0,
+                'color' => 'blue',
+            ],
+        ];
+        $sourcingTotal = $partnerSubs + $directSubs;
 
         // Retrieve paginated jobs list for dashboard display
         $jobs = Job::where('user_id', $client->id)
@@ -216,6 +247,8 @@ class ClientController extends Controller
             'dailyPulse' => $dailyPulse,
             'topRequirements' => $topRequirements,
             'performance' => $performance,
+            'sourcingChannels' => $sourcingChannels,
+            'sourcingTotal' => $sourcingTotal,
         ]);
     }
 
