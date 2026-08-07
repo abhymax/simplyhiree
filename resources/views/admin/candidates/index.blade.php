@@ -29,19 +29,27 @@
         @endif
 
         {{-- Source tabs --}}
+        @php
+            $tabQuery = request()->except(['source', 'page']);
+            $sourceTabs = [
+                'all'    => ['All', 'fa-layer-group', $totalCount],
+                'vendor' => ['Vendor-uploaded', 'fa-handshake', $vendorCount],
+                'direct' => ['Direct registrations', 'fa-user-circle', $directCount],
+            ];
+            $sourceLabel = ['all' => 'total', 'vendor' => 'vendor-uploaded', 'direct' => 'direct-registration'][$source] ?? 'total';
+        @endphp
         <div class="flex flex-wrap items-center gap-2 mb-4">
             <span class="text-xs uppercase tracking-wider text-slate-400 font-bold mr-1">Source:</span>
-            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border bg-purple-500/20 text-purple-100 border-purple-400/40 shadow-lg">
-                <i class="fa-solid fa-handshake"></i> Vendor-uploaded
-                <span class="text-purple-200">{{ $vendorCount }}</span>
-            </span>
-            <a href="{{ route('admin.users.index') }}"
-               class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border bg-white/5 text-slate-300 border-white/15 hover:bg-white/10 hover:text-white transition">
-                <i class="fa-solid fa-user-circle"></i> Direct registrations
-                <span class="text-slate-400">{{ $directCount }}</span>
-            </a>
+            @foreach($sourceTabs as $key => [$label, $icon, $count])
+                @php $active = $source === $key; @endphp
+                <a href="{{ route('admin.candidates.index', array_merge($tabQuery, ['source' => $key])) }}"
+                   class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition {{ $active ? 'bg-purple-500/20 text-purple-100 border-purple-400/40 shadow-lg' : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid {{ $icon }}"></i> {{ $label }}
+                    <span class="{{ $active ? 'text-purple-200' : 'text-slate-400' }}">{{ $count }}</span>
+                </a>
+            @endforeach
             <span class="ml-auto text-xs text-slate-400">
-                Showing <span class="text-white font-bold">{{ $candidates->total() }}</span> of {{ $vendorCount }} vendor candidates
+                Showing <span class="text-white font-bold">{{ $candidates->total() }}</span> {{ $sourceLabel }} candidates
             </span>
         </div>
 
@@ -101,6 +109,7 @@
 
         {{-- Unified Filter Bar --}}
         <form method="GET" action="{{ route('admin.candidates.index') }}" class="mb-6 bg-slate-900/60 backdrop-blur-md border border-white/15 rounded-2xl p-5 shadow-xl">
+            <input type="hidden" name="source" value="{{ $source }}">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 
                 {{-- Search (Name, Email, Mobile) --}}
@@ -165,7 +174,7 @@
 
             <div class="flex justify-end gap-2 mt-4 border-t border-white/10 pt-4">
                 @if(request()->anyFilled(['search', 'skill', 'job_role', 'client_id', 'partner_id', 'hiring_workflow']))
-                    <a href="{{ route('admin.candidates.index') }}" 
+                    <a href="{{ route('admin.candidates.index', ['source' => $source]) }}"
                        class="px-4 py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-400/40 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                         <i class="fa-solid fa-xmark"></i> Clear Filters
                     </a>
@@ -203,7 +212,7 @@
                             @endphp
                             <tr class="hover:bg-white/5 transition">
                                 <td class="px-5 py-4">
-                                    <a href="{{ route('admin.candidates.show', $c->id) }}" class="flex items-center gap-3 group">
+                                    <a href="{{ $c->detail_url }}" class="flex items-center gap-3 group">
                                         <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white ring-1 ring-white/20 group-hover:ring-cyan-400 transition">{{ $initial }}</div>
                                         <div>
                                             <div class="font-bold text-white group-hover:text-cyan-300 transition">{{ $name }}</div>
@@ -249,9 +258,13 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-4">
-                                    @if($c->partner)
+                                    @if($c->source_type === 'vendor' && $c->partner_name)
                                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-purple-500/20 border border-purple-400/40 text-purple-100 text-[11px] font-bold">
-                                            <i class="fa-solid fa-handshake"></i> {{ \Illuminate\Support\Str::limit($c->partner->name, 14) }}
+                                            <i class="fa-solid fa-handshake"></i> {{ \Illuminate\Support\Str::limit($c->partner_name, 14) }}
+                                        </span>
+                                    @elseif($c->source_type === 'direct')
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/20 border border-cyan-400/40 text-cyan-100 text-[11px] font-bold">
+                                            <i class="fa-solid fa-user-circle"></i> Direct
                                         </span>
                                     @else
                                         <span class="text-slate-500 text-xs">—</span>
@@ -265,7 +278,7 @@
                                                 <i class="fa-solid fa-file-pdf text-xs"></i>
                                             </a>
                                         @endif
-                                        <a href="{{ route('admin.candidates.show', $c->id) }}"
+                                        <a href="{{ $c->detail_url }}"
                                            class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition">
                                             View
                                         </a>
