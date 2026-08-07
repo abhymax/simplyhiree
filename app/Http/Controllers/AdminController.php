@@ -729,9 +729,19 @@ class AdminController extends Controller
         if ($user->hasRole('Superadmin') && auth()->id() !== $user->id) {
              return redirect()->back()->with('error', 'Cannot change Superadmin credentials.');
         }
-        $validated = $request->validate(['password' => ['required', 'confirmed', Rules\Password::defaults()]]);
-        $user->update(['password' => Hash::make($validated['password'])]);
-        return redirect()->back()->with('success', 'User credentials updated successfully.');
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'password' => ['required', 'confirmed', Rules\Password::min(8)],
+        ]);
+        if ($validator->fails()) {
+            // Surface the reason AND re-open this user's modal so it is not a silent no-op.
+            return redirect()->back()
+                ->withErrors($validator)
+                ->with('pwd_modal_user', $user->id)
+                ->with('error', 'Password not updated for '.$user->name.': '.$validator->errors()->first('password'));
+        }
+        // Plain value: the User model's 'hashed' cast hashes it once on save.
+        $user->update(['password' => $request->input('password')]);
+        return redirect()->back()->with('success', 'Password updated for '.$user->name.'. They can log in with the new password now.');
     }
 
     // --- CLIENT MANAGEMENT ---

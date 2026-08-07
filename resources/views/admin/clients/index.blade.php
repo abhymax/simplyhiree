@@ -38,6 +38,13 @@
                 </div>
             @endif
 
+            @if(session('error') || $errors->any())
+                <div class="mb-8 px-6 py-4 bg-rose-500/20 border border-rose-500/50 text-rose-200 rounded-2xl font-bold flex items-center shadow-lg backdrop-blur-md">
+                    <i class="fa-solid fa-triangle-exclamation mr-3 text-2xl"></i>
+                    <span>{{ session('error') ?? $errors->first() }}</span>
+                </div>
+            @endif
+
             {{-- MAIN GLASS CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 
@@ -145,6 +152,7 @@
                                             
                                             <a href="{{ route('admin.clients.edit', $user->id) }}" title="Edit Profile" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-pen"></i></a>
                                             <a href="{{ route('admin.clients.commercials.edit', $user->id) }}" title="Set Commercials" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-amber-500 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-file-invoice-dollar"></i></a>
+                                            <button @click="$dispatch('open-modal', 'control-{{ $user->id }}')" title="Client Controls" class="h-9 w-9 rounded-lg bg-slate-700/50 hover:bg-rose-600 text-slate-300 hover:text-white transition flex items-center justify-center border border-white/10"><i class="fa-solid fa-shield-halved"></i></button>
                                             
                                             @if($user->status !== 'active')
                                                 <form action="{{ route('admin.users.status.update', $user->id) }}" method="POST" class="inline">
@@ -182,12 +190,30 @@
                                         {{-- [Password Modal logic same as before...] --}}
                                         <x-modal name="pwd-{{ $user->id }}">
                                             <div class="p-6 bg-slate-900 border border-white/20 rounded-2xl text-white text-left">
-                                                <h2 class="text-xl font-bold mb-4">Reset Password</h2>
+                                                <h2 class="text-xl font-bold mb-1">Reset Password</h2>
+                                                <p class="text-xs text-slate-400 mb-4">{{ $user->name }} · min 8 characters · both fields must match</p>
+                                                @if(session('pwd_modal_user') == $user->id && $errors->any())
+                                                    <div class="mb-4 px-3 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-200 rounded-lg text-xs">{{ $errors->first('password') }}</div>
+                                                @endif
                                                 <form method="POST" action="{{ route('admin.users.credentials.update', $user->id) }}">
                                                     @csrf @method('PATCH')
-                                                    <div class="mb-4"><label class="block text-xs font-bold text-cyan-300 mb-1">New Password</label><input type="password" name="password" class="w-full bg-slate-800 border-slate-600 rounded-xl text-white"></div>
-                                                    <div class="mb-6"><label class="block text-xs font-bold text-cyan-300 mb-1">Confirm</label><input type="password" name="password_confirmation" class="w-full bg-slate-800 border-slate-600 rounded-xl text-white"></div>
+                                                    <div class="mb-4"><label class="block text-xs font-bold text-cyan-300 mb-1">New Password</label><input type="password" name="password" required minlength="8" class="w-full bg-slate-800 border-slate-600 rounded-xl text-white"></div>
+                                                    <div class="mb-6"><label class="block text-xs font-bold text-cyan-300 mb-1">Confirm</label><input type="password" name="password_confirmation" required minlength="8" class="w-full bg-slate-800 border-slate-600 rounded-xl text-white"></div>
                                                     <div class="flex justify-end"><button class="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold">Update</button></div>
+                                                </form>
+                                            </div>
+                                        </x-modal>
+                                        @if(session('pwd_modal_user') == $user->id)
+                                            <div x-init="$nextTick(() => $dispatch('open-modal', 'pwd-{{ $user->id }}'))"></div>
+                                        @endif
+                                        <x-modal name="control-{{ $user->id }}">
+                                            <div class="p-6 bg-slate-900 border border-white/20 rounded-xl text-white text-left">
+                                                <h2 class="text-xl font-bold">Client Controls</h2><p class="text-sm text-slate-400 mt-1">{{ $user->name }} · {{ str_replace('_',' ',$user->status) }}</p>
+                                                <form method="POST" action="{{ route('admin.marketplace.clients.action', $user) }}" class="mt-5 space-y-3">@csrf
+                                                    <label class="block text-xs font-bold text-slate-300">Action<select name="action" class="mt-1 w-full bg-slate-800 border-slate-600 rounded-lg"><option value="change_type">Change client type</option><option value="freeze">Emergency freeze</option><option value="unfreeze">Unfreeze account</option></select></label>
+                                                    <label class="block text-xs font-bold text-slate-300">Client type<input name="client_type" value="{{ $user->clientProfile?->service_required }}" class="mt-1 w-full bg-slate-800 border-slate-600 rounded-lg"></label>
+                                                    <label class="block text-xs font-bold text-slate-300">Mandatory reason<textarea required name="reason" rows="3" maxlength="1000" class="mt-1 w-full bg-slate-800 border-slate-600 rounded-lg"></textarea></label>
+                                                    <button onclick="return confirm('Apply this audited client action?')" class="w-full bg-rose-700 hover:bg-rose-600 py-2 rounded-lg font-bold">Apply Control</button>
                                                 </form>
                                             </div>
                                         </x-modal>
