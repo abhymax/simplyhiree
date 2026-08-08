@@ -162,6 +162,7 @@
                                             <div class="text-cyan-200 text-xs">{{ $application->candidate->email ?? 'N/A' }}</div>
                                         </div>
                                     </a>
+                                    <x-interview-rounds :rounds="$application->interviewRounds" />
                                 </td>
                                 <td class="px-6 py-5">
                                     @if($application->job)
@@ -207,4 +208,5 @@
         </div>
     </div>
 </div>
+<x-interview-round-modal />
 @endsection

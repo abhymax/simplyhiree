@@ -258,7 +258,7 @@ class AdminController extends Controller
      */
     public function listAllCandidates(Request $request)
     {
-        $query = \App\Models\Candidate::query()->with(['partner']);
+        $query = \App\Models\Candidate::query()->with(['partner', 'jobApplications.interviewRounds']);
 
         // --- Basic ---
         if ($s = trim((string) $request->input('search'))) {
@@ -427,6 +427,7 @@ class AdminController extends Controller
                 'partner_name'            => optional($c->partner)->name,
                 'created_at'              => $c->created_at,
                 'detail_url'              => route('admin.candidates.show', $c->id),
+                'interview_rounds'        => optional($c->jobApplications->sortByDesc('id')->first(fn ($a) => $a->interviewRounds->isNotEmpty()))->interviewRounds ?? collect(),
             ];
         });
     }
@@ -509,6 +510,7 @@ class AdminController extends Controller
                 'partner_name'            => null,
                 'created_at'              => $u->created_at,
                 'detail_url'              => route('admin.users.show', $u->id),
+                'interview_rounds'        => collect(),
             ];
         });
     }

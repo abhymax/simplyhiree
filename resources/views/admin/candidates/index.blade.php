@@ -209,6 +209,8 @@
                                 $totalExp = $c->total_experience_years ?? 0;
                                 if ($c->total_experience_months) $totalExp .= 'y ' . $c->total_experience_months . 'm';
                                 else $totalExp .= 'y';
+                                // Interview rounds from the candidate's most recent application (attached in controller).
+                                $ivRounds = $c->interview_rounds ?? collect();
                             @endphp
                             <tr class="hover:bg-white/5 transition">
                                 <td class="px-5 py-4">
@@ -219,6 +221,7 @@
                                             <div class="text-[10px] font-mono text-cyan-200">{{ $code }}</div>
                                         </div>
                                     </a>
+                                    <x-interview-rounds :rounds="$ivRounds" />
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="text-xs text-blue-100"><i class="fa-regular fa-envelope mr-1 text-cyan-300"></i>{{ $c->email ?? '—' }}</div>
@@ -316,4 +319,5 @@
         </div>
     </div>
 </div>
+<x-interview-round-modal />
 </x-app-layout>

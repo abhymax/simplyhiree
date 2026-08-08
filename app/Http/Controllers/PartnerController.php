@@ -7,15 +7,35 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Job;
 use App\Models\Candidate;
 use App\Models\JobApplication;
+use App\Models\User;
 use App\Models\ExperienceLevel;
 use App\Models\EducationLevel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Services\DuplicateCandidateService;
+use Illuminate\Validation\Rule;
 
 class PartnerController extends Controller
 {
+    private function partnerPoolIds($partner): array
+    {
+        $ownerId = (int) $partner->partnerOwnerId();
+
+        return User::query()
+            ->whereKey($ownerId)
+            ->orWhere('parent_partner_id', $ownerId)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    private function ownsCandidate($partner, Candidate $candidate): bool
+    {
+        return in_array((int) $candidate->partner_id, $this->partnerPoolIds($partner), true);
+    }
+
     public function upgrade()
     {
         $partner = Auth::user();
@@ -88,9 +108,11 @@ class PartnerController extends Controller
     public function wallet()
     {
         $partner = Auth::user();
-        if (!$partner->canSeeCommercials()) abort(403, 'Access restricted.');
+        abort_unless($partner->isPartnerOwner(), 403, 'Wallet and financial information are restricted to the partner account owner.');
+        $ownerId = $partner->partnerOwnerId();
+        $poolIds = $this->partnerPoolIds($partner);
 
-        $myApps = JobApplication::whereHas('candidate', fn ($q) => $q->where('partner_id', $partner->id))
+        $myApps = JobApplication::whereHas('candidate', fn ($q) => $q->whereIn('partner_id', $poolIds))
             ->with(['job', 'candidate', 'partnerCreditNote']);
 
         $activeCount = (clone $myApps)->where('joined_status', 'Joined')->whereNull('replacement_status')->count();
@@ -101,15 +123,15 @@ class PartnerController extends Controller
             ->count();
         $replacementRequiredCount = (clone $myApps)->where('replacement_status', 'window_open')->count();
 
-        $credits = \App\Models\PartnerCreditNote::where('partner_id', $partner->id)
+        $credits = \App\Models\PartnerCreditNote::where('partner_id', $ownerId)
             ->with(['sourceApplication.job', 'sourceApplication.candidate'])
             ->latest()
             ->paginate(20);
 
         $totals = [
-            'pending'   => \App\Models\PartnerCreditNote::where('partner_id', $partner->id)->where('status', 'pending')->sum('amount'),
-            'applied'   => \App\Models\PartnerCreditNote::where('partner_id', $partner->id)->where('status', 'applied')->sum('amount'),
-            'cancelled' => \App\Models\PartnerCreditNote::where('partner_id', $partner->id)->where('status', 'cancelled')->sum('amount'),
+            'pending'   => \App\Models\PartnerCreditNote::where('partner_id', $ownerId)->where('status', 'pending')->sum('amount'),
+            'applied'   => \App\Models\PartnerCreditNote::where('partner_id', $ownerId)->where('status', 'applied')->sum('amount'),
+            'cancelled' => \App\Models\PartnerCreditNote::where('partner_id', $ownerId)->where('status', 'cancelled')->sum('amount'),
         ];
 
         $replacementsRequired = (clone $myApps)
@@ -130,16 +152,16 @@ class PartnerController extends Controller
     public function index()
     {
         $partner = Auth::user();
+        $partnerOwnerId = $partner->partnerOwnerId();
 
         // --- Morning Brief Data ---
-        $todayInterviews = JobApplication::whereHas('candidate', function ($query) use ($partner) {
-                $query->where('partner_id', $partner->id);
+        $todayInterviews = JobApplication::whereHas('candidate', function ($query) use ($partnerOwnerId) {
+                $query->where('partner_id', $partnerOwnerId);
             })
             ->whereDate('interview_at', Carbon::today())
             ->count();
 
         // Replacement requests raised by clients for this partner's candidates
-        $partnerOwnerId = $partner->parent_partner_id ?? $partner->id;
         $replacementRequests = JobApplication::with(['job', 'candidate'])
             ->whereNotNull('replacement_requested_at')
             ->whereHas('candidate', fn ($q) => $q->where('partner_id', $partnerOwnerId))
@@ -211,18 +233,90 @@ class PartnerController extends Controller
         ]);
     }
 
+    public function replacementCandidateForm(JobApplication $application)
+    {
+        $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
+        $application->load(['job', 'candidate', 'replacementApplication.candidate']);
+
+        abort_unless(
+            $application->replacement_requested_at
+            && (int) $application->candidate?->partner_id === (int) $ownerId
+            && $application->job,
+            404
+        );
+
+        $candidates = Candidate::where('partner_id', $ownerId)
+            ->whereKeyNot($application->candidate_id)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+
+        return view('partner.replacements-submit', compact('application', 'candidates'));
+    }
+
+    public function replacementCandidateStore(Request $request, JobApplication $application)
+    {
+        $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
+        $application->load(['job', 'candidate']);
+
+        abort_unless(
+            $application->replacement_requested_at
+            && (int) $application->candidate?->partner_id === (int) $ownerId
+            && $application->job,
+            404
+        );
+
+        $data = $request->validate([
+            'candidate_id' => 'required|integer|exists:candidates,id',
+            'interview_at' => $application->job->screening_required ? 'nullable|date' : 'required|date|after:now',
+        ]);
+        $candidate = Candidate::whereKey($data['candidate_id'])->where('partner_id', $ownerId)->firstOrFail();
+        $duplicateService = app(DuplicateCandidateService::class);
+        if (!$duplicateService->canSubmit($candidate)) {
+            return back()->with('error', 'This candidate is awaiting duplicate review and cannot be nominated yet.');
+        }
+
+        $replacement = JobApplication::firstOrCreate(
+            ['job_id' => $application->job_id, 'candidate_id' => $candidate->id],
+            [
+                'status' => $application->job->screening_required ? 'Pending Review' : 'Approved',
+                'hiring_status' => $application->job->screening_required ? null : 'Interview Scheduled',
+                'interview_at' => $application->job->screening_required ? null : Carbon::parse($data['interview_at']),
+                'submitted_by_user_id' => Auth::id(),
+            ]
+        );
+        if ($replacement->id === $application->id) {
+            return back()->with('error', 'The failed hire cannot replace themselves.');
+        }
+
+        $application->update([
+            'replacement_status' => 'in_progress',
+            'replacement_application_id' => $replacement->id,
+        ]);
+        $replacement->update(['replacement_status' => 'replacement_given']);
+
+        return redirect()->route('partner.replacements')->with('success', 'Replacement candidate submitted and linked to this case.');
+    }
+
     /**
      * Show the applications related to this partner.
      */
     public function applications(Request $request)
     {
         $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
+        $teamPartnerIds = User::query()
+            ->where('id', $ownerId)
+            ->orWhere('parent_partner_id', $ownerId)
+            ->pluck('id');
 
-        // Base scope: only this partner's candidates
-        $baseScope = fn($q) => $q->where('partner_id', $partner->id);
+        // Applications belong to the shared owner/team candidate pool.
+        $baseScope = fn($q) => $q->whereIn('partner_id', $teamPartnerIds);
 
         $query = JobApplication::whereHas('candidate', $baseScope)
-                    ->with(['job', 'candidate']);
+                    ->with(['job', 'candidate', 'interviewRounds']);
 
         // Filter: Interviews Today
         if ($request->has('interview_today')) {
@@ -231,8 +325,8 @@ class PartnerController extends Controller
 
         // Search by candidate name/email
         if ($search = $request->input('search')) {
-            $query->whereHas('candidate', function ($q) use ($search) {
-                $q->where('partner_id', Auth::id() ? Auth::user()->id : 0)
+            $query->whereHas('candidate', function ($q) use ($search, $teamPartnerIds) {
+                $q->whereIn('partner_id', $teamPartnerIds)
                   ->where(function ($q2) use ($search) {
                       $q2->where('first_name', 'like', "%{$search}%")
                          ->orWhere('last_name', 'like', "%{$search}%")
@@ -311,8 +405,8 @@ class PartnerController extends Controller
         // queries, each cloning a whereHas EXISTS subquery — major bottleneck).
         $countsBase = JobApplication::whereHas('candidate', $baseScope);
         if ($search = $request->input('search')) {
-            $countsBase->whereHas('candidate', function ($q) use ($search) {
-                $q->where('partner_id', $partner->id)
+            $countsBase->whereHas('candidate', function ($q) use ($search, $teamPartnerIds) {
+                $q->whereIn('partner_id', $teamPartnerIds)
                   ->where(function ($q2) use ($search) {
                       $q2->where('first_name', 'like', "%{$search}%")
                          ->orWhere('last_name', 'like', "%{$search}%")
@@ -355,9 +449,14 @@ class PartnerController extends Controller
     public function showApplication(\App\Models\JobApplication $application)
     {
         $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
+        $teamPartnerIds = User::query()
+            ->where('id', $ownerId)
+            ->orWhere('parent_partner_id', $ownerId)
+            ->pluck('id');
 
-        // Ensure this application's candidate belongs to this partner
-        if (!$application->candidate || $application->candidate->partner_id !== $partner->id) {
+        // Ensure this application's candidate belongs to this partner team.
+        if (!$application->candidate || !$teamPartnerIds->contains((int) $application->candidate->partner_id)) {
             abort(403);
         }
 
@@ -373,24 +472,11 @@ class PartnerController extends Controller
     public function jobs(Request $request)
     {
         $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
+        $teamPartnerIds = $this->partnerPoolIds($partner);
 
         $query = Job::where('status', 'approved')
-            // 1. Check Global Exclusions
-            ->whereDoesntHave('excludedPartners', function ($q) use ($partner) {
-                $q->where('user_id', $partner->id);
-            })
-            // 2. Check Visibility Logic (Admin Feature)
-            ->where(function ($q) use ($partner) {
-                // Show if Visibility is 'all'
-                $q->where('partner_visibility', 'all')
-                  // OR if Visibility is 'selected' AND partner is in allowed list
-                  ->orWhere(function ($subQ) use ($partner) {
-                      $subQ->where('partner_visibility', 'selected')
-                           ->whereHas('allowedPartners', function ($p) use ($partner) {
-                               $p->where('partner_id', $partner->id);
-                           });
-                  });
-            });
+            ->visibleToPartner($partner);
 
         // 3. Premium / bulk-hiring jobs are reserved for Pro & Enterprise plans
         //    AND partners whose rating tier is at least Pro (>= 4.0).
@@ -439,10 +525,11 @@ class PartnerController extends Controller
         // --- Eager Load ---
         // Using 'category' based on previous fixes (ensure Job model has category() or jobCategory())
         $jobs = $query->with([
-            // Scoped to only the logged-in partner's applications for security and performance
-            'jobApplications' => function ($query) use ($partner) {
-                $query->whereHas('candidate', function ($subQuery) use ($partner) {
-                    $subQuery->where('partner_id', $partner->id);
+            // Include submissions made by the owner and every member of the
+            // same partner team so the job funnel matches My Applications.
+            'jobApplications' => function ($query) use ($teamPartnerIds) {
+                $query->whereHas('candidate', function ($subQuery) use ($teamPartnerIds) {
+                    $subQuery->whereIn('partner_id', $teamPartnerIds);
                 });
             },
             'experienceLevel',
@@ -507,11 +594,12 @@ class PartnerController extends Controller
      */
     public function showJob(Job $job)
     {
-        if ($job->status !== 'approved') {
+        if ($job->status !== 'approved' || !$job->isVisibleToPartner(Auth::user())) {
             abort(404, 'This job is currently not available.');
         }
 
         $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
 
         // 1. Get Job Details. We DELIBERATELY do not eager-load the 'user'
         //    relation here — that's the client owner, and partners should not
@@ -527,8 +615,8 @@ class PartnerController extends Controller
 
         // 2. Fetch Already Applied Candidates for this Partner
         $appliedApplications = JobApplication::where('job_id', $job->id)
-                                             ->whereHas('candidate', function ($query) use ($partner) {
-                                                 $query->where('partner_id', $partner->id);
+                                             ->whereHas('candidate', function ($query) use ($ownerId) {
+                                                 $query->where('partner_id', $ownerId);
                                              })
                                              ->with('candidate')
                                              ->latest()
@@ -537,7 +625,7 @@ class PartnerController extends Controller
         $appliedCandidateIds = $appliedApplications->pluck('candidate_id')->toArray();
 
         // 3. Find Matching Candidates from this Partner's Pool
-        $myCandidates = Candidate::where('partner_id', $partner->id)
+        $myCandidates = Candidate::where('partner_id', $ownerId)
                                  ->whereNotIn('id', $appliedCandidateIds)
                                  ->get();
         
@@ -568,11 +656,12 @@ class PartnerController extends Controller
     public function earnings()
     {
         $partner = Auth::user();
-        if (!$partner->canSeeCommercials()) abort(403, 'Access restricted.');
+        abort_unless($partner->isPartnerOwner(), 403, 'Earnings and payout information are restricted to the partner account owner.');
+        $poolIds = $this->partnerPoolIds($partner);
 
         $placements = JobApplication::where('joined_status', 'Joined')
-                                    ->whereHas('candidate', function ($query) use ($partner) {
-                                        $query->where('partner_id', $partner->id);
+                                    ->whereHas('candidate', function ($query) use ($poolIds) {
+                                        $query->whereIn('partner_id', $poolIds);
                                     })
                                     ->with(['job', 'candidate'])
                                     ->get();
@@ -626,9 +715,10 @@ class PartnerController extends Controller
         ]);
 
         $partner = Auth::user();
+        $poolIds = $this->partnerPoolIds($partner);
         $phone = $request->input('phone_number');
 
-        $existingCandidate = Candidate::where('partner_id', $partner->id)
+        $existingCandidate = Candidate::whereIn('partner_id', $poolIds)
                                       ->where('phone_number', $phone)
                                       ->first();
 
@@ -653,12 +743,14 @@ class PartnerController extends Controller
     public function storeCandidate(Request $request)
     {
         $partner = Auth::user();
+        $ownerId = (int) $partner->partnerOwnerId();
+        $poolIds = $this->partnerPoolIds($partner);
 
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:candidates,email,NULL,id,partner_id,'.$partner->id,
-            'phone_number' => 'required|string|max:20|unique:candidates,phone_number,NULL,id,partner_id,'.$partner->id,
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('candidates', 'email')->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
+            'phone_number' => ['required', 'string', 'max:20', Rule::unique('candidates', 'phone_number')->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'alternate_phone_number' => 'nullable|string|max:20',
             'location' => 'required|string|max:255',
             'preferred_locations' => 'required|string|max:500',
@@ -683,7 +775,12 @@ class PartnerController extends Controller
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        $validatedData['partner_id'] = $partner->id;
+        $duplicateService = app(DuplicateCandidateService::class);
+        $resumeFingerprint = $duplicateService->fingerprint($request->file('resume'));
+        $assessment = $duplicateService->assess($ownerId, $validatedData['email'] ?? null, $validatedData['phone_number'], $resumeFingerprint);
+        $validatedData['partner_id'] = $ownerId;
+        $validatedData['resume_fingerprint'] = $resumeFingerprint;
+        $validatedData['duplicate_status'] = 'clear';
         $validatedData['preferred_locations'] = array_values(array_filter(array_map('trim', explode(',', $validatedData['preferred_locations']))));
 
         if ($request->hasFile('resume')) {
@@ -693,6 +790,7 @@ class PartnerController extends Controller
         unset($validatedData['resume']);
 
         $candidate = Candidate::create($validatedData);
+        $duplicateService->quarantine($candidate, $assessment, 'candidate_create_web');
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -708,8 +806,9 @@ class PartnerController extends Controller
     public function listCandidates(Request $request)
     {
         $partner = Auth::user();
+        $poolIds = $this->partnerPoolIds($partner);
 
-        $query = Candidate::where('partner_id', $partner->id);
+        $query = Candidate::whereIn('partner_id', $poolIds);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -730,7 +829,7 @@ class PartnerController extends Controller
 
         $candidates = $query->latest()->paginate(20)->withQueryString();
 
-        $locations = Candidate::where('partner_id', $partner->id)
+        $locations = Candidate::whereIn('partner_id', $poolIds)
                         ->whereNotNull('location')
                         ->distinct()
                         ->orderBy('location')
@@ -741,7 +840,7 @@ class PartnerController extends Controller
 
     public function showCandidate(Candidate $candidate)
     {
-        if ($candidate->partner_id !== Auth::id()) {
+        if (!$this->ownsCandidate(Auth::user(), $candidate)) {
             abort(403);
         }
         return view('partner.candidates.show', compact('candidate'));
@@ -749,7 +848,7 @@ class PartnerController extends Controller
 
     public function editCandidate(Candidate $candidate)
     {
-        if ($candidate->partner_id !== Auth::id()) {
+        if (!$this->ownsCandidate(Auth::user(), $candidate)) {
             abort(403);
         }
         return view('partner.candidates.edit', compact('candidate'));
@@ -757,17 +856,18 @@ class PartnerController extends Controller
 
     public function updateCandidate(Request $request, Candidate $candidate)
     {
-        if ($candidate->partner_id !== Auth::id()) {
+        if (!$this->ownsCandidate(Auth::user(), $candidate)) {
             abort(403);
         }
 
         $partner = Auth::user();
+        $poolIds = $this->partnerPoolIds($partner);
 
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:candidates,email,'.$candidate->id.',id,partner_id,'.$partner->id,
-            'phone_number' => 'required|string|max:20|unique:candidates,phone_number,'.$candidate->id.',id,partner_id,'.$partner->id,
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('candidates', 'email')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
+            'phone_number' => ['required', 'string', 'max:20', Rule::unique('candidates', 'phone_number')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'alternate_phone_number' => 'nullable|string|max:20',
             'location' => 'required|string|max:255',
             'preferred_locations' => 'required|string|max:500',
@@ -793,6 +893,10 @@ class PartnerController extends Controller
         ]);
 
         $validatedData['preferred_locations'] = array_values(array_filter(array_map('trim', explode(',', $validatedData['preferred_locations']))));
+        $duplicateService = app(DuplicateCandidateService::class);
+        $resumeFingerprint = $request->hasFile('resume') ? $duplicateService->fingerprint($request->file('resume')) : $candidate->resume_fingerprint;
+        $assessment = $duplicateService->assess($partner->partnerOwnerId(), $validatedData['email'] ?? null, $validatedData['phone_number'], $resumeFingerprint, $candidate->id);
+        $validatedData['resume_fingerprint'] = $resumeFingerprint;
 
         if ($request->hasFile('resume')) {
             if ($candidate->resume_path && Storage::disk('public')->exists($candidate->resume_path)) {
@@ -804,41 +908,102 @@ class PartnerController extends Controller
         unset($validatedData['resume']);
 
         $candidate->update($validatedData);
+        $duplicateService->quarantine($candidate, $assessment, 'candidate_update_web');
 
         return redirect()->route('partner.candidates.show', $candidate->id)->with('success', 'Candidate updated successfully!');
     }
 
+    public function updateCandidateResume(Request $request, Candidate $candidate)
+    {
+        if (!$this->ownsCandidate(Auth::user(), $candidate)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'resume' => 'required|file|mimes:pdf,doc,docx|max:10240', // max 10MB
+        ]);
+
+        $file = $request->file('resume');
+        $duplicateService = app(DuplicateCandidateService::class);
+        $resumeFingerprint = $duplicateService->fingerprint($file);
+        $assessment = $duplicateService->assess($candidate->partner_id, $candidate->email, $candidate->phone_number, $resumeFingerprint, $candidate->id);
+        $path = $file->store('resumes', 'public');
+
+        // Delete old resume if exists
+        if ($candidate->resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($candidate->resume_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($candidate->resume_path);
+        }
+
+        $candidate->update(['resume_path' => $path, 'resume_fingerprint' => $resumeFingerprint]);
+        $duplicateService->quarantine($candidate, $assessment, 'candidate_resume_update_web');
+
+        return redirect()->back()->with('success', 'Candidate resume updated successfully!');
+    }
+
     public function showApplyForm(Job $job)
     {
-        if ($job->status !== 'approved') {
+        if ($job->status !== 'approved' || !$job->isVisibleToPartner(Auth::user())) {
             abort(404, 'This job is currently not available.');
         }
 
         $partner = Auth::user();
-        $candidates = Candidate::where('partner_id', $partner->id)
+        $ownerId = $partner->partnerOwnerId();
+        $poolIds = $this->partnerPoolIds($partner);
+        $candidates = Candidate::whereIn('partner_id', $poolIds)
                                 ->latest()
                                 ->get();
+        $appliedCandidateIds = JobApplication::where('job_id', $job->id)
+            ->whereIn('candidate_id', $candidates->pluck('id'))
+            ->pluck('candidate_id')
+            ->map(fn ($candidateId) => (int) $candidateId)
+            ->all();
 
         return view('partner.jobs.apply', [
             'job' => $job,
-            'candidates' => $candidates
+            'candidates' => $candidates,
+            'appliedCandidateIds' => $appliedCandidateIds,
         ]);
     }
 
     public function submitApplication(Request $request, Job $job)
     {
-        if ($job->status !== 'approved') {
+        if ($job->status !== 'approved' || !$job->isVisibleToPartner(Auth::user())) {
             return back()->with('error', 'This job is no longer accepting applications.');
         }
 
         $request->validate([
             'candidate_ids' => 'required|array|min:1',
             'candidate_ids.*' => 'exists:candidates,id',
+            'interview_at' => $job->screening_required ? 'nullable|date' : 'required|date|after:now',
         ]);
 
         $partner = Auth::user();
+        $ownerId = $partner->partnerOwnerId();
+        $poolIds = $this->partnerPoolIds($partner);
+        $requestedCandidateIds = collect($request->input('candidate_ids'))
+            ->map(fn ($candidateId) => (int) $candidateId)
+            ->unique()
+            ->values();
+        $candidateIds = Candidate::whereIn('partner_id', $poolIds)
+            ->whereIn('id', $requestedCandidateIds)
+            ->pluck('id')
+            ->map(fn ($candidateId) => (int) $candidateId);
+
+        if ($candidateIds->isEmpty()) {
+            return redirect()->back()->with('error', 'No valid candidates from your candidate pool were selected.');
+        }
+
+        $alreadySubmittedIds = JobApplication::where('job_id', $job->id)
+            ->whereIn('candidate_id', $candidateIds)
+            ->pluck('candidate_id')
+            ->map(fn ($candidateId) => (int) $candidateId);
+        $newCandidateIds = $candidateIds->diff($alreadySubmittedIds)->values();
+
+        if ($newCandidateIds->isEmpty()) {
+            return redirect()->back()->with('error', 'All selected candidates have already been submitted for this job.');
+        }
+
         // 3. Plan-based monthly submission cap.
-        $ownerId   = $partner->partnerOwnerId();
         $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
         $plan = \App\Models\PartnerPlan::where('name', $ownerPlan)->first();
         if ($plan && $plan->monthly_submission_limit !== null) {
@@ -849,7 +1014,8 @@ class PartnerController extends Controller
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count();
-            $attemptingToSubmit = count($request->input('candidate_ids'));
+            // Previously submitted candidates must never consume quota again.
+            $attemptingToSubmit = $newCandidateIds->count();
             if (($thisMonth + $attemptingToSubmit) > $cap) {
                 return redirect()->back()->with('error',
                     "Your {$ownerPlan} plan allows {$cap} submissions / month. You've used {$thisMonth}. Upgrade your plan to submit more.");
@@ -857,16 +1023,30 @@ class PartnerController extends Controller
         }
 
         $submittedCount = 0;
+        $blockedCount = 0;
+        $duplicateService = app(DuplicateCandidateService::class);
         // Screening branching: Mode 3 (client unchecked) skips admin queue.
         $initialStatus = ($job->screening_required ?? true) ? 'Pending Review' : 'Approved';
 
-        foreach ($request->input('candidate_ids') as $candidateId) {
+        foreach ($newCandidateIds as $candidateId) {
             // Verify candidate belongs to partner
             $candidate = Candidate::where('id', $candidateId)
-                                  ->where('partner_id', $partner->id)
+                                  ->whereIn('partner_id', $poolIds)
                                   ->first();
             
             if (!$candidate) continue;
+
+            if (!$duplicateService->canSubmit($candidate)) {
+                $blockedCount++;
+                continue;
+            }
+
+            $identityConflict = $duplicateService->submissionConflict($candidate, $job);
+            if ($identityConflict) {
+                $duplicateService->quarantineForJobConflict($candidate, $identityConflict, $job);
+                $blockedCount++;
+                continue;
+            }
 
             $existingApplication = JobApplication::where('job_id', $job->id)
                                                  ->where('candidate_id', $candidateId)
@@ -877,6 +1057,8 @@ class PartnerController extends Controller
                     'job_id'              => $job->id,
                     'candidate_id'        => $candidateId,
                     'status'              => $initialStatus,
+                    'hiring_status'       => $job->screening_required ? null : 'Interview Scheduled',
+                    'interview_at'        => $job->screening_required ? null : Carbon::parse($request->input('interview_at')),
                     'submitted_by_user_id' => Auth::id(),
                 ]);
                 $submittedCount++;
@@ -885,9 +1067,12 @@ class PartnerController extends Controller
 
         if ($submittedCount > 0) {
             $message = $submittedCount . ' ' . Str::plural('application', $submittedCount) . ' submitted successfully!';
+            if ($blockedCount > 0) $message .= " {$blockedCount} duplicate candidate(s) were blocked and sent for Superadmin review.";
             return redirect()->route('partner.jobs')->with('success', $message);
         } else {
-            return redirect()->back()->with('info', 'All selected candidates have already been submitted for this job.');
+            return redirect()->back()->with('error', $blockedCount > 0
+                ? 'Submission blocked: selected candidate(s) are duplicates or awaiting Superadmin review.'
+                : 'All selected candidates have already been submitted for this job.');
         }
     }
 }
