@@ -36,13 +36,18 @@
                                    class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
                         </div>
                         <div>
+                            <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Team name *</label>
+                            <input type="text" name="team_name" :value="editMember.team_name" required
+                                   class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                        </div>
+                        <div>
                             <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Email *</label>
                             <input type="email" name="email" :value="editMember.email" required
                                    class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
                         </div>
                         <div>
-                            <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Mobile</label>
-                            <input type="text" name="mobile" :value="editMember.mobile"
+                            <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Mobile *</label>
+                            <input type="text" name="mobile" :value="editMember.mobile" required
                                    class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
                         </div>
                         <div>
@@ -127,15 +132,19 @@
                 @csrf
                 <div>
                     <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Name *</label>
-                    <input type="text" name="name" required placeholder="Full name" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Full name" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Team name *</label>
+                    <input type="text" name="team_name" value="{{ old('team_name') }}" required placeholder="e.g. North Zone Team" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
                 </div>
                 <div>
                     <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Email *</label>
-                    <input type="email" name="email" required placeholder="Login email" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="Login email" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
                 </div>
                 <div>
-                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Mobile</label>
-                    <input type="text" name="mobile" placeholder="Phone number" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Mobile *</label>
+                    <input type="text" name="mobile" value="{{ old('mobile') }}" required placeholder="Phone number" class="w-full bg-slate-800 border border-white/20 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
                 </div>
                 <div>
                     <label class="block text-xs text-blue-200 font-bold uppercase tracking-wide mb-1">Role *</label>
@@ -158,7 +167,7 @@
                 </div>
                 <div class="md:col-span-3">
                     <button type="submit"
-                            class="px-8 py-2.5 rounded-xl text-sm font-bold text-slate-900 transition-all hover:-translate-y-0.5"
+                            class="px-8 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:-translate-y-0.5"
                             style="background: linear-gradient(135deg,#22d3ee,#0ea5e9); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
                         <i class="fa-solid fa-user-plus mr-2"></i>Create Member
                     </button>
@@ -183,7 +192,9 @@
                             <th class="px-5 py-4 text-right">Submitted</th>
                             <th class="px-5 py-4 text-right">Shortlisted</th>
                             <th class="px-5 py-4 text-right">Joined</th>
-                            <th class="px-5 py-4 text-right">Revenue</th>
+                            @if(auth()->user()->isPartnerOwner())
+                                <th class="px-5 py-4 text-right">Revenue</th>
+                            @endif
                             <th class="px-5 py-4">Status</th>
                             <th class="px-5 py-4 text-right">Actions</th>
                         </tr>
@@ -200,12 +211,13 @@
                                 <td class="px-5 py-4">
                                     <div class="font-bold flex items-center gap-2">
                                         {{ $m->name }}
+                                        @if(!$isOwner && filled($m->team_name)) <span class="text-emerald-200 text-[10px] uppercase font-bold border border-emerald-400/30 bg-emerald-500/10 px-1.5 py-0.5 rounded"><i class="fa-solid fa-users-line mr-1"></i>{{ $m->team_name }}</span> @endif
                                         @if($isOwner) <span class="text-cyan-300 text-[10px] uppercase font-bold border border-cyan-400/30 px-1.5 py-0.5 rounded">Owner</span> @endif
                                         @if($isArchived) <span class="text-rose-300 text-[10px] uppercase font-bold border border-rose-400/30 px-1.5 py-0.5 rounded">Archived</span> @endif
                                     </div>
                                     <div class="text-xs text-blue-300">{{ $m->email }}</div>
                                     @if($m->profile?->phone_number)
-                                        <div class="text-xs text-blue-400">{{ $m->profile->phone_number }}</div>
+                                        <div class="text-xs text-blue-400"><i class="fa-solid fa-phone mr-1 text-[9px]"></i>{{ $m->profile->phone_number }}</div>
                                     @endif
                                 </td>
                                 <td class="px-5 py-4 text-xs">
@@ -220,7 +232,9 @@
                                 <td class="px-5 py-4 text-right text-white/80">{{ $s->submitted ?? 0 }}</td>
                                 <td class="px-5 py-4 text-right text-white/80">{{ $s->shortlisted ?? 0 }}</td>
                                 <td class="px-5 py-4 text-right text-emerald-300 font-bold">{{ $s->joined ?? 0 }}</td>
-                                <td class="px-5 py-4 text-right text-emerald-300 font-extrabold">{{ $rev ? '₹'.number_format($rev) : '—' }}</td>
+                                @if(auth()->user()->isPartnerOwner())
+                                    <td class="px-5 py-4 text-right text-emerald-300 font-extrabold">{{ $rev ? '₹'.number_format($rev) : '—' }}</td>
+                                @endif
                                 <td class="px-5 py-4">
                                     @php
                                         $statusStyle = match($m->status ?? 'active') {
@@ -243,6 +257,7 @@
                                                         @click="editMember = {
                                                             id: {{ $m->id }},
                                                             name: @js($m->name),
+                                                            team_name: @js($m->team_name ?? ''),
                                                             email: @js($m->email),
                                                             mobile: @js($m->profile?->phone_number ?? ''),
                                                             team_role: @js($m->team_role ?? 'Recruiter'),

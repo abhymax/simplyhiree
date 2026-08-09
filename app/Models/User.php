@@ -23,8 +23,12 @@ class User extends Authenticatable
         'google_id',
         'billable_period_days',
         'status',
+        'marketing_consent',
+        'marketing_consent_at',
+        'marketing_consent_source',
         'parent_partner_id',
         'team_role',
+        'team_name',
         'access_level',
         'partner_tier',
         'partner_plan',
@@ -51,6 +55,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'marketing_consent' => 'boolean',
+            'marketing_consent_at' => 'datetime',
         ];
     }
 
@@ -74,6 +80,7 @@ class User extends Authenticatable
                     'client' => 'CLT',
                     'partner' => 'PRT',
                     'candidate' => 'CND',
+                    'referral_partner' => 'RFR',
                     'superadmin' => 'ADM',
                     'manager' => 'MGR',
                     default => 'USR',
@@ -119,6 +126,16 @@ class User extends Authenticatable
     public function clientCommercial(): HasOne
     {
         return $this->hasOne(\App\Models\ClientCommercial::class);
+    }
+
+    public function referralPartnerProfile(): HasOne
+    {
+        return $this->hasOne(ReferralPartnerProfile::class);
+    }
+
+    public function referredClients(): HasMany
+    {
+        return $this->hasMany(ClientReferral::class, 'referral_partner_id');
     }
 
     /** Client → their preferred partner pool */

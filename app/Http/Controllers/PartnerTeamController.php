@@ -23,11 +23,12 @@ class PartnerTeamController extends Controller
 
     public function index()
     {
-        $owner = Auth::user();
-        if (!$owner->isPartnerOwner() && !$owner->hasRole('partner')) {
+        $viewer = Auth::user();
+        if (!$viewer->hasRole('partner')) {
             abort(403);
         }
-        $ownerId = $owner->partnerOwnerId();
+        $ownerId = $viewer->partnerOwnerId();
+        $owner = User::findOrFail($ownerId);
 
         $members = User::where('parent_partner_id', $ownerId)
             ->orderBy('name')
@@ -73,8 +74,9 @@ class PartnerTeamController extends Controller
         $owner = $this->requireOwner();
         $data = $request->validate([
             'name'         => 'required|string|max:255',
+            'team_name'    => 'required|string|max:255',
             'email'        => 'required|email|max:255|unique:users,email',
-            'mobile'       => 'nullable|string|max:20',
+            'mobile'       => 'required|string|max:20',
             'team_role'    => 'required|in:Manager,Recruiter',
             'access_level' => 'required|in:full,submissions_only,view_only',
             'password'     => 'required|string|min:8',
@@ -82,6 +84,7 @@ class PartnerTeamController extends Controller
 
         $member = User::create([
             'name'              => $data['name'],
+            'team_name'         => $data['team_name'],
             'email'             => $data['email'],
             'password'          => Hash::make($data['password']),
             'parent_partner_id' => $owner->id,
@@ -110,8 +113,9 @@ class PartnerTeamController extends Controller
 
         $data = $request->validate([
             'name'         => 'required|string|max:255',
+            'team_name'    => 'required|string|max:255',
             'email'        => ['required','email','max:255', Rule::unique('users','email')->ignore($user->id)],
-            'mobile'       => 'nullable|string|max:20',
+            'mobile'       => 'required|string|max:20',
             'team_role'    => 'required|in:Manager,Recruiter',
             'access_level' => 'required|in:full,submissions_only,view_only',
             'password'     => 'nullable|string|min:8',
@@ -119,6 +123,7 @@ class PartnerTeamController extends Controller
 
         $update = [
             'name'         => $data['name'],
+            'team_name'    => $data['team_name'],
             'email'        => $data['email'],
             'team_role'    => $data['team_role'],
             'access_level' => $data['access_level'],
