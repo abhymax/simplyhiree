@@ -939,15 +939,15 @@ class AdminController extends Controller
         if (!$user->hasRole('client')) abort(404);
 
         $commercial = \App\Models\ClientCommercial::firstOrNew(['user_id' => $user->id]);
-        $defaults = $this->defaultCommercialContractData();
 
-        // For a brand-new commercial, pre-seed every billing type with the
-        // doc defaults so the admin can see and tweak them in any tab.
+        // Start every billing type empty for a brand-new client. Only saved slabs
+        // are shown; the admin adds rows via the "+ Add" buttons. (Previously this
+        // pre-seeded doc defaults, which looked like real, pre-filled commercials.)
         $existing = is_array($commercial->contract_data) ? $commercial->contract_data : [];
         $contract = [
-            'percentage_based' => $existing['percentage_based'] ?? $defaults['percentage_based'],
-            'profile_wise'     => $existing['profile_wise']     ?? $defaults['profile_wise'],
-            'flat'             => $existing['flat']             ?? $defaults['flat'],
+            'percentage_based' => $existing['percentage_based'] ?? [],
+            'profile_wise'     => $existing['profile_wise']     ?? [],
+            'flat'             => $existing['flat']             ?? [],
         ];
 
         return view('admin.clients.commercials', [
