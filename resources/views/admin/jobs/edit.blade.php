@@ -101,8 +101,8 @@
             <h2 class="mb-5 text-xl font-bold"><i class="fa-solid fa-coins mr-2 text-amber-300"></i>Commercials & guarantee</h2>
             <div class="grid gap-5 md:grid-cols-3">
                 <div><label class="{{ $label }}">Commercial source</label><select name="commercial_source" x-model="commercial" class="{{ $input }}"><option value="simplyhire">SimplyHiree client agreement</option><option value="manual">Manual override</option></select></div>
-                <div x-show="commercial==='manual'"><label class="{{ $label }}">Fee type</label><select name="fee_type" class="{{ $input }}"><option value="flat" @selected(old('fee_type',$job->fee_type)==='flat')>Flat amount</option><option value="percentage" @selected(old('fee_type',$job->fee_type)==='percentage')>Percentage</option></select></div>
-                <div x-show="commercial==='manual'"><label class="{{ $label }}">Fee amount / %</label><input type="number" step="0.01" name="fee_amount" value="{{ old('fee_amount',$job->fee_amount) }}" class="{{ $input }}"></div>
+                <div x-cloak x-show="commercial==='manual'"><label class="{{ $label }}">Fee type</label><select name="fee_type" class="{{ $input }}"><option value="flat" @selected(old('fee_type',$job->fee_type)==='flat')>Flat amount</option><option value="percentage" @selected(old('fee_type',$job->fee_type)==='percentage')>Percentage</option></select></div>
+                <div x-cloak x-show="commercial==='manual'"><label class="{{ $label }}">Fee amount / %</label><input type="number" step="0.01" name="fee_amount" value="{{ old('fee_amount',$job->fee_amount) }}" class="{{ $input }}"></div>
                 <div><label class="{{ $label }}">Partner payout</label><input type="number" step="0.01" name="payout_amount" required value="{{ old('payout_amount',$job->payout_amount ?: 0) }}" class="{{ $input }}"></div>
                 <div><label class="{{ $label }}">Payout maturity days</label><input type="number" name="minimum_stay_days" required value="{{ old('minimum_stay_days',$job->minimum_stay_days ?: 0) }}" class="{{ $input }}"></div>
                 <div><label class="{{ $label }}">Guarantee days</label><input type="number" name="replacement_guarantee_days" value="{{ old('replacement_guarantee_days',$job->replacement_guarantee_days) }}" class="{{ $input }}"></div>
@@ -116,7 +116,7 @@
             <p class="mb-5 text-sm text-slate-400">Control which sourcing partners can access this job and when screened resumes are forwarded.</p>
             <label class="{{ $label }}">Job access</label>
             <select name="partner_visibility" x-model="visibility" class="{{ $input }}"><option value="all">All active partners</option><option value="selected">Selected partners only</option></select>
-            <div x-show="visibility==='selected'" class="mt-4 grid max-h-64 gap-2 overflow-y-auto md:grid-cols-3">
+            <div x-cloak x-show="visibility==='selected'" class="mt-4 grid max-h-64 gap-2 overflow-y-auto md:grid-cols-3">
                 @foreach($partners as $partner)<label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 p-3"><input type="checkbox" name="allowed_partners[]" value="{{ $partner->id }}" @checked(in_array($partner->id,$selectedPartners))><span>{{ $partner->name }}</span></label>@endforeach
             </div>
             <div class="mt-5 max-w-sm">
