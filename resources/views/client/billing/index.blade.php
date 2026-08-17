@@ -8,6 +8,8 @@
     .billing-filter-field:focus { border-color: #67e8f9 !important; box-shadow: 0 0 0 3px rgba(34,211,238,.15) !important; outline: none; }
     /* keep the search text clear of the magnifying-glass icon (beats .premium-form input padding) */
     .premium-form input.billing-search-input { padding-left: 2.75rem !important; }
+    /* .premium-form label:not(.btn-label) forces display:block !important, which killed the flex layout — override it with matching specificity + later order. */
+    .premium-form label.billing-date-button { display: inline-flex !important; }
     .billing-date-button { position: relative; display: inline-flex; height: 2.25rem; min-width: 3.6rem; padding: 0 .55rem; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; border: 1px solid rgba(96,165,250,.38); border-radius: .75rem; background: rgba(5,21,56,.92); color: #fff; cursor: pointer; }
     .billing-date-button > i { font-size: .85rem; color: #93c5fd; line-height: 1; }
     .billing-date-button input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
