@@ -6,6 +6,7 @@
 
     <form method="POST" action="{{ route('register.client') }}" class="space-y-4">
         @csrf
+        <input type="hidden" name="referral_code" value="{{ old('referral_code', $referralCode ?? '') }}">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {{-- Row 1: Name & Company Name --}}
@@ -108,11 +109,17 @@
             </div>
         </div>
 
+        <label class="flex items-start gap-3 rounded-xl border border-white/10 bg-slate-950/30 p-4 cursor-pointer">
+            <input type="checkbox" name="marketing_consent" value="1" {{ old('marketing_consent') ? 'checked' : '' }} class="mt-0.5 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500">
+            <span class="text-xs leading-5 text-slate-300">I agree to receive SimplyHiree product updates, recruitment insights, offers, and other marketing communications by email, WhatsApp, and in-app notification. This is optional and I can withdraw consent later.</span>
+        </label>
+        <x-input-error :messages="$errors->get('marketing_consent')" class="mt-2" />
+
         {{-- Row 6: Submit & Google SSO --}}
         <div class="pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-center border-t border-white/5 mt-4">
             <div>
                 <a href="{{ route('google.login', ['role' => 'client']) }}" class="w-full flex justify-center items-center px-4 py-3 bg-slate-950/40 border border-white/8 hover:border-blue-500/30 text-slate-200 hover:text-white rounded-xl font-extrabold text-[10px] uppercase tracking-widest shadow-md hover:bg-slate-900/60 transition-all duration-150">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="h-4 w-4 mr-2" alt="Google Logo">
+                    <img src="{{ asset('images/google.svg') }}" class="h-4 w-4 mr-2" alt="Google">
                     Google Signup
                 </a>
             </div>
