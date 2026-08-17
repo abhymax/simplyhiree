@@ -5,23 +5,23 @@
     /* Absolute exact color and layout replication from JPEG */
     nav.glass-nav { display: none !important; }
     footer { display: none !important; }
-    html, body { background-color: #06123b !important; font-family: 'Outfit', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
+    html, body { background-color: #0a1b46 !important; font-family: 'Outfit', sans-serif; overflow-x: hidden; margin: 0; padding: 0; }
     /* Neutralise the app layout's light body class + any wrapper bg on this page */
-    body.bg-slate-50 { background-color: #06123b !important; }
-    .flex.flex-col.min-h-screen { background-color: #06123b !important; }
-    main { background-color: #06123b !important; }
+    body.bg-slate-50 { background-color: #0a1b46 !important; }
+    .flex.flex-col.min-h-screen { background-color: #0a1b46 !important; }
+    main { background-color: #0a1b46 !important; }
     main { padding: 0 !important; }
 
     /* Scrollbar Styling */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #06123b; }
+    ::-webkit-scrollbar-track { background: #0a1b46; }
     ::-webkit-scrollbar-thumb { background: #111827; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #1f2937; }
 
     /* Left Sidebar - Exact Match */
     .custom-sidebar {
         width: 250px;
-        background-color: #06123b;
+        background-color: #10275a;
         border-right: 1px solid rgba(59, 130, 246, 0.08);
         display: flex;
         flex-direction: column;
@@ -61,21 +61,32 @@
         border-radius: 10px;
         font-size: 13.5px;
         font-weight: 500;
-        color: #64748b;
+        color: #f8fafc;
         text-decoration: none;
-        transition: all 0.2s ease;
+        transition: color 0.22s ease, background-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid transparent;
     }
 
     .custom-sidebar-link:hover {
-        background-color: rgba(255, 255, 255, 0.02);
-        color: #f8fafc;
+        background-color: rgba(96, 165, 250, 0.18);
+        color: #ffffff;
+        border-color: rgba(125, 211, 252, 0.26);
+        transform: translateX(3px);
+        box-shadow: 0 8px 18px rgba(2, 6, 23, 0.24);
     }
 
     .custom-sidebar-link.active {
-        background-color: rgba(59, 130, 246, 0.12);
-        color: #3b82f6;
-        font-weight: 600;
+        background: linear-gradient(100deg, #2563eb, #4f46e5);
+        color: #ffffff;
+        font-weight: 700;
+        border-color: rgba(147, 197, 253, 0.42);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.26);
     }
+    .custom-sidebar-link::after { content: ''; position: absolute; top: 0; bottom: 0; left: -45%; width: 30%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent); opacity: 0; }
+    .custom-sidebar-link:hover::after, .custom-sidebar-link.active::after { animation: client-nav-sweep 2.8s ease-in-out infinite; }
+    @keyframes client-nav-sweep { 0%, 65% { left: -45%; opacity: 0; } 75% { opacity: 1; } 100% { left: 125%; opacity: 0; } }
 
     .custom-sidebar-footer {
         padding: 16px;
@@ -87,18 +98,56 @@
     /* Main Workspace Layout */
     .custom-main-content {
         margin-left: 250px;
+        margin-right: 0;
+        padding-inline: 20px;
         flex: 1;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
-        background-color: #06123b;
+        background: linear-gradient(135deg, #10224d 0%, #183a7a 54%, #162d66 100%);
+        position: relative;
     }
+
+    /* Broad ambient bloom, matching the super-admin workspace treatment. */
+    .custom-main-content::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 384px;
+        height: 384px;
+        border-radius: 50%;
+        background: #3b82f6;
+        mix-blend-mode: screen;
+        filter: blur(150px);
+        opacity: 0.30;
+        animation: client-ambient-bloom 3.2s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .custom-main-content > header { position: relative; z-index: 200 !important; overflow: visible !important; }
+    .custom-main-content > main { position: relative; z-index: 1; }
+    @keyframes client-ambient-bloom { 0%, 100% { opacity: .18; transform: scale(.94); } 50% { opacity: .36; transform: scale(1.05); } }
+
+    /* Explicit live-weather motion for every client workspace header. */
+    .animate-float { animation: weather-float 3.2s ease-in-out infinite; }
+    .animate-spin-slow { animation: weather-spin 14s linear infinite; }
+    .animate-rain-1, .animate-rain-2, .animate-rain-3 { animation: weather-rain 1.05s ease-in-out infinite; }
+    .animate-rain-2 { animation-delay: .24s; }
+    .animate-rain-3 { animation-delay: .5s; }
+    .animate-flash { animation: weather-flash 2.7s ease-in-out infinite; }
+    .animate-pulse-slow { animation: weather-status-glow 3s ease-in-out infinite; }
+    @keyframes weather-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes weather-spin { to { transform: rotate(360deg); } }
+    @keyframes weather-rain { 0% { opacity: 0; transform: translateY(-2px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(7px); } }
+    @keyframes weather-flash { 0%, 78%, 100% { opacity: .25; } 82%, 87% { opacity: 1; } }
+    @keyframes weather-status-glow { 0%, 100% { box-shadow: 0 0 0 rgba(96, 165, 250, 0); } 50% { box-shadow: 0 0 12px rgba(96, 165, 250, .24); } }
 
     .custom-header {
         height: 70px;
-        background-color: rgba(6, 18, 59, 0.85);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
         border-bottom: 1px solid rgba(59, 130, 246, 0.08);
         padding: 0 32px;
         display: flex;
@@ -110,6 +159,7 @@
     }
 
     .custom-main-body {
+        background: transparent !important;
         padding: 28px;
         display: flex;
         flex-direction: column;
@@ -117,7 +167,29 @@
         max-width: 1180px;   /* contained, not full-width */
         width: 100%;
         margin: 0 auto;
+        position: relative;
     }
+
+    /* Keep Laravel pagination consistent with the client workspace theme. */
+    .custom-main-body nav[role="navigation"] a,
+    .custom-main-body nav[role="navigation"] [aria-current="page"] > span,
+    .custom-main-body nav[role="navigation"] [aria-disabled="true"] > span {
+        background: rgba(5, 18, 53, .88) !important;
+        border-color: rgba(96, 165, 250, .34) !important;
+        color: #dbeafe !important;
+        box-shadow: none !important;
+    }
+    .custom-main-body nav[role="navigation"] a:hover {
+        background: rgba(37, 99, 235, .6) !important;
+        color: #fff !important;
+    }
+    .custom-main-body nav[role="navigation"] [aria-current="page"] > span {
+        background: linear-gradient(135deg, #2563eb, #4f46e5) !important;
+        border-color: rgba(147, 197, 253, .62) !important;
+        color: #fff !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) { .custom-main-content::before { animation: none; } }
 
     /* Section cards — slightly translucent so the page bg shows through */
     .glass-card {
@@ -195,7 +267,10 @@
         }
         .custom-main-content {
             margin-left: 0;
+            margin-right: 0;
+            padding-inline: 16px;
         }
+        .custom-main-content::before { left: 0; }
     }
 
     /* Sidebar Logout Contrast Button */
@@ -445,9 +520,25 @@
         vertical-align: middle !important;
         color: #f1f5f9 !important;
     }
+
+    /* Premium Modal Keyframe Animations & Utilities */
+    @keyframes modal-scale-up {
+        0% { transform: scale(0.95); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes modal-scale-down {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0; }
+    }
+    .modal-enter {
+        animation: modal-scale-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+    }
+    .modal-exit {
+        animation: modal-scale-down 0.18s ease forwards !important;
+    }
 </style>
 
-<div class="min-h-screen bg-[#06123b] text-[#f8fafc] flex" x-data="{ sidebarOpen: false }">
+<div class="min-h-screen bg-[#0a1b46] text-[#f8fafc] flex" x-data="{ sidebarOpen: false }">
 
     {{-- 1. LEFT SIDEBAR PANEL --}}
     <aside class="custom-sidebar" :class="sidebarOpen ? 'open' : ''">
@@ -463,17 +554,23 @@
         {{-- Navigation Menu (Replicating exact sidebar menu from JPEG) --}}
         <nav class="custom-sidebar-nav">
             @php
+                $cu = Auth::user();
+                $isClientOwner = $cu->hasRole('client') && empty($cu->parent_partner_id);
+                $mod = fn ($m) => $isClientOwner || (is_array($cu->team_modules) && in_array($m, $cu->team_modules, true));
                 $menu = [
                     ['icon' => 'fa-solid fa-chart-line', 'label' => 'Dashboard', 'route' => route('client.dashboard'), 'active' => request()->routeIs('client.dashboard')],
                     ['icon' => 'fa-solid fa-briefcase', 'label' => 'My Jobs', 'route' => route('client.jobs.index'), 'active' => request()->is('client/jobs*')],
                     ['icon' => 'fa-solid fa-file-lines', 'label' => 'Applications', 'route' => route('client.applications.index'), 'active' => request()->is('client/applications*') && !request()->has('joined_status')],
                     ['icon' => 'fa-solid fa-video', 'label' => 'Interviews', 'route' => route('client.interviews.calendar'), 'active' => request()->is('client/interviews*')],
-                    ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.applications.index', ['joined_status' => 'Left']), 'active' => request()->is('client/applications*') && request('joined_status') === 'Left'],
-                    ['icon' => 'fa-solid fa-handshake', 'label' => 'Sourcing Partners', 'route' => route('client.vendors.browse'), 'active' => request()->is('client/vendors*') || request()->is('client/vendor-performance*')],
-                    ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => request()->is('client/billing*')],
-                    ['icon' => 'fa-solid fa-gear', 'label' => 'Settings', 'route' => route('client.profile.company'), 'active' => request()->is('client/profile*')],
+                    ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.replacements.index'), 'active' => request()->routeIs('client.replacements.*'), 'visible' => $mod('selection')],
+                    ['icon' => 'fa-solid fa-handshake', 'label' => 'Sourcing Partners', 'route' => route('client.vendors.browse'), 'active' => request()->is('client/vendors*') || request()->is('client/vendor-performance*'), 'visible' => $mod('vendors')],
+                    ['icon' => 'fa-solid fa-users', 'label' => 'Team', 'route' => route('client.team.index'), 'active' => request()->is('client/team*'), 'visible' => $isClientOwner],
+                    ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => request()->is('client/billing*'), 'visible' => $isClientOwner],
+                    ['icon' => 'fa-solid fa-share-nodes', 'label' => Auth::user()->hasRole('referral_partner') ? 'Referral Dashboard' : 'Refer & Earn', 'route' => Auth::user()->hasRole('referral_partner') ? route('referral.dashboard') : route('referral.enroll'), 'active' => request()->routeIs('referral.*')],
+                    ['icon' => 'fa-solid fa-gear', 'label' => 'Settings', 'route' => route('client.profile.company'), 'active' => request()->is('client/profile*'), 'visible' => $isClientOwner],
                     ['icon' => 'fa-solid fa-circle-question', 'label' => 'Help & Support', 'route' => route('support'), 'active' => request()->is('support*')],
                 ];
+                $menu = array_values(array_filter($menu, fn ($i) => ($i['visible'] ?? true)));
             @endphp
 
             @foreach($menu as $item)
@@ -507,6 +604,9 @@
         <header class="custom-header">
             {{-- Search --}}
             <div class="flex items-center gap-4 flex-1 max-w-xl">
+                <button type="button" class="lg:hidden h-10 w-10 shrink-0 rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/20" @click="sidebarOpen = true" aria-label="Open navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="relative w-full hidden sm:block">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm z-10"></i>
                     <input type="text" placeholder="Search candidates, jobs, clients..."
@@ -582,9 +682,162 @@
         </main>
     </div>
 
+    <!-- Premium Notification and Confirmation Modals -->
+    <div id="premium-modal-container" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4">
+        <!-- Backdrop with blur -->
+        <div id="premium-modal-backdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 opacity-0"></div>
+        
+        <!-- Modal Card -->
+        <div id="premium-modal-card" class="relative w-full max-w-md premium-card p-6 text-center transform transition-all duration-300 scale-95 opacity-0 flex flex-col items-center">
+            <!-- Accent Top Bar -->
+            <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500"></div>
+            
+            <!-- Glowing Ambient Circle Background behind Icon -->
+            <div id="premium-modal-glow" class="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full filter blur-xl opacity-20 transition-all duration-500"></div>
+
+            <!-- Animated Icon Container -->
+            <div class="relative mb-5 flex items-center justify-center">
+                <!-- Icon Outer Ring -->
+                <div id="premium-icon-ring" class="w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-500">
+                    <i id="premium-modal-icon" class="text-2xl transition-all duration-500"></i>
+                </div>
+            </div>
+
+            <!-- Typography -->
+            <h3 id="premium-modal-title" class="text-xl font-extrabold text-white tracking-tight mb-2"></h3>
+            <p id="premium-modal-text" class="text-slate-300 text-sm leading-relaxed mb-6"></p>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-3 w-full justify-center">
+                <button id="premium-btn-cancel" type="button" class="hidden px-5 py-2.5 rounded-xl border border-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-all duration-200">
+                    Cancel
+                </button>
+                <button id="premium-btn-confirm" type="button" class="px-6 py-2.5 rounded-xl text-white text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-lg">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
+    // Global Premium Visual Popup Controller
+    window.premiumModal = {
+        modal: null,
+        backdrop: null,
+        card: null,
+        title: null,
+        text: null,
+        icon: null,
+        iconRing: null,
+        glow: null,
+        btnConfirm: null,
+        btnCancel: null,
+        resolvePromise: null,
+
+        init() {
+            this.modal = document.getElementById('premium-modal-container');
+            this.backdrop = document.getElementById('premium-modal-backdrop');
+            this.card = document.getElementById('premium-modal-card');
+            this.title = document.getElementById('premium-modal-title');
+            this.text = document.getElementById('premium-modal-text');
+            this.icon = document.getElementById('premium-modal-icon');
+            this.iconRing = document.getElementById('premium-icon-ring');
+            this.glow = document.getElementById('premium-modal-glow');
+            this.btnConfirm = document.getElementById('premium-btn-confirm');
+            this.btnCancel = document.getElementById('premium-btn-cancel');
+
+            this.btnConfirm.addEventListener('click', () => this.handleConfirm());
+            this.btnCancel.addEventListener('click', () => this.handleCancel());
+        },
+
+        show({ type, title, text, confirmText = 'OK', cancelText = 'Cancel', isConfirm = false }) {
+            if (!this.modal) this.init();
+
+            this.title.innerText = title;
+            this.text.innerText = text;
+            this.btnConfirm.innerText = confirmText;
+            this.btnCancel.innerText = cancelText;
+
+            // Reset classes
+            this.icon.className = 'text-2xl transition-all duration-500 ';
+            this.iconRing.className = 'w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-500 ';
+            this.glow.className = 'absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full filter blur-xl opacity-20 transition-all duration-500 ';
+            this.btnConfirm.className = 'px-6 py-2.5 rounded-xl text-white text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-lg ';
+
+            if (isConfirm) {
+                this.btnCancel.classList.remove('hidden');
+            } else {
+                this.btnCancel.classList.add('hidden');
+            }
+
+            // Apply type-specific colors & styles
+            if (type === 'success') {
+                this.icon.classList.add('fa-solid', 'fa-circle-check', 'text-emerald-400');
+                this.iconRing.classList.add('border-emerald-500/30', 'bg-emerald-500/10');
+                this.glow.classList.add('bg-emerald-500');
+                this.btnConfirm.classList.add('bg-emerald-600', 'hover:bg-emerald-500', 'shadow-emerald-500/20');
+            } else if (type === 'danger') {
+                this.icon.classList.add('fa-solid', 'fa-triangle-exclamation', 'text-rose-400');
+                this.iconRing.classList.add('border-rose-500/30', 'bg-rose-500/10');
+                this.glow.classList.add('bg-rose-500');
+                this.btnConfirm.classList.add('bg-rose-600', 'hover:bg-rose-500', 'shadow-rose-500/20');
+            } else if (type === 'warning') {
+                this.icon.classList.add('fa-solid', 'fa-circle-exclamation', 'text-amber-400');
+                this.iconRing.classList.add('border-amber-500/30', 'bg-amber-500/10');
+                this.glow.classList.add('bg-amber-500');
+                this.btnConfirm.classList.add('bg-amber-600', 'hover:bg-amber-500', 'shadow-amber-500/20');
+            } else {
+                this.icon.classList.add('fa-solid', 'fa-circle-info', 'text-cyan-400');
+                this.iconRing.classList.add('border-cyan-500/30', 'bg-cyan-500/10');
+                this.glow.classList.add('bg-cyan-500');
+                this.btnConfirm.classList.add('bg-blue-600', 'hover:bg-blue-500', 'shadow-blue-500/20');
+            }
+
+            // Show container
+            this.modal.classList.remove('hidden');
+            void this.modal.offsetWidth; // Force reflow
+
+            // Animate In
+            this.backdrop.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 opacity-100';
+            this.card.className = 'relative w-full max-w-md premium-card p-6 text-center flex flex-col items-center modal-enter';
+
+            if (isConfirm) {
+                return new Promise((resolve) => {
+                    this.resolvePromise = resolve;
+                });
+            }
+        },
+
+        handleConfirm() {
+            this.hide();
+            if (this.resolvePromise) {
+                this.resolvePromise(true);
+                this.resolvePromise = null;
+            }
+        },
+
+        handleCancel() {
+            this.hide();
+            if (this.resolvePromise) {
+                this.resolvePromise(false);
+                this.resolvePromise = null;
+            }
+        },
+
+        hide() {
+            if (!this.modal) return;
+            
+            this.backdrop.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 opacity-0';
+            this.card.className = 'relative w-full max-w-md premium-card p-6 text-center flex flex-col items-center modal-exit';
+
+            setTimeout(() => {
+                this.modal.classList.add('hidden');
+            }, 200);
+        }
+    };
+
     // Premium Chart Floating Tooltip Functions
     function showChartTooltip(event, label, count) {
         const tooltip = document.getElementById('chart-tooltip');
@@ -923,6 +1176,169 @@
         } else {
             fetchWeather(28.61, 77.20);
         }
+
+        // 4. Custom Premium Popups for Rejection, Selection, Joining, Exiting, and Feedback
+        // Pre-processor: Strip inline confirm()'s so they don't trigger native dialogs
+        document.querySelectorAll('form').forEach(form => {
+            const onsubmitAttr = form.getAttribute('onsubmit');
+            if (onsubmitAttr && onsubmitAttr.includes('confirm(')) {
+                let msg = 'Are you sure you want to proceed?';
+                const match = onsubmitAttr.match(/confirm\(['"](.+?)['"]\)/);
+                if (match && match[1]) {
+                    msg = match[1];
+                }
+                form.dataset.customConfirm = msg;
+                form.removeAttribute('onsubmit');
+            }
+        });
+
+        // Event listener to intercept submit events of all candidate status changing forms
+        document.addEventListener('submit', async (e) => {
+            const form = e.target;
+            const action = form.getAttribute('action') || '';
+            
+            if (form.dataset.confirmed === 'true') return;
+
+            // Priority 1: Check if this form had a stripped confirm popup
+            if (form.dataset.customConfirm) {
+                e.preventDefault();
+                
+                let type = 'warning';
+                let title = 'Confirm Action';
+                let confirmText = 'Confirm';
+                
+                if (form.dataset.customConfirm.toLowerCase().includes('reject')) {
+                    type = 'danger';
+                    title = 'Confirm Rejection';
+                    confirmText = 'Yes, Reject';
+                }
+                
+                const confirmed = await window.premiumModal.show({
+                    type: type,
+                    title: title,
+                    text: form.dataset.customConfirm,
+                    confirmText: confirmText,
+                    cancelText: 'Cancel',
+                    isConfirm: true
+                });
+                
+                if (confirmed) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+            // Priority 2: Detect Joined form
+            else if (action.includes('/mark-joined')) {
+                e.preventDefault();
+                const confirmed = await window.premiumModal.show({
+                    type: 'success',
+                    title: 'Mark as Joined',
+                    text: 'Are you sure you want to mark this candidate as Joined? This will officially register their employment onboarding.',
+                    confirmText: 'Yes, Joined',
+                    cancelText: 'Cancel',
+                    isConfirm: true
+                });
+                if (confirmed) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+            // Priority 3: Detect Did Not Join form
+            else if (action.includes('/mark-not-joined')) {
+                e.preventDefault();
+                const confirmed = await window.premiumModal.show({
+                    type: 'warning',
+                    title: 'Mark as Did Not Join',
+                    text: 'Are you sure this candidate did not join? This will log a no-show in their joining schedule.',
+                    confirmText: 'Confirm',
+                    cancelText: 'Cancel',
+                    isConfirm: true
+                });
+                if (confirmed) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+            // Priority 4: Detect Exited / Left form
+            else if (action.includes('/left') && form.method.toLowerCase() === 'post') {
+                e.preventDefault();
+                const confirmed = await window.premiumModal.show({
+                    type: 'warning',
+                    title: 'Confirm Candidate Departure',
+                    text: 'Are you sure you want to mark this candidate as Left? This will initiate the replacement eligibility review.',
+                    confirmText: 'Yes, Mark Left',
+                    cancelText: 'Cancel',
+                    isConfirm: true
+                });
+                if (confirmed) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+            // Priority 5: Detect Selection submission
+            else if (action.endsWith('/select') && form.method.toLowerCase() === 'post') {
+                e.preventDefault();
+                const confirmed = await window.premiumModal.show({
+                    type: 'success',
+                    title: 'Confirm Selection',
+                    text: 'Are you sure you want to select this candidate? This will set their joining date and generate the invoice.',
+                    confirmText: 'Yes, Select',
+                    cancelText: 'Cancel',
+                    isConfirm: true
+                });
+                if (confirmed) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+        });
+
+        // 5. Post-Action Success Popup Interception
+        @if(session('success'))
+            (function() {
+                const successMsg = @json(session('success'));
+                
+                let title = "Success!";
+                let type = "success";
+                let btnText = "Awesome";
+                
+                const lowerMsg = successMsg.toLowerCase();
+                
+                if (lowerMsg.includes('job has been posted successfully') || lowerMsg.includes('job posted successfully')) {
+                    title = "Job posted successfully!";
+                    btnText = "View my jobs";
+                } else if (lowerMsg.includes('selected')) {
+                    title = "Candidate Selected!";
+                    btnText = "Great";
+                } else if (lowerMsg.includes('rejected')) {
+                    title = "Candidate Rejected";
+                    type = "danger";
+                    btnText = "OK";
+                } else if (lowerMsg.includes('joined')) {
+                    title = "Candidate Joined!";
+                    btnText = "Excellent";
+                } else if (lowerMsg.includes('left')) {
+                    title = "Candidate Marked Left";
+                    type = "warning";
+                    btnText = "OK";
+                } else if (lowerMsg.includes('scheduled')) {
+                    title = "Interview Scheduled!";
+                    btnText = "Awesome";
+                } else if (lowerMsg.includes('feedback') || lowerMsg.includes('rating') || lowerMsg.includes('recorded')) {
+                    title = "Feedback Recorded!";
+                    btnText = "Done";
+                }
+                
+                setTimeout(() => {
+                    window.premiumModal.show({
+                        type: type,
+                        title: title,
+                        text: successMsg,
+                        confirmText: btnText
+                    });
+                }, 300);
+            })();
+        @endif
     });
 </script>
 @endsection

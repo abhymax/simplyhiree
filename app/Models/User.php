@@ -29,6 +29,7 @@ class User extends Authenticatable
         'parent_partner_id',
         'team_role',
         'team_name',
+        'team_modules',
         'access_level',
         'partner_tier',
         'partner_plan',
@@ -57,7 +58,33 @@ class User extends Authenticatable
             'password' => 'hashed',
             'marketing_consent' => 'boolean',
             'marketing_consent_at' => 'datetime',
+            'team_modules' => 'array',
         ];
+    }
+
+    /** Team owner id for a client account (self if owner, else parent). */
+    public function clientOwnerId(): ?int
+    {
+        return $this->parent_partner_id ?? $this->id;
+    }
+
+    public function isClientTeamOwner(): bool
+    {
+        return $this->hasRole('client') && empty($this->parent_partner_id);
+    }
+
+    public function isClientTeamMember(): bool
+    {
+        return $this->hasRole('client') && !empty($this->parent_partner_id);
+    }
+
+    /** Owner has every module; a member only the ones granted. */
+    public function hasClientModule(string $module): bool
+    {
+        if ($this->isClientTeamOwner()) {
+            return true;
+        }
+        return is_array($this->team_modules) && in_array($module, $this->team_modules, true);
     }
 
     protected function clientCode(): Attribute

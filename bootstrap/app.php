@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckAccountStatus;
+use App\Http\Middleware\EnforceClientModule;
 use App\Http\Middleware\EnforcePartnerAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(dirname(__DIR__))
         $middleware->alias([
             'status.check' => CheckAccountStatus::class,
             'partner.access' => EnforcePartnerAccess::class,
+            'client.module' => EnforceClientModule::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

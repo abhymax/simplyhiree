@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\Admin\LandingPageController;
 use App\Http\Controllers\PublicLandingPageController;
+use App\Http\Controllers\Admin\FinanceOfferController;
+use App\Http\Controllers\ReferralPartnerController;
+use App\Http\Controllers\Admin\ReferralAdminController;
+use App\Http\Controllers\Admin\ControlPanelController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PartnerReactivationController;
+use App\Http\Controllers\Admin\PartnerReactivationController as AdminPartnerReactivationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +49,8 @@ Route::get('/', function () {
 Route::view('/about', 'pages.about')->name('about');
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+Route::post('/partner/reactivation-request', [PartnerReactivationController::class, 'store'])
+    ->middleware('throttle:5,10')->name('partner.reactivation.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/support', [\App\Http\Controllers\SupportController::class, 'show'])->name('support');
@@ -67,6 +76,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/register/candidate', [RegisteredUserController::class, 'registerCandidate']);
     Route::get('/register/client', [RegisteredUserController::class, 'showClientRegistrationForm'])->name('register.client');
     Route::post('/register/client', [RegisteredUserController::class, 'registerClient']);
+    Route::get('/register/referral', [RegisteredUserController::class, 'showReferralRegistrationForm'])->name('register.referral');
+    Route::post('/register/referral', [RegisteredUserController::class, 'registerReferralPartner']);
 });
 
 // Standard Laravel authentication routes
@@ -79,6 +90,8 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'status.check'])->group(function () {
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{notificationId}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
     
     // --- MAIN DASHBOARD REDIRECTOR ---
     Route::get('/dashboard', function () {
@@ -96,6 +109,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         elseif ($user->hasRole('candidate')) {
             return redirect()->route('candidate.dashboard');
         }
+        elseif ($user->hasRole('referral_partner')) {
+            return redirect()->route('referral.dashboard');
+        }
         return redirect('/');
     })->name('dashboard');
 
@@ -111,6 +127,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     Route::middleware(['role:Superadmin|Manager'])->prefix('admin')->name('admin.')->group(function () {
         
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/finance-offers', [FinanceOfferController::class, 'index'])->middleware('can:view_billing_data')->name('finance-offers.index');
+        Route::post('/finance-offers/{application}/approve', [FinanceOfferController::class, 'approve'])->middleware('can:view_billing_data')->name('finance-offers.approve');
         Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
 
         // --- IMPERSONATION ---
@@ -119,7 +137,22 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 
 
         // --- SUPERADMIN ONLY ACTIONS ---
-        Route::middleware(['role:Superadmin'])->group(function() {
+    Route::middleware(['role:Superadmin'])->group(function() {
+            Route::get('/partner-reactivations', [AdminPartnerReactivationController::class, 'index'])->name('partner-reactivations.index');
+            Route::post('/partner-reactivations/{reactivation}/approve', [AdminPartnerReactivationController::class, 'approve'])->name('partner-reactivations.approve');
+            Route::post('/partner-reactivations/{reactivation}/reject', [AdminPartnerReactivationController::class, 'reject'])->name('partner-reactivations.reject');
+            Route::get('/revenue-control', [ControlPanelController::class, 'revenue'])->name('revenue-control.index');
+            Route::get('/risk-control', [ControlPanelController::class, 'risk'])->name('risk-control.index');
+            Route::post('/risk-control/candidates/{candidate}/review', [ControlPanelController::class, 'reviewCandidate'])->name('risk-control.candidates.review');
+            Route::get('/billing/{application}/invoice.pdf', [ControlPanelController::class, 'invoicePdf'])->name('billing.invoice.pdf');
+            Route::get('/referrals', [ReferralAdminController::class, 'index'])->name('referrals.index');
+            Route::post('/referrals/profiles/{profile}/approve', [ReferralAdminController::class, 'approveProfile'])->name('referrals.profiles.approve');
+            Route::post('/referrals/leads/{lead}/review', [ReferralAdminController::class, 'reviewLead'])->name('referrals.leads.review');
+            Route::post('/referrals/leads/{lead}/link-client', [ReferralAdminController::class, 'linkLeadToClient'])->name('referrals.leads.link-client');
+            Route::post('/referrals/clients/link', [ReferralAdminController::class, 'linkClient'])->name('referrals.clients.link');
+            Route::post('/referrals/clients/{referral}/status', [ReferralAdminController::class, 'updateClientStatus'])->name('referrals.clients.status');
+            Route::post('/referrals/applications/{application}/payment', [ReferralAdminController::class, 'verifyPayment'])->name('referrals.applications.payment');
+            Route::post('/referrals/withdrawals/{withdrawal}', [ReferralAdminController::class, 'updateWithdrawal'])->name('referrals.withdrawals.update');
             // Landing Page Manager
             Route::resource('landing-pages', LandingPageController::class);
             Route::get('/landing-pages/{landingPage}/export', [LandingPageController::class, 'exportRegistrations'])->name('landing-pages.export');
@@ -197,6 +230,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
             Route::post('/applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('applications.approve');
             Route::post('/applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('applications.reject');
+            Route::post('/applications/{application}/update-resume', [AdminController::class, 'updateApplicationResume'])->name('applications.update-resume');
         });
 
 
@@ -208,6 +242,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/jobs/archived/{job}/restore', [AdminController::class, 'restoreArchivedJob'])->name('jobs.archived.restore');
             Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
             Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
+            Route::get('/jobs/{job}/edit', [AdminController::class, 'editJob'])->name('jobs.edit');
+            Route::patch('/jobs/{job}', [AdminController::class, 'updateJob'])->name('jobs.update');
             Route::get('/jobs/{job}', [AdminController::class, 'showJob'])->name('jobs.show');
             Route::post('/jobs/{job}/approve', [AdminController::class, 'approveJob'])->name('jobs.approve');
             Route::post('/jobs/{job}/reject', [AdminController::class, 'rejectJob'])->name('jobs.reject');
@@ -223,14 +259,28 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // --- BILLING & REPORTS ---
         Route::middleware(['can:view_billing_data'])->group(function() {
             Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
+            Route::get('/legal-compliance', [\App\Http\Controllers\Admin\AdminControlController::class, 'legal'])->name('legal.index');
+            Route::post('/legal-compliance/documents', [\App\Http\Controllers\Admin\AdminControlController::class, 'uploadDocument'])->name('legal.documents.store');
+            Route::get('/marketing-control', [\App\Http\Controllers\Admin\AdminControlController::class, 'marketing'])->name('marketing.index');
+            Route::post('/marketing-control/clients', [\App\Http\Controllers\Admin\AdminControlController::class, 'sendClients'])->name('marketing.clients.send');
+            Route::get('/marketplace-controls', [\App\Http\Controllers\Admin\AdminControlController::class, 'marketplace'])->name('marketplace.index');
+            Route::post('/marketplace-controls/settings', [\App\Http\Controllers\Admin\AdminControlController::class, 'saveSettings'])->name('marketplace.settings');
+            Route::post('/marketplace-controls/jobs/{job}/close', [\App\Http\Controllers\Admin\AdminControlController::class, 'forceClose'])->name('marketplace.jobs.close');
+            Route::post('/marketplace-controls/jobs/{job}/commission', [\App\Http\Controllers\Admin\AdminControlController::class, 'overrideCommission'])->name('marketplace.jobs.commission');
+            Route::post('/marketplace-controls/clients/{client}', [\App\Http\Controllers\Admin\AdminControlController::class, 'clientAction'])->name('marketplace.clients.action');
+            Route::post('/marketplace-controls/revenue', [\App\Http\Controllers\Admin\AdminControlController::class, 'manualRevenue'])->name('marketplace.revenue.store');
+            Route::get('/analytics', [\App\Http\Controllers\Admin\ControlPanelController::class, 'analytics'])->name('analytics.index');
             Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
             Route::patch('/applications/{application}/mark-raised', [AdminController::class, 'markInvoiceRaised'])->name('applications.markRaised');
             Route::post('/applications/{application}/admin-select', [AdminController::class, 'adminSelectApplicant'])->name('applications.adminSelect');
 
             // Replacement lifecycle
             Route::get('/replacements', [AdminController::class, 'replacementsIndex'])->name('replacements.index');
+            Route::get('/replacements/{application}/candidate', [AdminController::class, 'replacementCandidateForm'])->name('replacements.candidate');
+            Route::post('/replacements/{application}/candidate', [AdminController::class, 'replacementCandidateStore'])->name('replacements.candidate.store');
             Route::post('/replacements/{application}/approve', [AdminController::class, 'replacementsApprove'])->name('replacements.approve');
             Route::post('/replacements/{application}/close', [AdminController::class, 'replacementsClose'])->name('replacements.close');
+            Route::post('/replacements/{application}/cost-adjustment', [AdminController::class, 'replacementCostAdjustment'])->name('replacements.cost-adjustment');
             Route::post('/replacements/{application}/issue-credit', [AdminController::class, 'creditNotesIssue'])->name('replacements.issue-credit');
 
             // Vendor ratings
@@ -264,12 +314,30 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 
 
     // ==========================================
+    //          REFERRAL PARTNER ROUTES
+    // ==========================================
+    Route::get('/referrals/enroll', [ReferralPartnerController::class, 'enroll'])->name('referral.enroll');
+    Route::post('/referrals/enroll', [ReferralPartnerController::class, 'storeEnrollment'])->name('referral.enroll.store');
+    Route::middleware('role:referral_partner')->prefix('referrals')->name('referral.')->group(function () {
+        Route::get('/dashboard', [ReferralPartnerController::class, 'dashboard'])->name('dashboard');
+        Route::post('/leads', [ReferralPartnerController::class, 'storeLead'])->name('leads.store');
+        Route::post('/withdrawals', [ReferralPartnerController::class, 'storeWithdrawal'])->name('withdrawals.store');
+    });
+
+    // ==========================================
     //         CLIENT (EMPLOYER) ROUTES
     // ==========================================
-    Route::middleware(['role:client'])->prefix('client')->name('client.')->group(function () {
-        
+    Route::middleware(['role:client', 'client.module'])->prefix('client')->name('client.')->group(function () {
+
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
-        
+
+        // Client team management (owner adds members with per-module access)
+        Route::get('/team', [\App\Http\Controllers\ClientTeamController::class, 'index'])->name('team.index');
+        Route::post('/team', [\App\Http\Controllers\ClientTeamController::class, 'store'])->name('team.store');
+        Route::patch('/team/{user}', [\App\Http\Controllers\ClientTeamController::class, 'update'])->name('team.update');
+        Route::patch('/team/{user}/toggle', [\App\Http\Controllers\ClientTeamController::class, 'toggle'])->name('team.toggle');
+        Route::delete('/team/{user}', [\App\Http\Controllers\ClientTeamController::class, 'destroy'])->name('team.destroy');
+
         // --- Job Management ---
         Route::get('/jobs', [ClientController::class, 'listJobs'])->name('jobs.index');
         Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
@@ -284,7 +352,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/applications/{application}/request-replacement', [ClientController::class, 'requestCandidateReplacement'])->name('applications.request-replacement');
         Route::get('/jobs/{job}/applicants', [ClientController::class, 'showApplicants'])->name('jobs.applicants');
         Route::get('/applications', [ClientController::class, 'listAllApplications'])->name('applications.index');
+        Route::get('/replacements', [ClientController::class, 'replacements'])->name('replacements.index');
         Route::get('/applications/{application}', [ClientController::class, 'showApplicantDetail'])->name('applications.show');
+        Route::get('/notifications', [ClientController::class, 'notificationHistory'])->name('notifications.index');
         Route::get('/smoke-test-joining', [ClientController::class, 'smokeTestJoining'])->name('smoke-test-joining');
 
         // Broadcast to my connected vendors
@@ -298,6 +368,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/profile/company', [ClientProfileController::class, 'update'])->name('profile.update');
         
         Route::get('/billing', [ClientController::class, 'billing'])->name('billing');
+        Route::get('/billing/{application}/demo-invoice.pdf', [ClientController::class, 'downloadDemoInvoice'])->name('billing.demo-invoice');
         Route::post('/billing/{application}/mark-paid', [ClientController::class, 'markBillingPaid'])->name('billing.markPaid');
         Route::post('/billing/{application}/unmark-paid', [ClientController::class, 'unmarkBillingPaid'])->name('billing.unmarkPaid');
 
@@ -327,6 +398,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // Multi-round interviews
         Route::get('/applications/{application}/rounds/create', [ClientController::class, 'showScheduleRoundForm'])->name('applications.rounds.create');
         Route::post('/applications/{application}/rounds', [ClientController::class, 'scheduleInterviewRound'])->name('applications.rounds.store');
+        Route::get('/rounds/{round}/edit', [ClientController::class, 'editInterviewRound'])->name('rounds.edit');
         Route::patch('/rounds/{round}', [ClientController::class, 'updateInterviewRound'])->name('rounds.update');
         Route::post('/rounds/{round}/appeared', [ClientController::class, 'markRoundAppeared'])->name('rounds.appeared');
         Route::post('/rounds/{round}/noshow', [ClientController::class, 'markRoundNoShow'])->name('rounds.noshow');
@@ -339,6 +411,9 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         
         // 3. Status Actions
         Route::post('/applications/{application}/reject', [ClientController::class, 'rejectApplicant'])->name('applications.reject');
+        Route::post('/applications/{application}/shortlist', [ClientController::class, 'shortlistApplicant'])->name('applications.shortlist');
+        Route::post('/applications/{application}/maybe', [ClientController::class, 'markApplicantMaybe'])->name('applications.maybe');
+        Route::post('/applications/{application}/undo-review', [ClientController::class, 'clearApplicantReviewStatus'])->name('applications.undo-review');
         Route::post('/applications/{application}/interview-appeared', [ClientController::class, 'markAsAppeared'])->name('applications.interview.appeared');
         Route::post('/applications/{application}/interview-noshow', [ClientController::class, 'markAsNoShow'])->name('applications.interview.noshow');
 
@@ -370,6 +445,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/earnings', [PartnerController::class, 'earnings'])->name('earnings');
         Route::get('/wallet', [PartnerController::class, 'wallet'])->name('wallet');
         Route::get('/replacements', [PartnerController::class, 'replacements'])->name('replacements');
+        Route::get('/replacements/{application}/candidate', [PartnerController::class, 'replacementCandidateForm'])->name('replacements.candidate');
+        Route::post('/replacements/{application}/candidate', [PartnerController::class, 'replacementCandidateStore'])->name('replacements.candidate.store');
 
         // Team management
         Route::get('/team', [\App\Http\Controllers\PartnerTeamController::class, 'index'])->name('team.index');
@@ -399,6 +476,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/candidates/{candidate}', [PartnerController::class, 'showCandidate'])->name('candidates.show');
         Route::get('/candidates/{candidate}/edit', [PartnerController::class, 'editCandidate'])->name('candidates.edit');
         Route::patch('/candidates/{candidate}', [PartnerController::class, 'updateCandidate'])->name('candidates.update');
+        Route::post('/candidates/{candidate}/update-resume', [PartnerController::class, 'updateCandidateResume'])->name('candidates.update-resume');
         
         // Profile
         Route::get('/profile/business', [PartnerProfileController::class, 'edit'])->name('profile.business');
@@ -424,3 +502,5 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 // ==========================================
 Route::get('/l/{slug}', [PublicLandingPageController::class, 'show'])->name('landing.show');
 Route::post('/l/{slug}/register', [PublicLandingPageController::class, 'register'])->name('landing.register');
+
+
