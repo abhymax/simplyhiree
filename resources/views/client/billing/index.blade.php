@@ -1,6 +1,20 @@
 @extends('layouts.client')
 
 @section('client_content')
+<style>
+    .billing-filter-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .billing-filter-field { background: rgba(5, 21, 56, .92) !important; border: 1px solid rgba(96,165,250,.38) !important; color: #fff !important; }
+    .billing-filter-field::placeholder { color: rgba(191,219,254,.72) !important; }
+    .billing-filter-field:focus { border-color: #67e8f9 !important; box-shadow: 0 0 0 3px rgba(34,211,238,.15) !important; outline: none; }
+    /* keep the search text clear of the magnifying-glass icon (beats .premium-form input padding) */
+    .premium-form input.billing-search-input { padding-left: 2.75rem !important; }
+    .billing-date-button { position: relative; display: inline-flex; height: 2.25rem; min-width: 5rem; padding: 0 .65rem; flex-direction: row; align-items: center; justify-content: center; gap: .4rem; border: 1px solid rgba(96,165,250,.38); border-radius: .75rem; background: rgba(5,21,56,.92); color: #fff; cursor: pointer; }
+    .billing-date-button > i { font-size: .8rem; color: #93c5fd; }
+    .billing-date-button input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .billing-date-label { max-width: 4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #bae6fd; font-size: .72rem; font-weight: 700; line-height: 1; }
+    .billing-perpage { min-width: 6.5rem; }
+    @media (min-width: 900px) { .billing-filter-grid { grid-template-columns: minmax(13rem, 1fr) 11rem 5rem 5rem 6.75rem auto auto; align-items: center; } }
+</style>
     <div class="relative z-10 max-w-7xl mx-auto" x-data="{ payRow: null, viewRow: null }">
 
         <div class="mb-6 border-b border-white/10 pb-6">
@@ -56,14 +70,14 @@
 
         {{-- Compact single-row filter bar inside a premium-form wrapper --}}
         <div class="glass-card rounded-2xl p-3 mb-4 premium-form">
-            <form method="GET" action="{{ route('client.billing') }}" class="flex flex-wrap items-center gap-2">
+            <form method="GET" action="{{ route('client.billing') }}" class="billing-filter-grid gap-2">
                 <input type="hidden" name="status" value="{{ $statusFilter }}">
                 <div class="relative flex-1 min-w-[180px]">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-white/60 text-sm pointer-events-none z-10"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate or job"
-                           class="h-9 w-full pl-9 pr-3">
+                           class="billing-filter-field billing-search-input h-9 w-full pr-3 rounded-xl">
                 </div>
-                <select name="job_id" class="{{ $fld }} max-w-[180px]">
+                <select name="job_id" class="billing-filter-field {{ $fld }} max-w-[180px] rounded-xl pr-8" style="appearance: auto; -webkit-appearance: menulist;">
                     <option value="" class="text-slate-400">All Jobs</option>
                     @foreach($clientJobs as $j)
                         <option value="{{ $j->id }}" class="bg-slate-900" {{ (string) request('job_id') === (string) $j->id ? 'selected' : '' }}>
@@ -71,9 +85,13 @@
                         </option>
                     @endforeach
                 </select>
-                <input type="date" name="date_from" value="{{ request('date_from') }}" title="Joined from" class="{{ $fld }} w-[150px]">
-                <span class="text-slate-400 text-xs">to</span>
-                <input type="date" name="date_to" value="{{ request('date_to') }}" title="Joined to" class="{{ $fld }} w-[150px]">
+                <label class="billing-date-button" title="Joined from" aria-label="Joined from"><i class="fa-regular fa-calendar-days"></i><span class="billing-date-label">{{ request('date_from') ? \Carbon\Carbon::parse(request('date_from'))->format('d M') : 'From' }}</span><input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.parentElement.querySelector('.billing-date-label').textContent = this.value ? new Date(this.value + 'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'From'"></label>
+                <label class="billing-date-button" title="Joined to" aria-label="Joined to"><i class="fa-regular fa-calendar-days"></i><span class="billing-date-label">{{ request('date_to') ? \Carbon\Carbon::parse(request('date_to'))->format('d M') : 'To' }}</span><input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.parentElement.querySelector('.billing-date-label').textContent = this.value ? new Date(this.value + 'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'To'"></label>
+                <select name="per_page" class="billing-filter-field billing-perpage {{ $fld }} w-full rounded-xl pr-7" style="appearance: auto; -webkit-appearance: menulist;" aria-label="Invoices per page" onchange="this.form.submit()">
+                    @foreach($allowedPerPage as $option)
+                        <option value="{{ $option }}" class="bg-slate-900" {{ $perPage === $option ? 'selected' : '' }}>{{ $option }}/page</option>
+                    @endforeach
+                </select>
                 <button type="submit" class="h-9 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-sm transition">
                     <i class="fa-solid fa-filter mr-1"></i> Filter
                 </button>
@@ -139,6 +157,13 @@
                                                 class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg border border-white/20 transition" title="View">
                                             <i class="fa-regular fa-eye"></i>
                                         </button>
+                                        @if((float) ($row['invoice_amount'] ?? 0) > 0)
+                                            <a href="{{ route('client.billing.demo-invoice', $app) }}"
+                                               class="px-2.5 py-1.5 bg-violet-500/20 hover:bg-violet-500/35 text-violet-100 text-xs font-bold rounded-lg border border-violet-300/40 transition"
+                                               title="Download invoice PDF preview">
+                                                <i class="fa-solid fa-file-pdf"></i><span class="hidden xl:inline ml-1">Invoice PDF</span>
+                                            </a>
+                                        @endif
                                         @if(in_array($row['status'], ['Raised', 'Overdue', 'Due to Raise']))
                                             <button type="button" @click="payRow = payRow === {{ $app->id }} ? null : {{ $app->id }}"
                                                     class="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold rounded-lg transition" title="Mark Paid">
@@ -220,7 +245,10 @@
                     </tbody>
                 </table>
             </div>
-            <div class="p-4 border-t border-white/10 bg-[#03071a]/50">{{ $billingData->onEachSide(1)->links() }}</div>
+            <div class="flex flex-col gap-3 border-t border-white/10 bg-[#03071a]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-xs font-medium text-slate-400">Showing {{ $billingData->firstItem() ?? 0 }}-{{ $billingData->lastItem() ?? 0 }} of {{ $billingData->total() }} invoices</p>
+                <div>{{ $billingData->onEachSide(1)->links() }}</div>
+            </div>
         </div>
     </div>
 @endsection
