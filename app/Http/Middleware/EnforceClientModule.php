@@ -17,9 +17,6 @@ class EnforceClientModule
     private const OWNER_ONLY = [
         'client.team.index', 'client.team.store', 'client.team.update',
         'client.team.toggle', 'client.team.destroy',
-        'client.billing', 'client.billing.demo-invoice',
-        'client.billing.markPaid', 'client.billing.unmarkPaid',
-        'client.profile.company', 'client.profile.update',
     ];
 
     /**
@@ -87,6 +84,16 @@ class EnforceClientModule
         'client.vendors.assign-request' => 'vendors',
         'client.vendors.assign-request.store' => 'vendors',
         'client.vendors.performance' => 'vendors',
+
+        // Invoices & billing (grantable to members)
+        'client.billing' => 'billing',
+        'client.billing.demo-invoice' => 'billing',
+        'client.billing.markPaid' => 'billing',
+        'client.billing.unmarkPaid' => 'billing',
+
+        // Company settings (grantable to members)
+        'client.profile.company' => 'company',
+        'client.profile.update' => 'company',
     ];
 
     public function handle(Request $request, Closure $next): Response

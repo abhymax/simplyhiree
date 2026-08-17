@@ -17,6 +17,8 @@ class ClientTeamController extends Controller
         'interviews'  => 'Interviews',
         'selection'   => 'Selection & Joining',
         'vendors'     => 'Vendors',
+        'billing'     => 'Invoices & Billing',
+        'company'     => 'Company Settings',
     ];
 
     private function requireOwner(): User

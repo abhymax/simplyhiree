@@ -565,9 +565,9 @@
                     ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.replacements.index'), 'active' => request()->routeIs('client.replacements.*'), 'visible' => $mod('selection')],
                     ['icon' => 'fa-solid fa-handshake', 'label' => 'Sourcing Partners', 'route' => route('client.vendors.browse'), 'active' => request()->is('client/vendors*') || request()->is('client/vendor-performance*'), 'visible' => $mod('vendors')],
                     ['icon' => 'fa-solid fa-users', 'label' => 'Team', 'route' => route('client.team.index'), 'active' => request()->is('client/team*'), 'visible' => $isClientOwner],
-                    ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => request()->is('client/billing*'), 'visible' => $isClientOwner],
+                    ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => request()->is('client/billing*'), 'visible' => $mod('billing')],
                     ['icon' => 'fa-solid fa-share-nodes', 'label' => Auth::user()->hasRole('referral_partner') ? 'Referral Dashboard' : 'Refer & Earn', 'route' => Auth::user()->hasRole('referral_partner') ? route('referral.dashboard') : route('referral.enroll'), 'active' => request()->routeIs('referral.*')],
-                    ['icon' => 'fa-solid fa-gear', 'label' => 'Settings', 'route' => route('client.profile.company'), 'active' => request()->is('client/profile*'), 'visible' => $isClientOwner],
+                    ['icon' => 'fa-solid fa-gear', 'label' => 'Settings', 'route' => route('client.profile.company'), 'active' => request()->is('client/profile*'), 'visible' => $mod('company')],
                     ['icon' => 'fa-solid fa-circle-question', 'label' => 'Help & Support', 'route' => route('support'), 'active' => request()->is('support*')],
                 ];
                 $menu = array_values(array_filter($menu, fn ($i) => ($i['visible'] ?? true)));
