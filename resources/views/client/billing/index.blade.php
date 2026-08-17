@@ -8,13 +8,13 @@
     .billing-filter-field:focus { border-color: #67e8f9 !important; box-shadow: 0 0 0 3px rgba(34,211,238,.15) !important; outline: none; }
     /* keep the search text clear of the magnifying-glass icon (beats .premium-form input padding) */
     .premium-form input.billing-search-input { padding-left: 2.75rem !important; }
-    .billing-date-button { position: relative; display: inline-flex; height: 2.25rem; min-width: 5rem; padding: 0 .65rem; flex-direction: row; align-items: center; justify-content: center; gap: .4rem; border: 1px solid rgba(96,165,250,.38); border-radius: .75rem; background: rgba(5,21,56,.92); color: #fff; cursor: pointer; }
-    .billing-date-button > i { font-size: .8rem; color: #93c5fd; }
+    .billing-date-button { position: relative; display: inline-flex; height: 2.25rem; min-width: 3.6rem; padding: 0 .55rem; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; border: 1px solid rgba(96,165,250,.38); border-radius: .75rem; background: rgba(5,21,56,.92); color: #fff; cursor: pointer; }
+    .billing-date-button > i { font-size: .85rem; color: #93c5fd; line-height: 1; }
     .billing-date-button input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-    .billing-date-label { max-width: 4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #bae6fd; font-size: .72rem; font-weight: 700; line-height: 1; }
-    .billing-perpage { min-width: 6.5rem; }
-    .billing-date-group { display: flex; align-items: center; gap: .5rem; }
-    @media (min-width: 900px) { .billing-filter-grid { grid-template-columns: minmax(13rem, 1fr) 11rem auto 6.75rem auto auto; align-items: center; } }
+    .billing-date-label { max-width: 3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #bae6fd; font-size: .56rem; font-weight: 800; letter-spacing: .02em; line-height: 1; }
+    .premium-form select.billing-perpage { font-size: .72rem !important; padding-right: 1.4rem !important; min-width: 6rem; }
+    .billing-date-group { display: flex; align-items: center; gap: .45rem; }
+    @media (min-width: 900px) { .billing-filter-grid { grid-template-columns: minmax(13rem, 1fr) 11rem auto 6.25rem auto auto; align-items: center; } }
 </style>
     <div class="relative z-10 max-w-7xl mx-auto" x-data="{ payRow: null, viewRow: null }">
 
