@@ -13,7 +13,8 @@
     .billing-date-button input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
     .billing-date-label { max-width: 4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #bae6fd; font-size: .72rem; font-weight: 700; line-height: 1; }
     .billing-perpage { min-width: 6.5rem; }
-    @media (min-width: 900px) { .billing-filter-grid { grid-template-columns: minmax(13rem, 1fr) 11rem 5rem 5rem 6.75rem auto auto; align-items: center; } }
+    .billing-date-group { display: flex; align-items: center; gap: .5rem; }
+    @media (min-width: 900px) { .billing-filter-grid { grid-template-columns: minmax(13rem, 1fr) 11rem auto 6.75rem auto auto; align-items: center; } }
 </style>
     <div class="relative z-10 max-w-7xl mx-auto" x-data="{ payRow: null, viewRow: null }">
 
@@ -85,8 +86,10 @@
                         </option>
                     @endforeach
                 </select>
-                <label class="billing-date-button" title="Joined from" aria-label="Joined from"><i class="fa-regular fa-calendar-days"></i><span class="billing-date-label">{{ request('date_from') ? \Carbon\Carbon::parse(request('date_from'))->format('d M') : 'From' }}</span><input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.parentElement.querySelector('.billing-date-label').textContent = this.value ? new Date(this.value + 'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'From'"></label>
-                <label class="billing-date-button" title="Joined to" aria-label="Joined to"><i class="fa-regular fa-calendar-days"></i><span class="billing-date-label">{{ request('date_to') ? \Carbon\Carbon::parse(request('date_to'))->format('d M') : 'To' }}</span><input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.parentElement.querySelector('.billing-date-label').textContent = this.value ? new Date(this.value + 'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'To'"></label>
+                <div class="billing-date-group">
+                    <label class="billing-date-button" title="Joined from" aria-label="Joined from"><i class="fa-regular fa-calendar-days"></i><span class="billing-date-label">{{ request('date_from') ? \Carbon\Carbon::parse(request('date_from'))->format('d M') : 'From' }}</span><input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.parentElement.querySelector('.billing-date-label').textContent = this.value ? new Date(this.value + 'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'From'"></label>
+                    <label class="billing-date-button" title="Joined to" aria-label="Joined to"><i class="fa-regular fa-calendar-days"></i><span class="billing-date-label">{{ request('date_to') ? \Carbon\Carbon::parse(request('date_to'))->format('d M') : 'To' }}</span><input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.parentElement.querySelector('.billing-date-label').textContent = this.value ? new Date(this.value + 'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'To'"></label>
+                </div>
                 <select name="per_page" class="billing-filter-field billing-perpage {{ $fld }} w-full rounded-xl pr-7" style="appearance: auto; -webkit-appearance: menulist;" aria-label="Invoices per page" onchange="this.form.submit()">
                     @foreach($allowedPerPage as $option)
                         <option value="{{ $option }}" class="bg-slate-900" {{ $perPage === $option ? 'selected' : '' }}>{{ $option }}/page</option>
