@@ -41,6 +41,14 @@
                     <div>
                         <label class="block text-xs font-bold text-purple-300 uppercase mb-2">Email Address</label>
                         <input type="email" name="email" value="{{ old('email') }}" placeholder="partner@example.com" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 transition h-12" required>
+                        @error('email') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Phone (mandatory) --}}
+                    <div>
+                        <label class="block text-xs font-bold text-purple-300 uppercase mb-2">Phone Number</label>
+                        <input type="tel" name="phone_number" value="{{ old('phone_number') }}" placeholder="10-digit mobile" inputmode="numeric" maxlength="10" class="w-full bg-slate-800/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 transition h-12" required>
+                        @error('phone_number') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     {{-- Type --}}

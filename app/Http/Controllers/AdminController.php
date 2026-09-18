@@ -1089,6 +1089,7 @@ class AdminController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'company_type' => ['required', 'string', 'in:Placement Agency,Freelancer,Recruiter'],
         ]);
@@ -1105,7 +1106,14 @@ class AdminController extends Controller
         PartnerProfile::create([
             'user_id' => $user->id,
             'company_type' => $request->company_type,
+            'contact_phone' => $request->phone_number,
         ]);
+
+        // Mirror onto user_profiles so listings that read profile.phone_number show it.
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['phone_number' => $request->phone_number]
+        );
 
         return redirect()->route('admin.partners.index')->with('success', 'Partner created successfully.');
     }
