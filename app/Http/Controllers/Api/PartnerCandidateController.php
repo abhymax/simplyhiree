@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PartnerCandidateResource;
 use App\Models\Candidate;
 use Illuminate\Http\Request;
+use App\Services\DuplicateCandidateService;
 
 class PartnerCandidateController extends Controller
 {
@@ -66,7 +67,7 @@ class PartnerCandidateController extends Controller
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:candidates,email,NULL,id,partner_id,' . $partner->id],
+            'email' => ['required', 'email', 'max:255', 'unique:candidates,email,NULL,id,partner_id,' . $partner->id],
             'phone_number' => ['required', 'string', 'max:20', 'unique:candidates,phone_number,NULL,id,partner_id,' . $partner->id],
             'alternate_phone_number' => ['nullable', 'string', 'max:20'],
             'location' => ['nullable', 'string', 'max:255'],
@@ -80,11 +81,17 @@ class PartnerCandidateController extends Controller
             'skills' => ['nullable', 'string'],
         ]);
 
+        $duplicateService = app(DuplicateCandidateService::class);
+        $assessment = $duplicateService->assess($partner->id, $validated['email'] ?? null, $validated['phone_number']);
         $validated['partner_id'] = $partner->id;
+        $validated['duplicate_status'] = 'clear';
         $candidate = Candidate::create($validated);
+        $duplicateService->quarantine($candidate, $assessment, 'candidate_create_api');
 
         return (new PartnerCandidateResource($candidate))
-            ->additional(['message' => 'Candidate added successfully.'])
+            ->additional(['message' => $assessment['is_duplicate']
+                ? 'Candidate saved but quarantined from submission pending Superadmin duplicate review.'
+                : 'Candidate added successfully.'])
             ->response()
             ->setStatusCode(201);
     }
@@ -119,7 +126,7 @@ class PartnerCandidateController extends Controller
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:candidates,email,' . $candidate->id . ',id,partner_id,' . $partner->id],
+            'email' => ['required', 'email', 'max:255', 'unique:candidates,email,' . $candidate->id . ',id,partner_id,' . $partner->id],
             'phone_number' => ['required', 'string', 'max:20', 'unique:candidates,phone_number,' . $candidate->id . ',id,partner_id,' . $partner->id],
             'alternate_phone_number' => ['nullable', 'string', 'max:20'],
             'location' => ['nullable', 'string', 'max:255'],
@@ -133,7 +140,10 @@ class PartnerCandidateController extends Controller
             'skills' => ['nullable', 'string'],
         ]);
 
+        $duplicateService = app(DuplicateCandidateService::class);
+        $assessment = $duplicateService->assess($partner->id, $validated['email'] ?? null, $validated['phone_number'], $candidate->resume_fingerprint, $candidate->id);
         $candidate->update($validated);
+        $duplicateService->quarantine($candidate, $assessment, 'candidate_update_api');
 
         return (new PartnerCandidateResource($candidate))
             ->additional(['message' => 'Candidate updated successfully.']);

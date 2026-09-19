@@ -40,7 +40,8 @@
                                 @error('last_name') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <input type="email" name="email" value="{{ old('email', $candidate->email) }}" placeholder="Email" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
+                                <input type="email" name="email" required value="{{ old('email', $candidate->email) }}" placeholder="Email (Required)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
+                                @error('email') <span class="text-rose-300 text-xs mt-1 block">{{ $message }}</span> @enderror
                                 @error('email') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
@@ -68,6 +69,13 @@
                     <div>
                         <h2 class="text-lg font-bold text-white border-b border-white/10 pb-2 mb-5">Professional Details</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <select name="education_level" required class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
+                                <option value="" class="text-slate-900">Select Education Level *</option>
+                                @foreach(['Less than 10th', '10th Pass', '12th Pass', 'Diploma', 'Graduation', 'Post Graduation', 'Doctorate'] as $level)
+                                    <option value="{{ $level }}" {{ old('education_level', $candidate->education_level) == $level ? 'selected' : '' }} class="text-slate-900">{{ $level }}</option>
+                                @endforeach
+                            </select>
+
                             <input type="text" name="qualification_degree" value="{{ old('qualification_degree', $candidate->qualification_degree) }}" required placeholder="Qualification / Degree * (e.g. B.Sc, NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
                             <input type="text" name="specialization" value="{{ old('specialization', $candidate->specialization) }}" required placeholder="Specialization * (or NA)" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
 

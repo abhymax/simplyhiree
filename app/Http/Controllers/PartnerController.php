@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\DuplicateCandidateService;
+use App\Services\AssessmentSessionService;
 use Illuminate\Validation\Rule;
 
 class PartnerController extends Controller
@@ -749,7 +750,7 @@ class PartnerController extends Controller
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => ['nullable', 'email', 'max:255', Rule::unique('candidates', 'email')->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
+            'email' => ['required', 'email', 'max:255', Rule::unique('candidates', 'email')->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'phone_number' => ['required', 'string', 'max:20', Rule::unique('candidates', 'phone_number')->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'alternate_phone_number' => 'nullable|string|max:20',
             'location' => 'required|string|max:255',
@@ -866,7 +867,7 @@ class PartnerController extends Controller
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => ['nullable', 'email', 'max:255', Rule::unique('candidates', 'email')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
+            'email' => ['required', 'email', 'max:255', Rule::unique('candidates', 'email')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'phone_number' => ['required', 'string', 'max:20', Rule::unique('candidates', 'phone_number')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'alternate_phone_number' => 'nullable|string|max:20',
             'location' => 'required|string|max:255',
@@ -1003,6 +1004,18 @@ class PartnerController extends Controller
             return redirect()->back()->with('error', 'All selected candidates have already been submitted for this job.');
         }
 
+        // Email is mandatory for every submitted candidate (assessment OTP is
+        // email-only). Block any selected candidate that has no email on file.
+        $missingEmail = Candidate::whereIn('id', $newCandidateIds)
+            ->where(fn ($q) => $q->whereNull('email')->orWhere('email', ''))
+            ->pluck('first_name', 'id');
+        if ($missingEmail->isNotEmpty()) {
+            $names = collect($missingEmail)->take(5)->implode(', ');
+            return redirect()->back()->with('error',
+                'Email is required to submit a candidate. Please add an email for: ' . $names .
+                ($missingEmail->count() > 5 ? ' and others' : '') . ', then submit again.');
+        }
+
         // 3. Plan-based monthly submission cap.
         $ownerPlan = \App\Models\User::where('id', $ownerId)->value('partner_plan') ?? 'Free';
         $plan = \App\Models\PartnerPlan::where('name', $ownerPlan)->first();
@@ -1053,7 +1066,7 @@ class PartnerController extends Controller
                                                  ->first();
             
             if (!$existingApplication) {
-                JobApplication::create([
+                $application = JobApplication::create([
                     'job_id'              => $job->id,
                     'candidate_id'        => $candidateId,
                     'status'              => $initialStatus,
@@ -1062,6 +1075,14 @@ class PartnerController extends Controller
                     'submitted_by_user_id' => Auth::id(),
                 ]);
                 $submittedCount++;
+
+                // If the job carries questionnaire stages, create the candidate's
+                // assessment session and email them the magic link.
+                try {
+                    app(AssessmentSessionService::class)->startForApplication($application);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 

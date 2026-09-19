@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CandidateAssessmentController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProfileController;
@@ -40,6 +41,16 @@ Route::get('/up', function () {
 | Public & Guest Routes
 |--------------------------------------------------------------------------
 */
+
+// Public candidate assessment (magic link + email OTP; no auth)
+Route::prefix('assessment')->name('assessment.')->group(function () {
+    Route::get('/{token}', [CandidateAssessmentController::class, 'entry'])->name('entry');
+    Route::post('/{token}/otp', [CandidateAssessmentController::class, 'sendOtp'])
+        ->middleware('throttle:5,1')->name('otp.send');
+    Route::post('/{token}/verify', [CandidateAssessmentController::class, 'verifyOtp'])
+        ->middleware('throttle:10,1')->name('verify');
+    Route::get('/{token}/stages', [CandidateAssessmentController::class, 'overview'])->name('overview');
+});
 
 // Public routes
 Route::get('/', function () {
