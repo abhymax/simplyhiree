@@ -203,7 +203,7 @@
                         <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Job Description <span class="text-rose-400">*</span></label>
                         <input type="hidden" name="description" id="job-description-input" value="{{ old('description') }}">
                         <div id="job-description-editor" class="bg-slate-800/80 rounded-xl border border-white/10 text-white"></div>
-                        <p class="mt-2 text-xs" style="color:#fff;">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
+                        <p class="mt-2 text-xs" style="color:#fff;">Paste from Word or use the advanced toolbar for fonts, tables, images, case conversion, links, alignment, lists and more.</p>
                     </div>
 
                     <div>
@@ -280,6 +280,11 @@
                             @endforeach
                         </div>
                     </div>
+                </div>
+
+                {{-- SECTION: ASSESSMENT QUESTIONNAIRES --}}
+                <div class="mb-8">
+                    @include('jobs.partials.assessment-stages', ['availableAssessments' => $availableAssessments ?? collect(), 'job' => null, 'assessmentCreateRoute' => 'admin.assessments.create'])
                 </div>
 
                 {{-- SECTION 3: PAYOUT SETTINGS --}}
@@ -402,54 +407,9 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
     </style>
 
-    {{-- Quill rich text editor --}}
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-    <style>
-        #job-description-editor { min-height: 220px; color: #fff; }
-        #job-description-editor .ql-editor { min-height: 200px; font-size: 15px; line-height: 1.6; }
-        #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, 0.55); font-style: normal; }
-        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
-        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
-        .ql-snow .ql-stroke { stroke: #cbd5e1; }
-        .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
-        .ql-snow .ql-picker { color: #cbd5e1; }
-        .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.2); }
-        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #a78bfa; }
-        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #a78bfa; }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    @include('jobs.partials.advanced-editor', ['uploadUrl' => route('admin.jobs.description-images.store')])
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // ── Rich-text description ──────────────────────────────────────────
-        const descEditorEl = document.getElementById('job-description-editor');
-        const descHidden   = document.getElementById('job-description-input');
-        if (descEditorEl && descHidden && window.Quill) {
-            const quill = new Quill(descEditorEl, {
-                theme: 'snow',
-                placeholder: 'Describe the role, responsibilities, requirements...',
-                modules: {
-                    toolbar: [
-                        [{ header: [2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ list: 'ordered' }, { list: 'bullet' }],
-                        [{ indent: '-1' }, { indent: '+1' }],
-                        [{ align: [] }],
-                        ['blockquote', 'link'],
-                        ['clean'],
-                    ],
-                },
-            });
-            const initialHtml = descHidden.value || '';
-            if (initialHtml) quill.clipboard.dangerouslyPasteHTML(initialHtml);
-            quill.on('text-change', () => {
-                descHidden.value = (quill.getText().trim().length === 0) ? '' : quill.root.innerHTML;
-            });
-            const descForm = descHidden.closest('form');
-            if (descForm) descForm.addEventListener('submit', () => {
-                descHidden.value = (quill.getText().trim().length === 0) ? '' : quill.root.innerHTML;
-            });
-        }
-
         // ── Multi-location chip input ──────────────────────────────────────
         const hidden     = document.getElementById('job-location');
         const chipbox    = document.getElementById('job-location-chipbox');

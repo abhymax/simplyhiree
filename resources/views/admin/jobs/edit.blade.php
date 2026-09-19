@@ -1,18 +1,4 @@
 <x-app-layout>
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<style>
-    #job-description-editor { min-height: 240px; color: #fff; }
-    #job-description-editor .ql-editor { min-height: 220px; font-size: 15px; line-height: 1.7; }
-    #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, .55); font-style: normal; }
-    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,.15); border-bottom: 0; border-radius: .75rem .75rem 0 0; background: rgba(15,23,42,.8); }
-    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,.15); border-radius: 0 0 .75rem .75rem; background: rgba(15,23,42,.8); font-family: inherit; }
-    .ql-snow .ql-stroke { stroke: #cbd5e1; }
-    .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
-    .ql-snow .ql-picker { color: #cbd5e1; }
-    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,.2); }
-    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #67e8f9; }
-    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #67e8f9; }
-</style>
 <div class="min-h-screen bg-slate-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-8 text-white">
 <div class="max-w-6xl mx-auto">
     <div class="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
@@ -71,7 +57,7 @@
                     <label class="{{ $label }}">Description</label>
                     <input type="hidden" name="description" id="job-description-input" value="{{ old('description',$job->description) }}">
                     <div id="job-description-editor" aria-label="Job description rich text editor"></div>
-                    <p class="mt-2 text-xs text-slate-400">The description is displayed as formatted content. Use the toolbar to update headings, emphasis, lists, alignment, quotes, and links.</p>
+                    <p class="mt-2 text-xs text-slate-400">Paste from Word or use the advanced toolbar for fonts, tables, images, case conversion, links, alignment, lists and more.</p>
                 </div>
             </div>
         </section>
@@ -126,41 +112,10 @@
             </div>
         </section>
 
+        @include('jobs.partials.assessment-stages', ['availableAssessments' => $availableAssessments ?? collect(), 'job' => $job, 'assessmentCreateRoute' => 'admin.assessments.create'])
+
         <div class="flex justify-end gap-3"><a href="{{ route('admin.jobs.show',$job) }}" class="rounded-xl border border-white/15 px-5 py-3 font-bold text-slate-200">Cancel</a><button class="rounded-xl bg-emerald-500 px-6 py-3 font-black text-slate-950 hover:bg-emerald-400"><i class="fa-solid fa-floppy-disk mr-2"></i>{{ $job->status === 'approved' ? 'Save live changes' : 'Save changes' }}</button></div>
     </form>
 </div></div>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const editorElement = document.getElementById('job-description-editor');
-    const descriptionInput = document.getElementById('job-description-input');
-    if (!editorElement || !descriptionInput || !window.Quill) return;
-
-    const editor = new Quill(editorElement, {
-        theme: 'snow',
-        placeholder: 'Describe the role, responsibilities, and requirements...',
-        modules: {
-            toolbar: [
-                [{ header: [2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ list: 'ordered' }, { list: 'bullet' }],
-                [{ indent: '-1' }, { indent: '+1' }],
-                [{ align: [] }],
-                ['blockquote', 'link'],
-                ['clean'],
-            ],
-        },
-    });
-
-    if (descriptionInput.value) {
-        editor.clipboard.dangerouslyPasteHTML(descriptionInput.value);
-    }
-
-    const syncDescription = function () {
-        descriptionInput.value = editor.getText().trim().length === 0 ? '' : editor.root.innerHTML;
-    };
-    editor.on('text-change', syncDescription);
-    descriptionInput.closest('form')?.addEventListener('submit', syncDescription);
-});
-</script>
+@include('jobs.partials.advanced-editor', ['uploadUrl' => route('admin.jobs.description-images.store')])
 </x-app-layout>

@@ -9,8 +9,10 @@ use App\Models\JobApplication;
 use App\Models\InterviewRound;
 use App\Models\User;
 // Added missing models for Job Creation
-use App\Models\JobCategory; 
+use App\Models\JobCategory;
 use App\Models\EducationLevel;
+use App\Models\Assessment;
+use App\Models\JobAssessmentStage;
 // Notifications
 use App\Notifications\CandidateRejectedByClient;
 use App\Notifications\CandidateSelected;
@@ -369,7 +371,12 @@ class ClientController extends Controller
                 ->unique()->sort()->values()->all();
         });
 
-        return compact('categories', 'educationLevels', 'indianCities');
+        $availableAssessments = Assessment::visibleTo(Auth::user())
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'tag']);
+
+        return compact('categories', 'educationLevels', 'indianCities', 'availableAssessments');
     }
 
     /**
@@ -438,6 +445,8 @@ class ClientController extends Controller
             'travel_required'   => array_key_exists('travel_required', $validated) ? (bool) $validated['travel_required'] : null,
             'benefits'          => $validated['benefits'] ?? null,
         ]);
+
+        JobAssessmentStage::syncForJob($job, $request->input('assessment_stages', []), Auth::user());
 
         $this->sendJobPostedCommercialEmails($job, Auth::user());
 
@@ -508,6 +517,8 @@ class ClientController extends Controller
             'benefits'          => $validated['benefits'] ?? null,
         ]);
 
+        JobAssessmentStage::syncForJob($job, $request->input('assessment_stages', []), Auth::user());
+
         return redirect()->route('client.dashboard')->with('success', 'Pending job updated successfully.');
     }
 
@@ -575,6 +586,10 @@ class ClientController extends Controller
             'travel_required'   => 'nullable|boolean',
             'benefits'          => 'nullable|array',
             'benefits.*'        => 'string|in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation',
+            // Assessment questionnaire stages
+            'assessment_stages'                          => 'nullable|array|max:10',
+            'assessment_stages.*.assessment_id'          => 'required|integer|exists:assessments,id',
+            'assessment_stages.*.next_stage_start_hours' => 'nullable|integer|min:0|max:8760',
         ]);
     }
 

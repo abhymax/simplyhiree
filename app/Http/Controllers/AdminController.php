@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Models\Assessment;
+use App\Models\JobAssessmentStage;
 use App\Models\User;
 use App\Models\JobCategory;
 use App\Models\ExperienceLevel;
@@ -1257,9 +1259,13 @@ class AdminController extends Controller
         $experienceLevels = Cache::remember('experience_levels', 3600, fn () => ExperienceLevel::orderBy('name')->get());
         $educationLevels = Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get());
 
+        $availableAssessments = Assessment::where('status', 'active')
+            ->orderBy('name')->get(['id', 'name', 'tag']);
+
         return view('admin.jobs.create', compact(
             'clients', 'partners', 'candidates',
-            'categories', 'experienceLevels', 'educationLevels'
+            'categories', 'experienceLevels', 'educationLevels',
+            'availableAssessments'
         ));
     }
 
@@ -1306,6 +1312,9 @@ class AdminController extends Controller
             'travel_required'   => 'nullable|boolean',
             'benefits'          => 'nullable|array',
             'benefits.*'        => 'string|in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation',
+            'assessment_stages'                          => 'nullable|array|max:10',
+            'assessment_stages.*.assessment_id'          => 'required|integer|exists:assessments,id',
+            'assessment_stages.*.next_stage_start_hours' => 'nullable|integer|min:0|max:8760',
         ]);
 
         $salary = $this->formatSalaryRange(
@@ -1367,6 +1376,8 @@ class AdminController extends Controller
             $job->restrictedCandidates()->sync($request->restricted_candidates);
         }
 
+        JobAssessmentStage::syncForJob($job, $request->input('assessment_stages', []), null);
+
         return redirect()->route('admin.jobs.pending')->with('success', 'Job created successfully.');
     }
 
@@ -1386,6 +1397,7 @@ class AdminController extends Controller
             'partners' => User::role('partner')->where('status', 'active')->orderBy('name')->get(),
             'categories' => Cache::remember('job_categories', 3600, fn () => JobCategory::orderBy('name')->get()),
             'educationLevels' => Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get()),
+            'availableAssessments' => Assessment::where('status', 'active')->orderBy('name')->get(['id', 'name', 'tag']),
         ]);
     }
 
@@ -1437,11 +1449,15 @@ class AdminController extends Controller
             'travel_required'   => 'nullable|boolean',
             'benefits'          => 'nullable|array',
             'benefits.*'        => 'string|in:PF,ESIC,Insurance,Food,Transport,Accommodation,Laptop,Mobile,Joining Bonus,Relocation',
+            'assessment_stages'                          => 'nullable|array|max:10',
+            'assessment_stages.*.assessment_id'          => 'required|integer|exists:assessments,id',
+            'assessment_stages.*.next_stage_start_hours' => 'nullable|integer|min:0|max:8760',
         ]);
 
         $wasApproved = $job->status === 'approved';
         $manual = $validated['commercial_source'] === 'manual';
-        DB::transaction(function () use ($job, $validated, $manual) {
+        $stagesInput = $request->input('assessment_stages', []);
+        DB::transaction(function () use ($job, $validated, $manual, $stagesInput) {
             $job->update([
                 'user_id' => $validated['client_id'] ?: null,
                 'company_name' => $validated['company_name'],
@@ -1493,6 +1509,8 @@ class AdminController extends Controller
                     ? ($validated['allowed_partners'] ?? [])
                     : []
             );
+
+            JobAssessmentStage::syncForJob($job, $stagesInput, null);
         });
 
         if ($validated['status'] === 'approved' && !$wasApproved) {

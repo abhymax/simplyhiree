@@ -1,7 +1,6 @@
 @extends('layouts.client')
 
 @section('client_content')
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <style>
     .post-job-shell { max-width: 1040px; }
     .post-job-surface { background: linear-gradient(145deg, rgba(10, 24, 59, .94), rgba(15, 41, 90, .9)); border: 1px solid rgba(125, 211, 252, .28); box-shadow: 0 28px 60px rgba(2, 6, 23, .35); }
@@ -22,17 +21,6 @@
     .job-submit-btn:hover::after { animation: job-button-sweep .75s ease-out; }
     @keyframes job-button-sweep { to { left: 125%; } }
     @media (prefers-reduced-motion: reduce) { .job-flow-option, .job-submit-btn { transition: none; } .job-submit-btn:hover::after { animation: none; } }
-    #job-description-editor { min-height: 220px; color: #fff; }
-    #job-description-editor .ql-editor { min-height: 200px; font-size: 15px; line-height: 1.6; }
-    #job-description-editor .ql-editor.ql-blank::before { color: rgba(191, 219, 254, 0.55); font-style: normal; }
-    .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom: 0; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; background: rgba(15,23,42,0.6); }
-    .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.2); border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; font-family: inherit; }
-    .ql-snow .ql-stroke { stroke: #cbd5e1; }
-    .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: #cbd5e1; }
-    .ql-snow .ql-picker { color: #cbd5e1; }
-    .ql-snow .ql-picker-options { background: #0f172a; color: #fff; border-color: rgba(255,255,255,0.2); }
-    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #67e8f9; }
-    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #67e8f9; }
 </style>
 @php
     $isEditMode = ($formMode ?? 'create') === 'edit' && isset($job) && $job;
@@ -322,7 +310,7 @@
                         <label class="block text-sm font-medium text-blue-100">Job Description <span class="text-rose-300">*</span></label>
                         <input type="hidden" name="description" id="job-description-input" value="{{ old('description', $job->description ?? '') }}">
                         <div id="job-description-editor" class="mt-1 bg-slate-900/40 rounded-xl border border-white/20 text-white min-h-[200px]"></div>
-                        <p class="mt-1 text-xs text-blue-200/80">Use the toolbar to format — bold, italic, headings, lists, links, etc.</p>
+                        <p class="mt-1 text-xs text-blue-200/80">Paste from Word or use the advanced toolbar for fonts, tables, images, case conversion, links, alignment, lists and more.</p>
                         @error('description') <span class="text-rose-300 text-xs">{{ $message }}</span> @enderror
                     </section>
 
@@ -354,6 +342,8 @@
                         </label>
                         @error('is_company_confidential') <span class="mt-1 block text-xs text-rose-300">{{ $message }}</span> @enderror
                     </section>
+
+                    @include('jobs.partials.assessment-stages', ['availableAssessments' => $availableAssessments ?? collect(), 'job' => $job, 'assessmentCreateRoute' => 'client.assessments.create'])
 
                     <section class="job-form-section mb-6 bg-amber-500/10 border-amber-400/30" x-data="{ commercial: '{{ old('commercial_source', $job->commercial_source ?? 'simplyhire') }}' }">
                         <h3 class="text-amber-200 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-coins"></i> Commercials</h3>
@@ -419,46 +409,9 @@
         </div>
 
     </div>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+@include('jobs.partials.advanced-editor', ['uploadUrl' => route('client.jobs.description-images.store')])
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Job description rich-text editor
-        const descEditorEl = document.getElementById('job-description-editor');
-        const descHidden   = document.getElementById('job-description-input');
-        if (descEditorEl && descHidden && window.Quill) {
-            const quill = new Quill(descEditorEl, {
-                theme: 'snow',
-                placeholder: 'Describe the role, responsibilities, requirements...',
-                modules: {
-                    toolbar: [
-                        [{ header: [2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ list: 'ordered' }, { list: 'bullet' }],
-                        [{ indent: '-1' }, { indent: '+1' }],
-                        [{ align: [] }],
-                        ['blockquote', 'link'],
-                        ['clean'],
-                    ],
-                },
-            });
-            // Pre-fill with existing/old value
-            const initialHtml = descHidden.value || '';
-            if (initialHtml) {
-                quill.clipboard.dangerouslyPasteHTML(initialHtml);
-            }
-            // Sync editor → hidden input on every change AND on submit
-            quill.on('text-change', () => {
-                const html = quill.root.innerHTML;
-                descHidden.value = (quill.getText().trim().length === 0) ? '' : html;
-            });
-            const descForm = descHidden.closest('form');
-            if (descForm) {
-                descForm.addEventListener('submit', () => {
-                    descHidden.value = (quill.getText().trim().length === 0) ? '' : quill.root.innerHTML;
-                });
-            }
-        }
-
         const titleField = document.querySelector('input[name="title"]');
         const experienceField = document.querySelector('input[name="min_experience"]');
         const openingsField = document.querySelector('input[name="openings"]');

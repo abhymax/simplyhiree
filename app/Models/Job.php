@@ -169,6 +169,15 @@ class Job extends Model
     }
 
     /**
+     * Assessment questionnaires attached to this job as ordered stages.
+     * Candidates must clear each stage in order before they may apply.
+     */
+    public function assessmentStages(): HasMany
+    {
+        return $this->hasMany(JobAssessmentStage::class)->orderBy('stage_order');
+    }
+
+    /**
      * Render description as safe HTML. New descriptions come from the rich
      * editor as already-sanitized HTML; legacy plain-text descriptions get
      * escaped and have newlines converted to <br>.
