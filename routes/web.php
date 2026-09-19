@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ControlPanelController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerReactivationController;
 use App\Http\Controllers\Admin\PartnerReactivationController as AdminPartnerReactivationController;
+use App\Http\Controllers\AccountDeletionRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +59,11 @@ Route::middleware('auth')->group(function () {
 });
 Route::view('/terms', 'pages.terms')->name('terms');
 Route::view('/privacy', 'pages.privacy')->name('privacy');
+Route::get('/account-deletion', [AccountDeletionRequestController::class, 'create'])
+    ->name('account-deletion.create');
+Route::post('/account-deletion', [AccountDeletionRequestController::class, 'store'])
+    ->middleware('throttle:5,10')
+    ->name('account-deletion.store');
 
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show'); 
@@ -127,6 +133,17 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     Route::middleware(['role:Superadmin|Manager'])->prefix('admin')->name('admin.')->group(function () {
         
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+
+        // Assessment questionnaires (global library, Superadmin/Manager)
+        Route::get('/assessments', [\App\Http\Controllers\AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('/assessments/create', [\App\Http\Controllers\AssessmentController::class, 'create'])->name('assessments.create');
+        Route::post('/assessments', [\App\Http\Controllers\AssessmentController::class, 'store'])->name('assessments.store');
+        Route::get('/assessments/{assessment}/edit', [\App\Http\Controllers\AssessmentController::class, 'edit'])->name('assessments.edit');
+        Route::patch('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->name('assessments.update');
+        Route::delete('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+
+        Route::post('/jobs/description-images', \App\Http\Controllers\JobDescriptionImageController::class)
+            ->middleware('throttle:20,1')->name('jobs.description-images.store');
         Route::get('/finance-offers', [FinanceOfferController::class, 'index'])->middleware('can:view_billing_data')->name('finance-offers.index');
         Route::post('/finance-offers/{application}/approve', [FinanceOfferController::class, 'approve'])->middleware('can:view_billing_data')->name('finance-offers.approve');
         Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
@@ -338,9 +355,19 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/team/{user}/toggle', [\App\Http\Controllers\ClientTeamController::class, 'toggle'])->name('team.toggle');
         Route::delete('/team/{user}', [\App\Http\Controllers\ClientTeamController::class, 'destroy'])->name('team.destroy');
 
+        // Assessment questionnaires (company-scoped)
+        Route::get('/assessments', [\App\Http\Controllers\AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('/assessments/create', [\App\Http\Controllers\AssessmentController::class, 'create'])->name('assessments.create');
+        Route::post('/assessments', [\App\Http\Controllers\AssessmentController::class, 'store'])->name('assessments.store');
+        Route::get('/assessments/{assessment}/edit', [\App\Http\Controllers\AssessmentController::class, 'edit'])->name('assessments.edit');
+        Route::patch('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->name('assessments.update');
+        Route::delete('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+
         // --- Job Management ---
         Route::get('/jobs', [ClientController::class, 'listJobs'])->name('jobs.index');
         Route::get('/jobs/create', [ClientController::class, 'createJob'])->name('jobs.create');
+        Route::post('/jobs/description-images', \App\Http\Controllers\JobDescriptionImageController::class)
+            ->middleware('throttle:20,1')->name('jobs.description-images.store');
         Route::post('/jobs', [ClientController::class, 'storeJob'])->name('jobs.store');
         Route::get('/jobs/{job}/edit', [ClientController::class, 'editJob'])->name('jobs.edit');
         Route::patch('/jobs/{job}', [ClientController::class, 'updateJob'])->name('jobs.update');
@@ -502,5 +529,3 @@ Route::middleware(['auth', 'status.check'])->group(function () {
 // ==========================================
 Route::get('/l/{slug}', [PublicLandingPageController::class, 'show'])->name('landing.show');
 Route::post('/l/{slug}/register', [PublicLandingPageController::class, 'register'])->name('landing.register');
-
-

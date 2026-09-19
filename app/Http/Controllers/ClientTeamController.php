@@ -19,6 +19,7 @@ class ClientTeamController extends Controller
         'vendors'     => 'Vendors',
         'billing'     => 'Invoices & Billing',
         'company'     => 'Company Settings',
+        'assessments' => 'Questionnaires',
     ];
 
     private function requireOwner(): User

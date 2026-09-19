@@ -564,6 +564,7 @@
                     ['icon' => 'fa-solid fa-video', 'label' => 'Interviews', 'route' => route('client.interviews.calendar'), 'active' => request()->is('client/interviews*')],
                     ['icon' => 'fa-solid fa-arrows-rotate', 'label' => 'Replacements', 'route' => route('client.replacements.index'), 'active' => request()->routeIs('client.replacements.*'), 'visible' => $mod('selection')],
                     ['icon' => 'fa-solid fa-handshake', 'label' => 'Sourcing Partners', 'route' => route('client.vendors.browse'), 'active' => request()->is('client/vendors*') || request()->is('client/vendor-performance*'), 'visible' => $mod('vendors')],
+                    ['icon' => 'fa-solid fa-clipboard-question', 'label' => 'Questionnaires', 'route' => route('client.assessments.index'), 'active' => request()->is('client/assessments*'), 'visible' => $mod('assessments')],
                     ['icon' => 'fa-solid fa-users', 'label' => 'Team', 'route' => route('client.team.index'), 'active' => request()->is('client/team*'), 'visible' => $isClientOwner],
                     ['icon' => 'fa-solid fa-file-invoice-dollar', 'label' => 'Invoices & Billing', 'route' => route('client.billing'), 'active' => request()->is('client/billing*'), 'visible' => $mod('billing')],
                     ['icon' => 'fa-solid fa-share-nodes', 'label' => Auth::user()->hasRole('referral_partner') ? 'Referral Dashboard' : 'Refer & Earn', 'route' => Auth::user()->hasRole('referral_partner') ? route('referral.dashboard') : route('referral.enroll'), 'active' => request()->routeIs('referral.*')],
@@ -585,6 +586,9 @@
 
         {{-- User Section --}}
         <div class="custom-sidebar-footer">
+            <div class="mb-3 flex justify-center">
+                @include('partials.google-play-link')
+            </div>
             <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
                 <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 rounded-xl sidebar-logout-btn transition duration-200 font-bold text-sm tracking-wider uppercase">

@@ -94,6 +94,14 @@ class EnforceClientModule
         // Company settings (grantable to members)
         'client.profile.company' => 'company',
         'client.profile.update' => 'company',
+
+        // Assessment questionnaires (grantable to members)
+        'client.assessments.index' => 'assessments',
+        'client.assessments.create' => 'assessments',
+        'client.assessments.store' => 'assessments',
+        'client.assessments.edit' => 'assessments',
+        'client.assessments.update' => 'assessments',
+        'client.assessments.destroy' => 'assessments',
     ];
 
     public function handle(Request $request, Closure $next): Response

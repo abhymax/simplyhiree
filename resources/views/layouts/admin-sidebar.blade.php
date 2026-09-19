@@ -48,14 +48,24 @@
                     ['route'=>'admin.applications.index',     'label'=>'All Applications',    'icon'=>'fa-file-lines',          'active'=>['admin.applications.*'], 'can'=>'view_application_data'],
                     ['route'=>'admin.jobs.pending',           'label'=>'Pending Jobs',        'icon'=>'fa-briefcase-clock',     'active'=>['admin.jobs.pending'], 'can'=>'view_pending_jobs'],
                     ['route'=>'admin.jobs.archived',          'label'=>'Archived Jobs',       'icon'=>'fa-box-archive',         'active'=>['admin.jobs.archived*'], 'can'=>'view_pending_jobs'],
+                    ['route'=>'admin.assessments.index',      'label'=>'Questionnaires',      'icon'=>'fa-clipboard-question',  'active'=>['admin.assessments.*']],
                     ['route'=>'admin.billing.index',          'label'=>'Billing Report',      'icon'=>'fa-file-invoice-dollar', 'active'=>['admin.billing.*'], 'can'=>'view_billing_data'],
+                    ['route'=>'admin.revenue-control.index',  'label'=>'Revenue & Payout',    'icon'=>'fa-sack-dollar',         'active'=>['admin.revenue-control.*'], 'role'=>'Superadmin'],
+                    ['route'=>'admin.risk-control.index',     'label'=>'Risk & Fraud',        'icon'=>'fa-shield-halved',       'active'=>['admin.risk-control.*'], 'role'=>'Superadmin'],
+                    ['route'=>'admin.finance-offers.index',   'label'=>'Finance Offer Queue', 'icon'=>'fa-file-signature',      'active'=>['admin.finance-offers.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.replacements.index',     'label'=>'Replacements',        'icon'=>'fa-rotate',              'active'=>['admin.replacements.*'], 'can'=>'view_billing_data'],
+                    ['route'=>'admin.analytics.index',        'label'=>'Advanced Analytics',  'icon'=>'fa-chart-line',          'active'=>['admin.analytics.*'], 'role'=>'Superadmin'],
+                    ['route'=>'admin.legal.index',            'label'=>'Legal & Compliance',  'icon'=>'fa-scale-balanced',      'active'=>['admin.legal.*'], 'role'=>'Superadmin'],
+                    ['route'=>'admin.marketing.index',        'label'=>'Marketing Control',   'icon'=>'fa-bullhorn',            'active'=>['admin.marketing.*'], 'role'=>'Superadmin'],
+                    ['route'=>'admin.marketplace.index',      'label'=>'Marketplace Controls','icon'=>'fa-sliders',             'active'=>['admin.marketplace.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.credit-notes.index',     'label'=>'Credit Notes',        'icon'=>'fa-receipt',             'active'=>['admin.credit-notes.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.plan-requests.index',    'label'=>'Plan Requests',       'icon'=>'fa-rocket',              'active'=>['admin.plan-requests.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.vendor-assignment-requests.index', 'label'=>'Vendor Assignment Req.', 'icon'=>'fa-handshake-angle',  'active'=>['admin.vendor-assignment-requests.*']],
+                    ['route'=>'admin.partner-reactivations.index', 'label'=>'Activation Requests', 'icon'=>'fa-user-clock', 'active'=>['admin.partner-reactivations.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.vendor-ratings.index',   'label'=>'Vendor Ratings',      'icon'=>'fa-star',                'active'=>['admin.vendor-ratings.*'], 'can'=>'view_partner_data'],
                     ['route'=>'admin.reports.jobs',           'label'=>'Master Job Report',   'icon'=>'fa-chart-bar',           'active'=>['admin.reports.jobs*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.clients.index',          'label'=>'Clients',             'icon'=>'fa-building',            'active'=>['admin.clients.*']],
+                    ['route'=>'admin.referrals.index',        'label'=>'Referrals',           'icon'=>'fa-share-nodes',         'active'=>['admin.referrals.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.partners.index',         'label'=>'Partners',            'icon'=>'fa-handshake',           'active'=>['admin.partners.*']],
                     ['route'=>'admin.partner-plans.index',    'label'=>'Partner Plans',       'icon'=>'fa-crown',               'active'=>['admin.partner-plans.*']],
                     ['route'=>'admin.candidates.index',       'label'=>'Candidates',          'icon'=>'fa-users',               'active'=>['admin.candidates.*']],
@@ -68,6 +78,7 @@
                 @php
                     if (!\Illuminate\Support\Facades\Route::has($l['route'])) continue;
                     if (!empty($l['can']) && !auth()->user()->can($l['can'])) continue;
+                    if (!empty($l['role']) && !auth()->user()->hasRole($l['role'])) continue;
                     $isActive = false;
                     foreach ($l['active'] as $pattern) {
                         if (request()->routeIs($pattern)) { $isActive = true; break; }
