@@ -514,6 +514,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/jobs/{job}/apply', [PartnerController::class, 'showApplyForm'])->name('jobs.showApplyForm');
         Route::post('/jobs/{job}/submit', [PartnerController::class, 'submitApplication'])->name('jobs.submit');
 
+        // Assessment tracking
+        Route::get('/assessments', [\App\Http\Controllers\PartnerAssessmentController::class, 'index'])->name('assessments.index');
+        Route::post('/assessments/{session}/resend', [\App\Http\Controllers\PartnerAssessmentController::class, 'resend'])
+            ->middleware('throttle:10,1')->name('assessments.resend');
+
         // Candidate Management
         Route::get('/candidates/check', [PartnerController::class, 'checkCandidateMobile'])->name('candidates.check'); 
         Route::post('/candidates/check', [PartnerController::class, 'verifyCandidateMobile'])->name('candidates.verify'); 
