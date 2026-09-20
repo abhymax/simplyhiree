@@ -45,6 +45,10 @@ class CandidateAssessmentTestController extends Controller
             return redirect()->route('assessment.overview', $token)
                 ->with('assessment_error', 'You have used all attempts for this stage.');
         }
+        if ($res['status'] === 'window_missed') {
+            return redirect()->route('assessment.overview', $token)
+                ->with('assessment_error', 'The time window to start this stage has passed, so the assessment is now closed.');
+        }
         if ($res['status'] === 'passed') {
             return redirect()->route('assessment.overview', $token);
         }

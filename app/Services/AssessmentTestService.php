@@ -92,6 +92,14 @@ class AssessmentTestService
             return ['status' => 'exhausted', 'attempt' => null];
         }
 
+        // Enforce the per-stage start window: the candidate must begin this
+        // stage within N hours of clearing the previous one (first start only).
+        if ($used === 0 && $this->windowMissed($session, $stage)) {
+            $session->update(['status' => 'failed']);
+            $this->syncApplication($session, 'failed');
+            return ['status' => 'window_missed', 'attempt' => null];
+        }
+
         $questionIds = $assessment->questions()->pluck('id')->all();
         if ($assessment->shuffle_questions) {
             shuffle($questionIds);
@@ -201,6 +209,7 @@ class AssessmentTestService
         if ($attempt->passed) {
             if ($attempt->stage_order >= $lastOrder) {
                 $session->update(['status' => 'passed', 'current_stage' => $lastOrder]);
+                $this->syncApplication($session, 'passed');
             } else {
                 $session->update([
                     'status'        => 'in_progress',
@@ -215,7 +224,60 @@ class AssessmentTestService
         $max = max(1, (int) $attempt->assessment->max_attempts);
         if ($used >= $max) {
             $session->update(['status' => 'failed']);
+            $this->syncApplication($session, 'failed');
         }
+    }
+
+    /** Reflect a finished assessment session onto its job application (the gate). */
+    private function syncApplication(AssessmentSession $session, string $outcome): void
+    {
+        if (empty($session->job_application_id)) {
+            return;
+        }
+        $application = $session->application()->first();
+        if (!$application) {
+            return;
+        }
+
+        if ($outcome === 'passed') {
+            $application->update([
+                'assessment_status'       => \App\Models\JobApplication::ASSESSMENT_QUALIFIED,
+                'assessment_qualified_at' => now(),
+            ]);
+        } else {
+            $application->update([
+                'assessment_status' => \App\Models\JobApplication::ASSESSMENT_NOT_QUALIFIED,
+            ]);
+        }
+    }
+
+    /**
+     * Has the candidate blown the start window for this stage? Defined by the
+     * PREVIOUS stage's next_stage_start_hours, measured from when they cleared it.
+     */
+    public function windowMissed(AssessmentSession $session, JobAssessmentStage $stage): bool
+    {
+        if ($stage->stage_order <= 1) {
+            return false;
+        }
+
+        $prev = $this->stages($session)->firstWhere('stage_order', $stage->stage_order - 1);
+        $hours = $prev ? $prev->next_stage_start_hours : null;
+        if ($prev === null || $hours === null) {
+            return false; // no deadline configured
+        }
+
+        $prevPass = $session->attempts()
+            ->where('stage_order', $prev->stage_order)
+            ->where('passed', true)
+            ->whereNotNull('submitted_at')
+            ->orderByDesc('submitted_at')
+            ->first();
+        if (!$prevPass || !$prevPass->submitted_at) {
+            return false;
+        }
+
+        return now()->greaterThan($prevPass->submitted_at->copy()->addHours((int) $hours));
     }
 
     public function attemptsRemaining(AssessmentSession $session, JobAssessmentStage $stage): int

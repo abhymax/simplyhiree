@@ -56,6 +56,9 @@ class AssessmentSessionService
             'status'             => 'pending',
         ]);
 
+        // Gate this application until the candidate clears the assessment.
+        $application->update(['assessment_status' => \App\Models\JobApplication::ASSESSMENT_PENDING]);
+
         $this->sendInvite($session);
 
         return $session;

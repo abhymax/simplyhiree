@@ -973,6 +973,9 @@ class ClientController extends Controller
         if ($job->screening_required) {
             $baseResponses->where('status', 'Approved');
         }
+        // Assessment gate: only candidates who cleared the mandatory questionnaire
+        // (or jobs without one) are shown to the client for review.
+        $baseResponses->assessmentCleared();
         $responseCounts = [
             'all' => (clone $baseResponses)->count(),
             'shortlisted' => (clone $baseResponses)->whereIn('hiring_status', ['Shortlisted', 'shortlisted'])->count(),

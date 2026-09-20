@@ -48,7 +48,14 @@ class JobApplication extends Model
         'payment_status',
         'paid_at',
         'billing_due_alerted_at',
+        // Assessment gating
+        'assessment_status',
+        'assessment_qualified_at',
     ];
+
+    public const ASSESSMENT_PENDING       = 'pending';
+    public const ASSESSMENT_QUALIFIED      = 'qualified';
+    public const ASSESSMENT_NOT_QUALIFIED  = 'not_qualified';
 
     protected $casts = [
         'interview_at' => 'datetime',
@@ -66,7 +73,36 @@ class JobApplication extends Model
         'final_ctc' => 'decimal:2',
         'invoice_amount' => 'decimal:2',
         'replacement_deadline' => 'datetime',
+        'assessment_qualified_at' => 'datetime',
     ];
+
+    /**
+     * True when this application is clear to be reviewed: either the job has no
+     * mandatory assessment (status null) or the candidate has qualified.
+     */
+    public function isAssessmentCleared(): bool
+    {
+        return $this->assessment_status === null
+            || $this->assessment_status === self::ASSESSMENT_QUALIFIED;
+    }
+
+    /**
+     * Limit a query to applications that may be shown to a client for review:
+     * no assessment attached, or the candidate has qualified. Pending and
+     * not-qualified candidates are withheld.
+     */
+    public function scopeAssessmentCleared($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('assessment_status')
+              ->orWhere('assessment_status', self::ASSESSMENT_QUALIFIED);
+        });
+    }
+
+    public function assessmentSession()
+    {
+        return $this->hasOne(AssessmentSession::class, 'job_application_id');
+    }
 
     /**
      * Get the job associated with the application.
@@ -121,7 +157,7 @@ class JobApplication extends Model
         if ($client && $client->billable_period_days !== null) {
             return (int) $client->billable_period_days;
         }
-        return 30;
+        return (int) \App\Models\MarketplaceSetting::valueOf('payment_release_days', 30);
     }
 
     /**
@@ -384,6 +420,9 @@ class JobApplication extends Model
         if (!$amount && $this->invoice_amount) {
             $amount = (float) $this->invoice_amount;
         }
+        $gstApplicable = (bool) ($cb['gst_applicable'] ?? false);
+        $gstRate = $gstApplicable ? 18.0 : 0.0;
+        $gstAmount = round((float) ($amount ?? 0) * $gstRate / 100, 2);
 
         return [
             'application'         => $this,
@@ -397,7 +436,10 @@ class JobApplication extends Model
             'fee_percent'         => $cb['fee_percent'] ?? null,
             'fee_amount_flat'     => $cb['fee_amount_flat'] ?? null,
             'invoice_amount'      => $amount,
-            'gst_applicable'      => $cb['gst_applicable'] ?? false,
+            'gst_applicable'      => $gstApplicable,
+            'gst_rate'            => $gstRate,
+            'gst_amount'          => $gstAmount,
+            'invoice_total'       => round((float) ($amount ?? 0) + $gstAmount, 2),
             'replacement_days'    => $cb['replacement_days'] ?? null,
             'invoice_due_at'      => $invoiceDueAt,
             'payment_due_at'      => $paymentDueAt,
