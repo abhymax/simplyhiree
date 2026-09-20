@@ -8,6 +8,7 @@ use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CandidateAssessmentController;
+use App\Http\Controllers\CandidateAssessmentTestController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProfileController;
@@ -50,6 +51,15 @@ Route::prefix('assessment')->name('assessment.')->group(function () {
     Route::post('/{token}/verify', [CandidateAssessmentController::class, 'verifyOtp'])
         ->middleware('throttle:10,1')->name('verify');
     Route::get('/{token}/stages', [CandidateAssessmentController::class, 'overview'])->name('overview');
+
+    // Take-test runner (email already verified above).
+    Route::get('/{token}/start', [CandidateAssessmentTestController::class, 'start'])->name('stage.start');
+    Route::get('/{token}/take', [CandidateAssessmentTestController::class, 'take'])->name('stage.take');
+    Route::post('/{token}/answer', [CandidateAssessmentTestController::class, 'answer'])
+        ->middleware('throttle:120,1')->name('stage.answer');
+    Route::post('/{token}/focus-lost', [CandidateAssessmentTestController::class, 'focusLost'])
+        ->middleware('throttle:120,1')->name('stage.focus');
+    Route::post('/{token}/submit', [CandidateAssessmentTestController::class, 'submit'])->name('stage.submit');
 });
 
 // Public routes
