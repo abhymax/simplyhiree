@@ -117,6 +117,73 @@ Artisan::command('wa:test:billing-period-hit {application_id}', function (
     return 0;
 })->purpose('Test billing period hit WhatsApp campaign');
 
+Artisan::command('vendor:test:emails {email}', function (string $email) {
+    $this->info("Sending branded test emails to {$email}...");
+
+    $partnerName = "Massive Dynamics Partner";
+    $candidateName = "John Doe";
+    $jobTitle = "Senior Full Stack Engineer";
+    $companyName = "Acme Corp";
+    $appCode = "SH-APP-009472";
+    $joiningDate = "August 15, 2026";
+    $ctc = "₹1,800,000";
+    $notes = "The candidate demonstrated excellent Laravel and architectural skills. We are excited to make this offer.";
+
+    // 1. Application Approved
+    try {
+        \Illuminate\Support\Facades\Mail::send('emails.vendor_application_approved', [
+            'partnerName'   => $partnerName,
+            'candidateName' => $candidateName,
+            'jobTitle'      => $jobTitle,
+            'companyName'   => $companyName,
+            'appCode'       => $appCode,
+        ], function ($m) use ($email, $candidateName) {
+            $m->to($email)->subject("[SimplyHiree] DEMO: Candidate Application Approved & Forwarded - {$candidateName}");
+        });
+        $this->info("1. Approved email sent successfully.");
+    } catch (\Throwable $e) {
+        $this->error("Failed to send Approved email: " . $e->getMessage());
+    }
+
+    // 2. Candidate Selected
+    try {
+        \Illuminate\Support\Facades\Mail::send('emails.vendor_candidate_selected', [
+            'partnerName'   => $partnerName,
+            'candidateName' => $candidateName,
+            'jobTitle'      => $jobTitle,
+            'companyName'   => $companyName,
+            'joiningDate'   => $joiningDate,
+            'ctc'           => $ctc,
+            'appCode'       => $appCode,
+            'notes'         => $notes,
+        ], function ($m) use ($email, $candidateName) {
+            $m->to($email)->subject("[SimplyHiree] DEMO: Candidate Selected! - {$candidateName}");
+        });
+        $this->info("2. Selected email sent successfully.");
+    } catch (\Throwable $e) {
+        $this->error("Failed to send Selected email: " . $e->getMessage());
+    }
+
+    // 3. Candidate Rejected
+    try {
+        \Illuminate\Support\Facades\Mail::send('emails.vendor_candidate_rejected', [
+            'partnerName'   => $partnerName,
+            'candidateName' => $candidateName,
+            'jobTitle'      => $jobTitle,
+            'companyName'   => $companyName,
+            'appCode'       => $appCode,
+        ], function ($m) use ($email, $candidateName) {
+            $m->to($email)->subject("[SimplyHiree] DEMO: Application Update: Candidate Rejected - {$candidateName}");
+        });
+        $this->info("3. Rejected email sent successfully.");
+    } catch (\Throwable $e) {
+        $this->error("Failed to send Rejected email: " . $e->getMessage());
+    }
+
+    $this->comment("All test emails triggered successfully!");
+    return 0;
+})->purpose('Send demo / test vendor branded emails to a specified address');
+
 // ---------- Scheduled Jobs (IST) ----------
 Schedule::command('partner:daily-pulse-whatsapp')
     ->timezone('Asia/Kolkata')
@@ -128,30 +195,7 @@ Schedule::command('superadmin:billing-due-check')
     ->dailyAt('10:00')
     ->withoutOverlapping();
 
-Schedule::command('resumes:auto-forward')
+Schedule::command('assessment:reminders')
     ->timezone('Asia/Kolkata')
-    ->hourly()
-    ->withoutOverlapping();
-
-Schedule::command('replacements:resolve')
-    ->timezone('Asia/Kolkata')
-    ->dailyAt('03:00')
-    ->withoutOverlapping();
-
-Schedule::command('vendors:recompute-ratings')
-    ->timezone('Asia/Kolkata')
-    ->dailyAt('02:30')
-    ->withoutOverlapping();
-
-Schedule::command('clients:approved-applications-digest')
-    ->timezone('Asia/Kolkata')
-    ->dailyAt('08:00')
-    ->withoutOverlapping();
-
-// Send WhatsApp reminders to candidates whose interview is starting in the
-// next 60 minutes. Runs every 10 minutes so reminders go out ~50-60 min ahead.
-Schedule::command('interviews:send-reminders --window=60')
-    ->timezone('Asia/Kolkata')
-    ->everyTenMinutes()
-    ->between('06:00', '22:00')
+    ->dailyAt('09:30')
     ->withoutOverlapping();

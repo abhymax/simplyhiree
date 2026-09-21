@@ -97,6 +97,7 @@ class AssessmentTestService
         if ($used === 0 && $this->windowMissed($session, $stage)) {
             $session->update(['status' => 'failed']);
             $this->syncApplication($session, 'failed');
+            $this->dispatchOutcome($session->refresh(), 'failed');
             return ['status' => 'window_missed', 'attempt' => null];
         }
 
@@ -166,7 +167,7 @@ class AssessmentTestService
             return $attempt; // already finalized
         }
 
-        return DB::transaction(function () use ($attempt, $timedOut) {
+        $intent = DB::transaction(function () use ($attempt, $timedOut) {
             $assessment = $attempt->assessment;
             $total = (int) $assessment->totalMarks();
 
@@ -195,13 +196,20 @@ class AssessmentTestService
                 'status'       => $timedOut ? 'expired' : 'submitted',
             ]);
 
-            $this->advanceSession($attempt->session, $attempt);
-
-            return $attempt->refresh();
+            return $this->advanceSession($attempt->session, $attempt);
         });
+
+        // Fire candidate notifications AFTER the transaction commits.
+        $this->dispatchOutcome($attempt->session->refresh(), $intent);
+
+        return $attempt->refresh();
     }
 
-    private function advanceSession(AssessmentSession $session, AssessmentAttempt $attempt): void
+    /**
+     * Advance the session and return a notification intent for the caller to
+     * dispatch after commit: 'passed' | 'failed' | ['unlocked', stageOrder] | null.
+     */
+    private function advanceSession(AssessmentSession $session, AssessmentAttempt $attempt)
     {
         $stages = $this->stages($session);
         $lastOrder = (int) ($stages->max('stage_order') ?? $attempt->stage_order);
@@ -210,13 +218,13 @@ class AssessmentTestService
             if ($attempt->stage_order >= $lastOrder) {
                 $session->update(['status' => 'passed', 'current_stage' => $lastOrder]);
                 $this->syncApplication($session, 'passed');
-            } else {
-                $session->update([
-                    'status'        => 'in_progress',
-                    'current_stage' => $attempt->stage_order + 1,
-                ]);
+                return 'passed';
             }
-            return;
+            $session->update([
+                'status'        => 'in_progress',
+                'current_stage' => $attempt->stage_order + 1,
+            ]);
+            return ['unlocked', $attempt->stage_order + 1];
         }
 
         // Failed: out of attempts on this stage means the whole journey fails.
@@ -225,6 +233,28 @@ class AssessmentTestService
         if ($used >= $max) {
             $session->update(['status' => 'failed']);
             $this->syncApplication($session, 'failed');
+            return 'failed';
+        }
+
+        return null;
+    }
+
+    private function dispatchOutcome(AssessmentSession $session, $intent): void
+    {
+        if (!$intent) {
+            return;
+        }
+        try {
+            $notifier = app(AssessmentNotifier::class);
+            if ($intent === 'passed') {
+                $notifier->result($session, true);
+            } elseif ($intent === 'failed') {
+                $notifier->result($session, false);
+            } elseif (is_array($intent) && ($intent[0] ?? null) === 'unlocked') {
+                $notifier->stageUnlocked($session, (int) $intent[1]);
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 

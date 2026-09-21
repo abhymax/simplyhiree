@@ -22,6 +22,7 @@ class AssessmentSession extends Model
         'token', 'email', 'candidate_name',
         'otp_hash', 'otp_expires_at', 'otp_attempts', 'otp_last_sent_at', 'verified_at',
         'current_stage', 'status', 'expires_at',
+        'last_reminded_at', 'reminder_count', 'result_notified_at', 'unlock_notified_stage',
     ];
 
     protected $casts = [
@@ -29,6 +30,10 @@ class AssessmentSession extends Model
         'otp_last_sent_at' => 'datetime',
         'verified_at'      => 'datetime',
         'expires_at'       => 'datetime',
+        'last_reminded_at'   => 'datetime',
+        'result_notified_at' => 'datetime',
+        'reminder_count'        => 'integer',
+        'unlock_notified_stage' => 'integer',
         'otp_attempts'     => 'integer',
         'current_stage'    => 'integer',
     ];

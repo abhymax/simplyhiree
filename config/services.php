@@ -57,6 +57,11 @@ return [
             'partner.daily_pulse' => env('AISENSY_TEMPLATE_PARTNER_DAILY_PULSE'),
             'billing.period_hit' => env('AISENSY_TEMPLATE_BILLING_PERIOD_HIT'),
             'vendor.broadcast' => env('AISENSY_TEMPLATE_VENDOR_BROADCAST'),
+            // Assessment engine (map to AiSensy campaigns when ready; empty = skipped)
+            'assessment.result_qualified'     => env('AISENSY_TEMPLATE_ASSESSMENT_QUALIFIED'),
+            'assessment.result_not_qualified' => env('AISENSY_TEMPLATE_ASSESSMENT_NOT_QUALIFIED'),
+            'assessment.stage_unlocked'       => env('AISENSY_TEMPLATE_ASSESSMENT_STAGE_UNLOCKED'),
+            'assessment.reminder'             => env('AISENSY_TEMPLATE_ASSESSMENT_REMINDER'),
             // Aliases (used by newer controllers that pass un-dotted keys)
             'interview_scheduled' => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_SCHEDULED'),
             'interview_reminder'  => env('AISENSY_TEMPLATE_CANDIDATE_INTERVIEW_REMINDER'),
