@@ -96,7 +96,7 @@ class AssessmentSessionService
                 'job'     => $job,
                 'code'    => $code,
                 'ttl'     => AssessmentSession::OTP_TTL_MINUTES,
-            ], function ($mail) use ($session) {
+            ], function ($mail) use ($session, $code) {
                 $mail->to($session->email, $session->candidate_name ?: null)
                      ->subject('Your verification code: ' . $code);
             });
