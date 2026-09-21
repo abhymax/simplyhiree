@@ -102,6 +102,8 @@ class EnforceClientModule
         'client.assessments.edit' => 'assessments',
         'client.assessments.update' => 'assessments',
         'client.assessments.destroy' => 'assessments',
+        'client.assessment-results.index' => 'assessments',
+        'client.assessment-results.show' => 'assessments',
     ];
 
     public function handle(Request $request, Closure $next): Response

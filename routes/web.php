@@ -163,6 +163,10 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::patch('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->name('assessments.update');
         Route::delete('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->name('assessments.destroy');
 
+        // Assessment results / reporting (Superadmin/Manager: all clients)
+        Route::get('/assessment-results', [\App\Http\Controllers\AssessmentResultController::class, 'index'])->name('assessment-results.index');
+        Route::get('/assessment-results/{session}', [\App\Http\Controllers\AssessmentResultController::class, 'show'])->name('assessment-results.show');
+
         Route::post('/jobs/description-images', \App\Http\Controllers\JobDescriptionImageController::class)
             ->middleware('throttle:20,1')->name('jobs.description-images.store');
         Route::get('/finance-offers', [FinanceOfferController::class, 'index'])->middleware('can:view_billing_data')->name('finance-offers.index');
@@ -383,6 +387,10 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/assessments/{assessment}/edit', [\App\Http\Controllers\AssessmentController::class, 'edit'])->name('assessments.edit');
         Route::patch('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->name('assessments.update');
         Route::delete('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+
+        // Assessment results / reporting (company-scoped)
+        Route::get('/assessment-results', [\App\Http\Controllers\AssessmentResultController::class, 'index'])->name('assessment-results.index');
+        Route::get('/assessment-results/{session}', [\App\Http\Controllers\AssessmentResultController::class, 'show'])->name('assessment-results.show');
 
         // --- Job Management ---
         Route::get('/jobs', [ClientController::class, 'listJobs'])->name('jobs.index');

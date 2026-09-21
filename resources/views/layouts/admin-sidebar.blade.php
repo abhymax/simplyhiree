@@ -49,6 +49,7 @@
                     ['route'=>'admin.jobs.pending',           'label'=>'Pending Jobs',        'icon'=>'fa-briefcase-clock',     'active'=>['admin.jobs.pending'], 'can'=>'view_pending_jobs'],
                     ['route'=>'admin.jobs.archived',          'label'=>'Archived Jobs',       'icon'=>'fa-box-archive',         'active'=>['admin.jobs.archived*'], 'can'=>'view_pending_jobs'],
                     ['route'=>'admin.assessments.index',      'label'=>'Questionnaires',      'icon'=>'fa-clipboard-question',  'active'=>['admin.assessments.*']],
+                    ['route'=>'admin.assessment-results.index','label'=>'Assessment Results', 'icon'=>'fa-square-poll-vertical', 'active'=>['admin.assessment-results.*']],
                     ['route'=>'admin.billing.index',          'label'=>'Billing Report',      'icon'=>'fa-file-invoice-dollar', 'active'=>['admin.billing.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.revenue-control.index',  'label'=>'Revenue & Payout',    'icon'=>'fa-sack-dollar',         'active'=>['admin.revenue-control.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.risk-control.index',     'label'=>'Risk & Fraud',        'icon'=>'fa-shield-halved',       'active'=>['admin.risk-control.*'], 'role'=>'Superadmin'],
