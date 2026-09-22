@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AssessmentQuestionOption extends Model
 {
     protected $fillable = [
-        'assessment_question_id', 'option_text', 'is_correct', 'sort_order',
+        'assessment_question_id', 'option_text', 'is_correct', 'weight', 'sort_order',
     ];
 
     protected $casts = [
         'is_correct' => 'boolean',
+        'weight'     => 'integer',
         'sort_order' => 'integer',
     ];
 

@@ -169,31 +169,21 @@ class AssessmentTestService
 
         $intent = DB::transaction(function () use ($attempt, $timedOut) {
             $assessment = $attempt->assessment;
-            $total = (int) $assessment->totalMarks();
+            $graded = $assessment->isWeighted()
+                ? $this->scoreWeighted($attempt, $assessment)
+                : $this->scoreMcq($attempt, $assessment);
 
-            // Score = sum of marks for questions whose saved answer is correct.
-            $correctQuestionIds = $attempt->answers()
-                ->where('is_correct', true)
-                ->pluck('assessment_question_id')
-                ->all();
-
-            $score = 0;
-            if (!empty($correctQuestionIds)) {
-                $score = (int) $assessment->questions()
-                    ->whereIn('id', $correctQuestionIds)
-                    ->sum('marks');
-            }
-
-            $percentage = $total > 0 ? round(($score / $total) * 100, 2) : 0;
+            $percentage = $graded['total'] > 0 ? round(($graded['score'] / $graded['total']) * 100, 2) : 0;
             $passed = $percentage >= (int) $assessment->passing_percentage;
 
             $attempt->update([
-                'submitted_at' => now(),
-                'score'        => $score,
-                'total_marks'  => $total,
-                'percentage'   => $percentage,
-                'passed'       => $passed,
-                'status'       => $timedOut ? 'expired' : 'submitted',
+                'submitted_at'    => now(),
+                'score'           => $graded['score'],
+                'total_marks'     => $graded['total'],
+                'percentage'      => $percentage,
+                'passed'          => $passed,
+                'status'          => $timedOut ? 'expired' : 'submitted',
+                'category_scores' => $graded['categories'],
             ]);
 
             return $this->advanceSession($attempt->session, $attempt);
@@ -203,6 +193,66 @@ class AssessmentTestService
         $this->dispatchOutcome($attempt->session->refresh(), $intent);
 
         return $attempt->refresh();
+    }
+
+    /** MCQ: full question marks when the chosen option is correct. */
+    private function scoreMcq(AssessmentAttempt $attempt, Assessment $assessment): array
+    {
+        $total = (int) $assessment->totalMarks();
+
+        $correctQuestionIds = $attempt->answers()
+            ->where('is_correct', true)
+            ->pluck('assessment_question_id')
+            ->all();
+
+        $score = 0;
+        if (!empty($correctQuestionIds)) {
+            $score = (int) $assessment->questions()
+                ->whereIn('id', $correctQuestionIds)
+                ->sum('marks');
+        }
+
+        return ['score' => $score, 'total' => $total, 'categories' => null];
+    }
+
+    /**
+     * Weighted / Likert: each chosen option contributes its point weight, rolled
+     * up per competency category. Max per question is its highest option weight.
+     */
+    private function scoreWeighted(AssessmentAttempt $attempt, Assessment $assessment): array
+    {
+        $questions = $assessment->questions()->with('options')->get()->keyBy('id');
+        $chosen = $attempt->answers()->pluck('assessment_question_option_id', 'assessment_question_id');
+
+        $cats = []; // category => [score, max]
+        foreach ($questions as $qid => $q) {
+            $cat = $q->category ?: 'General';
+            $cats[$cat] ??= ['score' => 0, 'max' => 0];
+
+            $cats[$cat]['max'] += (int) $q->options->max('weight');
+
+            $optId = $chosen[$qid] ?? null;
+            if ($optId !== null) {
+                $opt = $q->options->firstWhere('id', (int) $optId);
+                if ($opt) {
+                    $cats[$cat]['score'] += (int) $opt->weight;
+                }
+            }
+        }
+
+        $score = 0; $total = 0; $categories = [];
+        foreach ($cats as $name => $c) {
+            $score += $c['score'];
+            $total += $c['max'];
+            $categories[] = [
+                'category'   => $name,
+                'score'      => $c['score'],
+                'max'        => $c['max'],
+                'percentage' => $c['max'] > 0 ? round(($c['score'] / $c['max']) * 100, 2) : 0,
+            ];
+        }
+
+        return ['score' => $score, 'total' => $total, 'categories' => $categories];
     }
 
     /**

@@ -12,7 +12,7 @@ class AssessmentAttempt extends Model
         'assessment_session_id', 'assessment_id', 'stage_order', 'attempt_number',
         'started_at', 'expires_at', 'submitted_at',
         'score', 'total_marks', 'percentage', 'passed', 'status',
-        'focus_lost_count', 'question_order',
+        'focus_lost_count', 'question_order', 'category_scores',
     ];
 
     protected $casts = [
@@ -22,6 +22,7 @@ class AssessmentAttempt extends Model
         'passed'        => 'boolean',
         'percentage'    => 'decimal:2',
         'question_order' => 'array',
+        'category_scores' => 'array',
     ];
 
     public function session(): BelongsTo

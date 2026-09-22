@@ -101,11 +101,12 @@ class AssessmentController extends Controller
                 'description'        => $data['description'] ?? null,
                 'passing_percentage' => $data['passing_percentage'],
                 'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
+                'scoring_type'       => $data['scoring_type'],
                 'max_attempts'       => $data['max_attempts'],
                 'shuffle_questions'  => (bool) ($request->boolean('shuffle_questions')),
                 'status'             => $data['status'] ?? 'active',
             ]);
-            $this->syncQuestions($assessment, $request->input('questions', []));
+            $this->syncQuestions($assessment, $request->input('questions', []), $data['scoring_type']);
         });
         return redirect()->route($this->routeNames()['index'])->with('success', 'Questionnaire saved.');
     }
@@ -121,12 +122,13 @@ class AssessmentController extends Controller
                 'description'        => $data['description'] ?? null,
                 'passing_percentage' => $data['passing_percentage'],
                 'time_limit_minutes' => $data['time_limit_minutes'] ?? null,
+                'scoring_type'       => $data['scoring_type'],
                 'max_attempts'       => $data['max_attempts'],
                 'shuffle_questions'  => (bool) ($request->boolean('shuffle_questions')),
                 'status'             => $data['status'] ?? 'active',
             ]);
             $assessment->questions()->delete(); // cascade removes options; recreate fresh
-            $this->syncQuestions($assessment, $request->input('questions', []));
+            $this->syncQuestions($assessment, $request->input('questions', []), $data['scoring_type']);
         });
         return redirect()->route($this->routeNames()['index'])->with('success', 'Questionnaire updated.');
     }
@@ -140,30 +142,71 @@ class AssessmentController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $weighted = $request->input('scoring_type') === 'weighted';
+
+        $rules = [
+            'scoring_type'               => 'required|in:mcq,weighted',
             'name'                       => 'required|string|max:255',
             'tag'                        => 'nullable|string|max:60',
             'description'                => 'nullable|string|max:2000',
-            'passing_percentage'         => 'required|integer|min:1|max:100',
+            'passing_percentage'         => 'required|integer|min:0|max:100',
             'time_limit_minutes'         => 'nullable|integer|min:1|max:600',
             'max_attempts'               => 'required|integer|min:1|max:10',
             'status'                     => 'nullable|in:active,archived',
             'questions'                  => 'required|array|min:1',
             'questions.*.question_text'  => 'required|string|max:2000',
-            'questions.*.marks'          => 'nullable|integer|min:1|max:100',
-            'questions.*.correct'        => 'required',
-            'questions.*.options'        => 'required|array|min:2|max:6',
-            'questions.*.options.*.text' => 'required|string|max:1000',
-        ], [
+        ];
+
+        if ($weighted) {
+            $rules['questions.*.category']  = 'nullable|string|max:120';
+            $rules['questions.*.direction'] = 'required|in:direct,reverse';
+        } else {
+            $rules['questions.*.marks']          = 'nullable|integer|min:1|max:100';
+            $rules['questions.*.correct']        = 'required';
+            $rules['questions.*.options']        = 'required|array|min:2|max:6';
+            $rules['questions.*.options.*.text'] = 'required|string|max:1000';
+        }
+
+        return $request->validate($rules, [
             'questions.required'            => 'Add at least one question.',
             'questions.*.correct.required'  => 'Mark the correct option for each question.',
             'questions.*.options.min'       => 'Each question needs at least two options.',
+            'questions.*.direction.required'=> 'Choose Direct or Reverse for each statement.',
         ]);
     }
 
-    private function syncQuestions(Assessment $assessment, array $questions): void
+    /** Fixed 5-point Likert scale (label => [directWeight, reverseWeight]). */
+    private const LIKERT = [
+        'Strongly Disagree' => [1, 5],
+        'Disagree'          => [2, 4],
+        'Neutral'           => [3, 3],
+        'Agree'             => [4, 2],
+        'Strongly Agree'    => [5, 1],
+    ];
+
+    private function syncQuestions(Assessment $assessment, array $questions, string $scoringType = 'mcq'): void
     {
         foreach (array_values($questions) as $qi => $q) {
+            if ($scoringType === 'weighted') {
+                $question = $assessment->questions()->create([
+                    'question_text' => $q['question_text'],
+                    'category'      => $q['category'] ?? null,
+                    'marks'         => 1,
+                    'sort_order'    => $qi,
+                ]);
+                $reverse = ($q['direction'] ?? 'direct') === 'reverse';
+                $oi = 0;
+                foreach (self::LIKERT as $label => $weights) {
+                    $question->options()->create([
+                        'option_text' => $label,
+                        'is_correct'  => false,
+                        'weight'      => $reverse ? $weights[1] : $weights[0],
+                        'sort_order'  => $oi++,
+                    ]);
+                }
+                continue;
+            }
+
             $question = $assessment->questions()->create([
                 'question_text' => $q['question_text'],
                 'marks'         => (int) ($q['marks'] ?? 1),
@@ -174,6 +217,7 @@ class AssessmentController extends Controller
                 $question->options()->create([
                     'option_text' => $opt['text'],
                     'is_correct'  => ((string) $oi === $correct),
+                    'weight'      => 0,
                     'sort_order'  => $oi,
                 ]);
             }

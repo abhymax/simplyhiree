@@ -56,20 +56,51 @@
                         <span class="text-amber-300 text-xs"><i class="fa-solid fa-eye-slash mr-1"></i>{{ $att->focus_lost_count }} focus loss</span>
                     @endif
                 </div>
+                @php $isWeighted = optional($att->assessment)->scoring_type === 'weighted'; @endphp
+
+                {{-- Weighted: competency breakdown --}}
+                @if($isWeighted && !empty($att->category_scores))
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        @foreach($att->category_scores as $c)
+                            <div class="rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-white/90 font-semibold">{{ $c['category'] }}</span>
+                                    <span class="text-violet-200 font-bold">{{ $c['score'] }}/{{ $c['max'] }} · {{ rtrim(rtrim((string)$c['percentage'],'0'),'.') }}%</span>
+                                </div>
+                                <div class="mt-1.5 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full bg-violet-400" style="width: {{ min(100,(float)$c['percentage']) }}%"></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 @if($att->answers->isNotEmpty())
                     <div class="mt-3 space-y-2">
                         @foreach($att->answers as $ans)
-                            @php $correct = optional($ans->question)->options->firstWhere('is_correct', true); @endphp
-                            <div class="text-xs rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
-                                <div class="text-white/90 font-semibold">{{ optional($ans->question)->question_text }}</div>
-                                <div class="mt-1 {{ $ans->is_correct ? 'text-emerald-300' : 'text-rose-300' }}">
-                                    <i class="fa-solid {{ $ans->is_correct ? 'fa-check' : 'fa-xmark' }} mr-1"></i>
-                                    Chosen: {{ optional($ans->option)->option_text ?? '—' }}
+                            @if($isWeighted)
+                                <div class="text-xs rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
+                                    <div class="text-white/90 font-semibold">{{ optional($ans->question)->question_text }}
+                                        @if(optional($ans->question)->category)<span class="text-violet-300/70 font-normal">· {{ $ans->question->category }}</span>@endif
+                                    </div>
+                                    <div class="mt-1 text-slate-200">
+                                        Answered: <span class="text-white">{{ optional($ans->option)->option_text ?? '—' }}</span>
+                                        <span class="text-violet-300 font-bold ml-1">(+{{ (int) optional($ans->option)->weight }})</span>
+                                    </div>
                                 </div>
-                                @unless($ans->is_correct)
-                                    <div class="text-blue-200/70 mt-0.5">Correct: {{ optional($correct)->option_text ?? '—' }}</div>
-                                @endunless
-                            </div>
+                            @else
+                                @php $correct = optional($ans->question)->options->firstWhere('is_correct', true); @endphp
+                                <div class="text-xs rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
+                                    <div class="text-white/90 font-semibold">{{ optional($ans->question)->question_text }}</div>
+                                    <div class="mt-1 {{ $ans->is_correct ? 'text-emerald-300' : 'text-rose-300' }}">
+                                        <i class="fa-solid {{ $ans->is_correct ? 'fa-check' : 'fa-xmark' }} mr-1"></i>
+                                        Chosen: {{ optional($ans->option)->option_text ?? '—' }}
+                                    </div>
+                                    @unless($ans->is_correct)
+                                        <div class="text-blue-200/70 mt-0.5">Correct: {{ optional($correct)->option_text ?? '—' }}</div>
+                                    @endunless
+                                </div>
+                            @endif
                         @endforeach
                     </div>
                 @endif
