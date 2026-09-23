@@ -129,6 +129,7 @@
                             <th class="px-6 py-5">Job Details</th>
                             <th class="px-6 py-5">Company</th>
                             <th class="px-6 py-5">Status</th>
+                            <th class="px-6 py-5">Assessment</th>
                             <th class="px-6 py-5">Date</th>
                         </tr>
                     </thead>
@@ -188,11 +189,12 @@
                                         {{ $status }}
                                     </span>
                                 </td>
+                                <td class="px-6 py-5">@include('applications._assessment_cell', ['app' => $application, 'showRoute' => null])</td>
                                 <td class="px-6 py-5 text-blue-200 text-xs">{{ $application->created_at->format('M d, Y') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-16 text-center">
+                                <td colspan="6" class="px-6 py-16 text-center">
                                     <i class="fa-regular fa-folder-open text-5xl text-blue-200 mb-3"></i>
                                     <p class="text-white font-bold">No applications submitted yet.</p>
                                 </td>

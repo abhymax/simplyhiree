@@ -24,14 +24,16 @@ class AssessmentResultController extends Controller
         return ['index' => "$p.index", 'show' => "$p.show"];
     }
 
-    /** Base query scoped by access: admin sees all; a client sees only their company's jobs. */
+    /** Base query scoped by access: admin sees all; a client sees only their own APPROVED jobs. */
     private function scopedQuery()
     {
         $query = AssessmentSession::query()->with(['job', 'candidate', 'partner']);
 
         if (!$this->isAdmin()) {
             $ownerId = (int) Auth::user()->clientOwnerId();
-            $query->whereHas('job', fn ($q) => $q->where('user_id', $ownerId));
+            // Clients only see results for jobs that are live (approved by admin) —
+            // never for jobs still pending approval / on hold / rejected.
+            $query->whereHas('job', fn ($q) => $q->where('user_id', $ownerId)->where('status', 'approved'));
         }
 
         return $query;
@@ -71,23 +73,44 @@ class AssessmentResultController extends Controller
             $query->where('job_id', (int) $request->input('job_id'));
         }
 
+        // Company filter (admin only): show assessments for one client's jobs.
+        $clientId = $this->isAdmin() && $request->filled('client_id') ? (int) $request->input('client_id') : null;
+        if ($clientId) {
+            $query->whereHas('job', fn ($jq) => $jq->where('user_id', $clientId));
+        }
+
         $sessions = $query->latest()->paginate(25)->withQueryString();
 
+        // Client dropdown for the admin company filter — only clients that
+        // actually have assessment sessions, so the list stays short.
+        $clientOptions = collect();
+        if ($this->isAdmin()) {
+            $clientOptions = \App\Models\User::whereIn('id', function ($q) {
+                $q->select('jobs.user_id')
+                  ->from('assessment_sessions')
+                  ->join('jobs', 'jobs.id', '=', 'assessment_sessions.job_id')
+                  ->whereNotNull('jobs.user_id');
+            })->orderBy('name')->get(['id', 'name']);
+        }
+
         return view($this->views() . '.index', [
-            'sessions' => $sessions,
-            'counts'   => $counts,
-            'filter'   => $filter,
-            'routes'   => $this->routeNames(),
-            'isAdmin'  => $this->isAdmin(),
+            'sessions'      => $sessions,
+            'counts'        => $counts,
+            'filter'        => $filter,
+            'routes'        => $this->routeNames(),
+            'isAdmin'       => $this->isAdmin(),
+            'clientOptions' => $clientOptions,
+            'clientId'      => $clientId,
         ]);
     }
 
     public function show(AssessmentSession $session)
     {
-        // Access control: a client may only open sessions on their own company's jobs.
+        // Access control: a client may only open sessions on their own APPROVED jobs.
         if (!$this->isAdmin()) {
             $ownerId = (int) Auth::user()->clientOwnerId();
-            if ((int) optional($session->job)->user_id !== $ownerId) {
+            $job = $session->job;
+            if (!$job || (int) $job->user_id !== $ownerId || $job->status !== 'approved') {
                 abort(403);
             }
         }

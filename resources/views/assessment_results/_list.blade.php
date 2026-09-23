@@ -25,11 +25,19 @@
     @endforeach
 </div>
 
-<form method="GET" class="mb-5 flex gap-3">
+<form method="GET" class="mb-5 flex flex-wrap gap-3">
     <input type="hidden" name="status" value="{{ $filter }}">
+    @if(($isAdmin ?? false) && ($clientOptions ?? collect())->isNotEmpty())
+        <select name="client_id" class="rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-2.5 focus:ring-2 focus:ring-cyan-400">
+            <option value="">All companies</option>
+            @foreach($clientOptions as $co)
+                <option value="{{ $co->id }}" @selected((int) ($clientId ?? 0) === (int) $co->id)>{{ $co->name }}</option>
+            @endforeach
+        </select>
+    @endif
     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidate, email or job…"
-           class="flex-1 rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-2.5 focus:ring-2 focus:ring-cyan-400">
-    <button class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5">Search</button>
+           class="flex-1 min-w-[200px] rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-2.5 focus:ring-2 focus:ring-cyan-400">
+    <button class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5">Filter</button>
 </form>
 
 <div class="rounded-2xl border border-white/10 bg-slate-900/40 overflow-hidden">

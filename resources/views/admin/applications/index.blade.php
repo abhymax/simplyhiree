@@ -170,6 +170,7 @@
                                 <th class="px-6 py-5">Job Details</th>
                                 <th class="px-6 py-5">Source</th>
                                 <th class="px-6 py-5">Status</th>
+                                <th class="px-6 py-5">Assessment</th>
                                 <th class="px-6 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -265,6 +266,10 @@
                                         @endif
                                     </td>
 
+                                    <td class="px-6 py-5">
+                                        @include('applications._assessment_cell', ['app' => $application, 'showRoute' => 'admin.assessment-results.show'])
+                                    </td>
+
                                     {{-- Actions (Bright Icons) --}}
                                     <td class="px-6 py-5 text-right">
                                         <div class="flex flex-col items-end gap-2">
@@ -318,7 +323,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-20 text-center">
+                                    <td colspan="7" class="px-6 py-20 text-center">
                                         <div class="bg-white/10 inline-block p-6 rounded-full mb-4 backdrop-blur-md border border-white/10">
                                             <i class="fa-regular fa-folder-open text-5xl text-blue-200"></i>
                                         </div>

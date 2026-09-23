@@ -210,6 +210,13 @@
                     </div>
                 </div>
 
+                @if($app->assessmentBadge())
+                    <div class="mt-3 inline-flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wide text-slate-400"><i class="fa-solid fa-clipboard-check mr-1 text-violet-300"></i>Assessment</span>
+                        @include('applications._assessment_cell', ['app' => $app, 'showRoute' => 'client.assessment-results.show'])
+                    </div>
+                @endif
+
                 <div class="candidate-actions">
                     <a href="{{ route('client.applications.show', $app) }}" class="candidate-action inline-flex items-center gap-2 rounded-xl border border-cyan-200/45 bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2.5 text-xs font-extrabold text-white shadow-md shadow-cyan-950/35 hover:from-cyan-400 hover:to-blue-500">
                             <i class="fa-regular fa-user"></i> Profile

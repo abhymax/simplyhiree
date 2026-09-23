@@ -1750,7 +1750,7 @@ class AdminController extends Controller
 
     public function listApplications(Request $request)
     {
-        $query = JobApplication::with(['job', 'candidate', 'candidate.partner', 'candidateUser.profile']);
+        $query = JobApplication::with(['job', 'candidate', 'candidate.partner', 'candidateUser.profile', 'assessmentSession.attempts']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');

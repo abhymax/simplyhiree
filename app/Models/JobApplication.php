@@ -105,6 +105,46 @@ class JobApplication extends Model
     }
 
     /**
+     * Compact assessment summary for list views, or null when the job has no
+     * questionnaire. ['label','color','percentage','stages_passed','session_id'].
+     */
+    public function assessmentBadge(): ?array
+    {
+        if ($this->assessment_status === null) {
+            return null;
+        }
+
+        $labels = [
+            self::ASSESSMENT_QUALIFIED     => ['Qualified', 'emerald'],
+            self::ASSESSMENT_NOT_QUALIFIED => ['Not qualified', 'rose'],
+            self::ASSESSMENT_PENDING       => ['In assessment', 'amber'],
+        ];
+        [$label, $color] = $labels[$this->assessment_status] ?? ['—', 'slate'];
+
+        $session = $this->relationLoaded('assessmentSession')
+            ? $this->assessmentSession
+            : $this->assessmentSession()->with('attempts')->first();
+
+        $pct = null; $sessionId = null; $stagesPassed = null;
+        if ($session) {
+            $sessionId = $session->id;
+            $submitted = $session->attempts->whereNotNull('submitted_at');
+            if ($submitted->isNotEmpty()) {
+                $pct = (float) $submitted->max('percentage');
+                $stagesPassed = $submitted->where('passed', true)->pluck('stage_order')->unique()->count();
+            }
+        }
+
+        return [
+            'label'         => $label,
+            'color'         => $color,
+            'percentage'    => $pct,
+            'stages_passed' => $stagesPassed,
+            'session_id'    => $sessionId,
+        ];
+    }
+
+    /**
      * Get the job associated with the application.
      */
     public function job()

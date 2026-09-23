@@ -317,7 +317,7 @@ class PartnerController extends Controller
         $baseScope = fn($q) => $q->whereIn('partner_id', $teamPartnerIds);
 
         $query = JobApplication::whereHas('candidate', $baseScope)
-                    ->with(['job', 'candidate', 'interviewRounds']);
+                    ->with(['job', 'candidate', 'interviewRounds', 'assessmentSession.attempts']);
 
         // Filter: Interviews Today
         if ($request->has('interview_today')) {

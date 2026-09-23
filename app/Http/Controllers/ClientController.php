@@ -984,7 +984,7 @@ class ClientController extends Controller
             'rejected' => (clone $baseResponses)->where('hiring_status', 'Client Rejected')->count(),
         ];
 
-        $query = (clone $baseResponses)->with(['candidate', 'candidateUser.profile', 'interviewRounds']);
+        $query = (clone $baseResponses)->with(['candidate', 'candidateUser.profile', 'interviewRounds', 'assessmentSession.attempts']);
 
         $responseFilter = $request->input('response', 'all');
         if ($responseFilter === 'shortlisted') {
