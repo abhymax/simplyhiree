@@ -1259,8 +1259,16 @@ class AdminController extends Controller
         $experienceLevels = Cache::remember('experience_levels', 3600, fn () => ExperienceLevel::orderBy('name')->get());
         $educationLevels = Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get());
 
-        $availableAssessments = Assessment::where('status', 'active')
-            ->orderBy('name')->get(['id', 'name', 'tag']);
+        $availableAssessments = Assessment::with('owner:id,name')->where('status', 'active')
+            ->orderBy('name')->get(['id', 'name', 'tag', 'user_id'])
+            ->map(function ($a) {
+                // Tag client-owned questionnaires with the company so admin knows
+                // whose it is when selecting; global ones stay plain.
+                if ($a->user_id && $a->owner) {
+                    $a->name = $a->name . ' — ' . $a->owner->name;
+                }
+                return $a;
+            });
 
         return view('admin.jobs.create', compact(
             'clients', 'partners', 'candidates',
@@ -1398,7 +1406,7 @@ class AdminController extends Controller
             'partners' => User::role('partner')->where('status', 'active')->orderBy('name')->get(),
             'categories' => Cache::remember('job_categories', 3600, fn () => JobCategory::orderBy('name')->get()),
             'educationLevels' => Cache::remember('education_levels', 3600, fn () => EducationLevel::orderBy('name')->get()),
-            'availableAssessments' => Assessment::where('status', 'active')->orderBy('name')->get(['id', 'name', 'tag']),
+            'availableAssessments' => Assessment::with('owner:id,name')->where('status', 'active')->orderBy('name')->get(['id', 'name', 'tag', 'user_id'])->map(function ($a) { if ($a->user_id && $a->owner) { $a->name = $a->name . ' — ' . $a->owner->name; } return $a; }),
         ]);
     }
 
