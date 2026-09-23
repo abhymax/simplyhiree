@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +75,7 @@ class AssessmentController extends Controller
             'routes'     => $this->routeNames(),
             'tags'       => self::TAGS,
             'isAdmin'    => $this->isAdmin(),
+            'clients'    => $this->clientOptions(),
         ]);
     }
 
@@ -86,6 +88,7 @@ class AssessmentController extends Controller
             'routes'     => $this->routeNames(),
             'tags'       => self::TAGS,
             'isAdmin'    => $this->isAdmin(),
+            'clients'    => $this->clientOptions(),
         ]);
     }
 
@@ -93,9 +96,10 @@ class AssessmentController extends Controller
     {
         $data = $this->validated($request);
         DB::transaction(function () use ($data, $request) {
+            $assignedClientId = ($this->isAdmin() && !empty($data['client_id'])) ? (int) $data['client_id'] : null;
             $assessment = Assessment::create([
-                'user_id'            => $this->isAdmin() ? null : $this->ownerId(),
-                'is_global'          => $this->isAdmin(),
+                'user_id'            => $this->isAdmin() ? $assignedClientId : $this->ownerId(),
+                'is_global'          => $this->isAdmin() ? empty($assignedClientId) : false,
                 'name'               => $data['name'],
                 'tag'                => $data['tag'] ?? null,
                 'description'        => $data['description'] ?? null,
@@ -116,7 +120,12 @@ class AssessmentController extends Controller
         $this->authorizeAccess($assessment);
         $data = $this->validated($request);
         DB::transaction(function () use ($assessment, $data, $request) {
-            $assessment->update([
+            $reassign = [];
+            if ($this->isAdmin()) {
+                $assignedClientId = !empty($data['client_id']) ? (int) $data['client_id'] : null;
+                $reassign = ['user_id' => $assignedClientId, 'is_global' => empty($assignedClientId)];
+            }
+            $assessment->update(array_merge($reassign, [
                 'name'               => $data['name'],
                 'tag'                => $data['tag'] ?? null,
                 'description'        => $data['description'] ?? null,
@@ -126,7 +135,7 @@ class AssessmentController extends Controller
                 'max_attempts'       => $data['max_attempts'],
                 'shuffle_questions'  => (bool) ($request->boolean('shuffle_questions')),
                 'status'             => $data['status'] ?? 'active',
-            ]);
+            ]));
             $assessment->questions()->delete(); // cascade removes options; recreate fresh
             $this->syncQuestions($assessment, $request->input('questions', []), $data['scoring_type']);
         });
@@ -140,12 +149,23 @@ class AssessmentController extends Controller
         return redirect()->route($this->routeNames()['index'])->with('success', 'Questionnaire deleted.');
     }
 
+    /** Client accounts an admin can assign a questionnaire to (owners only). */
+    private function clientOptions()
+    {
+        if (!$this->isAdmin()) {
+            return collect();
+        }
+        return User::role('client')->whereNull('parent_partner_id')
+            ->orderBy('name')->get(['id', 'name']);
+    }
+
     private function validated(Request $request): array
     {
         $weighted = $request->input('scoring_type') === 'weighted';
 
         $rules = [
             'scoring_type'               => 'required|in:mcq,weighted',
+            'client_id'                  => 'nullable|integer|exists:users,id',
             'name'                       => 'required|string|max:255',
             'tag'                        => 'nullable|string|max:60',
             'description'                => 'nullable|string|max:2000',

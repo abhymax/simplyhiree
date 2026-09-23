@@ -87,6 +87,18 @@
                 <label class="{{ $lc }}">Questionnaire name *</label>
                 <input type="text" name="name" value="{{ old('name', $assessment->name ?? '') }}" required placeholder="e.g. Psychometric Screening" class="{{ $ic }}">
             </div>
+            @if(!empty($isAdmin))
+                <div class="md:col-span-2">
+                    <label class="{{ $lc }}">Assign to</label>
+                    <select name="client_id" class="{{ $ic }}">
+                        <option value="">All clients (global library)</option>
+                        @foreach(($clients ?? []) as $c)
+                            <option value="{{ $c->id }}" @selected((string) old('client_id', $assessment->user_id ?? '') === (string) $c->id)>{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                    <span class="text-[11px] text-slate-400 mt-1 block">Global = usable by every client. Pick a client to make this questionnaire visible to that client only.</span>
+                </div>
+            @endif
             <div>
                 <label class="{{ $lc }}">Tag / Category</label>
                 <input type="text" name="tag" list="asmt-tags" value="{{ old('tag', $assessment->tag ?? '') }}" placeholder="e.g. Psychometric, Electrical" class="{{ $ic }}">
