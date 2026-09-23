@@ -100,6 +100,7 @@ class AssessmentController extends Controller
             $assessment = Assessment::create([
                 'user_id'            => $this->isAdmin() ? $assignedClientId : $this->ownerId(),
                 'is_global'          => $this->isAdmin() ? empty($assignedClientId) : false,
+                'auto_attach'        => $request->boolean('auto_attach'),
                 'name'               => $data['name'],
                 'tag'                => $data['tag'] ?? null,
                 'description'        => $data['description'] ?? null,
@@ -135,6 +136,7 @@ class AssessmentController extends Controller
                 'max_attempts'       => $data['max_attempts'],
                 'shuffle_questions'  => (bool) ($request->boolean('shuffle_questions')),
                 'status'             => $data['status'] ?? 'active',
+                'auto_attach'        => $request->boolean('auto_attach'),
             ]));
             $assessment->questions()->delete(); // cascade removes options; recreate fresh
             $this->syncQuestions($assessment, $request->input('questions', []), $data['scoring_type']);

@@ -35,6 +35,39 @@ class JobAssessmentStage extends Model
      *
      * @param  array  $stages  list of ['assessment_id' => int, 'next_stage_start_hours' => ?int]
      */
+    /**
+     * Attach any "auto-apply" questionnaires for the given owner to a newly
+     * created job — but only when the job has no questionnaires already, so an
+     * explicit selection on the form is always respected.
+     */
+    public static function autoAttachForJob(Job $job, ?int $ownerId): void
+    {
+        if ($ownerId === null) {
+            return;
+        }
+        if (static::where('job_id', $job->id)->exists()) {
+            return;
+        }
+
+        $assessments = Assessment::where('status', 'active')
+            ->where('auto_attach', true)
+            ->where(function ($q) use ($ownerId) {
+                $q->where('user_id', $ownerId)->orWhere('is_global', true);
+            })
+            ->orderBy('id')
+            ->get();
+
+        $order = 1;
+        foreach ($assessments as $a) {
+            static::create([
+                'job_id'                 => $job->id,
+                'assessment_id'          => $a->id,
+                'stage_order'            => $order++,
+                'next_stage_start_hours' => null,
+            ]);
+        }
+    }
+
     public static function syncForJob(Job $job, array $stages, ?User $scopeUser = null): void
     {
         $stages = array_values(array_filter($stages, function ($s) {

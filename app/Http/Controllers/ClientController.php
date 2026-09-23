@@ -447,6 +447,7 @@ class ClientController extends Controller
         ]);
 
         JobAssessmentStage::syncForJob($job, $request->input('assessment_stages', []), Auth::user());
+        JobAssessmentStage::autoAttachForJob($job, (int) Auth::user()->clientOwnerId());
 
         $this->sendJobPostedCommercialEmails($job, Auth::user());
 

@@ -1377,6 +1377,7 @@ class AdminController extends Controller
         }
 
         JobAssessmentStage::syncForJob($job, $request->input('assessment_stages', []), null);
+        if ($job->user_id) { JobAssessmentStage::autoAttachForJob($job, (int) $job->user_id); }
 
         return redirect()->route('admin.jobs.pending')->with('success', 'Job created successfully.');
     }

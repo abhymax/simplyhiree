@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Assessment extends Model
 {
     protected $fillable = [
-        'user_id', 'is_global', 'name', 'tag', 'description',
+        'user_id', 'is_global', 'auto_attach', 'name', 'tag', 'description',
         'scoring_type',
         'passing_percentage', 'time_limit_minutes', 'max_attempts',
         'shuffle_questions', 'status',
@@ -17,6 +17,7 @@ class Assessment extends Model
 
     protected $casts = [
         'is_global'          => 'boolean',
+        'auto_attach'        => 'boolean',
         'shuffle_questions'  => 'boolean',
         'passing_percentage' => 'integer',
         'time_limit_minutes' => 'integer',

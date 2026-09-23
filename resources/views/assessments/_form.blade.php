@@ -134,6 +134,15 @@
                 </label>
             </div>
             <div class="md:col-span-2">
+                <label class="flex items-start gap-2 text-sm text-slate-200 cursor-pointer rounded-xl border border-white/10 bg-slate-800/40 p-3">
+                    <input type="checkbox" name="auto_attach" value="1" @checked(old('auto_attach', $assessment->auto_attach ?? false)) class="mt-0.5 rounded bg-slate-900 border-slate-600 text-cyan-500 focus:ring-cyan-500">
+                    <span>
+                        <span class="font-bold text-white">Automatically apply to all new jobs</span>
+                        <span class="block text-[11px] text-slate-400 mt-0.5">When a new job is posted{{ !empty($isAdmin) ? ' for the assigned client' : '' }}, this questionnaire is added as a stage automatically (only if the job has no questionnaires selected).</span>
+                    </span>
+                </label>
+            </div>
+            <div class="md:col-span-2">
                 <label class="{{ $lc }}">Description (optional)</label>
                 <textarea name="description" rows="2" class="{{ $ic }}" placeholder="Shown to the candidate before starting">{{ old('description', $assessment->description ?? '') }}</textarea>
             </div>
