@@ -69,9 +69,11 @@
                             <select :name="`assessment_stages[${idx}][assessment_id]`" x-model="stage.assessment_id"
                                     class="block w-full rounded-lg border border-white/20 bg-slate-900/70 text-white text-sm px-3 py-2">
                                 <option value="">— Select a questionnaire —</option>
-                                <template x-for="opt in options" :key="opt.id">
-                                    <option :value="opt.id" x-text="opt.name + (opt.tag ? ' · ' + opt.tag : '')"></option>
-                                </template>
+                                {{-- Options rendered server-side so x-model can preselect saved
+                                     values reliably (Alpine can't preselect against x-for options). --}}
+                                @foreach($assessmentOptions as $opt)
+                                    <option value="{{ $opt['id'] }}">{{ $opt['name'] }}@if(!empty($opt['tag'])) · {{ $opt['tag'] }}@endif</option>
+                                @endforeach
                             </select>
                         </div>
                         <button type="button" @click="removeStage(idx)" title="Remove stage"

@@ -96,7 +96,7 @@
                                                 $failedFinal = $latest && !$latest->passed && $latest->submitted_at;
                                                 $isCurrent = $stage->stage_order == $s->current_stage;
                                                 $dot = $passed ? 'bg-emerald-400' : ($failedFinal ? 'bg-rose-400' : ($isCurrent ? 'bg-indigo-400' : 'bg-slate-600'));
-                                                $title = 'Stage '.$stage->stage_order.($latest ? ' · '.rtrim(rtrim((string)$latest->percentage,'0'),'.').'%' : '');
+                                                $title = 'Stage '.$stage->stage_order.($latest ? ' · '.rtrim(rtrim(number_format((float) $latest->percentage, 2), '0'), '.').'%' : '');
                                             @endphp
                                             <span class="inline-block w-3 h-3 rounded-full {{ $dot }}" title="{{ $title }}"></span>
                                         @empty

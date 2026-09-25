@@ -39,7 +39,7 @@
             </div>
             @if($best)
                 <span class="text-sm font-extrabold {{ $best->passed ? 'text-emerald-300' : 'text-rose-300' }}">
-                    Best {{ rtrim(rtrim((string)$best->percentage,'0'),'.') }}%
+                    Best {{ rtrim(rtrim(number_format((float) $best->percentage, 2), '0'), '.') }}%
                 </span>
             @else
                 <span class="text-sm text-blue-200/60">Not attempted</span>
@@ -50,7 +50,7 @@
             <div class="px-6 py-4 border-t border-white/5">
                 <div class="flex flex-wrap items-center gap-3 text-sm">
                     <span class="font-bold text-white">Attempt {{ $att->attempt_number }}</span>
-                    <span class="{{ $att->passed ? 'text-emerald-300' : 'text-rose-300' }} font-bold">{{ rtrim(rtrim((string)$att->percentage,'0'),'.') }}% ({{ $att->score }}/{{ $att->total_marks }})</span>
+                    <span class="{{ $att->passed ? 'text-emerald-300' : 'text-rose-300' }} font-bold">{{ rtrim(rtrim(number_format((float) $att->percentage, 2), '0'), '.') }}% ({{ $att->score }}/{{ $att->total_marks }})</span>
                     <span class="text-blue-200/60">{{ $att->submitted_at ? $att->submitted_at->format('d M Y, h:i A') : 'in progress' }}</span>
                     @if($att->focus_lost_count > 0)
                         <span class="text-amber-300 text-xs"><i class="fa-solid fa-eye-slash mr-1"></i>{{ $att->focus_lost_count }} focus loss</span>
@@ -65,7 +65,7 @@
                             <div class="rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="text-white/90 font-semibold">{{ $c['category'] }}</span>
-                                    <span class="text-violet-200 font-bold">{{ $c['score'] }}/{{ $c['max'] }} · {{ rtrim(rtrim((string)$c['percentage'],'0'),'.') }}%</span>
+                                    <span class="text-violet-200 font-bold">{{ $c['score'] }}/{{ $c['max'] }} · {{ rtrim(rtrim(number_format((float) $c['percentage'], 2), '0'), '.') }}%</span>
                                 </div>
                                 <div class="mt-1.5 h-1.5 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full bg-violet-400" style="width: {{ min(100,(float)$c['percentage']) }}%"></div>

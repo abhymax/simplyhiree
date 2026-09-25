@@ -59,11 +59,11 @@
                     </div>
                     <div style="flex:0 0 auto;text-align:right;">
                         @if($isPassed)
-                            <span style="color:#6ee7b7;font-weight:700;font-size:.82rem;">Passed · {{ rtrim(rtrim((string)$latest->percentage,'0'),'.') }}%</span>
+                            <span style="color:#6ee7b7;font-weight:700;font-size:.82rem;">Passed · {{ rtrim(rtrim(number_format((float) $latest->percentage, 2), '0'), '.') }}%</span>
                         @elseif($isLocked)
                             <span style="color:#94a3b8;font-size:.82rem;">Locked</span>
                         @elseif($latest && !$latest->passed)
-                            <span style="color:#fca5a5;font-weight:700;font-size:.82rem;">{{ rtrim(rtrim((string)$latest->percentage,'0'),'.') }}%</span>
+                            <span style="color:#fca5a5;font-weight:700;font-size:.82rem;">{{ rtrim(rtrim(number_format((float) $latest->percentage, 2), '0'), '.') }}%</span>
                         @else
                             <span style="color:#a5b4fc;font-weight:700;font-size:.82rem;">Ready</span>
                         @endif
