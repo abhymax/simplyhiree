@@ -82,7 +82,38 @@ class AssessmentNotifier
                 [$name, $jobTitle]);
         }
 
+        // Notify the partner/vendor who lined up the candidate.
+        $this->notifyPartner($session, $passed, $job, $name);
+
         $session->forceFill(['result_notified_at' => now()])->save();
+    }
+
+    /** Email the submitting partner/vendor about their candidate's result. */
+    private function notifyPartner(AssessmentSession $session, bool $passed, $job, string $name): void
+    {
+        try {
+            $partner = $session->partner()->first();
+            if (!$partner || empty($partner->email)) {
+                return;
+            }
+            $jobTitle = $job->title ?? 'the role';
+            $best = $session->attempts()->whereNotNull('submitted_at')->orderByDesc('percentage')->first();
+            $pct = $best ? rtrim(rtrim(number_format((float) $best->percentage, 2), '0'), '.') : null;
+
+            $subject = ($passed ? 'Candidate qualified: ' : 'Candidate did not qualify: ') . $name . ' — ' . $jobTitle;
+            \Illuminate\Support\Facades\Mail::send('emails.assessment-partner-result', [
+                'partner' => $partner,
+                'session' => $session,
+                'job'     => $job,
+                'passed'  => $passed,
+                'candidateName' => $name,
+                'pct'     => $pct,
+            ], function ($mail) use ($partner, $subject) {
+                $mail->to($partner->email, $partner->name)->subject($subject);
+            });
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /** A new stage has unlocked for the candidate. */
