@@ -199,3 +199,8 @@ Schedule::command('assessment:reminders')
     ->timezone('Asia/Kolkata')
     ->dailyAt('09:30')
     ->withoutOverlapping();
+
+Schedule::command('plans:expire')
+    ->timezone('Asia/Kolkata')
+    ->dailyAt('08:00')
+    ->withoutOverlapping();

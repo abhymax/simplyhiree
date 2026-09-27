@@ -18,6 +18,10 @@ return Application::configure(dirname(__DIR__))
         require base_path('routes/console.php');
     })
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+            'razorpay/webhook',
+        ]);
+
         $middleware->alias([
             'status.check' => CheckAccountStatus::class,
             'partner.access' => EnforcePartnerAccess::class,

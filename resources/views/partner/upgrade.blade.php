@@ -9,7 +9,10 @@
         <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Choose Your Plan</h1>
             <p class="text-blue-200 mt-2">Higher tiers = lower commission, faster payouts, and access to exclusive bulk-hiring projects.</p>
-            @php $currentPlan = $partner->partner_plan ?? 'Free'; @endphp
+            @php
+                $currentPlan = $partner->partner_plan ?? 'Free';
+                $isPartnerOwner = $partner->isPartnerOwner();
+            @endphp
             <div class="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-wider text-amber-200 font-bold">
                 Current plan: <span class="px-2 py-0.5 rounded bg-white/10 border border-white/20">{{ $currentPlan }}</span>
             </div>
@@ -21,6 +24,16 @@
         @if(session('error'))
             <div class="mb-5 px-5 py-3 bg-rose-500/20 border border-rose-500/50 text-rose-100 rounded-xl font-bold">{{ session('error') }}</div>
         @endif
+
+        @unless($isPartnerOwner)
+            <div class="mb-6 px-5 py-4 bg-sky-500/10 border border-sky-300/40 text-sky-50 rounded-2xl flex items-start gap-3">
+                <i class="fa-solid fa-lock mt-1 text-sky-300"></i>
+                <div>
+                    <div class="font-extrabold">Plan changes are managed by the account owner</div>
+                    <div class="text-sm text-sky-100/80 mt-1">You can review plan benefits and track requests submitted by your account owner, but only the owner can request, cancel, or modify a plan.</div>
+                </div>
+            </div>
+        @endunless
 
         @if($pendingRequest)
             <div class="mb-6 bg-amber-500/10 border border-amber-400/40 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -36,10 +49,16 @@
                         <div class="mt-1 text-amber-100/80 text-sm italic">"{{ $pendingRequest->notes }}"</div>
                     @endif
                 </div>
-                <form method="POST" action="{{ route('partner.upgrade.cancel', $pendingRequest->id) }}" onsubmit="return confirm('Cancel this plan request?');">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-4 py-2 rounded-lg">Cancel Request</button>
-                </form>
+                @if($isPartnerOwner)
+                    <form method="POST" action="{{ route('partner.upgrade.cancel', $pendingRequest->id) }}" onsubmit="return confirm('Cancel this plan request?');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-4 py-2 rounded-lg">Cancel Request</button>
+                    </form>
+                @else
+                    <span class="inline-flex items-center gap-2 bg-slate-800/80 border border-white/15 text-slate-200 text-xs font-bold px-4 py-2 rounded-lg">
+                        <i class="fa-solid fa-lock"></i> Owner controlled
+                    </span>
+                @endif
             </div>
         @endif
 
@@ -64,7 +83,7 @@
                 @endphp
                 <div class="{{ $accent['frame'] }} backdrop-blur-xl rounded-2xl p-5 flex flex-col relative {{ $isCurrent ? 'ring-2 ring-white/40' : '' }}">
                     @if($plan->is_most_popular)
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-400 text-slate-900 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider">Most Popular</div>
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-400 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full tracking-wider">Most Popular</div>
                     @endif
                     <div class="flex items-center justify-between mb-3">
                         <span class="font-bold uppercase text-[11px] tracking-wider text-white inline-flex items-center gap-1.5">
@@ -111,6 +130,11 @@
                                 style="background:#475569; color:#cbd5e1;">
                             <i class="fa-solid fa-check-circle"></i> Current Plan
                         </button>
+                    @elseif(!$isPartnerOwner)
+                        <button disabled class="mt-3 w-full font-bold py-2 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                                style="background:#334155; color:#cbd5e1;" title="Only the partner account owner can change plans">
+                            <i class="fa-solid fa-lock"></i> Owner Only
+                        </button>
                     @elseif($pendingRequest)
                         <button disabled class="mt-3 w-full font-bold py-2 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                                 style="background:#475569; color:#cbd5e1;"
@@ -122,7 +146,17 @@
                             $isDowngrade = array_search($plan->name, $planOrder) !== false
                                 && array_search($currentPlan, $planOrder) !== false
                                 && array_search($plan->name, $planOrder) < array_search($currentPlan, $planOrder);
+                            $canPay = ($plan->is_purchasable ?? false) && !$isDowngrade && (float) $plan->price > 0;
+                            $payTotal = (float) $plan->price * 1.18;
                         @endphp
+                        @if($canPay)
+                            <a href="{{ route('partner.billing.checkout', $plan->name) }}"
+                               class="mt-3 w-full font-bold py-2 rounded-xl transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 hover:scale-[1.02] text-sm"
+                               style="background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%); color: #0f172a; box-shadow: 0 10px 25px -8px rgba(34,211,238,.55), inset 0 1px 0 rgba(255,255,255,.45);">
+                                <i class="fa-solid fa-bolt"></i> Pay &amp; Upgrade · ₹{{ number_format($payTotal, 0) }}
+                            </a>
+                            <p class="mt-1 text-center text-[10px] text-white/50">incl. 18% GST · 30-day plan</p>
+                        @else
                         <form method="POST" action="{{ route('partner.upgrade.request') }}" onsubmit="return confirm('Request a plan change to {{ $plan->name }}? A SimplyHiree manager will contact you.');" class="mt-3">
                             @csrf
                             <input type="hidden" name="requested_plan" value="{{ $plan->name }}">
@@ -139,6 +173,7 @@
                                 @endif
                             </button>
                         </form>
+                        @endif
                     @endif
                 </div>
             @endforeach

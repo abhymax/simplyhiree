@@ -58,6 +58,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'marketing_consent' => 'boolean',
             'marketing_consent_at' => 'datetime',
+            'plan_started_at' => 'datetime',
+            'plan_expires_at' => 'datetime',
+            'plan_expiry_reminded_on' => 'date',
             'team_modules' => 'array',
         ];
     }

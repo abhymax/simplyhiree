@@ -43,6 +43,9 @@ Route::get('/up', function () {
 |--------------------------------------------------------------------------
 */
 
+// Razorpay payment webhook (no auth, CSRF-exempt in bootstrap/app.php)
+Route::post('/razorpay/webhook', [\App\Http\Controllers\PartnerBillingController::class, 'webhook'])->name('razorpay.webhook');
+
 // Public candidate assessment (magic link + email OTP; no auth)
 Route::prefix('assessment')->name('assessment.')->group(function () {
     Route::get('/{token}', [CandidateAssessmentController::class, 'entry'])->name('entry');
@@ -515,6 +518,10 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/upgrade', [PartnerController::class, 'upgrade'])->name('upgrade');
         Route::post('/upgrade/request', [PartnerController::class, 'requestPlanChange'])->name('upgrade.request');
         Route::delete('/upgrade/request/{planChangeRequest}', [PartnerController::class, 'cancelPlanChange'])->name('upgrade.cancel');
+
+        // Online plan purchase (Razorpay)
+        Route::get('/billing/checkout/{plan}', [\App\Http\Controllers\PartnerBillingController::class, 'checkout'])->name('billing.checkout');
+        Route::post('/billing/verify', [\App\Http\Controllers\PartnerBillingController::class, 'verify'])->name('billing.verify');
         
         // Jobs
         Route::get('/jobs', [PartnerController::class, 'jobs'])->name('jobs');
