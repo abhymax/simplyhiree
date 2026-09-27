@@ -1785,6 +1785,22 @@ class AdminController extends Controller
         if ($request->filled('client_id')) {
             $query->whereHas('job', fn ($q) => $q->where('user_id', (int) $request->input('client_id')));
         }
+        if ($request->filled('client_decision')) {
+            $cd = $request->input('client_decision');
+            $query->where(function ($q) use ($cd) {
+                switch ($cd) {
+                    case 'Shortlisted':         $q->whereIn('hiring_status', ['Shortlisted', 'shortlisted']); break;
+                    case 'Maybe':               $q->where('hiring_status', 'Maybe'); break;
+                    case 'Interview Scheduled': $q->where('hiring_status', 'Interview Scheduled'); break;
+                    case 'Interviewed':         $q->where('hiring_status', 'Interviewed'); break;
+                    case 'No-Show':             $q->where('hiring_status', 'No-Show'); break;
+                    case 'Selected':            $q->where('hiring_status', 'Selected'); break;
+                    case 'Client Rejected':     $q->where('hiring_status', 'Client Rejected'); break;
+                    case 'Joined':              $q->where('joined_status', 'Joined'); break;
+                    case 'Left':                $q->where('joined_status', 'Left'); break;
+                }
+            });
+        }
         if ($request->filled('date_from')) {
             try { $query->whereDate('created_at', '>=', \Carbon\Carbon::parse($request->input('date_from'))->toDateString()); } catch (\Throwable $e) {}
         }

@@ -63,10 +63,17 @@
                                 class="{{ $fldClass }} w-full pl-9">
                         </div>
 
-                        <select name="status" title="Status" class="{{ $fldClass }} min-w-[130px]">
+                        <select name="status" title="Screening Status" class="{{ $fldClass }} min-w-[130px]">
                             <option value="" class="text-gray-400">All Statuses</option>
                             @foreach(['Pending Review', 'Approved', 'Rejected', 'Interview Scheduled', 'Selected', 'Joined'] as $status)
                                 <option value="{{ $status }}" class="bg-slate-900" {{ request('status') == $status ? 'selected' : '' }}>{{ $status }}</option>
+                            @endforeach
+                        </select>
+
+                        <select name="client_decision" title="Client Decision" class="{{ $fldClass }} min-w-[150px]">
+                            <option value="" class="text-gray-400">Client Decision: Any</option>
+                            @foreach(['Shortlisted', 'Maybe', 'Interview Scheduled', 'Interviewed', 'No-Show', 'Selected', 'Joined', 'Left', 'Client Rejected'] as $cd)
+                                <option value="{{ $cd }}" class="bg-slate-900" {{ request('client_decision') == $cd ? 'selected' : '' }}>{{ $cd }}</option>
                             @endforeach
                         </select>
 

@@ -34,6 +34,34 @@
 
         <div class="relative z-10 max-w-7xl mx-auto">
             
+            @if(session('info'))
+                <div class="mb-6 px-5 py-3 bg-blue-500/20 border border-blue-400/40 text-blue-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i> {{ session('info') }}
+                </div>
+            @endif
+            @if(session('success'))
+                <div class="mb-6 px-5 py-3 bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> {{ session('success') }}
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="mb-6 px-5 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> {{ session('error') }}
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="mb-6 px-5 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> <span>Please fix the errors below:</span>
+                    </div>
+                    <ul class="list-disc list-inside pl-4 text-xs text-rose-200">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             {{-- BREADCRUMB --}}
             <div class="mb-8">
                 @php
@@ -196,7 +224,7 @@
                             <i class="fa-solid fa-file-lines text-rose-400"></i> Resume / CV
                         </h3>
                         @if($resumePath)
-                            <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 flex items-center justify-between group hover:border-blue-500/50 transition">
+                            <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-blue-500/50 transition">
                                 <div class="flex items-center gap-4">
                                     <div class="h-12 w-12 bg-rose-500/20 rounded-xl flex items-center justify-center text-rose-400">
                                         <i class="fa-solid fa-file-pdf text-2xl"></i>
@@ -206,13 +234,33 @@
                                         <p class="text-xs text-slate-400">Click download to view</p>
                                     </div>
                                 </div>
-                                <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5">
-                                    Download
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ asset('storage/' . $resumePath) }}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 whitespace-nowrap">
+                                        Download
+                                    </a>
+                                    
+                                    {{-- Edit button --}}
+                                    <form id="edit-resume-form" action="{{ route('admin.applications.update-resume', $application->id) }}" method="POST" enctype="multipart/form-data" class="inline m-0 p-0">
+                                        @csrf
+                                        <input type="file" id="resume-file-input" name="resume" accept=".pdf,.doc,.docx" class="hidden" onchange="document.getElementById('edit-resume-form').submit()">
+                                        <button type="button" onclick="document.getElementById('resume-file-input').click()" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition transform hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-1.5">
+                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         @else
-                            <div class="text-center py-8 border-2 border-dashed border-white/10 rounded-2xl">
+                            <div class="text-center py-8 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3">
                                 <p class="text-slate-400 italic">No resume uploaded by candidate.</p>
+                                
+                                {{-- Upload button --}}
+                                <form id="edit-resume-form" action="{{ route('admin.applications.update-resume', $application->id) }}" method="POST" enctype="multipart/form-data" class="inline m-0 p-0">
+                                    @csrf
+                                    <input type="file" id="resume-file-input" name="resume" accept=".pdf,.doc,.docx" class="hidden" onchange="document.getElementById('edit-resume-form').submit()">
+                                    <button type="button" onclick="document.getElementById('resume-file-input').click()" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-6 py-2.5 rounded-xl font-bold border border-rose-500/30 transition flex items-center gap-2">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Resume
+                                    </button>
+                                </form>
                             </div>
                         @endif
                     </div>
@@ -312,8 +360,12 @@
                             {{-- Client Status --}}
                             <div>
                                 <p class="text-xs text-blue-300 uppercase font-bold mb-2">Client Progress</p>
+                                @php
+                                    $acted = !empty($application->hiring_status) || !empty($application->joined_status);
+                                    $decision = $acted ? $application->effectiveStatus() : 'Pending Client Action';
+                                @endphp
                                 <div class="w-full bg-slate-900/50 border border-white/10 text-white px-4 py-3 rounded-xl flex items-center justify-between font-medium">
-                                    <span>{{ $application->hiring_status ?? 'Pending Client Action' }}</span>
+                                    <span>{{ $decision }}</span>
                                     <i class="fa-solid fa-circle-info text-blue-400"></i>
                                 </div>
                             </div>
