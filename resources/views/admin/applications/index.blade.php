@@ -264,6 +264,34 @@
                                                 <i class="fa-solid fa-circle-info"></i> {{ ucfirst($status) }}
                                             </span>
                                         @endif
+
+                                        {{-- Client's own decision on this candidate (shortlist / maybe / selected / joined …) --}}
+                                        @if(!empty($application->hiring_status) || !empty($application->joined_status))
+                                            @php
+                                                $clientDecision = $application->effectiveStatus();
+                                                $cdMap = [
+                                                    'Shortlisted'            => ['fa-star', 'bg-emerald-500/15 text-emerald-200 border-emerald-400/40'],
+                                                    'Maybe'                  => ['fa-clock', 'bg-amber-500/15 text-amber-200 border-amber-400/40'],
+                                                    'Interview Scheduled'    => ['fa-calendar-check', 'bg-sky-500/15 text-sky-200 border-sky-400/40'],
+                                                    'Interviewed'            => ['fa-comments', 'bg-sky-500/15 text-sky-200 border-sky-400/40'],
+                                                    'No-Show'                => ['fa-user-slash', 'bg-orange-500/15 text-orange-200 border-orange-400/40'],
+                                                    'Selected'               => ['fa-user-check', 'bg-violet-500/15 text-violet-200 border-violet-400/40'],
+                                                    'Selected by Superadmin' => ['fa-user-check', 'bg-violet-500/15 text-violet-200 border-violet-400/40'],
+                                                    'Joined'                 => ['fa-circle-check', 'bg-green-500/15 text-green-200 border-green-400/40'],
+                                                    'Did Not Join'           => ['fa-ban', 'bg-rose-500/15 text-rose-200 border-rose-400/40'],
+                                                    'Left'                   => ['fa-person-walking-arrow-right', 'bg-rose-500/15 text-rose-200 border-rose-400/40'],
+                                                    'Client Rejected'        => ['fa-xmark', 'bg-rose-500/15 text-rose-200 border-rose-400/40'],
+                                                ];
+                                                [$cdIcon, $cdCls] = $cdMap[$clientDecision] ?? ['fa-circle-info', 'bg-white/10 text-slate-200 border-white/20'];
+                                            @endphp
+                                            @if(isset($cdMap[$clientDecision]))
+                                                <div class="mt-1.5">
+                                                    <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide {{ $cdCls }}">
+                                                        <i class="fa-solid {{ $cdIcon }}"></i> {{ $clientDecision }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endif
                                     </td>
 
                                     <td class="px-6 py-5">
