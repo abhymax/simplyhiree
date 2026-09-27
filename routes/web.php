@@ -338,6 +338,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/plan-requests/{planChangeRequest}/contacted', [AdminController::class, 'planRequestMarkContacted'])->name('plan-requests.contacted');
             Route::post('/plan-requests/{planChangeRequest}/approve', [AdminController::class, 'planRequestApprove'])->name('plan-requests.approve');
             Route::post('/plan-requests/{planChangeRequest}/reject', [AdminController::class, 'planRequestReject'])->name('plan-requests.reject');
+            Route::get('/vendor-payments', [AdminController::class, 'vendorPayments'])->name('payments.index');
 
             // Credit notes
             Route::get('/credit-notes', [AdminController::class, 'creditNotesIndex'])->name('credit-notes.index');

@@ -1945,6 +1945,7 @@ class AdminController extends Controller
                 'Source (Partner)',
                 'Application Code',
                 'Status',
+                'Client Decision',
             ]);
 
             // Stream in chunks of 50 to keep memory bounded.
@@ -1997,6 +1998,7 @@ class AdminController extends Controller
                             $partnerName,
                             $app->application_code ?? ('#'.$app->id),
                             $app->status ?? '',
+                            (!empty($app->hiring_status) || !empty($app->joined_status)) ? $app->effectiveStatus() : '',
                         ]);
                     }
                     @flush();
@@ -2004,6 +2006,43 @@ class AdminController extends Controller
 
             fclose($out);
         }, $fileName, $headers);
+    }
+
+    public function vendorPayments(Request $request)
+    {
+        $base = \App\Models\PartnerPayment::query()->with('partner');
+
+        $stats = [
+            'revenue'    => (float) (clone $base)->where('status', 'paid')->sum('total_amount'),
+            'paid'       => (clone $base)->where('status', 'paid')->count(),
+            'this_month' => (float) (clone $base)->where('status', 'paid')
+                                ->whereMonth('paid_at', now()->month)->whereYear('paid_at', now()->year)->sum('total_amount'),
+            'created'    => (clone $base)->where('status', 'created')->count(),
+        ];
+
+        $q = (clone $base);
+        if ($request->filled('status')) {
+            $q->where('status', $request->input('status'));
+        }
+        if ($request->filled('search')) {
+            $sv = $request->input('search');
+            $q->where(function ($x) use ($sv) {
+                $x->where('plan_name', 'like', "%{$sv}%")
+                  ->orWhere('razorpay_order_id', 'like', "%{$sv}%")
+                  ->orWhere('razorpay_payment_id', 'like', "%{$sv}%")
+                  ->orWhereHas('partner', fn ($p) => $p->where('name', 'like', "%{$sv}%")->orWhere('email', 'like', "%{$sv}%"));
+            });
+        }
+        if ($request->filled('date_from')) {
+            try { $q->whereDate('created_at', '>=', \Carbon\Carbon::parse($request->input('date_from'))->toDateString()); } catch (\Throwable $e) {}
+        }
+        if ($request->filled('date_to')) {
+            try { $q->whereDate('created_at', '<=', \Carbon\Carbon::parse($request->input('date_to'))->toDateString()); } catch (\Throwable $e) {}
+        }
+
+        $payments = $q->latest()->paginate(30)->withQueryString();
+
+        return view('admin.payments.index', compact('payments', 'stats'));
     }
 
     public function bulkApproveApplications(Request $request)

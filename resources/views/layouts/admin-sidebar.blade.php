@@ -61,6 +61,7 @@
                     ['route'=>'admin.marketplace.index',      'label'=>'Marketplace Controls','icon'=>'fa-sliders',             'active'=>['admin.marketplace.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.credit-notes.index',     'label'=>'Credit Notes',        'icon'=>'fa-receipt',             'active'=>['admin.credit-notes.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.plan-requests.index',    'label'=>'Plan Requests',       'icon'=>'fa-rocket',              'active'=>['admin.plan-requests.*'], 'can'=>'view_billing_data'],
+                    ['route'=>'admin.payments.index',         'label'=>'Vendor Payments',     'icon'=>'fa-credit-card',         'active'=>['admin.payments.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.vendor-assignment-requests.index', 'label'=>'Vendor Assignment Req.', 'icon'=>'fa-handshake-angle',  'active'=>['admin.vendor-assignment-requests.*']],
                     ['route'=>'admin.partner-reactivations.index', 'label'=>'Activation Requests', 'icon'=>'fa-user-clock', 'active'=>['admin.partner-reactivations.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.vendor-ratings.index',   'label'=>'Vendor Ratings',      'icon'=>'fa-star',                'active'=>['admin.vendor-ratings.*'], 'can'=>'view_partner_data'],
