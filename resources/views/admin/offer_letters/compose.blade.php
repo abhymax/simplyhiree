@@ -25,7 +25,7 @@
         <option value="">— Choose who signs —</option>
         @foreach($signatures as $sg)<option value="{{ $sg->id }}">{{ $sg->name }}@if($sg->designation) — {{ $sg->designation }}@endif</option>@endforeach
       </select>
-      <p class="text-[11px] text-blue-200/60 -mt-3 mb-4">The chosen signature replaces the <code>@{{signature_block}}</code> marker in the letter.</p>
+      <p class="text-[11px] text-slate-300 -mt-3 mb-4">The chosen signature replaces the <code class="bg-white/10 text-cyan-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> marker in the letter.</p>
     @endif
 
     {{-- Structured fields — typing here updates the matching spots in the letter below --}}
@@ -53,7 +53,7 @@
           <input type="text" data-olfield="annual_ctc" value="{{ $fields['annual_ctc'] ?? '' }}" placeholder="e.g. 2,40,000" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
         </div>
       </div>
-      <p class="text-[11px] text-blue-200/50 mt-2">These fill the matching fields in the letter automatically. You can still fine-tune the body below.</p>
+      <p class="text-[11px] text-slate-400 mt-2">These fill the matching fields in the letter automatically. You can still fine-tune the body below.</p>
     </div>
 
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Letter body (edit as needed)</label>
