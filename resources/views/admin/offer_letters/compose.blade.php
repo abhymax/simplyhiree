@@ -25,7 +25,7 @@
         <option value="">— Choose who signs —</option>
         @foreach($signatures as $sg)<option value="{{ $sg->id }}">{{ $sg->name }}@if($sg->designation) — {{ $sg->designation }}@endif</option>@endforeach
       </select>
-      <p class="text-[11px] text-blue-200/60 -mt-3 mb-4">The chosen signature replaces the <code>{{ '{{signature_block}}' }}</code> marker in the letter.</p>
+      <p class="text-[11px] text-blue-200/60 -mt-3 mb-4">The chosen signature replaces the <code>@{{signature_block}}</code> marker in the letter.</p>
     @endif
 
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Letter body (edit as needed)</label>
