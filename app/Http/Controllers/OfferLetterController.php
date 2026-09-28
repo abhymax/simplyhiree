@@ -133,6 +133,27 @@ class OfferLetterController extends Controller
         return redirect()->route('admin.offer-letters.index')->with('success', 'Offer letter saved as draft.');
     }
 
+    /** Live preview of the current draft as an inline PDF (no save, no email). */
+    public function previewPdf(Request $request)
+    {
+        $data = $request->validate([
+            'job_application_id' => 'required|exists:job_applications,id',
+            'subject'            => 'required|string|max:255',
+            'body_html'          => 'required|string',
+            'signature_id'       => 'nullable|exists:offer_letter_signatures,id',
+        ]);
+        $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
+        $sigBlock = $this->signatureBlockHtml($sig);
+        $body = str_contains($data['body_html'], '{{signature_block}}')
+            ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
+            : $data['body_html'] . $sigBlock;
+        $pdf = $this->renderPdf($data['subject'], $body);
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="offer-preview.pdf"',
+        ]);
+    }
+
     public function download(OfferLetter $offerLetter)
     {
         abort_unless($offerLetter->pdf_path && Storage::disk('public')->exists($offerLetter->pdf_path), 404);

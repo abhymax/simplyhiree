@@ -37,9 +37,28 @@
     <div id="editor" contenteditable="true" class="bg-white text-slate-900 rounded-xl px-6 py-5 min-h-[420px] leading-relaxed" style="font-family:Georgia,serif;">{!! $bodyHtml !!}</div>
 
     <div class="flex justify-end gap-3 mt-5">
+      <button type="button" onclick="previewOffer()" class="rounded-xl border border-cyan-300/40 bg-cyan-500/10 text-cyan-100 font-bold px-5 py-3 hover:bg-cyan-500/20"><i class="fa-solid fa-eye mr-1"></i>Preview PDF</button>
       <button type="submit" name="action" value="draft" class="rounded-xl border border-white/15 text-slate-100 font-bold px-5 py-3 hover:bg-white/10">Save draft</button>
       <button type="submit" name="action" value="send" class="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold px-6 py-3" onclick="return confirm('Generate the PDF and email it to the candidate now?');">Generate &amp; Send</button>
     </div>
   </form>
+
+  {{-- Hidden form used by the Preview PDF button (opens in a new tab) --}}
+  <form id="previewForm" method="POST" action="{{ route('admin.offer-letters.preview-pdf') }}" target="_blank" style="display:none">
+    @csrf
+    <input type="hidden" name="job_application_id" value="{{ $app->id }}">
+    <input type="hidden" name="subject" id="pf_subject">
+    <input type="hidden" name="body_html" id="pf_body">
+    <input type="hidden" name="signature_id" id="pf_sig">
+  </form>
+  <script>
+    function previewOffer(){
+      document.getElementById('pf_body').value = document.getElementById('editor').innerHTML;
+      document.getElementById('pf_subject').value = document.querySelector('input[name=subject]').value;
+      var sel = document.querySelector('select[name=signature_id]');
+      document.getElementById('pf_sig').value = sel ? sel.value : '';
+      document.getElementById('previewForm').submit();
+    }
+  </script>
  </div></div>
 </x-app-layout>

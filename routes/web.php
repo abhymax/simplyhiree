@@ -346,6 +346,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
                 Route::get('/create', [\App\Http\Controllers\OfferLetterController::class, 'create'])->name('create');
                 Route::post('/compose', [\App\Http\Controllers\OfferLetterController::class, 'compose'])->name('compose');
                 Route::post('/', [\App\Http\Controllers\OfferLetterController::class, 'store'])->name('store');
+                Route::post('/preview-pdf', [\App\Http\Controllers\OfferLetterController::class, 'previewPdf'])->name('preview-pdf');
                 Route::get('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settings'])->name('settings');
                 Route::post('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settingsUpdate'])->name('settings.update');
                 Route::get('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templates'])->name('templates');
