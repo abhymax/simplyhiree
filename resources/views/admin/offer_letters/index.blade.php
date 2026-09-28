@@ -1,14 +1,14 @@
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-6xl mx-auto">
-  <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
-    <div><h1 class="text-4xl font-extrabold text-white tracking-tight">Offer Letters</h1>
-    <p class="text-blue-200 mt-1 text-lg">Generate and send branded offer letters to candidates.</p></div>
-    <div class="flex gap-2">
-      <a href="{{ route('admin.offer-letters.templates') }}" class="rounded-xl border border-white/15 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10">Templates</a>
-      <a href="{{ route('admin.offer-letters.signatures') }}" class="rounded-xl border border-white/15 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10">Signatures</a>
-      <a href="{{ route('admin.offer-letters.settings') }}" class="rounded-xl border border-white/15 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10">Branding</a>
-      <a href="{{ route('admin.offer-letters.create') }}" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5">+ Create Offer Letter</a>
+  <div class="mb-8 border-b border-white/10 pb-6">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Offer Letters</h1>
+    <p class="text-blue-200 mt-1">Generate and send branded offer letters to candidates.</p>
+    <div class="flex flex-wrap gap-2 mt-4">
+      <a href="{{ route('admin.offer-letters.create') }}" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5"><i class="fa-solid fa-plus mr-1"></i>Create Offer Letter</a>
+      <a href="{{ route('admin.offer-letters.templates') }}" class="rounded-xl border border-white/20 bg-white/5 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10"><i class="fa-solid fa-file-lines mr-1"></i>Templates</a>
+      <a href="{{ route('admin.offer-letters.signatures') }}" class="rounded-xl border border-white/20 bg-white/5 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10"><i class="fa-solid fa-signature mr-1"></i>Signatures</a>
+      <a href="{{ route('admin.offer-letters.settings') }}" class="rounded-xl border border-white/20 bg-white/5 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10"><i class="fa-solid fa-image mr-1"></i>Branding</a>
     </div>
   </div>
   @if(session('success'))<div class="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-emerald-100">{{ session('success') }}</div>@endif

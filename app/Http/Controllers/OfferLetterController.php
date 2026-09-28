@@ -61,7 +61,23 @@ class OfferLetterController extends Controller
         $app = JobApplication::with(['job', 'candidate', 'candidateUser'])->findOrFail($data['job_application_id']);
         $tpl = OfferLetterTemplate::findOrFail($data['template_id']);
 
-        $tokens = $this->tokens($app);
+        $annual = $app->final_ctc ? (float) $app->final_ctc : null;
+        $fields = [
+            'ref_no'       => 'SHPL/HR/OL/' . date('Y') . '/' . str_pad((int) ((OfferLetter::max('id') ?? 0) + 3001), 4, '0', STR_PAD_LEFT),
+            'department'   => optional($app->job)->department ?? '',
+            'reporting_to' => '',
+            'monthly_ctc'  => $annual ? number_format($annual / 12, 0) : '',
+            'annual_ctc'   => $annual ? number_format($annual, 0) : '',
+        ];
+        $fieldTokens = [
+            '{{ref_no}}'       => $fields['ref_no'] ?: '________',
+            '{{department}}'   => $fields['department'] ?: '________',
+            '{{reporting_to}}' => $fields['reporting_to'] ?: '________',
+            '{{monthly_ctc}}'  => $fields['monthly_ctc'] ?: '________',
+            '{{annual_ctc}}'   => $fields['annual_ctc'] ?: '________',
+        ];
+
+        $tokens = array_merge($this->tokens($app), $fieldTokens);
         $body = strtr($tpl->body_html, $tokens);
         $subject = strtr((string) ($tpl->subject ?: 'Offer of Employment'), $tokens);
 
@@ -71,6 +87,7 @@ class OfferLetterController extends Controller
             'bodyHtml'   => $body,
             'subject'    => $subject,
             'tokens'     => $tokens,
+            'fields'     => $fields,
             'signatures' => OfferLetterSignature::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
         ]);
     }

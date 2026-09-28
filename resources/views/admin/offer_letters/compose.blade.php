@@ -28,6 +28,34 @@
       <p class="text-[11px] text-blue-200/60 -mt-3 mb-4">The chosen signature replaces the <code>@{{signature_block}}</code> marker in the letter.</p>
     @endif
 
+    {{-- Structured fields — typing here updates the matching spots in the letter below --}}
+    <div class="rounded-2xl border border-white/10 bg-slate-950/40 p-4 mb-4">
+      <div class="text-xs font-bold text-cyan-300 uppercase mb-3">Offer details</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Reference No.</label>
+          <input type="text" data-olfield="ref_no" value="{{ $fields['ref_no'] ?? '' }}" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Department</label>
+          <input type="text" data-olfield="department" value="{{ $fields['department'] ?? '' }}" placeholder="e.g. Talent Acquisition" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Reporting To</label>
+          <input type="text" data-olfield="reporting_to" value="{{ $fields['reporting_to'] ?? '' }}" placeholder="e.g. Recruitment Manager" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Monthly CTC (₹)</label>
+          <input type="text" data-olfield="monthly_ctc" value="{{ $fields['monthly_ctc'] ?? '' }}" placeholder="e.g. 20,000" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Annual CTC (₹)</label>
+          <input type="text" data-olfield="annual_ctc" value="{{ $fields['annual_ctc'] ?? '' }}" placeholder="e.g. 2,40,000" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+        </div>
+      </div>
+      <p class="text-[11px] text-blue-200/50 mt-2">These fill the matching fields in the letter automatically. You can still fine-tune the body below.</p>
+    </div>
+
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Letter body (edit as needed)</label>
     <div class="flex flex-wrap gap-1 mb-2">
       @foreach(['bold'=>'B','italic'=>'I','underline'=>'U','insertUnorderedList'=>'• List','insertOrderedList'=>'1. List'] as $cmd=>$lbl)
@@ -52,6 +80,15 @@
     <input type="hidden" name="signature_id" id="pf_sig">
   </form>
   <script>
+    // Live-bind the structured fields to the matching spans in the letter body.
+    document.querySelectorAll('[data-olfield]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var f = inp.getAttribute('data-olfield');
+        document.querySelectorAll('#editor [data-field="' + f + '"]').forEach(function (sp) {
+          sp.textContent = inp.value && inp.value.trim() !== '' ? inp.value : '________';
+        });
+      });
+    });
     function previewOffer(){
       document.getElementById('pf_body').value = document.getElementById('editor').innerHTML;
       document.getElementById('pf_subject').value = document.querySelector('input[name=subject]').value;
