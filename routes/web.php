@@ -354,6 +354,12 @@ Route::middleware(['auth', 'status.check'])->group(function () {
                 Route::get('/templates/{offerTemplate}/edit', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.edit');
                 Route::patch('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.update');
                 Route::delete('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateDelete'])->name('template.delete');
+                Route::get('/signatures', [\App\Http\Controllers\OfferLetterController::class, 'signatures'])->name('signatures');
+                Route::get('/signatures/create', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.create');
+                Route::post('/signatures', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.store');
+                Route::get('/signatures/{offerSignature}/edit', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.edit');
+                Route::patch('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.update');
+                Route::delete('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureDelete'])->name('signature.delete');
                 Route::get('/{offerLetter}/download', [\App\Http\Controllers\OfferLetterController::class, 'download'])->name('download');
             });
 

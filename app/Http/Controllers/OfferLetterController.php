@@ -6,6 +6,7 @@ use App\Models\JobApplication;
 use App\Models\OfferLetter;
 use App\Models\OfferLetterSetting;
 use App\Models\OfferLetterTemplate;
+use App\Models\OfferLetterSignature;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
@@ -65,11 +66,12 @@ class OfferLetterController extends Controller
         $subject = strtr((string) ($tpl->subject ?: 'Offer of Employment'), $tokens);
 
         return view('admin.offer_letters.compose', [
-            'app'      => $app,
-            'template' => $tpl,
-            'bodyHtml' => $body,
-            'subject'  => $subject,
-            'tokens'   => $tokens,
+            'app'        => $app,
+            'template'   => $tpl,
+            'bodyHtml'   => $body,
+            'subject'    => $subject,
+            'tokens'     => $tokens,
+            'signatures' => OfferLetterSignature::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
         ]);
     }
 
@@ -81,13 +83,21 @@ class OfferLetterController extends Controller
             'template_id'        => 'nullable|exists:offer_letter_templates,id',
             'subject'            => 'required|string|max:255',
             'body_html'          => 'required|string',
+            'signature_id'       => 'nullable|exists:offer_letter_signatures,id',
             'action'             => 'required|in:send,draft',
         ]);
 
         $app = JobApplication::with(['job', 'candidate', 'candidateUser'])->findOrFail($data['job_application_id']);
         $email = $app->candidate->email ?? $app->candidateUser->email ?? null;
 
-        $pdf = $this->renderPdf($data['subject'], $data['body_html']);
+        $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
+
+        $sigBlock = $this->signatureBlockHtml($sig);
+        $finalBody = str_contains($data['body_html'], '{{signature_block}}')
+            ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
+            : $data['body_html'] . $sigBlock;
+
+        $pdf = $this->renderPdf($data['subject'], $finalBody);
         $fileName = 'offer-letters/offer_' . $app->id . '_' . now()->format('Ymd_His') . '.pdf';
         Storage::disk('public')->put($fileName, $pdf);
 
@@ -100,8 +110,11 @@ class OfferLetterController extends Controller
             'candidate_email'    => $email,
             'job_title'          => optional($app->job)->title,
             'company_name'       => optional($app->job)->company_name,
+            'signatory_name'         => $sig?->name,
+            'signatory_designation'  => $sig?->designation,
+            'signatory_signature_path' => $sig?->signature_path,
             'subject'            => $data['subject'],
-            'body_html'          => $data['body_html'],
+            'body_html'          => $finalBody,
             'pdf_path'           => $fileName,
             'status'             => 'draft',
             'created_by'         => Auth::id(),
@@ -195,6 +208,48 @@ class OfferLetterController extends Controller
         return back()->with('success', 'Offer letter branding updated.');
     }
 
+    // ---- Signature manager ----------------------------------------------
+    public function signatures()
+    {
+        $signatures = OfferLetterSignature::orderBy('sort_order')->orderBy('name')->get();
+        return view('admin.offer_letters.signatures', compact('signatures'));
+    }
+
+    public function signatureForm(?OfferLetterSignature $offerSignature = null)
+    {
+        return view('admin.offer_letters.signature_form', ['sig' => $offerSignature]);
+    }
+
+    public function signatureSave(Request $request, ?OfferLetterSignature $offerSignature = null)
+    {
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'is_active'   => 'nullable|boolean',
+            'signature'   => ($offerSignature && $offerSignature->exists ? 'nullable' : 'nullable') . '|image|mimes:png,jpg,jpeg|max:2048',
+        ]);
+        $save = [
+            'name'        => $data['name'],
+            'designation' => $data['designation'] ?? null,
+            'is_active'   => $request->boolean('is_active'),
+        ];
+        if ($request->hasFile('signature')) {
+            $save['signature_path'] = $request->file('signature')->store('offer-branding', 'public');
+        }
+        if ($offerSignature && $offerSignature->exists) {
+            $offerSignature->update($save);
+        } else {
+            OfferLetterSignature::create($save);
+        }
+        return redirect()->route('admin.offer-letters.signatures')->with('success', 'Signature saved.');
+    }
+
+    public function signatureDelete(OfferLetterSignature $offerSignature)
+    {
+        $offerSignature->delete();
+        return back()->with('success', 'Signature deleted.');
+    }
+
     // ---- Helpers ---------------------------------------------------------
     private function tokens(JobApplication $app): array
     {
@@ -226,15 +281,28 @@ class OfferLetterController extends Controller
         return 'data:' . $mime . ';base64,' . base64_encode($bytes);
     }
 
+    private function signatureBlockHtml(?OfferLetterSignature $sig): string
+    {
+        $imgUri = $sig ? $this->dataUri($sig->signature_path) : null;
+        $name = $sig?->name ?: '';
+        $desig = $sig?->designation ?: '';
+        $img = $imgUri ? '<img src="' . $imgUri . '" style="height:54px;" alt="signature"><br>' : '';
+        return '<div class="sigblock" style="margin-top:26px;">' . $img
+            . '<div style="font-weight:bold;">Authorised Signatory</div>'
+            . 'Name: ' . e($name) . '<br>'
+            . ($desig ? 'Designation: ' . e($desig) . '<br>' : '')
+            . 'Date: ' . now()->format('d/m/Y')
+            . '</div>';
+    }
+
     private function renderPdf(string $subject, string $bodyHtml): string
     {
         $s = OfferLetterSetting::current();
         $html = view('admin.offer_letters.pdf', [
-            'subject'   => $subject,
-            'bodyHtml'  => $bodyHtml,
-            'settings'  => $s,
-            'logo'      => $this->dataUri($s->logo_path),
-            'signature' => $this->dataUri($s->signature_path),
+            'subject'  => $subject,
+            'bodyHtml' => $bodyHtml,
+            'settings' => $s,
+            'logo'     => $this->dataUri($s->logo_path),
         ])->render();
 
         $options = new Options();

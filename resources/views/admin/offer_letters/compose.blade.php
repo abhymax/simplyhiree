@@ -17,6 +17,17 @@
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Subject *</label>
     <input type="text" name="subject" value="{{ $subject }}" required class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5 mb-4">
 
+    <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Signature *</label>
+    @if($signatures->isEmpty())
+      <div class="mb-4 rounded-xl border border-amber-400/40 bg-amber-500/15 p-3 text-amber-100 text-sm">No signatures yet. <a class="underline font-bold" href="{{ route('admin.offer-letters.signature.create') }}" target="_blank">Add a signature</a> (name, designation, image), then reload this page.</div>
+    @else
+      <select name="signature_id" required class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5 mb-4">
+        <option value="">— Choose who signs —</option>
+        @foreach($signatures as $sg)<option value="{{ $sg->id }}">{{ $sg->name }}@if($sg->designation) — {{ $sg->designation }}@endif</option>@endforeach
+      </select>
+      <p class="text-[11px] text-blue-200/60 -mt-3 mb-4">The chosen signature replaces the <code>{{ '{{signature_block}}' }}</code> marker in the letter.</p>
+    @endif
+
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Letter body (edit as needed)</label>
     <div class="flex flex-wrap gap-1 mb-2">
       @foreach(['bold'=>'B','italic'=>'I','underline'=>'U','insertUnorderedList'=>'• List','insertOrderedList'=>'1. List'] as $cmd=>$lbl)

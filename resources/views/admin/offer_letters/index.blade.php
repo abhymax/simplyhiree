@@ -6,6 +6,7 @@
     <p class="text-blue-200 mt-1 text-lg">Generate and send branded offer letters to candidates.</p></div>
     <div class="flex gap-2">
       <a href="{{ route('admin.offer-letters.templates') }}" class="rounded-xl border border-white/15 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10">Templates</a>
+      <a href="{{ route('admin.offer-letters.signatures') }}" class="rounded-xl border border-white/15 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10">Signatures</a>
       <a href="{{ route('admin.offer-letters.settings') }}" class="rounded-xl border border-white/15 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10">Branding</a>
       <a href="{{ route('admin.offer-letters.create') }}" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5">+ Create Offer Letter</a>
     </div>
