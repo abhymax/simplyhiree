@@ -340,6 +340,23 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/plan-requests/{planChangeRequest}/reject', [AdminController::class, 'planRequestReject'])->name('plan-requests.reject');
             Route::get('/vendor-payments', [AdminController::class, 'vendorPayments'])->name('payments.index');
 
+            // Offer Letter Engine
+            Route::prefix('offer-letters')->name('offer-letters.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\OfferLetterController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\OfferLetterController::class, 'create'])->name('create');
+                Route::post('/compose', [\App\Http\Controllers\OfferLetterController::class, 'compose'])->name('compose');
+                Route::post('/', [\App\Http\Controllers\OfferLetterController::class, 'store'])->name('store');
+                Route::get('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settings'])->name('settings');
+                Route::post('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settingsUpdate'])->name('settings.update');
+                Route::get('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templates'])->name('templates');
+                Route::get('/templates/create', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.create');
+                Route::post('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.store');
+                Route::get('/templates/{offerTemplate}/edit', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.edit');
+                Route::patch('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.update');
+                Route::delete('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateDelete'])->name('template.delete');
+                Route::get('/{offerLetter}/download', [\App\Http\Controllers\OfferLetterController::class, 'download'])->name('download');
+            });
+
             // Credit notes
             Route::get('/credit-notes', [AdminController::class, 'creditNotesIndex'])->name('credit-notes.index');
             Route::post('/credit-notes/{creditNote}/apply', [AdminController::class, 'creditNotesApply'])->name('credit-notes.apply');
