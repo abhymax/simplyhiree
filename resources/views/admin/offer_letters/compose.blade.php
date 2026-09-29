@@ -97,7 +97,7 @@
     function olInr(n){ n=Math.round(n); var neg=n<0; n=Math.abs(n); var s=''+n; if(s.length<=3) return (neg?'-':'')+s; var l3=s.slice(-3); var rest=s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,','); return (neg?'-':'')+rest+','+l3; }
     function recalcCtcBreakup(){
       var wrap = document.querySelector('#editor .ctc-breakup');
-      if(!wrap){ alert('This template has no {{ctc_breakup}} block, so there is nothing to fill. Add the {{ctc_breakup}} placeholder to the template.'); return; }
+      if(!wrap){ alert('This template has no @{{ctc_breakup}} block, so there is nothing to fill. Add the @{{ctc_breakup}} placeholder to the template.'); return; }
       var mEl=document.querySelector('[data-olfield="monthly_ctc"]'), aEl=document.querySelector('[data-olfield="annual_ctc"]');
       var m=parseFloat(((mEl&&mEl.value)||'').replace(/[^0-9.]/g,''));
       if(!m){ var a=parseFloat(((aEl&&aEl.value)||'').replace(/[^0-9.]/g,'')); if(a) m=a/12; }
