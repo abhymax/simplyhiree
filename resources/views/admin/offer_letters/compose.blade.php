@@ -54,6 +54,10 @@
           <input type="text" data-olfield="annual_ctc" value="{{ $fields['annual_ctc'] ?? '' }}" placeholder="e.g. 2,40,000" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
         </div>
       </div>
+      <div class="mt-3">
+        <button type="button" onclick="recalcCtcBreakup()" class="rounded-lg border border-emerald-300/40 bg-emerald-500/15 text-emerald-100 text-xs font-bold px-3.5 py-2 hover:bg-emerald-500/25"><i class="fa-solid fa-calculator mr-1"></i>Auto-calculate salary breakup</button>
+        <span class="text-[11px] text-slate-400 ml-2">Uses Monthly CTC (or Annual ÷ 12) to fill Basic, HRA, PF, Gratuity, etc. into the letter.</span>
+      </div>
       <p class="text-[11px] text-slate-400 mt-2">These fill the matching fields in the letter automatically. You can still fine-tune the body below.</p>
     </div>
 
@@ -90,6 +94,29 @@
         });
       });
     });
+    function olInr(n){ n=Math.round(n); var neg=n<0; n=Math.abs(n); var s=''+n; if(s.length<=3) return (neg?'-':'')+s; var l3=s.slice(-3); var rest=s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,','); return (neg?'-':'')+rest+','+l3; }
+    function recalcCtcBreakup(){
+      var wrap = document.querySelector('#editor .ctc-breakup');
+      if(!wrap){ alert('This template has no {{ctc_breakup}} block, so there is nothing to fill. Add the {{ctc_breakup}} placeholder to the template.'); return; }
+      var mEl=document.querySelector('[data-olfield="monthly_ctc"]'), aEl=document.querySelector('[data-olfield="annual_ctc"]');
+      var m=parseFloat(((mEl&&mEl.value)||'').replace(/[^0-9.]/g,''));
+      if(!m){ var a=parseFloat(((aEl&&aEl.value)||'').replace(/[^0-9.]/g,'')); if(a) m=a/12; }
+      if(!m || m<=0){ alert('Enter Monthly CTC (or Annual CTC) first.'); return; }
+      var basic=0.5*(m/(1+0.5*0.12+0.5*0.0481)); // gross*0.5
+      var gross=m/(1+0.5*0.12+0.5*0.0481);
+      basic=gross*0.5; var hra=basic*0.4, special=gross-basic-hra;
+      var erPf=basic*0.12, erEsic=gross<=21000?gross*0.0325:0, grat=basic*0.0481;
+      var total=gross+erPf+erEsic+grat;
+      var eePf=basic*0.12, eeEsic=gross<=21000?gross*0.0075:0, take=gross-eePf-eeEsic;
+      function r(l,mv,yv,b){var o=b?'<b>':'',c=b?'</b>':'';return '<tr><td>'+o+l+c+'</td><td>'+o+'Rs. '+olInr(mv)+c+'</td><td>'+o+'Rs. '+olInr(yv)+c+'</td></tr>';}
+      var h='<table><tr><td>Salary Component</td><td>Monthly (Rs.)</td><td>Annual (Rs.)</td></tr>';
+      h+=r('Basic Salary',basic,basic*12); h+=r('HRA',hra,hra*12); h+=r('Special Allowance',special,special*12);
+      h+=r('Gross Salary',gross,gross*12,true); h+=r('Employer PF',erPf,erPf*12);
+      if(erEsic>0) h+=r('Employer ESIC',erEsic,erEsic*12);
+      h+=r('Gratuity',grat,grat*12); h+=r('Total CTC',total,total*12,true); h+='</table>';
+      h+='<p style="font-size:11px;color:#555;margin-top:4px;">Employee PF: Rs. '+olInr(eePf)+'/month'+(eeEsic>0?' · Employee ESIC: Rs. '+olInr(eeEsic)+'/month':'')+' · Approx. take-home: Rs. '+olInr(take)+'/month (before income tax &amp; other deductions).</p>';
+      wrap.innerHTML=h;
+    }
     function previewOffer(){
       document.getElementById('pf_body').value = document.getElementById('editor').innerHTML;
       document.getElementById('pf_subject').value = document.querySelector('input[name=subject]').value;

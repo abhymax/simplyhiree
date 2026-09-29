@@ -19,8 +19,28 @@ class OfferLetterController extends Controller
     // ---- Sent-letter list ------------------------------------------------
     public function index(Request $request)
     {
-        $letters = OfferLetter::with('creator')->latest()->paginate(25);
-        return view('admin.offer_letters.index', compact('letters'));
+        $base = OfferLetter::query();
+        $counts = [
+            'all'   => (clone $base)->count(),
+            'sent'  => (clone $base)->where('status', 'sent')->count(),
+            'draft' => (clone $base)->where('status', 'draft')->count(),
+        ];
+        $companies = (clone $base)->whereNotNull('company_name')->where('company_name', '!=', '')
+            ->distinct()->orderBy('company_name')->pluck('company_name');
+        $roles = (clone $base)->whereNotNull('job_title')->where('job_title', '!=', '')
+            ->distinct()->orderBy('job_title')->pluck('job_title');
+
+        $q = OfferLetter::with('creator');
+        if ($request->filled('company')) { $q->where('company_name', $request->input('company')); }
+        if ($request->filled('role'))    { $q->where('job_title', $request->input('role')); }
+        if ($request->filled('status'))  { $q->where('status', $request->input('status')); }
+        if ($request->filled('search')) {
+            $sv = $request->input('search');
+            $q->where(fn ($x) => $x->where('candidate_name', 'like', "%{$sv}%")->orWhere('candidate_email', 'like', "%{$sv}%"));
+        }
+        $letters = $q->latest()->paginate(25)->withQueryString();
+
+        return view('admin.offer_letters.index', compact('letters', 'counts', 'companies', 'roles'));
     }
 
     // ---- Create / compose ------------------------------------------------
@@ -66,8 +86,8 @@ class OfferLetterController extends Controller
             'ref_no'       => 'SHPL/HR/OL/' . date('Y') . '/' . str_pad((int) ((OfferLetter::max('id') ?? 0) + 3001), 4, '0', STR_PAD_LEFT),
             'department'   => optional($app->job)->department ?? '',
             'reporting_to' => '',
-            'monthly_ctc'  => $annual ? number_format($annual / 12, 0) : '',
-            'annual_ctc'   => $annual ? number_format($annual, 0) : '',
+            'monthly_ctc'  => $annual ? $this->inr($annual / 12) : '',
+            'annual_ctc'   => $annual ? $this->inr($annual) : '',
         ];
         $fieldTokens = [
             '{{ref_no}}'       => $fields['ref_no'] ?: '________',
@@ -77,7 +97,10 @@ class OfferLetterController extends Controller
             '{{annual_ctc}}'   => $fields['annual_ctc'] ?: '________',
         ];
 
-        $tokens = array_merge($this->tokens($app), $fieldTokens);
+        $monthlyForBreakup = $annual ? $annual / 12 : 0;
+        $tokens = array_merge($this->tokens($app), $fieldTokens, [
+            '{{ctc_breakup}}' => $this->ctcBreakupTable($monthlyForBreakup),
+        ]);
         $body = strtr($tpl->body_html, $tokens);
         $subject = strtr((string) ($tpl->subject ?: 'Offer of Employment'), $tokens);
 
@@ -331,6 +354,58 @@ class OfferLetterController extends Controller
             . ($desig ? 'Designation: ' . e($desig) . '<br>' : '')
             . 'Date: ' . now()->format('d/m/Y')
             . '</div>';
+    }
+
+    /** Indian-style number grouping (e.g. 1,38,370). */
+    private function inr($n): string
+    {
+        $n = (int) round((float) $n);
+        $neg = $n < 0; $n = abs($n);
+        $str = (string) $n;
+        if (strlen($str) <= 3) return ($neg ? '-' : '') . $str;
+        $last3 = substr($str, -3);
+        $rest = substr($str, 0, -3);
+        $rest = preg_replace('/\\B(?=(\\d{2})+(?!\\d))/', ',', $rest);
+        return ($neg ? '-' : '') . $rest . ',' . $last3;
+    }
+
+    /** Build the salary breakup table HTML from a MONTHLY CTC (mirrors the client Excel). */
+    private function ctcBreakupTable($monthlyCtc): string
+    {
+        $m = (float) $monthlyCtc;
+        if ($m <= 0) {
+            return '<div class="ctc-breakup"></div>';
+        }
+        $basicPct = 0.5; $hraPct = 0.4; $erPfPct = 0.12; $eePfPct = 0.12; $gratPct = 0.0481;
+        $gross    = $m / (1 + ($basicPct * $erPfPct) + ($basicPct * $gratPct));
+        $basic    = $gross * $basicPct;
+        $hra      = $basic * $hraPct;
+        $special  = $gross - $basic - $hra;
+        $erPf     = $basic * $erPfPct;
+        $erEsic   = $gross <= 21000 ? $gross * 0.0325 : 0;
+        $gratuity = $basic * $gratPct;
+        $total    = $gross + $erPf + $erEsic + $gratuity;
+        $eePf     = $basic * $eePfPct;
+        $eeEsic   = $gross <= 21000 ? $gross * 0.0075 : 0;
+        $takehome = $gross - $eePf - $eeEsic;
+
+        $row = function ($label, $mv, $yv, $strong = false) {
+            $o = $strong ? '<b>' : ''; $c = $strong ? '</b>' : '';
+            return '<tr><td>' . $o . $label . $c . '</td><td>' . $o . 'Rs. ' . $this->inr($mv) . $c . '</td><td>' . $o . 'Rs. ' . $this->inr($yv) . $c . '</td></tr>';
+        };
+        $h  = '<div class="ctc-breakup"><table><tr><td>Salary Component</td><td>Monthly (Rs.)</td><td>Annual (Rs.)</td></tr>';
+        $h .= $row('Basic Salary', $basic, $basic * 12);
+        $h .= $row('HRA', $hra, $hra * 12);
+        $h .= $row('Special Allowance', $special, $special * 12);
+        $h .= $row('Gross Salary', $gross, $gross * 12, true);
+        $h .= $row('Employer PF', $erPf, $erPf * 12);
+        if ($erEsic > 0) { $h .= $row('Employer ESIC', $erEsic, $erEsic * 12); }
+        $h .= $row('Gratuity', $gratuity, $gratuity * 12);
+        $h .= $row('Total CTC', $total, $total * 12, true);
+        $h .= '</table><p style="font-size:11px;color:#555;margin-top:4px;">Employee PF: Rs. ' . $this->inr($eePf) . '/month'
+            . ($eeEsic > 0 ? ' &middot; Employee ESIC: Rs. ' . $this->inr($eeEsic) . '/month' : '')
+            . ' &middot; Approx. take-home: Rs. ' . $this->inr($takehome) . '/month (before income tax &amp; other deductions).</p></div>';
+        return $h;
     }
 
     private function renderPdf(string $subject, string $bodyHtml): string
