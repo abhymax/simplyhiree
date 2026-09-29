@@ -40,7 +40,7 @@
     <button class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5">Filter</button>
     @if(request()->hasAny(['company','role','status','search']))<a href="{{ route('admin.offer-letters.index') }}" class="rounded-xl border border-white/20 text-slate-200 px-4 py-2.5">Clear</a>@endif
   </form>
-  <div class="mb-3 text-blue-200/70 text-sm">Showing {{ $letters->total() }} letter{{ $letters->total()==1?'':'s' }}@if(request('company')) for <b class="text-white">{{ request('company') }}</b>@endif@if(request('role')) · role <b class="text-white">{{ request('role') }}</b>@endif.</div>
+  <div class="mb-3 text-blue-200/70 text-sm">Showing {{ $letters->total() }} letter{{ $letters->total()==1?'':'s' }}@if(request('company')) for <b class="text-white">{{ request('company') }}</b>@endif @if(request('role'))· role <b class="text-white">{{ request('role') }}</b>@endif.</div>
 
   <div class="rounded-2xl border border-white/10 bg-slate-900/40 overflow-hidden"><div class="overflow-x-auto">
    <table class="w-full text-sm"><thead class="bg-white/5 text-blue-200/80 text-xs uppercase tracking-wide"><tr>
