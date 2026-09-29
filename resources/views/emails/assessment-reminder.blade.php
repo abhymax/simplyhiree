@@ -5,7 +5,7 @@
 <tr><td style="background:linear-gradient(135deg,#4f46e5,#06b6d4);padding:22px 28px;color:#fff;font-weight:800;font-size:18px;">SimplyHiree</td></tr>
 <tr><td style="padding:30px 28px;">
 <h1 style="margin:0 0 10px;font-size:20px;color:#0f172a;">Don't forget your assessment</h1>
-<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#475569;">Hi {{ $session->candidate_name ?: 'there' }}, this is a friendly reminder to complete your assessment@if(!empty($job)) for <strong>{{ $job->title }}</strong>@endif. You must clear it to be considered for the role.</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#475569;">Hi {{ $session->candidate_name ?: 'there' }}, this is a friendly reminder to complete your assessment{!! !empty($job) ? ' for <strong>'.e($job->title).'</strong>' : '' !!}. You must clear it to be considered for the role.</p>
 <div style="text-align:center;margin:0 0 20px;"><a href="{{ $url }}" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:14px 28px;border-radius:12px;">Continue assessment</a></div>
 @if($session->expires_at)<p style="margin:0;font-size:12px;color:#64748b;">Your link is valid until {{ $session->expires_at->format('d M Y') }}.</p>@endif
 </td></tr>

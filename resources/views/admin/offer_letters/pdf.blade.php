@@ -22,6 +22,10 @@
   .body ul { margin:6px 0 6px 4px; padding-left:16px; }
   .body li { list-style-type: square; margin:3px 0; }
   .body b, .body strong { color:#111827; }
+  /* Safeguard: neutralise pasted inline colors so letters stay readable on white */
+  .body, .body p, .body span, .body td, .body th, .body li, .body div, .body b, .body strong { color:#1f2937 !important; background-color: transparent !important; }
+  .body h2, .body h3 { color:#1d4ed8 !important; }
+  .body table th, .body table tr:first-child td { background:#eef2f7 !important; }
   .sigblock { margin-top:26px; }
 </style></head>
 <body>

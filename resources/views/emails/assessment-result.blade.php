@@ -6,7 +6,7 @@
 <tr><td style="padding:30px 28px;">
 @if($passed)
 <h1 style="margin:0 0 10px;font-size:20px;color:#0f172a;">You've qualified! 🎉</h1>
-<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#475569;">Congratulations {{ $session->candidate_name ?: 'there' }} — you cleared every stage of the assessment@if(!empty($job)) for <strong>{{ $job->title }}</strong>@endif. Your results have been shared with the recruiter. No further action is needed from you right now.</p>
+<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#475569;">Congratulations {{ $session->candidate_name ?: 'there' }} — you cleared every stage of the assessment{!! !empty($job) ? ' for <strong>'.e($job->title).'</strong>' : '' !!}. Your results have been shared with the recruiter. No further action is needed from you right now.</p>
 @else
 <h1 style="margin:0 0 10px;font-size:20px;color:#0f172a;">Assessment complete</h1>
 <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#475569;">Thank you for completing the assessment{{ !empty($job) ? ' for '.$job->title : '' }}, {{ $session->candidate_name ?: 'there' }}. Unfortunately you didn't meet the pass mark this time. Please reach out to the recruiter who invited you for any next steps.</p>

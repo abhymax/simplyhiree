@@ -6,6 +6,7 @@
   @if($errors->any())<div class="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/15 p-3 text-rose-100 text-sm"><ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
   <form method="POST" action="{{ $sig && $sig->exists ? route('admin.offer-letters.signature.update', $sig) : route('admin.offer-letters.signature.store') }}" enctype="multipart/form-data" class="rounded-3xl border border-white/15 bg-slate-900/60 p-6 space-y-4">
     @csrf
+    @if($sig && $sig->exists) @method('PATCH') @endif
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Name *</label>
       <input name="name" value="{{ old('name', $sig->name ?? '') }}" required class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5" placeholder="e.g. Sachin Singh"></div>
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Designation</label>

@@ -1,3 +1,4 @@
+<style>#editor, #editor * { color:#0f172a !important; background-color: transparent !important; }</style>
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-3xl mx-auto">
@@ -9,6 +10,7 @@
         onsubmit="document.getElementById('body_html').value=document.getElementById('editor').innerHTML;"
         class="rounded-3xl border border-white/15 bg-slate-900/60 p-6 space-y-4">
     @csrf
+    @if($tpl && $tpl->exists) @method('PATCH') @endif
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Template name *</label>
       <input name="name" value="{{ old('name', $tpl->name ?? '') }}" required class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5"></div>
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Default subject</label>
