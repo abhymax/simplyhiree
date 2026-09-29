@@ -55,13 +55,8 @@
         </div>
       </div>
       <div class="mt-3">
-        <button type="button" onclick="recalcCtcBreakup()" class="rounded-lg border border-emerald-300/40 bg-emerald-500/15 text-emerald-100 text-xs font-bold px-3.5 py-2 hover:bg-emerald-500/25"><i class="fa-solid fa-calculator mr-1"></i>Auto-calculate salary breakup</button>
-        <span class="text-[11px] text-slate-400 ml-2">Uses Monthly CTC (or Annual ÷ 12) to fill Basic, HRA, PF, Gratuity, etc. into the letter.</span>
-      </div>
-      <div class="mt-2 text-[11px] text-slate-300 flex items-center flex-wrap gap-2">
-        <span>Placeholder for the breakup table — paste this into your template where the salary table should appear:</span>
-        <code class="bg-white/10 text-cyan-200 px-1.5 py-0.5 rounded">@{{ctc_breakup}}</code>
-        <button type="button" onclick="copyTok(this,'@{{ctc_breakup}}')" class="text-cyan-300 underline">Copy</button>
+        <button type="button" onclick="recalcCtcBreakup()" class="rounded-lg border border-emerald-300/40 bg-emerald-500/15 text-emerald-100 text-xs font-bold px-3.5 py-2 hover:bg-emerald-500/25"><i class="fa-solid fa-calculator mr-1"></i>Insert salary breakup</button>
+        <span class="text-[11px] text-slate-400 ml-2">Enter Monthly (or Annual) CTC, then click to drop the Basic/HRA/PF/Gratuity table into the letter below. Click again to refresh it.</span>
       </div>
       <p class="text-[11px] text-slate-400 mt-2">These fill the matching fields in the letter automatically. You can still fine-tune the body below.</p>
     </div>
@@ -101,13 +96,25 @@
     });
     function copyTok(btn, tok){ (navigator.clipboard ? navigator.clipboard.writeText(tok) : Promise.reject()).then(function(){ var o=btn.textContent; btn.textContent='Copied!'; setTimeout(function(){ btn.textContent=o; },1500); }).catch(function(){ window.prompt('Copy this placeholder:', tok); }); }
     function olInr(n){ n=Math.round(n); var neg=n<0; n=Math.abs(n); var s=''+n; if(s.length<=3) return (neg?'-':'')+s; var l3=s.slice(-3); var rest=s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,','); return (neg?'-':'')+rest+','+l3; }
+    function insertHtmlIntoEditor(html){
+      var editor=document.getElementById('editor'); editor.focus();
+      var sel=window.getSelection();
+      if(sel && sel.rangeCount>0 && editor.contains(sel.anchorNode)){
+        var range=sel.getRangeAt(0); range.deleteContents();
+        var tmp=document.createElement('div'); tmp.innerHTML=html;
+        var frag=document.createDocumentFragment(), node, last;
+        while((node=tmp.firstChild)){ last=frag.appendChild(node); }
+        range.insertNode(frag);
+        if(last){ range=range.cloneRange(); range.setStartAfter(last); range.collapse(true); sel.removeAllRanges(); sel.addRange(range); }
+      } else {
+        editor.insertAdjacentHTML('beforeend', html);
+      }
+    }
     function recalcCtcBreakup(){
-      var wrap = document.querySelector('#editor .ctc-breakup');
-      if(!wrap){ alert('This template has no @{{ctc_breakup}} block, so there is nothing to fill. Add the @{{ctc_breakup}} placeholder to the template.'); return; }
       var mEl=document.querySelector('[data-olfield="monthly_ctc"]'), aEl=document.querySelector('[data-olfield="annual_ctc"]');
       var m=parseFloat(((mEl&&mEl.value)||'').replace(/[^0-9.]/g,''));
       if(!m){ var a=parseFloat(((aEl&&aEl.value)||'').replace(/[^0-9.]/g,'')); if(a) m=a/12; }
-      if(!m || m<=0){ alert('Enter Monthly CTC (or Annual CTC) first.'); return; }
+      if(!m || m<=0){ alert('Enter the Monthly CTC (or Annual CTC) above first.'); return; }
       var basic=0.5*(m/(1+0.5*0.12+0.5*0.0481)); // gross*0.5
       var gross=m/(1+0.5*0.12+0.5*0.0481);
       basic=gross*0.5; var hra=basic*0.4, special=gross-basic-hra;
@@ -121,7 +128,9 @@
       if(erEsic>0) h+=r('Employer ESIC',erEsic,erEsic*12);
       h+=r('Gratuity',grat,grat*12); h+=r('Total CTC',total,total*12,true); h+='</table>';
       h+='<p style="font-size:11px;color:#555;margin-top:4px;">Employee PF: Rs. '+olInr(eePf)+'/month'+(eeEsic>0?' · Employee ESIC: Rs. '+olInr(eeEsic)+'/month':'')+' · Approx. take-home: Rs. '+olInr(take)+'/month (before income tax &amp; other deductions).</p>';
-      wrap.innerHTML=h;
+      var wrap = document.querySelector('#editor .ctc-breakup');
+      if(wrap){ wrap.innerHTML=h; }            // already inserted -> refresh in place
+      else { insertHtmlIntoEditor('<div class="ctc-breakup">'+h+'</div>'); }  // otherwise drop it in
     }
     function previewOffer(){
       document.getElementById('pf_body').value = document.getElementById('editor').innerHTML;
