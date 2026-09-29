@@ -58,6 +58,11 @@
         <button type="button" onclick="recalcCtcBreakup()" class="rounded-lg border border-emerald-300/40 bg-emerald-500/15 text-emerald-100 text-xs font-bold px-3.5 py-2 hover:bg-emerald-500/25"><i class="fa-solid fa-calculator mr-1"></i>Auto-calculate salary breakup</button>
         <span class="text-[11px] text-slate-400 ml-2">Uses Monthly CTC (or Annual ÷ 12) to fill Basic, HRA, PF, Gratuity, etc. into the letter.</span>
       </div>
+      <div class="mt-2 text-[11px] text-slate-300 flex items-center flex-wrap gap-2">
+        <span>Placeholder for the breakup table — paste this into your template where the salary table should appear:</span>
+        <code class="bg-white/10 text-cyan-200 px-1.5 py-0.5 rounded">@{{ctc_breakup}}</code>
+        <button type="button" onclick="copyTok(this,'@{{ctc_breakup}}')" class="text-cyan-300 underline">Copy</button>
+      </div>
       <p class="text-[11px] text-slate-400 mt-2">These fill the matching fields in the letter automatically. You can still fine-tune the body below.</p>
     </div>
 
@@ -94,6 +99,7 @@
         });
       });
     });
+    function copyTok(btn, tok){ (navigator.clipboard ? navigator.clipboard.writeText(tok) : Promise.reject()).then(function(){ var o=btn.textContent; btn.textContent='Copied!'; setTimeout(function(){ btn.textContent=o; },1500); }).catch(function(){ window.prompt('Copy this placeholder:', tok); }); }
     function olInr(n){ n=Math.round(n); var neg=n<0; n=Math.abs(n); var s=''+n; if(s.length<=3) return (neg?'-':'')+s; var l3=s.slice(-3); var rest=s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,','); return (neg?'-':'')+rest+','+l3; }
     function recalcCtcBreakup(){
       var wrap = document.querySelector('#editor .ctc-breakup');
