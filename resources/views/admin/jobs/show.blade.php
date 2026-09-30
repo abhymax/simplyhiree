@@ -223,13 +223,14 @@
                     {{-- CLIENT INFO --}}
                     <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6">
                         <h3 class="text-slate-400 font-bold text-sm uppercase tracking-wider mb-4">Posted By</h3>
+                        @php $poster = $job->user; @endphp
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">
-                                {{ substr($job->user->name, 0, 1) }}
+                                {{ strtoupper(substr($poster->name ?? ($job->company_name ?: 'S'), 0, 1)) }}
                             </div>
                             <div>
-                                <div class="text-white font-bold">{{ $job->user->name }}</div>
-                                <div class="text-xs text-blue-300">{{ $job->user->email }}</div>
+                                <div class="text-white font-bold">{{ $poster->name ?? ($job->company_name ?: 'SimplyHiree') }}</div>
+                                <div class="text-xs text-blue-300">{{ $poster->email ?? 'SimplyHiree (Internal job)' }}</div>
                             </div>
                         </div>
                     </div>
