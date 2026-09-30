@@ -52,6 +52,14 @@
         @if($latestRound&&$latestRoundStatus==='Scheduled'&&!$joined&&!$isSelected)
             <form method="POST" action="{{ route('client.rounds.appeared',$latestRound) }}">@csrf<button class="response-action rounded-xl bg-gradient-to-r from-sky-500 to-cyan-600 px-3 py-2.5 text-xs font-extrabold text-white"><i class="fa-solid fa-user-check mr-1"></i>Mark appeared</button></form>
             <form method="POST" action="{{ route('client.rounds.noshow',$latestRound) }}">@csrf<button class="response-action rounded-xl border border-orange-300/35 bg-orange-500/20 px-3 py-2.5 text-xs font-extrabold text-orange-50"><i class="fa-solid fa-user-slash mr-1"></i>Mark no-show</button></form>
+            <details class="w-full mt-1">
+                <summary class="response-action inline-flex cursor-pointer items-center gap-2 rounded-xl border border-rose-300/35 bg-rose-500/15 px-3 py-2.5 text-xs font-extrabold text-rose-100"><i class="fa-solid fa-calendar-xmark mr-1"></i>Cancel interview</summary>
+                <form method="POST" action="{{ route('client.rounds.cancel',$latestRound) }}" class="mt-2 rounded-xl border border-rose-300/25 bg-rose-500/10 p-3" onsubmit="return confirm('Cancel this interview and notify the candidate?')">@csrf
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-rose-100 mb-1.5">Reason for cancellation (sent to candidate)</label>
+                    <textarea name="cancel_reason" rows="2" required maxlength="2000" placeholder="e.g. Interviewer unavailable; we will reschedule shortly." class="w-full rounded-lg border border-white/20 bg-slate-800 px-3 py-2 text-xs text-white"></textarea>
+                    <div class="mt-2 flex justify-end"><button class="rounded-lg bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-extrabold text-white"><i class="fa-solid fa-xmark mr-1"></i>Confirm cancellation</button></div>
+                </form>
+            </details>
         @elseif($latestRound&&$latestRoundStatus==='Appeared'&&!$joined&&!$isSelected)
             <a href="{{ route('client.rounds.feedback.create',$latestRound) }}" class="response-action inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-2.5 text-xs font-extrabold text-white"><i class="fa-regular fa-clipboard"></i>Add feedback</a>
         @elseif(!$latestRound&&$reviewStatus==='Interview Scheduled'&&!$joined&&!$isSelected)

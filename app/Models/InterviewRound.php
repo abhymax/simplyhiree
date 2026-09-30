@@ -21,7 +21,10 @@ class InterviewRound extends Model
         'location',
         'interviewer_name',
         'candidate_message',
+        'cc_emails',
         'status',
+        'cancel_reason',
+        'cancelled_at',
         'feedback',
         'rating',
         'recommendation',
@@ -31,6 +34,7 @@ class InterviewRound extends Model
     protected $casts = [
         'scheduled_at'          => 'datetime',
         'feedback_submitted_at' => 'datetime',
+        'cancelled_at'          => 'datetime',
     ];
 
     public function application()

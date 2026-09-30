@@ -1238,7 +1238,7 @@ class ClientController extends Controller
      *                                 candidate_message instead of legacy client_notes.
      * @param  ?int     $roundNumber   If passed, prepends "Round N" to the subject/body.
      */
-    private function sendInterviewConfirmationToCandidate(JobApplication $application, bool $isUpdate = false, ?string $extraNote = null, ?int $roundNumber = null): void
+    private function sendInterviewConfirmationToCandidate(JobApplication $application, bool $isUpdate = false, ?string $extraNote = null, ?int $roundNumber = null, ?string $ccEmails = null): void
     {
         $application->loadMissing('candidate.partner');
         $whatsapp = app(AiSensyWhatsAppService::class);
@@ -1309,7 +1309,8 @@ class ClientController extends Controller
         }
 
         // --- Email ---
-        if ($email) {
+        $cc = $this->parseCcEmails($ccEmails);
+        if ($email || !empty($cc)) {
             try {
                 Mail::send('client.interviews.email_confirmation', [
                     'name'         => $name,
@@ -1321,10 +1322,12 @@ class ClientController extends Controller
                     'notes'        => $noteText,
                     'isUpdate'     => $isUpdate,
                     'partnerName'  => $partnerName,
-                ], function ($m) use ($email, $name, $verb, $roundNumber) {
+                ], function ($m) use ($email, $name, $verb, $roundNumber, $cc) {
                     $subject = '[SimplyHiree] Your interview is ' . $verb;
                     if ($roundNumber) $subject = "[SimplyHiree] Round {$roundNumber} interview is {$verb}";
-                    $m->to($email, $name)->subject($subject);
+                    if ($email) { $m->to($email, $name); } elseif (!empty($cc)) { $m->to($cc); }
+                    if ($email && !empty($cc)) { $m->cc($cc); }
+                    $m->subject($subject);
                 });
             } catch (\Throwable $e) {
                 \Log::warning('Interview email confirmation failed app=' . $application->id . ': ' . $e->getMessage());
@@ -1557,6 +1560,7 @@ class ClientController extends Controller
             'meeting_link'      => 'nullable|url|max:500',
             'location'          => 'nullable|string|max:255',
             'candidate_message' => 'nullable|string|max:2000',
+            'cc_emails'         => 'nullable|string|max:1000',
         ]);
 
         $round = $application->interviewRounds()->create([
@@ -1566,6 +1570,7 @@ class ClientController extends Controller
             'meeting_link'      => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
             'location'          => $validated['mode'] === 'In-person' ? $validated['location'] : null,
             'candidate_message' => $validated['candidate_message'] ?? null,
+            'cc_emails'         => $this->normalizeCcRaw($validated['cc_emails'] ?? null),
             'status'            => 'Scheduled',
         ]);
 
@@ -1587,7 +1592,8 @@ class ClientController extends Controller
             $application->fresh(['job', 'candidate', 'candidateUser.profile']),
             false,
             $round->candidate_message,
-            $round->round_number
+            $round->round_number,
+            $round->cc_emails
         );
 
         return redirect()->back()->with('success', "Round {$round->round_number} scheduled — candidate notified on WhatsApp + email.");
@@ -1620,6 +1626,7 @@ class ClientController extends Controller
             'meeting_link'      => 'nullable|url|max:500',
             'location'          => 'nullable|string|max:255',
             'candidate_message' => 'nullable|string|max:2000',
+            'cc_emails'         => 'nullable|string|max:1000',
         ]);
 
         $round->update([
@@ -1628,6 +1635,7 @@ class ClientController extends Controller
             'meeting_link'      => $validated['mode'] === 'Online' ? $validated['meeting_link'] : null,
             'location'          => $validated['mode'] === 'In-person' ? $validated['location'] : null,
             'candidate_message' => $validated['candidate_message'] ?? null,
+            'cc_emails'         => $this->normalizeCcRaw($validated['cc_emails'] ?? null),
             'status'            => 'Scheduled', // Reset round status to Scheduled upon edit/reschedule
         ]);
 
@@ -1647,7 +1655,8 @@ class ClientController extends Controller
                 $application->fresh(['job', 'candidate', 'candidateUser.profile']),
                 true,
                 $round->candidate_message,
-                $round->round_number
+                $round->round_number,
+                $round->cc_emails
             );
         }
 
@@ -1662,6 +1671,153 @@ class ClientController extends Controller
         
         // Redirect to candidate details page
         return redirect()->route('client.applications.show', $application->id)->with('success', $msg . '.');
+    }
+
+    /**
+     * Parse a comma/semicolon/space separated string into a de-duplicated
+     * list of valid email addresses.
+     */
+    private function parseCcEmails(?string $raw): array
+    {
+        if (!$raw) return [];
+        $parts = preg_split('/[,;\s]+/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $valid = [];
+        foreach ($parts as $e) {
+            $e = trim($e);
+            if ($e !== '' && filter_var($e, FILTER_VALIDATE_EMAIL)) {
+                $valid[strtolower($e)] = $e;
+            }
+        }
+        return array_values($valid);
+    }
+
+    /**
+     * Normalise a raw CC string to a clean comma-joined list for storage.
+     */
+    private function normalizeCcRaw(?string $raw): ?string
+    {
+        $list = $this->parseCcEmails($raw);
+        return empty($list) ? null : implode(', ', $list);
+    }
+
+    /**
+     * Cancel an interview round with a reason. The candidate (and any CC
+     * recipients captured on the round) are notified.
+     */
+    public function cancelInterviewRound(Request $request, InterviewRound $round)
+    {
+        $application = $round->application;
+        if ($application->job->user_id !== $this->ownerId()) {
+            abort(403);
+        }
+
+        if ($round->status === 'Cancelled') {
+            return redirect()->back()->with('error', "Round {$round->round_number} is already cancelled.");
+        }
+
+        $validated = $request->validate([
+            'cancel_reason' => 'required|string|max:2000',
+        ]);
+
+        $round->update([
+            'status'        => 'Cancelled',
+            'cancel_reason' => $validated['cancel_reason'],
+            'cancelled_at'  => now(),
+        ]);
+
+        // If this was the active (latest) round, roll the mirrored hiring
+        // status back to Shortlisted and suppress any pending reminder.
+        $latest = $application->interviewRounds()->latest('round_number')->first();
+        if ($latest && $latest->id === $round->id) {
+            $application->update([
+                'hiring_status'              => 'Shortlisted',
+                'interview_reminder_sent_at' => now(),
+            ]);
+        }
+
+        $this->sendInterviewCancellationToCandidate(
+            $application->fresh(['job', 'candidate', 'candidateUser.profile']),
+            $round
+        );
+
+        try {
+            app(SuperadminActivityService::class)->logApplicationLifecycle($application, 'client.interview_cancelled');
+        } catch (\Throwable $e) {
+            \Log::warning('Interview cancel activity log failed: ' . $e->getMessage());
+        }
+        try {
+            $this->notifySourcingPartner(
+                new CandidateLifecycleUpdated($application, 'interview_cancelled', $round->round_number),
+                $application
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('Interview cancel partner notify failed: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', "Round {$round->round_number} cancelled - candidate notified.");
+    }
+
+    /**
+     * Notify the candidate (and CC recipients) that an interview round has
+     * been cancelled, including the reason.
+     */
+    private function sendInterviewCancellationToCandidate(JobApplication $application, InterviewRound $round): void
+    {
+        $application->loadMissing('candidate.partner');
+        $whatsapp = app(AiSensyWhatsAppService::class);
+        $cand     = $application->candidate;
+        $direct   = $application->candidateUser;
+
+        $name = $cand
+            ? trim(($cand->first_name ?? '') . ' ' . ($cand->last_name ?? ''))
+            : ($direct?->name ?? 'Candidate');
+        $email = $cand?->email ?? $direct?->email ?? null;
+        $phone = $whatsapp->normalizeIndianPhone($cand?->phone_number ?? optional($direct?->profile)->phone_number ?? null);
+
+        $job     = $application->job;
+        $company = $job?->company_name ?: (optional($job?->user)->name ?? 'the company');
+        if ($job && $job->is_company_confidential) $company = 'Confidential';
+
+        $when       = $round->scheduled_at?->format('h:i A, D d M Y') ?? 'the scheduled time';
+        $roundLabel = "Round {$round->round_number}";
+        $cc         = $this->parseCcEmails($round->cc_emails);
+
+        $body  = "Hi {$name},\n\n";
+        $body .= "Your {$roundLabel} interview for " . ($job?->title ?? 'the role') . " at {$company}, scheduled for {$when}, has been CANCELLED.\n\n";
+        $body .= "Reason: {$round->cancel_reason}\n\n";
+        $body .= "We will reach out if it is to be rescheduled.\n\n- SimplyHiree";
+
+        if ($phone) {
+            try {
+                $whatsapp->sendEventAlert(
+                    $phone,
+                    'interview_cancelled',
+                    'Interview cancelled - ' . $roundLabel,
+                    $body,
+                    ['template_params' => [
+                        $name,
+                        ($job?->title ?? 'the role'),
+                        $company,
+                        $when,
+                        $round->cancel_reason,
+                    ]]
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Interview cancel WA failed app=' . $application->id . ': ' . $e->getMessage());
+            }
+        }
+
+        try {
+            if ($email || !empty($cc)) {
+                Mail::raw($body, function ($m) use ($email, $name, $cc, $roundLabel) {
+                    if ($email) { $m->to($email, $name); } elseif (!empty($cc)) { $m->to($cc); }
+                    if ($email && !empty($cc)) { $m->cc($cc); }
+                    $m->subject("[SimplyHiree] {$roundLabel} interview cancelled");
+                });
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Interview cancel email failed app=' . $application->id . ': ' . $e->getMessage());
+        }
     }
 
     public function markRoundAppeared(InterviewRound $round)

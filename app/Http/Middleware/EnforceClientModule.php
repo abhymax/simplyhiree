@@ -62,6 +62,7 @@ class EnforceClientModule
         'client.rounds.update' => 'interviews',
         'client.rounds.appeared' => 'interviews',
         'client.rounds.noshow' => 'interviews',
+        'client.rounds.cancel' => 'interviews',
         'client.rounds.feedback.create' => 'interviews',
         'client.rounds.feedback' => 'interviews',
 
