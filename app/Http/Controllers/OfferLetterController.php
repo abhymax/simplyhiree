@@ -109,6 +109,7 @@ class OfferLetterController extends Controller
             'template'   => $tpl,
             'bodyHtml'   => $body,
             'subject'    => $subject,
+            'heading'    => $tpl->default_heading ?: 'OFFER LETTER',
             'tokens'     => $tokens,
             'fields'     => $fields,
             'signatures' => OfferLetterSignature::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
@@ -122,6 +123,7 @@ class OfferLetterController extends Controller
             'job_application_id' => 'required|exists:job_applications,id',
             'template_id'        => 'nullable|exists:offer_letter_templates,id',
             'subject'            => 'required|string|max:255',
+            'heading'            => 'nullable|string|max:120',
             'body_html'          => 'required|string',
             'signature_id'       => 'nullable|exists:offer_letter_signatures,id',
             'action'             => 'required|in:send,draft',
@@ -137,7 +139,8 @@ class OfferLetterController extends Controller
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
             : $data['body_html'] . $sigBlock;
 
-        $pdf = $this->renderPdf($data['subject'], $finalBody);
+        $heading = trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER';
+        $pdf = $this->renderPdf($data['subject'], $finalBody, $heading);
         $fileName = 'offer-letters/offer_' . $app->id . '_' . now()->format('Ymd_His') . '.pdf';
         Storage::disk('public')->put($fileName, $pdf);
 
@@ -154,6 +157,7 @@ class OfferLetterController extends Controller
             'signatory_designation'  => $sig?->designation,
             'signatory_signature_path' => $sig?->signature_path,
             'subject'            => $data['subject'],
+            'heading'            => $heading,
             'body_html'          => $finalBody,
             'pdf_path'           => $fileName,
             'status'             => 'draft',
@@ -179,6 +183,7 @@ class OfferLetterController extends Controller
         $data = $request->validate([
             'job_application_id' => 'required|exists:job_applications,id',
             'subject'            => 'required|string|max:255',
+            'heading'            => 'nullable|string|max:120',
             'body_html'          => 'required|string',
             'signature_id'       => 'nullable|exists:offer_letter_signatures,id',
         ]);
@@ -187,7 +192,7 @@ class OfferLetterController extends Controller
         $body = str_contains($data['body_html'], '{{signature_block}}')
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
             : $data['body_html'] . $sigBlock;
-        $pdf = $this->renderPdf($data['subject'], $body);
+        $pdf = $this->renderPdf($data['subject'], $body, trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER');
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="offer-preview.pdf"',
@@ -218,6 +223,7 @@ class OfferLetterController extends Controller
         $data = $request->validate([
             'name'      => 'required|string|max:255',
             'subject'   => 'nullable|string|max:255',
+            'default_heading' => 'nullable|string|max:120',
             'body_html' => 'required|string',
             'is_active' => 'nullable|boolean',
         ]);
@@ -408,11 +414,12 @@ class OfferLetterController extends Controller
         return $h;
     }
 
-    private function renderPdf(string $subject, string $bodyHtml): string
+    private function renderPdf(string $subject, string $bodyHtml, string $heading = 'OFFER LETTER'): string
     {
         $s = OfferLetterSetting::current();
         $html = view('admin.offer_letters.pdf', [
             'subject'  => $subject,
+            'heading'  => $heading,
             'bodyHtml' => $bodyHtml,
             'settings' => $s,
             'logo'     => $this->dataUri($s->logo_path),

@@ -45,6 +45,6 @@
     @endif
   </footer>
 
-  <h1 class="title">OFFER LETTER</h1>
+  <h1 class="title">{{ $heading ?? 'OFFER LETTER' }}</h1>
   <div class="body">{!! $bodyHtml !!}</div>
 </body></html>

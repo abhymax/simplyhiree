@@ -16,6 +16,8 @@
       <input name="name" value="{{ old('name', $tpl->name ?? '') }}" required class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5"></div>
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Default subject</label>
       <input name="subject" value="{{ old('subject', $tpl->subject ?? 'Offer of Employment') }}" class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5"></div>
+    <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Default heading (PDF title)</label>
+      <input name="default_heading" value="{{ old('default_heading', $tpl->default_heading ?? 'OFFER LETTER') }}" placeholder="e.g. OFFER LETTER, APPOINTMENT LETTER" class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5"></div>
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Body</label>
       <div class="flex flex-wrap gap-1 mb-2">@foreach(['bold'=>'B','italic'=>'I','underline'=>'U','insertUnorderedList'=>'• List'] as $cmd=>$lbl)<button type="button" onclick="document.execCommand('{{ $cmd }}',false,null);document.getElementById('editor').focus();" class="px-2.5 py-1 rounded bg-white/10 text-slate-200 text-xs font-bold">{{ $lbl }}</button>@endforeach</div>
       <input type="hidden" name="body_html" id="body_html">

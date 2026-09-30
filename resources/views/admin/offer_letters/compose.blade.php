@@ -15,6 +15,10 @@
     <input type="hidden" name="template_id" value="{{ $template->id }}">
     <input type="hidden" name="body_html" id="body_html">
 
+    <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Document heading *</label>
+    <input type="text" name="heading" value="{{ $heading ?? 'OFFER LETTER' }}" required placeholder="e.g. OFFER LETTER, APPOINTMENT LETTER" class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5 mb-1">
+    <p class="text-[11px] text-slate-400 mb-4">The big title shown at the top of the PDF.</p>
+
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Subject *</label>
     <input type="text" name="subject" value="{{ $subject }}" required class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5 mb-4">
 
@@ -81,6 +85,7 @@
     @csrf
     <input type="hidden" name="job_application_id" value="{{ $app->id }}">
     <input type="hidden" name="subject" id="pf_subject">
+    <input type="hidden" name="heading" id="pf_heading">
     <input type="hidden" name="body_html" id="pf_body">
     <input type="hidden" name="signature_id" id="pf_sig">
   </form>
@@ -135,6 +140,7 @@
     function previewOffer(){
       document.getElementById('pf_body').value = document.getElementById('editor').innerHTML;
       document.getElementById('pf_subject').value = document.querySelector('input[name=subject]').value;
+      document.getElementById('pf_heading').value = document.querySelector('input[name=heading]').value;
       var sel = document.querySelector('select[name=signature_id]');
       document.getElementById('pf_sig').value = sel ? sel.value : '';
       document.getElementById('previewForm').submit();

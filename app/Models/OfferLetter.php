@@ -8,7 +8,7 @@ class OfferLetter extends Model
         'job_application_id','candidate_id','candidate_user_id','template_id',
         'candidate_name','candidate_email','job_title','company_name',
         'signatory_name','signatory_designation','signatory_signature_path',
-        'subject','body_html','pdf_path','status','sent_at','created_by',
+        'subject','heading','body_html','pdf_path','status','sent_at','created_by',
     ];
     protected $casts = ['sent_at' => 'datetime'];
     public function application(): BelongsTo { return $this->belongsTo(JobApplication::class, 'job_application_id'); }
