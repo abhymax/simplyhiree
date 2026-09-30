@@ -26,6 +26,7 @@ class EnforceClientModule
      */
     private const MODULE_ROUTES = [
         // Job posting
+        'client.jobs.index' => 'job_posting',
         'client.jobs.create' => 'job_posting',
         'client.jobs.store' => 'job_posting',
         'client.jobs.edit' => 'job_posting',
@@ -38,12 +39,15 @@ class EnforceClientModule
         'client.broadcasts.retry' => 'job_posting',
 
         // Applicants & review
+        'client.applications.index' => 'applicants',
         'client.applications.reject' => 'applicants',
         'client.applications.shortlist' => 'applicants',
         'client.applications.maybe' => 'applicants',
         'client.applications.undo-review' => 'applicants',
 
         // Interviews
+        'client.interviews.calendar' => 'interviews',
+        'client.interviews.past' => 'interviews',
         'client.applications.interview.create' => 'interviews',
         'client.applications.interview.store' => 'interviews',
         'client.applications.interview.edit' => 'interviews',

@@ -27,9 +27,9 @@ class ClientNav
 
         $menu = [
             ['icon' => 'fa-solid fa-chart-line',            'label' => 'Dashboard',          'route' => route('client.dashboard'),          'active' => request()->routeIs('client.dashboard')],
-            ['icon' => 'fa-solid fa-briefcase',             'label' => 'My Jobs',             'route' => route('client.jobs.index'),         'active' => request()->is('client/jobs*')],
-            ['icon' => 'fa-solid fa-file-lines',            'label' => 'Applications',        'route' => route('client.applications.index'), 'active' => request()->is('client/applications*') && !request()->has('joined_status')],
-            ['icon' => 'fa-solid fa-video',                 'label' => 'Interviews',          'route' => route('client.interviews.calendar'),'active' => request()->is('client/interviews*')],
+            ['icon' => 'fa-solid fa-briefcase',             'label' => 'My Jobs',             'route' => route('client.jobs.index'),         'active' => request()->is('client/jobs*'), 'visible' => $mod('job_posting')],
+            ['icon' => 'fa-solid fa-file-lines',            'label' => 'Applications',        'route' => route('client.applications.index'), 'active' => request()->is('client/applications*') && !request()->has('joined_status'), 'visible' => $mod('applicants')],
+            ['icon' => 'fa-solid fa-video',                 'label' => 'Interviews',          'route' => route('client.interviews.calendar'),'active' => request()->is('client/interviews*'), 'visible' => $mod('interviews')],
             ['icon' => 'fa-solid fa-arrows-rotate',         'label' => 'Replacements',        'route' => route('client.replacements.index'), 'active' => request()->routeIs('client.replacements.*'), 'visible' => $mod('selection')],
             ['icon' => 'fa-solid fa-handshake',             'label' => 'Sourcing Partners',   'route' => route('client.vendors.browse'),     'active' => request()->is('client/vendors*') || request()->is('client/vendor-performance*'), 'visible' => $mod('vendors')],
             ['icon' => 'fa-solid fa-clipboard-question',    'label' => 'Questionnaires',      'route' => route('client.assessments.index'),  'active' => request()->is('client/assessments*'), 'visible' => $mod('assessments')],
