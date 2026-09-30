@@ -34,6 +34,12 @@ use App\Services\InvoiceDocumentService;
 
 class ClientController extends Controller
 {
+    /** The client account owner id — team members resolve to their owner so they share data. */
+    private function ownerId(): int
+    {
+        return (int) Auth::user()->clientOwnerId();
+    }
+
     /**
      * Show the client dashboard.
      */
@@ -43,7 +49,7 @@ class ClientController extends Controller
 
         $client = Auth::user();
         
-        $allJobs = Job::where('user_id', $client->id)
+        $allJobs = Job::where('user_id', $this->ownerId())
                     ->with(['educationLevel', 'jobApplications'])
                     ->latest()
                     ->get();
@@ -68,7 +74,7 @@ class ClientController extends Controller
         // Calculate actual outstanding and paid invoice amounts
         $allBillingSnapshot = JobApplication::where('hiring_status', 'Selected')
             ->whereNotNull('joining_date')
-            ->whereHas('job', fn ($q) => $q->where('user_id', $client->id))
+            ->whereHas('job', fn ($q) => $q->where('user_id', $this->ownerId()))
             ->get()
             ->map(fn ($a) => $a->billingSnapshot());
 
@@ -222,7 +228,7 @@ class ClientController extends Controller
         $sourcingTotal = $partnerSubs + $directSubs;
 
         // Retrieve paginated jobs list for dashboard display
-        $jobs = Job::where('user_id', $client->id)
+        $jobs = Job::where('user_id', $this->ownerId())
                     ->with(['educationLevel', 'jobApplications'])
                     ->latest()
                     ->paginate(10);
@@ -258,7 +264,7 @@ class ClientController extends Controller
 
     public function listJobs(Request $request)
     {
-        $clientId = Auth::id();
+        $clientId = $this->ownerId();
         $query = \App\Models\Job::where('user_id', $clientId)
             ->withCount(['jobApplications' => function($q) {
                 $q->where('status', 'Approved');
@@ -396,8 +402,8 @@ class ClientController extends Controller
         $legacyVisibility = $assignMode === 'open' ? 'all' : 'selected';
 
         $job = Job::create([
-            'user_id' => Auth::id(),
-            'company_name' => Auth::user()->name,
+            'user_id' => $this->ownerId(),
+            'company_name' => optional(User::find($this->ownerId()))->name ?? Auth::user()->name,
             'status' => 'pending_approval',
             'title' => $validated['title'],
             'category_id' => $validated['category_id'],
@@ -655,7 +661,7 @@ class ClientController extends Controller
      */
     public function requestCandidateReplacement(Request $request, \App\Models\JobApplication $application)
     {
-        $clientId = Auth::id();
+        $clientId = $this->ownerId();
         $application->loadMissing(['job', 'candidate.partner']);
         if (!$application->job || (int) $application->job->user_id !== (int) $clientId) {
             abort(403, 'Unauthorized.');
@@ -709,7 +715,7 @@ class ClientController extends Controller
 
     private function ensureClientCanEditJob(Job $job): void
     {
-        if ((int) $job->user_id !== (int) Auth::id()) {
+        if ((int) $job->user_id !== $this->ownerId()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -740,7 +746,7 @@ class ClientController extends Controller
      */
     public function requestDeactivation(Request $request, Job $job)
     {
-        if ((int) $job->user_id !== (int) Auth::id()) {
+        if ((int) $job->user_id !== $this->ownerId()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -769,7 +775,7 @@ class ClientController extends Controller
      */
     public function cancelDeactivationRequest(Job $job)
     {
-        if ((int) $job->user_id !== (int) Auth::id()) {
+        if ((int) $job->user_id !== $this->ownerId()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -795,7 +801,7 @@ class ClientController extends Controller
         $client = Auth::user();
         
         $todayInterviews = JobApplication::whereHas('job', function($q) use ($client){
-                $q->where('user_id', $client->id);
+                $q->where('user_id', $this->ownerId());
             })
             ->whereDate('interview_at', Carbon::today())
             ->with(['job', 'candidate', 'candidateUser'])
@@ -811,7 +817,7 @@ class ClientController extends Controller
      */
     public function listAllApplications(Request $request)
     {
-        $clientId = Auth::id();
+        $clientId = $this->ownerId();
 
         $query = JobApplication::with(['job.category', 'candidate.partner', 'candidateUser'])
             ->whereHas('job', function ($q) use ($clientId) {
@@ -966,7 +972,7 @@ class ClientController extends Controller
      */
     public function showApplicants(Request $request, Job $job)
     {
-        if ($job->user_id !== Auth::id()) {
+        if ($job->user_id !== $this->ownerId()) {
             abort(403, 'UNAUTHORIZED ACTION.');
         }
 
@@ -1073,7 +1079,7 @@ class ClientController extends Controller
     
     public function showApplicantDetail(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id() || ($application->job->screening_required && $application->status !== 'Approved')) {
+        if ($application->job->user_id !== $this->ownerId() || ($application->job->screening_required && $application->status !== 'Approved')) {
             abort(403, 'You can only view applicants who applied to your own jobs.');
         }
         $application->load(['job', 'candidate.partner', 'candidateUser.profile', 'interviewRounds']);
@@ -1082,7 +1088,7 @@ class ClientController extends Controller
 
     public function rejectApplicant(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->update(['hiring_status' => 'Client Rejected']);
@@ -1105,7 +1111,7 @@ class ClientController extends Controller
     public function clearApplicantReviewStatus(JobApplication $application)
     {
         $application->loadMissing('job');
-        if ((int) $application->job?->user_id !== (int) Auth::id()) {
+        if ((int) $application->job?->user_id !== $this->ownerId()) {
             abort(403);
         }
 
@@ -1131,7 +1137,7 @@ class ClientController extends Controller
     private function setApplicantReviewStatus(JobApplication $application, string $status): void
     {
         $application->loadMissing('job');
-        if ((int) $application->job?->user_id !== (int) Auth::id()) {
+        if ((int) $application->job?->user_id !== $this->ownerId()) {
             abort(403);
         }
         if ($application->status !== 'Approved' || !empty($application->joined_status)) {
@@ -1148,7 +1154,7 @@ class ClientController extends Controller
 
     public function showInterviewForm(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
@@ -1157,7 +1163,7 @@ class ClientController extends Controller
 
     public function scheduleInterview(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $validated = $request->validate([
@@ -1185,7 +1191,7 @@ class ClientController extends Controller
 
     public function editInterviewDetails(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
@@ -1194,7 +1200,7 @@ class ClientController extends Controller
 
     public function updateInterviewDetails(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $validated = $request->validate([
@@ -1331,14 +1337,14 @@ class ClientController extends Controller
      */
     public function showInterviewFeedbackForm(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) abort(403);
+        if ($application->job->user_id !== $this->ownerId()) abort(403);
         $application->load(['job', 'candidate', 'candidateUser']);
         return view('client.jobs.interview_feedback', compact('application'));
     }
 
     public function submitInterviewFeedback(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) abort(403);
+        if ($application->job->user_id !== $this->ownerId()) abort(403);
         $validated = $request->validate([
             'interview_rating'         => 'required|integer|min:1|max:5',
             'interview_feedback'       => 'required|string|max:5000',
@@ -1361,7 +1367,7 @@ class ClientController extends Controller
      */
     public function interviewCalendar(Request $request)
     {
-        $clientId = Auth::id();
+        $clientId = $this->ownerId();
         $events = JobApplication::with(['job', 'candidate', 'candidateUser'])
             ->whereHas('job', fn ($q) => $q->where('user_id', $clientId))
             ->whereNotNull('interview_at')
@@ -1438,7 +1444,7 @@ class ClientController extends Controller
      */
     public function pastInterviews(\Illuminate\Http\Request $request)
     {
-        $clientId = Auth::id();
+        $clientId = $this->ownerId();
         $query = JobApplication::with(['job', 'candidate', 'candidateUser', 'interviewRounds'])
             ->whereHas('job', fn ($q) => $q->where('user_id', $clientId))
             ->whereNotNull('interview_at')
@@ -1467,7 +1473,7 @@ class ClientController extends Controller
 
     public function markAsAppeared(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->update(['hiring_status' => 'Interviewed']);
@@ -1480,7 +1486,7 @@ class ClientController extends Controller
 
     public function markAsNoShow(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->update(['hiring_status' => 'No-Show']);
@@ -1498,7 +1504,7 @@ class ClientController extends Controller
      */
     public function showScheduleRoundForm(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) abort(403);
+        if ($application->job->user_id !== $this->ownerId()) abort(403);
 
         $application->load(['candidate', 'job', 'interviewRounds']);
         $roundCount = $application->interviewRounds->count();
@@ -1519,7 +1525,7 @@ class ClientController extends Controller
     public function showRoundFeedbackForm(InterviewRound $round)
     {
         $application = $round->application;
-        if ($application->job->user_id !== Auth::id()) abort(403);
+        if ($application->job->user_id !== $this->ownerId()) abort(403);
 
         $application->load(['candidate', 'job', 'interviewRounds']);
         $roundCount = $application->interviewRounds->count();
@@ -1536,7 +1542,7 @@ class ClientController extends Controller
      */
     public function scheduleInterviewRound(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
 
@@ -1590,7 +1596,7 @@ class ClientController extends Controller
     public function editInterviewRound(InterviewRound $round)
     {
         $application = $round->application;
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->load(['candidate', 'job', 'interviewRounds']);
@@ -1604,7 +1610,7 @@ class ClientController extends Controller
     public function updateInterviewRound(Request $request, InterviewRound $round)
     {
         $application = $round->application;
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
 
@@ -1660,7 +1666,7 @@ class ClientController extends Controller
 
     public function markRoundAppeared(InterviewRound $round)
     {
-        if ($round->application->job->user_id !== Auth::id()) abort(403);
+        if ($round->application->job->user_id !== $this->ownerId()) abort(403);
         $round->update(['status' => 'Appeared']);
         $round->application->update(['hiring_status' => 'Interviewed']);
         $this->notifySourcingPartner(
@@ -1672,7 +1678,7 @@ class ClientController extends Controller
 
     public function markRoundNoShow(InterviewRound $round)
     {
-        if ($round->application->job->user_id !== Auth::id()) abort(403);
+        if ($round->application->job->user_id !== $this->ownerId()) abort(403);
         $round->update(['status' => 'No-Show']);
         $round->application->update(['hiring_status' => 'No-Show']);
         $this->notifySourcingPartner(
@@ -1684,7 +1690,7 @@ class ClientController extends Controller
 
     public function submitRoundFeedback(Request $request, InterviewRound $round)
     {
-        if ($round->application->job->user_id !== Auth::id()) abort(403);
+        if ($round->application->job->user_id !== $this->ownerId()) abort(403);
 
         $validated = $request->validate([
             'feedback'       => 'nullable|string|max:5000',
@@ -1738,7 +1744,7 @@ class ClientController extends Controller
 
     public function showSelectForm(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
@@ -1747,7 +1753,7 @@ class ClientController extends Controller
 
     public function storeSelection(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $validated = $request->validate([
@@ -1773,7 +1779,7 @@ class ClientController extends Controller
 
     public function editSelection(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
@@ -1782,7 +1788,7 @@ class ClientController extends Controller
 
     public function updateSelectionDetails(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $validated = $request->validate([
@@ -1829,7 +1835,7 @@ class ClientController extends Controller
 
     public function markAsJoined(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->update(['joined_status' => 'Joined']);
@@ -1847,7 +1853,7 @@ class ClientController extends Controller
 
     public function showRatePartner(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) abort(403);
+        if ($application->job->user_id !== $this->ownerId()) abort(403);
         $partner = $application->candidate?->partner;
         if (!$partner) abort(404, 'This candidate has no sourcing partner.');
         if (\App\Models\VendorRating::where('application_id', $application->id)->exists()) {
@@ -1858,7 +1864,7 @@ class ClientController extends Controller
 
     public function storeRatePartner(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) abort(403);
+        if ($application->job->user_id !== $this->ownerId()) abort(403);
         $partner = $application->candidate?->partner;
         if (!$partner) abort(404);
 
@@ -1887,7 +1893,7 @@ class ClientController extends Controller
 
     public function markAsNotJoined(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->update(['joined_status' => 'Did Not Join']);
@@ -1897,7 +1903,7 @@ class ClientController extends Controller
 
     public function showLeftForm(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->load(['job', 'candidate', 'candidateUser']);
@@ -1906,7 +1912,7 @@ class ClientController extends Controller
 
     public function markAsLeft(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
 
@@ -1931,7 +1937,7 @@ class ClientController extends Controller
 
         $query = JobApplication::where('hiring_status', 'Selected')
             ->whereNotNull('joining_date')
-            ->whereHas('job', fn ($q) => $q->where('user_id', $client->id))
+            ->whereHas('job', fn ($q) => $q->where('user_id', $this->ownerId()))
             ->with(['job.user', 'candidate', 'candidateUser']);
 
         // Filters
@@ -1994,7 +2000,7 @@ class ClientController extends Controller
         );
 
         // Dropdown options
-        $clientJobs = Job::where('user_id', $client->id)
+        $clientJobs = Job::where('user_id', $this->ownerId())
             ->whereHas('jobApplications', fn ($q) => $q->where('hiring_status', 'Selected')->whereNotNull('joining_date'))
             ->orderBy('title')
             ->get(['id', 'title']);
@@ -2010,7 +2016,7 @@ class ClientController extends Controller
     {
         $application->load(['job.user.clientProfile', 'candidate', 'candidateUser']);
 
-        abort_unless($application->job?->user_id === Auth::id(), 403);
+        abort_unless((int) $application->job?->user_id === $this->ownerId(), 403);
         abort_unless($application->hiring_status === 'Selected' && $application->joining_date, 422, 'This application is not billable yet.');
 
         $invoice = $application->billingSnapshot();
@@ -2038,7 +2044,7 @@ class ClientController extends Controller
      */
     public function markBillingPaid(Request $request, JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
 
@@ -2058,7 +2064,7 @@ class ClientController extends Controller
 
     public function unmarkBillingPaid(JobApplication $application)
     {
-        if ($application->job->user_id !== Auth::id()) {
+        if ($application->job->user_id !== $this->ownerId()) {
             abort(403);
         }
         $application->update(['payment_status' => null, 'paid_at' => null]);
