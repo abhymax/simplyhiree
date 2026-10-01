@@ -2,7 +2,7 @@
     $statusMap = [
         'pending' => ['Invited', 'bg-amber-500/15 text-amber-200 border-amber-400/30'],
         'verified' => ['Verified', 'bg-amber-500/15 text-amber-200 border-amber-400/30'],
-        'in_progress' => ['In progress', 'bg-sky-500/15 text-sky-200 border-sky-400/30'],
+        'in_progress' => ['In progress', 'bg-cyan-500/15 text-cyan-200 border-cyan-400/30'],
         'passed' => ['Qualified', 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'],
         'failed' => ['Not qualified', 'bg-rose-500/15 text-rose-200 border-rose-400/30'],
         'expired' => ['Expired', 'bg-slate-500/15 text-slate-300 border-slate-400/30'],
