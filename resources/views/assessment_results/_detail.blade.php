@@ -35,14 +35,14 @@
         <div class="px-6 py-4 bg-white/5 flex items-center justify-between">
             <div>
                 <div class="text-white font-bold">Stage {{ $stage->stage_order }}: {{ $a->name ?? 'Questionnaire' }}</div>
-                <div class="text-blue-200/60 text-xs mt-0.5">Pass {{ optional($a)->passing_percentage }}%@if(optional($a)->time_limit_minutes) · {{ $a->time_limit_minutes }} min @endif · {{ $attempts->count() }} attempt(s)</div>
+                <div class="text-blue-200/70 text-xs mt-0.5">Pass {{ optional($a)->passing_percentage }}%@if(optional($a)->time_limit_minutes) · {{ $a->time_limit_minutes }} min @endif · {{ $attempts->count() }} attempt(s)</div>
             </div>
             @if($best)
                 <span class="text-sm font-extrabold {{ $best->passed ? 'text-emerald-300' : 'text-rose-300' }}">
                     Best {{ rtrim(rtrim(number_format((float) $best->percentage, 2), '0'), '.') }}%
                 </span>
             @else
-                <span class="text-sm text-blue-200/60">Not attempted</span>
+                <span class="text-sm text-blue-200/70">Not attempted</span>
             @endif
         </div>
 
@@ -51,7 +51,7 @@
                 <div class="flex flex-wrap items-center gap-3 text-sm">
                     <span class="font-bold text-white">Attempt {{ $att->attempt_number }}</span>
                     <span class="{{ $att->passed ? 'text-emerald-300' : 'text-rose-300' }} font-bold">{{ rtrim(rtrim(number_format((float) $att->percentage, 2), '0'), '.') }}% ({{ $att->score }}/{{ $att->total_marks }})</span>
-                    <span class="text-blue-200/60">{{ $att->submitted_at ? $att->submitted_at->format('d M Y, h:i A') : 'in progress' }}</span>
+                    <span class="text-blue-200/70">{{ $att->submitted_at ? $att->submitted_at->format('d M Y, h:i A') : 'in progress' }}</span>
                     @if($att->focus_lost_count > 0)
                         <span class="text-amber-300 text-xs"><i class="fa-solid fa-eye-slash mr-1"></i>{{ $att->focus_lost_count }} focus loss</span>
                     @endif
@@ -81,7 +81,7 @@
                             @if($isWeighted)
                                 <div class="text-xs rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
                                     <div class="text-white font-semibold">{{ optional($ans->question)->question_text }}
-                                        @if(optional($ans->question)->category)<span class="text-violet-300/70 font-normal">· {{ $ans->question->category }}</span>@endif
+                                        @if(optional($ans->question)->category)<span class="text-violet-300 font-normal">· {{ $ans->question->category }}</span>@endif
                                     </div>
                                     <div class="mt-1 text-slate-200">
                                         Answered: <span class="text-white">{{ optional($ans->option)->option_text ?? '—' }}</span>
@@ -106,7 +106,7 @@
                 @endif
             </div>
         @empty
-            <div class="px-6 py-4 border-t border-white/5 text-blue-200/60 text-sm">No attempts recorded for this stage.</div>
+            <div class="px-6 py-4 border-t border-white/5 text-blue-200/70 text-sm">No attempts recorded for this stage.</div>
         @endforelse
     </div>
 @endforeach
