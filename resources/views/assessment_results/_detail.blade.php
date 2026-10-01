@@ -64,7 +64,7 @@
                         @foreach($att->category_scores as $c)
                             <div class="rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="text-white/90 font-semibold">{{ $c['category'] }}</span>
+                                    <span class="text-white font-semibold">{{ $c['category'] }}</span>
                                     <span class="text-violet-200 font-bold">{{ $c['score'] }}/{{ $c['max'] }} · {{ rtrim(rtrim(number_format((float) $c['percentage'], 2), '0'), '.') }}%</span>
                                 </div>
                                 <div class="mt-1.5 h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -80,7 +80,7 @@
                         @foreach($att->answers as $ans)
                             @if($isWeighted)
                                 <div class="text-xs rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
-                                    <div class="text-white/90 font-semibold">{{ optional($ans->question)->question_text }}
+                                    <div class="text-white font-semibold">{{ optional($ans->question)->question_text }}
                                         @if(optional($ans->question)->category)<span class="text-violet-300/70 font-normal">· {{ $ans->question->category }}</span>@endif
                                     </div>
                                     <div class="mt-1 text-slate-200">
@@ -91,7 +91,7 @@
                             @else
                                 @php $correct = optional($ans->question)->options->firstWhere('is_correct', true); @endphp
                                 <div class="text-xs rounded-lg border border-white/10 bg-slate-950/40 px-3 py-2">
-                                    <div class="text-white/90 font-semibold">{{ optional($ans->question)->question_text }}</div>
+                                    <div class="text-white font-semibold">{{ optional($ans->question)->question_text }}</div>
                                     <div class="mt-1 {{ $ans->is_correct ? 'text-emerald-300' : 'text-rose-300' }}">
                                         <i class="fa-solid {{ $ans->is_correct ? 'fa-check' : 'fa-xmark' }} mr-1"></i>
                                         Chosen: {{ optional($ans->option)->option_text ?? '—' }}
