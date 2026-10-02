@@ -101,7 +101,7 @@ class OfferLetterController extends Controller
         $tokens = array_merge($this->tokens($app), $fieldTokens, [
             '{{ctc_breakup}}' => $this->ctcBreakupTable($monthlyForBreakup),
         ]);
-        $body = strtr($tpl->body_html, $tokens);
+        $body = strtr($this->cleanPastedHtml($tpl->body_html), $tokens);
         $subject = strtr((string) ($tpl->subject ?: 'Offer of Employment'), $tokens);
 
         return view('admin.offer_letters.compose', [
@@ -134,6 +134,7 @@ class OfferLetterController extends Controller
 
         $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
 
+        $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
         $sigBlock = $this->signatureBlockHtml($sig);
         $finalBody = str_contains($data['body_html'], '{{signature_block}}')
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
@@ -188,6 +189,7 @@ class OfferLetterController extends Controller
             'signature_id'       => 'nullable|exists:offer_letter_signatures,id',
         ]);
         $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
+        $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
         $sigBlock = $this->signatureBlockHtml($sig);
         $body = str_contains($data['body_html'], '{{signature_block}}')
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
@@ -346,6 +348,55 @@ class OfferLetterController extends Controller
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         $mime = $ext === 'svg' ? 'image/svg+xml' : ($ext === 'png' ? 'image/png' : 'image/jpeg');
         return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+    }
+
+    /**
+     * Strip editor/paste junk (Microsoft Word + copied web styling) so pasted
+     * template content renders cleanly in the PDF:
+     *  - removes Word conditional comments and o:p/w:/v:/xml tags
+     *  - drops --tw-* (Tailwind) and mso-* declarations from style attributes
+     *  - drops stray color / background declarations and <font color>/color attrs
+     *  - keeps safe layout declarations (alignment, margins, font-weight, width)
+     * Our own generated blocks (CTC table, signature) are added separately and
+     * are unaffected.
+     */
+    private function cleanPastedHtml(?string $html): string
+    {
+        $html = (string) $html;
+        if ($html === '') {
+            return $html;
+        }
+
+        // Word conditional comments and namespaced tags
+        $html = preg_replace('/<!--\[if[^\]]*\]>.*?<!\[endif\]-->/is', '', $html) ?? $html;
+        $html = preg_replace('/<\/?(?:o:p|w:[a-z0-9]+|v:[a-z0-9]+|xml)[^>]*>/i', '', $html) ?? $html;
+
+        // Clean inline style attributes
+        $html = preg_replace_callback('/\sstyle="([^"]*)"/i', function ($m) {
+            $keep = [];
+            foreach (explode(';', $m[1]) as $decl) {
+                $decl = trim($decl);
+                if ($decl === '' || !str_contains($decl, ':')) {
+                    continue;
+                }
+                [$prop, $val] = explode(':', $decl, 2);
+                $prop = strtolower(trim($prop));
+                if ($prop === '' || str_starts_with($prop, '--tw-') || str_starts_with($prop, 'mso-')) {
+                    continue;
+                }
+                if (in_array($prop, ['color', 'background', 'background-color', 'background-image'], true)) {
+                    continue;
+                }
+                $keep[] = $prop . ':' . trim($val);
+            }
+            return $keep ? ' style="' . implode(';', $keep) . '"' : '';
+        }, $html) ?? $html;
+
+        // Legacy color attributes and empty Word class names
+        $html = preg_replace('/\scolor="[^"]*"/i', '', $html) ?? $html;
+        $html = preg_replace('/\sclass="Mso[^"]*"/i', '', $html) ?? $html;
+
+        return $html;
     }
 
     private function signatureBlockHtml(?OfferLetterSignature $sig): string
