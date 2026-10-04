@@ -8,8 +8,8 @@ use App\Models\Candidate;
 use App\Models\Job;
 use App\Models\JobApplication;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use App\Services\DuplicateCandidateService;
 
 class PartnerJobController extends Controller
 {
@@ -21,26 +21,9 @@ class PartnerJobController extends Controller
             return response()->json(['message' => 'Only partner users can access this endpoint.'], 403);
         }
 
-        $query = Job::query()->where('status', 'approved');
-
-        if (Schema::hasTable('job_partner_exclusions')) {
-            $query->whereDoesntHave('excludedPartners', function ($q) use ($partner) {
-                $q->where('users.id', $partner->id);
-            });
-        }
-
-        if (Schema::hasTable('job_partner_access')) {
-            $query->where(function ($q) use ($partner) {
-                $q->where('partner_visibility', 'all')
-                    ->orWhereNull('partner_visibility')
-                    ->orWhere(function ($subQ) use ($partner) {
-                        $subQ->where('partner_visibility', 'selected')
-                            ->whereHas('allowedPartners', function ($p) use ($partner) {
-                                $p->where('users.id', $partner->id);
-                            });
-                    });
-            });
-        }
+        $query = Job::query()
+            ->where('status', 'approved')
+            ->visibleToPartner($partner);
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -92,7 +75,7 @@ class PartnerJobController extends Controller
             return response()->json(['message' => 'Only partner users can access this endpoint.'], 403);
         }
 
-        if ((string) $job->status !== 'approved') {
+        if ((string) $job->status !== 'approved' || !$job->isVisibleToPartner($partner)) {
             return response()->json(['message' => 'Job not available.'], 404);
         }
 
@@ -113,16 +96,19 @@ class PartnerJobController extends Controller
             return response()->json(['message' => 'Only partner users can access this endpoint.'], 403);
         }
 
-        if ((string) $job->status !== 'approved') {
+        if ((string) $job->status !== 'approved' || !$job->isVisibleToPartner($partner)) {
             return response()->json(['message' => 'Job not available.'], 422);
         }
 
         $validated = $request->validate([
             'candidate_ids' => ['required', 'array', 'min:1'],
             'candidate_ids.*' => ['required', 'integer', 'exists:candidates,id'],
+            'interview_at' => $job->screening_required ? ['nullable', 'date'] : ['required', 'date', 'after:now'],
         ]);
 
         $submittedCount = 0;
+        $blockedCount = 0;
+        $duplicateService = app(DuplicateCandidateService::class);
 
         foreach ($validated['candidate_ids'] as $candidateId) {
             $candidate = Candidate::query()
@@ -131,6 +117,22 @@ class PartnerJobController extends Controller
                 ->first();
 
             if (!$candidate) {
+                continue;
+            }
+
+            if (!$duplicateService->canSubmit($candidate)) {
+                $duplicateService->rememberBlockedJob($candidate, $job);
+                $blockedCount++;
+                continue;
+            }
+
+            $identityConflict = $duplicateService->isReleased($candidate)
+                ? null
+                : $duplicateService->submissionConflict($candidate, $job);
+            if ($identityConflict) {
+                $duplicateService->quarantineForJobConflict($candidate, $identityConflict, $job);
+                $duplicateService->rememberBlockedJob($candidate->refresh(), $job);
+                $blockedCount++;
                 continue;
             }
 
@@ -146,7 +148,9 @@ class PartnerJobController extends Controller
             JobApplication::create([
                 'job_id' => $job->id,
                 'candidate_id' => $candidateId,
-                'status' => 'Pending Review',
+                'status' => $job->screening_required ? 'Pending Review' : 'Approved',
+                'hiring_status' => $job->screening_required ? null : 'Interview Scheduled',
+                'interview_at' => $job->screening_required ? null : $validated['interview_at'],
             ]);
 
             $submittedCount++;
@@ -154,14 +158,18 @@ class PartnerJobController extends Controller
 
         if ($submittedCount === 0) {
             return response()->json([
-                'message' => 'All selected candidates have already been submitted for this job.',
+                'message' => $blockedCount > 0
+                    ? 'Submission blocked: candidate identity is duplicated or awaiting Superadmin review.'
+                    : 'All selected candidates have already been submitted for this job.',
                 'submitted_count' => 0,
+                'blocked_count' => $blockedCount,
             ], 422);
         }
 
         return response()->json([
             'message' => $submittedCount . ' ' . Str::plural('application', $submittedCount) . ' submitted successfully.',
             'submitted_count' => $submittedCount,
+            'blocked_count' => $blockedCount,
         ]);
     }
 }

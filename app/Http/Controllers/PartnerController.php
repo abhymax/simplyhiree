@@ -1050,13 +1050,17 @@ class PartnerController extends Controller
             if (!$candidate) continue;
 
             if (!$duplicateService->canSubmit($candidate)) {
+                $duplicateService->rememberBlockedJob($candidate, $job);
                 $blockedCount++;
                 continue;
             }
 
-            $identityConflict = $duplicateService->submissionConflict($candidate, $job);
+            $identityConflict = $duplicateService->isReleased($candidate)
+                ? null
+                : $duplicateService->submissionConflict($candidate, $job);
             if ($identityConflict) {
                 $duplicateService->quarantineForJobConflict($candidate, $identityConflict, $job);
+                $duplicateService->rememberBlockedJob($candidate->refresh(), $job);
                 $blockedCount++;
                 continue;
             }
