@@ -749,7 +749,7 @@ class PartnerController extends Controller
 
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('candidates', 'email')->where(fn ($query) => $query->whereIn('partner_id', $poolIds)), function ($attribute, $value, $fail) use ($poolIds) { if (\App\Models\Candidate::where('email', $value)->whereNotIn('partner_id', $poolIds)->exists()) $fail('This candidate is already registered on SimplyHiree by another vendor, so they cannot be added again. Please contact the SimplyHiree team if this is a different person.'); }],
             'phone_number' => ['required', 'string', 'max:20', Rule::unique('candidates', 'phone_number')->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'alternate_phone_number' => 'nullable|string|max:20',
@@ -866,7 +866,7 @@ class PartnerController extends Controller
 
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('candidates', 'email')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds)), function ($attribute, $value, $fail) use ($poolIds, $candidate) { if (\App\Models\Candidate::where('email', $value)->where('id', '!=', $candidate->id)->whereNotIn('partner_id', $poolIds)->exists()) $fail('This candidate is already registered on SimplyHiree by another vendor, so they cannot be added again. Please contact the SimplyHiree team if this is a different person.'); }],
             'phone_number' => ['required', 'string', 'max:20', Rule::unique('candidates', 'phone_number')->ignore($candidate->id)->where(fn ($query) => $query->whereIn('partner_id', $poolIds))],
             'alternate_phone_number' => 'nullable|string|max:20',

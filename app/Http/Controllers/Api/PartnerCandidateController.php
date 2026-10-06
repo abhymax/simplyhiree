@@ -66,7 +66,7 @@ class PartnerCandidateController extends Controller
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:candidates,email,NULL,id,partner_id,' . $partner->id, function ($attribute, $value, $fail) use ($partner) { if (\App\Models\Candidate::where('email', $value)->whereNotIn('partner_id', [$partner->id])->exists()) $fail('This candidate is already registered on SimplyHiree by another vendor, so they cannot be added again. Please contact the SimplyHiree team if this is a different person.'); }],
             'phone_number' => ['required', 'string', 'max:20', 'unique:candidates,phone_number,NULL,id,partner_id,' . $partner->id],
             'alternate_phone_number' => ['nullable', 'string', 'max:20'],
@@ -125,7 +125,7 @@ class PartnerCandidateController extends Controller
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:candidates,email,' . $candidate->id . ',id,partner_id,' . $partner->id, function ($attribute, $value, $fail) use ($partner, $candidate) { if (\App\Models\Candidate::where('email', $value)->where('id', '!=', $candidate->id)->whereNotIn('partner_id', [$partner->id])->exists()) $fail('This candidate is already registered on SimplyHiree by another vendor, so they cannot be added again. Please contact the SimplyHiree team if this is a different person.'); }],
             'phone_number' => ['required', 'string', 'max:20', 'unique:candidates,phone_number,' . $candidate->id . ',id,partner_id,' . $partner->id],
             'alternate_phone_number' => ['nullable', 'string', 'max:20'],

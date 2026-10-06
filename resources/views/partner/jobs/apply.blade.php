@@ -229,8 +229,8 @@
                             <input type="text" name="first_name" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300">Last Name <span class="text-rose-300">*</span></label>
-                            <input type="text" name="last_name" required class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
+                            <label class="block text-xs font-medium text-slate-300">Last Name</label>
+                            <input type="text" name="last_name" class="mt-1 block w-full rounded-xl border border-white/20 bg-slate-800 text-white text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300">Email</label>

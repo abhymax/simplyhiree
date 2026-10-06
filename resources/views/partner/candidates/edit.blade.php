@@ -36,7 +36,7 @@
                                 @error('first_name') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
-                                <input type="text" name="last_name" value="{{ old('last_name', $candidate->last_name) }}" required placeholder="Last Name *" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
+                                <input type="text" name="last_name" value="{{ old('last_name', $candidate->last_name) }}" placeholder="Last Name" class="w-full rounded-xl border border-white/20 bg-slate-900/40 text-white px-4 py-3">
                                 @error('last_name') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
