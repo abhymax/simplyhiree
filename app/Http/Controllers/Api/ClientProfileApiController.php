@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ClientProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ClientProfileApiController extends Controller
 {
@@ -76,6 +77,7 @@ class ClientProfileApiController extends Controller
             return response()->json(['message' => 'Only client users can access this endpoint.'], 403);
         }
 
+        $profile = ClientProfile::query()->firstOrNew(['user_id' => $client->id]);
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'website' => ['nullable', 'string', 'max:255'],
@@ -84,12 +86,12 @@ class ClientProfileApiController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
             'contact_person_name' => ['nullable', 'string', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:20'],
-            'gst_number' => ['nullable', 'string', 'max:50'],
+            'gst_number' => ['nullable', 'string', 'max:50', Rule::unique('client_profiles', 'gst_number')->ignore($profile->id)],
             'address' => ['nullable', 'string', 'max:500'],
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
             'pincode' => ['nullable', 'string', 'max:20'],
-            'pan_number' => ['nullable', 'string', 'max:20'],
+            'pan_number' => ['nullable', 'string', 'max:20', Rule::unique('client_profiles', 'pan_number')->ignore($profile->id)],
             'tan_number' => ['nullable', 'string', 'max:20'],
             'coi_number' => ['nullable', 'string', 'max:50'],
             'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -99,8 +101,6 @@ class ClientProfileApiController extends Controller
             'other_docs' => ['nullable', 'array', 'max:10'],
             'other_docs.*' => ['file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);
-
-        $profile = ClientProfile::query()->firstOrNew(['user_id' => $client->id]);
 
         $profile->company_name = $validated['company_name'];
         $profile->website = $validated['website'] ?? null;

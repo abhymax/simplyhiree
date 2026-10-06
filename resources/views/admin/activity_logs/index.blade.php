@@ -5,11 +5,14 @@
 
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-            <form method="GET" class="bg-white p-4 rounded-lg shadow grid grid-cols-1 md:grid-cols-5 gap-3">
+            <form method="GET" class="bg-white p-4 rounded-lg shadow grid grid-cols-1 md:grid-cols-6 gap-3">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search title/message/actor"
                     class="border-gray-300 rounded-md shadow-sm">
 
                 <input type="text" name="event_key" value="{{ request('event_key') }}" placeholder="Event key"
+                    class="border-gray-300 rounded-md shadow-sm">
+
+                <input type="text" name="ip_address" value="{{ request('ip_address') }}" placeholder="IP address"
                     class="border-gray-300 rounded-md shadow-sm">
 
                 <input type="date" name="date_from" value="{{ request('date_from') }}" class="border-gray-300 rounded-md shadow-sm">
@@ -29,6 +32,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Event</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Message</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Actor</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">IP / Device</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">WhatsApp</th>
                             </tr>
                         </thead>
@@ -42,6 +46,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-gray-700">{{ $log->message }}</td>
                                     <td class="px-4 py-3 text-gray-700">{{ $log->actor_name ?? 'System' }}</td>
+                                    <td class="px-4 py-3 text-gray-700"><div class="font-mono text-xs">{{ $log->ip_address ?? '—' }}</div><div class="max-w-56 truncate text-xs text-gray-500" title="{{ $log->user_agent }}">{{ $log->user_agent ?? '—' }}</div></td>
                                     <td class="px-4 py-3">
                                         @php
                                             $badge = [
@@ -58,7 +63,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">No activity logs found.</td>
+                                    <td colspan="6" class="px-4 py-6 text-center text-gray-500">No activity logs found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

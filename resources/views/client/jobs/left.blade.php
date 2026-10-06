@@ -1,9 +1,10 @@
 @extends('layouts.client')
 
 @section('client_content')
+
     <div class="relative z-10 max-w-3xl mx-auto">
         <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl">
-            <h1 class="text-3xl font-extrabold">Mark Candidate as Left</h1>
+            <h1 class="text-3xl font-extrabold text-white">Mark Candidate as Left</h1>
             <p class="text-blue-200 mt-1">{{ $application->job->title }}</p>
 
             <div class="mt-6 mb-4 border-b border-white/10 pb-4">

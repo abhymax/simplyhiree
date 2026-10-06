@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ComplianceDocument;
 use App\Models\PartnerProfile;
 
 class PartnerProfileController extends Controller
@@ -13,7 +14,18 @@ class PartnerProfileController extends Controller
     {
         $user = Auth::user();
         $profile = $user->partnerProfile ?? new PartnerProfile();
-        return view('partner.profile.edit', compact('user', 'profile'));
+        $sharedDocuments = ComplianceDocument::query()
+            ->where(function ($query) use ($user) {
+                $query->where('party_type', 'global')
+                    ->orWhere(function ($partyQuery) use ($user) {
+                        $partyQuery->where('party_type', 'vendor')
+                            ->where('party_id', $user->id);
+                    });
+            })
+            ->latest()
+            ->get();
+
+        return view('partner.profile.edit', compact('user', 'profile', 'sharedDocuments'));
     }
 
     public function update(Request $request)
@@ -43,12 +55,12 @@ class PartnerProfileController extends Controller
             'account_number' => 'required|string|max:50|confirmed',
             'account_type' => 'required|string|in:Savings,Current',
             'ifsc_code' => 'required|string|max:20',
-            'cancelled_cheque' => 'nullable|image|mimes:jpg,png,jpeg|max:2560',
+            'cancelled_cheque' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'pan_name' => 'required|string|max:255',
             'pan_number' => 'required|string|max:20',
-            'pan_card' => 'nullable|image|mimes:jpg,png,jpeg|max:2560',
+            'pan_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'gst_number' => 'required|string|max:50',
-            'gst_certificate' => 'nullable|image|mimes:jpg,png,jpeg|max:2560',
+            'gst_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $handleUpload = function ($fileInput, $existingPath, $folder) use ($request) {

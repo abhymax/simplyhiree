@@ -24,3 +24,16 @@ app/Models/*.bak
 project_files.tar.gz
 *.bak
 *.xlsx
+
+# ---- local backups / scratch (not for the repo) ----
+/backups/
+/deploy-backups/
+/hotfix-backups/
+*.bak2
+._*
+/storage/*.json
+*.tar.gz
+*.zip
+/laravel-12.x/
+/candidate_format/
+*.bak-*

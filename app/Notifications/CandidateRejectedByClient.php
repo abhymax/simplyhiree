@@ -29,7 +29,32 @@ class CandidateRejectedByClient extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+        if (method_exists($notifiable, 'hasRole') && $notifiable->hasRole('partner')) {
+            $channels[] = 'mail';
+        }
+        return $channels;
+    }
+
+    public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    {
+        $candidateName = $this->application->candidate
+            ? trim(($this->application->candidate->first_name ?? '') . ' ' . ($this->application->candidate->last_name ?? ''))
+            : ($this->application->candidateUser?->name ?? 'Candidate');
+
+        $jobTitle = $this->application->job ? $this->application->job->title : 'Job';
+        $companyName = $this->application->job ? $this->application->job->company_name : 'the company';
+        $appCode = $this->application->application_code ?? ('SH-APP-' . str_pad($this->application->id, 6, '0', STR_PAD_LEFT));
+
+        return (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject("[SimplyHiree] Application Update: Candidate Rejected - {$candidateName}")
+            ->view('emails.vendor_candidate_rejected', [
+                'partnerName'   => $notifiable->name,
+                'candidateName' => $candidateName,
+                'jobTitle'      => $jobTitle,
+                'companyName'   => $companyName,
+                'appCode'       => $appCode,
+            ]);
     }
 
     /**

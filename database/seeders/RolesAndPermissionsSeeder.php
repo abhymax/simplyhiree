@@ -40,6 +40,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'client']);
         Role::firstOrCreate(['name' => 'partner']);
         Role::firstOrCreate(['name' => 'candidate']);
+        Role::firstOrCreate(['name' => 'referral_partner']);
 
         // 3. Assign ALL permissions to Superadmin
         $superadminRole->syncPermissions(Permission::all());

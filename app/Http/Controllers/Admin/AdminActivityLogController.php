@@ -27,6 +27,10 @@ class AdminActivityLogController extends Controller
             });
         }
 
+        if ($request->filled('ip_address')) {
+            $query->where('ip_address', 'like', '%' . $request->input('ip_address') . '%');
+        }
+
         if ($request->filled('date_from')) {
             $query->whereDate('occurred_at', '>=', $request->input('date_from'));
         }

@@ -15,17 +15,18 @@ class EnforcePartnerAccess
      * upgrades, wallet, billing-side commercials, profile/business edit.
      */
     private const OWNER_ONLY = [
-        'partner.team.index',
         'partner.team.store',
         'partner.team.update',
         'partner.team.toggle',
-        'partner.upgrade',
+        'partner.team.destroy',
+        'partner.earnings',
+        'partner.wallet',
         'partner.upgrade.request',
         'partner.upgrade.cancel',
         'partner.profile.business',
         'partner.profile.update',
-        'partner.wallet',
-        'partner.earnings',
+        'api.partner.profile.update',
+        'api.partner.earnings',
     ];
 
     /**
@@ -41,6 +42,9 @@ class EnforcePartnerAccess
         'partner.candidates.store',
         'partner.candidates.edit',
         'partner.candidates.update',
+        'api.partner.jobs.apply',
+        'api.partner.candidates.store',
+        'api.partner.candidates.update',
     ];
 
     public function handle(Request $request, Closure $next): Response
@@ -64,6 +68,12 @@ class EnforcePartnerAccess
 
         // 1. Owner-only routes — block every team member
         if (in_array($routeName, self::OWNER_ONLY, true)) {
+            if (in_array($routeName, ['partner.upgrade.request', 'partner.upgrade.cancel'], true)) {
+                return redirect()
+                    ->route('partner.upgrade')
+                    ->with('error', 'Only the partner-account owner can request, cancel, or modify a plan.');
+            }
+
             abort(403, 'This action is restricted to the partner account owner. Please ask your account owner.');
         }
 

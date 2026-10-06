@@ -63,3 +63,197 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in Command line code on line 4
+[09-Jul-2026 19:58:41 UTC] PHP Warning:  include(/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 19:58:41 UTC] PHP Warning:  include(/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 19:58:41 UTC] PHP Warning:  include(): Failed opening '/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php' for inclusion (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 19:58:41 UTC] PHP Fatal error:  Trait "Illuminate\Support\Traits\ReflectsClosures" not found in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 25
+[09-Jul-2026 20:01:18 UTC] PHP Warning:  include(/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 20:01:18 UTC] PHP Warning:  include(/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 20:01:18 UTC] PHP Warning:  include(): Failed opening '/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php' for inclusion (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 20:01:18 UTC] PHP Fatal error:  Trait "Illuminate\Support\Traits\ReflectsClosures" not found in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 25
+[09-Jul-2026 20:02:44 UTC] PHP Warning:  include(/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 20:02:44 UTC] PHP Warning:  include(/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 20:02:44 UTC] PHP Warning:  include(): Failed opening '/home/simplyhiree/public_html/vendor/composer/../laravel/framework/src/Illuminate/Support/Traits/ReflectsClosures.php' for inclusion (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/ClassLoader.php on line 576
+[09-Jul-2026 20:02:44 UTC] PHP Fatal error:  Trait "Illuminate\Support\Traits\ReflectsClosures" not found in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 25
+[09-Jul-2026 20:03:14 UTC] PHP Fatal error:  Uncaught Error: Class "Composer\Autoload\ComposerStaticInita39dcb2ee0806b34004e3c514df96c91" not found in /home/simplyhiree/public_html/vendor/composer/autoload_real.php:32
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/autoload.php(25): ComposerAutoloaderInita39dcb2ee0806b34004e3c514df96c91::getLoader()
+#1 /home/simplyhiree/public_html/artisan(10): require('/home/simplyhir...')
+#2 {main}
+  thrown in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 32
+[09-Jul-2026 20:03:40 UTC] PHP Fatal error:  Uncaught Error: Class "ComposerAutoloaderInita39dcb2ee0806b34004e3c514df96c91" not found in /home/simplyhiree/public_html/vendor/autoload.php:25
+Stack trace:
+#0 /home/simplyhiree/public_html/artisan(10): require()
+#1 {main}
+  thrown in /home/simplyhiree/public_html/vendor/autoload.php on line 25
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/composer/autoload_real.php(45): {closure}('decc78cc4436b12...', '/home/simplyhir...')
+#1 /home/simplyhiree/public_html/vendor/autoload.php(22): ComposerAutoloaderInitbd48c3ed87d53d08941e1ec72bf79dde::getLoader()
+#2 /home/simplyhiree/public_html/artisan(10): require('/home/simplyhir...')
+#3 {main}
+  thrown in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/composer/autoload_real.php(45): {closure}('decc78cc4436b12...', '/home/simplyhir...')
+#1 /home/simplyhiree/public_html/vendor/autoload.php(22): ComposerAutoloaderInitbd48c3ed87d53d08941e1ec72bf79dde::getLoader()
+#2 /home/simplyhiree/public_html/artisan(10): require('/home/simplyhir...')
+#3 {main}
+  thrown in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/composer/autoload_real.php(45): {closure}('decc78cc4436b12...', '/home/simplyhir...')
+#1 /home/simplyhiree/public_html/vendor/autoload.php(22): ComposerAutoloaderInitbd48c3ed87d53d08941e1ec72bf79dde::getLoader()
+#2 /home/simplyhiree/public_html/artisan(10): require('/home/simplyhir...')
+#3 {main}
+  thrown in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Warning:  require(/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php): Failed to open stream: No such file or directory in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[09-Jul-2026 20:12:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/simplyhiree/public_html/vendor/composer/../phpseclib/phpseclib/phpseclib/bootstrap.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/simplyhiree/public_html/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/composer/autoload_real.php(45): {closure}('decc78cc4436b12...', '/home/simplyhir...')
+#1 /home/simplyhiree/public_html/vendor/autoload.php(22): ComposerAutoloaderInitbd48c3ed87d53d08941e1ec72bf79dde::getLoader()
+#2 /home/simplyhiree/public_html/artisan(10): require('/home/simplyhir...')
+#3 {main}
+  thrown in /home/simplyhiree/public_html/vendor/composer/autoload_real.php on line 41
+[01-Aug-2026 13:16:22 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "NunoMaduro\Collision\STDOUT" in /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/ConsoleColor.php:182
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/ConsoleColor.php(86): NunoMaduro\Collision\ConsoleColor->isSupported()
+#1 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Highlighter.php(241): NunoMaduro\Collision\ConsoleColor->apply('token_html', '            </d...')
+#2 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Highlighter.php(120): NunoMaduro\Collision\Highlighter->colorLines(Array)
+#3 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Highlighter.php(105): NunoMaduro\Collision\Highlighter->getCodeSnippet('<?php $__env->s...', 15, 4, 4)
+#4 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Writer.php(267): NunoMaduro\Collision\Highlighter->highlight('<?php $__env->s...', 15)
+#5 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Writer.php(110): NunoMaduro\Collision\Writer->renderEditor(Object(Whoops\Exception\Frame))
+#6 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Handler.php(36): NunoMaduro\Collision\Writer->write(Object(NunoMaduro\Collision\Adapters\Laravel\Inspector))
+#7 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Adapters/Laravel/ExceptionHandler.php(75): NunoMaduro\Collision\Handler->handle()
+#8 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(214): NunoMaduro\Collision\Adapters\Laravel\ExceptionHandler->renderForConsole(Object(Symfony\Component\Console\Output\ConsoleOutput), Object(Illuminate\View\ViewException))
+#9 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(196): Illuminate\Foundation\Bootstrap\HandleExceptions->renderForConsole(Object(Illuminate\View\ViewException))
+#10 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(262): Illuminate\Foundation\Bootstrap\HandleExceptions->handleException(Object(Illuminate\View\ViewException))
+#11 [internal function]: Illuminate\Foundation\Bootstrap\HandleExceptions->Illuminate\Foundation\Bootstrap\{closure}(Object(Illuminate\View\ViewException))
+#12 {main}
+  thrown in /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/ConsoleColor.php on line 182
+[01-Aug-2026 13:16:22 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "NunoMaduro\Collision\STDOUT" in /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/ConsoleColor.php:182
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/ConsoleColor.php(86): NunoMaduro\Collision\ConsoleColor->isSupported()
+#1 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Highlighter.php(241): NunoMaduro\Collision\ConsoleColor->apply('token_keyword', '        if (')
+#2 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Highlighter.php(120): NunoMaduro\Collision\Highlighter->colorLines(Array)
+#3 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Highlighter.php(105): NunoMaduro\Collision\Highlighter->getCodeSnippet('<?php\n\ndeclare(...', 182, 4, 4)
+#4 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Writer.php(267): NunoMaduro\Collision\Highlighter->highlight('<?php\n\ndeclare(...', 182)
+#5 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Writer.php(110): NunoMaduro\Collision\Writer->renderEditor(Object(Whoops\Exception\Frame))
+#6 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Handler.php(36): NunoMaduro\Collision\Writer->write(Object(NunoMaduro\Collision\Adapters\Laravel\Inspector))
+#7 /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/Adapters/Laravel/ExceptionHandler.php(75): NunoMaduro\Collision\Handler->handle()
+#8 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(214): NunoMaduro\Collision\Adapters\Laravel\ExceptionHandler->renderForConsole(Object(Symfony\Component\Console\Output\ConsoleOutput), Object(Symfony\Component\ErrorHandler\Error\FatalError))
+#9 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(196): Illuminate\Foundation\Bootstrap\HandleExceptions->renderForConsole(Object(Symfony\Component\ErrorHandler\Error\FatalError))
+#10 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(238): Illuminate\Foundation\Bootstrap\HandleExceptions->handleException(Object(Symfony\Component\ErrorHandler\Error\FatalError))
+#11 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php(262): Illuminate\Foundation\Bootstrap\HandleExceptions->handleShutdown()
+#12 [internal function]: Illuminate\Foundation\Bootstrap\HandleExceptions->Illuminate\Foundation\Bootstrap\{closure}()
+#13 {main}
+  thrown in /home/simplyhiree/public_html/vendor/nunomaduro/collision/src/ConsoleColor.php on line 182
+[01-Aug-2026 20:09:43 UTC] PHP Parse error:  syntax error, unexpected token "\", expecting ")" in Command line code on line 1
+[04-Aug-2026 18:52:24 Asia/Kolkata] PHP Fatal error:  Uncaught BadMethodCallException: Call to undefined method App\Models\User::partnerOwner() in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:67
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php(36): Illuminate\Database\Eloquent\Model::throwBadMethodCallException('partnerOwner')
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2544): Illuminate\Database\Eloquent\Model->forwardCallTo(Object(Illuminate\Database\Eloquent\Builder), 'partnerOwner', Array)
+#2 Command line code(1): Illuminate\Database\Eloquent\Model->__call('partnerOwner', Array)
+#3 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php on line 67
+[04-Aug-2026 19:01:20 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Call to a member function hasRole() on null in /home/simplyhiree/public_html/app/Http/Controllers/ProfileController.php:19
+Stack trace:
+#0 Command line code(1): App\Http\Controllers\ProfileController->edit(Object(Illuminate\Http\Request))
+#1 {main}
+  thrown in /home/simplyhiree/public_html/app/Http/Controllers/ProfileController.php on line 19
+[07-Aug-2026 03:37:58 UTC] PHP Parse error:  syntax error, unexpected token ";", expecting ")" in app/Http/Controllers/AdminController.php on line 1368
+[22-Aug-2026 19:48:45 UTC] PHP Warning:  syntax error, unexpected '=' in .env on line 3
+ in Command line code on line 1
+[27-Sep-2026 05:57:04 UTC] PHP Parse error:  syntax error, unexpected token "=", expecting end of file in Command line code on line 1
+[30-Sep-2026 10:20:55 UTC] PHP Warning:  require(/tmp/vendor/autoload.php): Failed to open stream: No such file or directory in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:20:55 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/tmp/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /tmp/check_nav.php:2
+Stack trace:
+#0 {main}
+  thrown in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:00 UTC] PHP Warning:  require(/tmp/vendor/autoload.php): Failed to open stream: No such file or directory in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:00 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/tmp/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /tmp/check_nav.php:2
+Stack trace:
+#0 {main}
+  thrown in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:04 UTC] PHP Warning:  require(/tmp/vendor/autoload.php): Failed to open stream: No such file or directory in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:04 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/tmp/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /tmp/check_nav.php:2
+Stack trace:
+#0 {main}
+  thrown in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:09 UTC] PHP Warning:  require(/tmp/vendor/autoload.php): Failed to open stream: No such file or directory in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:09 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/tmp/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /tmp/check_nav.php:2
+Stack trace:
+#0 {main}
+  thrown in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:14 UTC] PHP Warning:  require(/tmp/vendor/autoload.php): Failed to open stream: No such file or directory in /tmp/check_nav.php on line 2
+[30-Sep-2026 10:21:14 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/tmp/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /tmp/check_nav.php:2
+Stack trace:
+#0 {main}
+  thrown in /tmp/check_nav.php on line 2
+[30-Sep-2026 11:44:02 UTC] PHP Fatal error:  Uncaught Error: Call to a member function connection() on null in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1984
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1950): Illuminate\Database\Eloquent\Model::resolveConnection(NULL)
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1713): Illuminate\Database\Eloquent\Model->getConnection()
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1611): Illuminate\Database\Eloquent\Model->newBaseQueryBuilder()
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1647): Illuminate\Database\Eloquent\Model->newModelQuery()
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1600): Illuminate\Database\Eloquent\Model->newQueryWithoutScopes()
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2544): Illuminate\Database\Eloquent\Model->newQuery()
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2560): Illuminate\Database\Eloquent\Model->__call('role', Array)
+#7 /home/simplyhiree/public_html/repro.php(7): Illuminate\Database\Eloquent\Model::__callStatic('role', Array)
+#8 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php on line 1984
+[30-Sep-2026 11:44:07 UTC] PHP Fatal error:  Uncaught Error: Call to a member function connection() on null in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1984
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1950): Illuminate\Database\Eloquent\Model::resolveConnection(NULL)
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1713): Illuminate\Database\Eloquent\Model->getConnection()
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1611): Illuminate\Database\Eloquent\Model->newBaseQueryBuilder()
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1647): Illuminate\Database\Eloquent\Model->newModelQuery()
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1600): Illuminate\Database\Eloquent\Model->newQueryWithoutScopes()
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2544): Illuminate\Database\Eloquent\Model->newQuery()
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2560): Illuminate\Database\Eloquent\Model->__call('role', Array)
+#7 /home/simplyhiree/public_html/repro.php(7): Illuminate\Database\Eloquent\Model::__callStatic('role', Array)
+#8 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php on line 1984
+[30-Sep-2026 11:44:12 UTC] PHP Fatal error:  Uncaught Error: Call to a member function connection() on null in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1984
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1950): Illuminate\Database\Eloquent\Model::resolveConnection(NULL)
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1713): Illuminate\Database\Eloquent\Model->getConnection()
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1611): Illuminate\Database\Eloquent\Model->newBaseQueryBuilder()
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1647): Illuminate\Database\Eloquent\Model->newModelQuery()
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1600): Illuminate\Database\Eloquent\Model->newQueryWithoutScopes()
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2544): Illuminate\Database\Eloquent\Model->newQuery()
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2560): Illuminate\Database\Eloquent\Model->__call('role', Array)
+#7 /home/simplyhiree/public_html/repro.php(7): Illuminate\Database\Eloquent\Model::__callStatic('role', Array)
+#8 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php on line 1984
+[30-Sep-2026 11:44:17 UTC] PHP Fatal error:  Uncaught Error: Call to a member function connection() on null in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1984
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1950): Illuminate\Database\Eloquent\Model::resolveConnection(NULL)
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1713): Illuminate\Database\Eloquent\Model->getConnection()
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1611): Illuminate\Database\Eloquent\Model->newBaseQueryBuilder()
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1647): Illuminate\Database\Eloquent\Model->newModelQuery()
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1600): Illuminate\Database\Eloquent\Model->newQueryWithoutScopes()
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2544): Illuminate\Database\Eloquent\Model->newQuery()
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2560): Illuminate\Database\Eloquent\Model->__call('role', Array)
+#7 /home/simplyhiree/public_html/repro.php(7): Illuminate\Database\Eloquent\Model::__callStatic('role', Array)
+#8 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php on line 1984
+[30-Sep-2026 11:44:22 UTC] PHP Fatal error:  Uncaught Error: Call to a member function connection() on null in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1984
+Stack trace:
+#0 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1950): Illuminate\Database\Eloquent\Model::resolveConnection(NULL)
+#1 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1713): Illuminate\Database\Eloquent\Model->getConnection()
+#2 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1611): Illuminate\Database\Eloquent\Model->newBaseQueryBuilder()
+#3 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1647): Illuminate\Database\Eloquent\Model->newModelQuery()
+#4 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1600): Illuminate\Database\Eloquent\Model->newQueryWithoutScopes()
+#5 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2544): Illuminate\Database\Eloquent\Model->newQuery()
+#6 /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(2560): Illuminate\Database\Eloquent\Model->__call('role', Array)
+#7 /home/simplyhiree/public_html/repro.php(7): Illuminate\Database\Eloquent\Model::__callStatic('role', Array)
+#8 {main}
+  thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php on line 1984

@@ -3,7 +3,35 @@
         <div class="absolute top-0 right-0 w-96 h-96 bg-amber-500 rounded-full mix-blend-screen filter blur-[150px] opacity-15"></div>
         <div class="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-[150px] opacity-15"></div>
 
-        <div class="relative z-10 max-w-7xl mx-auto" x-data="{ mode: '{{ $commercial->billing_type ?? 'percentage_based' }}' }">
+        <div class="relative z-10 max-w-7xl mx-auto"
+             x-data="{ mode: '{{ $commercial->billing_type ?? 'percentage_based' }}', submitting: false, noticeVisible: {{ (session('success') || session('error') || $errors->any()) ? 'true' : 'false' }} }"
+             x-init="if (noticeVisible) setTimeout(() => noticeVisible = false, 7000)">
+            @if(session('success') || session('error') || $errors->any())
+                <div x-show="noticeVisible"
+                     x-transition.opacity.duration.250ms
+                     role="status"
+                     aria-live="polite"
+                     class="fixed right-5 top-24 z-[100] w-[min(28rem,calc(100vw-2.5rem))] rounded-2xl border px-5 py-4 shadow-2xl backdrop-blur-xl {{ session('success') ? 'border-emerald-300/60 bg-emerald-950/95 text-emerald-50' : 'border-rose-300/60 bg-rose-950/95 text-rose-50' }}">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid {{ session('success') ? 'fa-circle-check text-emerald-300' : 'fa-circle-exclamation text-rose-300' }} mt-0.5 text-lg"></i>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-extrabold">{{ session('success') ? 'Commercials updated' : 'Commercials not updated' }}</div>
+                            <div class="mt-1 text-sm leading-relaxed opacity-90">
+                                @if(session('success'))
+                                    {{ session('success') }}
+                                @elseif(session('error'))
+                                    {{ session('error') }}
+                                @else
+                                    {{ $errors->first() }}
+                                @endif
+                            </div>
+                        </div>
+                        <button type="button" @click="noticeVisible = false" class="text-white/70 transition hover:text-white" aria-label="Dismiss message">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            @endif
             {{-- HEADER --}}
             <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-white/10 pb-6">
                 <div>
@@ -15,11 +43,6 @@
                         {{ $user->name }} <span class="text-blue-300/70">· {{ $user->email }}</span>
                     </p>
                 </div>
-                @if(session('success'))
-                    <div class="px-5 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 rounded-xl font-bold">
-                        <i class="fa-solid fa-circle-check mr-2"></i> {{ session('success') }}
-                    </div>
-                @endif
             </div>
 
             @if($errors->any())
@@ -31,7 +54,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.clients.commercials.update', $user) }}">
+            <form method="POST" action="{{ route('admin.clients.commercials.update', $user) }}" @submit="submitting = true">
                 @csrf
                 @method('PUT')
 
@@ -203,8 +226,9 @@
 
                 <div class="flex justify-end gap-3">
                     <a href="{{ route('admin.clients.show', $user) }}" class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl">Cancel</a>
-                    <button type="submit" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-extrabold rounded-xl shadow-lg shadow-amber-500/30">
-                        <i class="fa-solid fa-save mr-2"></i> Save Commercials
+                    <button type="submit" :disabled="submitting" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-extrabold rounded-xl shadow-lg shadow-amber-500/30 transition disabled:cursor-wait disabled:opacity-65">
+                        <i class="fa-solid mr-2" :class="submitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                        <span x-text="submitting ? 'Saving...' : 'Save Commercials'">Save Commercials</span>
                     </button>
                 </div>
             </form>

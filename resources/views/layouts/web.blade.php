@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'SimplyHiree') - The Future of Recruitment</title>
     
+    <!-- FAVICON -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%232563eb' /><stop offset='100%' stop-color='%234f46e5' /></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)' /><text x='50' y='65' font-size='50' font-weight='bold' text-anchor='middle' fill='white' font-family='Roboto'>SH</text></svg>">
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
     <style>
         body { font-family: 'Outfit', sans-serif; }
@@ -22,12 +24,6 @@
             background: linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-            animation-delay: 4s;
         }
     </style>
 </head>
@@ -50,6 +46,7 @@
             <nav class="hidden md:flex items-center space-x-8 font-medium">
                 <a href="{{ route('about') }}" class="text-slate-600 hover:text-primary transition-colors">About</a>
                 <a href="{{ route('contact') }}" class="text-slate-600 hover:text-primary transition-colors">Contact</a>
+                <a href="{{ route('register.referral') }}" class="text-slate-600 hover:text-primary transition-colors">Refer &amp; Earn</a>
                 <a href="/login" class="text-slate-600 hover:text-primary transition-colors">Login</a>
                 <a href="/register/candidate" class="px-6 py-2.5 bg-slate-900 text-white rounded-full hover:bg-primary hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
                     Get Started
@@ -64,6 +61,7 @@
         <div x-show="mobileMenuOpen" @click.away="mobileMenuOpen = false" class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl p-4 flex flex-col space-y-4">
             <a href="{{ route('about') }}" class="text-slate-600 font-medium">About</a>
             <a href="{{ route('contact') }}" class="text-slate-600 font-medium">Contact</a>
+            <a href="{{ route('register.referral') }}" class="text-slate-600 font-medium">Refer &amp; Earn</a>
             <a href="/login" class="text-slate-600 font-medium">Login</a>
             <a href="/register/candidate" class="bg-primary text-white text-center py-3 rounded-lg font-bold">Sign Up Free</a>
         </div>
@@ -84,6 +82,9 @@
                     <p class="text-slate-400 max-w-sm leading-relaxed">
                         We are bridging the gap between talent and opportunity. Our AI-driven platform ensures the perfect match for employers, partners, and candidates.
                     </p>
+                    <div class="mt-5">
+                        @include('partials.google-play-link')
+                    </div>
                 </div>
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Company</h4>

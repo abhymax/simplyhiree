@@ -20,7 +20,7 @@ class ProfileController extends Controller
             return Redirect::route('candidate.profile.edit');
         }
 
-        if ($request->user()->hasRole('partner')) {
+        if ($request->user()->hasRole('partner') && $request->user()->isPartnerOwner()) {
             return Redirect::route('partner.profile.business');
         }
 

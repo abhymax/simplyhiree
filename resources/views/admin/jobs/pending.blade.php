@@ -138,6 +138,10 @@
                                                 <span class="text-slate-400 text-xs w-8 uppercase font-bold">Edu</span>
                                                 <span>{{ $job->educationLevel->name ?? 'Not Specified' }}</span>
                                             </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-slate-400 text-xs w-8 uppercase font-bold">Type</span>
+                                                <span class="rounded border border-violet-400/25 bg-violet-500/15 px-2 py-0.5 text-xs font-bold text-violet-100">{{ $job->job_type ?? 'Not Specified' }}</span>
+                                            </div>
                                             @if($job->min_age || $job->max_age)
                                             <div class="flex items-center gap-2">
                                                 <span class="text-slate-400 text-xs w-8 uppercase font-bold">Age</span>
@@ -182,6 +186,26 @@
                                         <form action="{{ route('admin.jobs.approve', $job) }}" method="POST">
                                             @csrf
                                             <div class="bg-slate-800/50 rounded-xl p-2.5 border border-white/10 flex flex-col gap-2 shadow-inner">
+                                                <div class="rounded-lg border border-amber-400/25 bg-amber-400/[0.08] px-2.5 py-2 text-left">
+                                                    <div class="text-[9px] font-extrabold uppercase tracking-wider text-amber-300">Client-submitted commercial</div>
+                                                    @if($job->commercial_source === 'manual')
+                                                        <div class="mt-0.5 text-xs font-bold text-white">
+                                                            Manual &middot;
+                                                            @if($job->fee_type === 'percentage')
+                                                                {{ rtrim(rtrim(number_format((float) $job->fee_amount, 2), '0'), '.') }}%
+                                                            @else
+                                                                ₹{{ number_format((float) $job->fee_amount, 2) }} flat
+                                                            @endif
+                                                        </div>
+                                                        <div class="mt-0.5 text-[10px] text-amber-100/75">
+                                                            Maturity {{ $job->client_payout_days ?? $job->minimum_stay_days ?? '—' }} days
+                                                            &middot; Replacement {{ $job->replacement_period_days ?? $job->replacement_guarantee_days ?? '—' }} days
+                                                        </div>
+                                                    @else
+                                                        <div class="mt-0.5 text-xs font-bold text-cyan-100">SimplyHire client agreement</div>
+                                                        <div class="mt-0.5 text-[10px] text-slate-300">Use the client account commercial; set partner payout below.</div>
+                                                    @endif
+                                                </div>
 
                                                 <div class="grid grid-cols-3 gap-1.5">
                                                     <div title="Partner Payout (₹)">
@@ -191,12 +215,12 @@
                                                     </div>
                                                     <div title="Days candidate must stay; partner owes replacement if they leave earlier.">
                                                         <span class="block text-[9px] text-amber-300 uppercase font-bold mb-0.5 tracking-wider">Repl. Days</span>
-                                                        <input type="number" name="replacement_guarantee_days" min="0" max="365" placeholder="90" value="{{ $job->replacement_guarantee_days ?? 90 }}" required
+                                                        <input type="number" name="replacement_guarantee_days" min="0" max="365" placeholder="90" value="{{ $job->replacement_period_days ?? $job->replacement_guarantee_days ?? 90 }}" required
                                                             class="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
                                                     <div title="Days after joining when partner's payout matures and is paid.">
                                                         <span class="block text-[9px] text-cyan-300 uppercase font-bold mb-0.5 tracking-wider">Payout Days</span>
-                                                        <input type="number" name="minimum_stay_days" min="0" max="365" placeholder="30" value="{{ $job->minimum_stay_days ?? 30 }}" required
+                                                        <input type="number" name="minimum_stay_days" min="0" max="365" placeholder="30" value="{{ $job->client_payout_days ?? $job->minimum_stay_days ?? 30 }}" required
                                                             class="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-white text-xs placeholder-slate-500 focus:ring-emerald-500 focus:border-emerald-500 transition">
                                                     </div>
                                                 </div>

@@ -18,6 +18,8 @@ class AdminActivityLog extends Model
         'icon',
         'actor_id',
         'actor_name',
+        'ip_address',
+        'user_agent',
         'subject_type',
         'subject_id',
         'metadata',

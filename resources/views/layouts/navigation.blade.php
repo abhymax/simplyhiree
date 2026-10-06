@@ -89,6 +89,18 @@
                         </x-nav-link>
                     @endrole
 
+                    @role('referral_partner')
+                        <x-nav-link :href="route('referral.dashboard')" :active="request()->routeIs('referral.*')" class="text-slate-600 hover:text-indigo-600">
+                            Referrals
+                        </x-nav-link>
+                    @else
+                        @auth
+                            <x-nav-link :href="route('referral.enroll')" :active="request()->routeIs('referral.enroll*')" class="text-slate-600 hover:text-indigo-600">
+                                Become a Referral Partner
+                            </x-nav-link>
+                        @endauth
+                    @endrole
+
                     {{-- PARTNER LINKS --}}
                     @role('partner')
                         <x-nav-link :href="route('partner.jobs')" :active="request()->routeIs('partner.jobs')" class="text-slate-600 hover:text-indigo-600">
@@ -111,6 +123,10 @@
                                 Team
                             </x-nav-link>
                             <x-nav-link :href="route('partner.profile.business')" :active="request()->routeIs('partner.profile.business')" class="text-slate-600 hover:text-indigo-600">
+                                My Account
+                            </x-nav-link>
+                        @else
+                            <x-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.*')" class="text-slate-600 hover:text-indigo-600">
                                 My Account
                             </x-nav-link>
                         @endif
@@ -148,7 +164,7 @@
                                     $profileRoute = route('profile.edit');
                                     if (auth()->user()->hasRole('candidate')) {
                                         $profileRoute = route('candidate.profile.edit');
-                                    } elseif (auth()->user()->hasRole('partner')) {
+                                    } elseif (auth()->user()->hasRole('partner') && auth()->user()->isPartnerOwner()) {
                                         $profileRoute = route('partner.profile.business');
                                     } elseif (auth()->user()->hasRole('client')) {
                                         $profileRoute = route('client.profile.company');
@@ -264,6 +280,18 @@
                 </x-responsive-nav-link>
             @endrole
 
+            @role('referral_partner')
+                <x-responsive-nav-link :href="route('referral.dashboard')" :active="request()->routeIs('referral.*')">
+                    Referrals
+                </x-responsive-nav-link>
+            @else
+                @auth
+                    <x-responsive-nav-link :href="route('referral.enroll')" :active="request()->routeIs('referral.enroll*')">
+                        Become a Referral Partner
+                    </x-responsive-nav-link>
+                @endauth
+            @endrole
+
             @role('partner')
                 <x-responsive-nav-link :href="route('partner.jobs')" :active="request()->routeIs('partner.jobs')">
                     Browse Jobs
@@ -277,7 +305,7 @@
                 <x-responsive-nav-link :href="route('partner.replacements')" :active="request()->routeIs('partner.replacements')">
                     Replacements
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('partner.profile.business')" :active="request()->routeIs('partner.profile.business')">
+                <x-responsive-nav-link :href="auth()->user()->isPartnerOwner() ? route('partner.profile.business') : route('profile.edit')" :active="request()->routeIs('partner.profile.business', 'profile.*')">
                     My Account
                 </x-responsive-nav-link>
             @endrole
@@ -306,7 +334,7 @@
                         $responsiveProfileRoute = route('profile.edit');
                         if (auth()->user()->hasRole('candidate')) {
                             $responsiveProfileRoute = route('candidate.profile.edit');
-                        } elseif (auth()->user()->hasRole('partner')) {
+                        } elseif (auth()->user()->hasRole('partner') && auth()->user()->isPartnerOwner()) {
                             $responsiveProfileRoute = route('partner.profile.business');
                         } elseif (auth()->user()->hasRole('client')) {
                             $responsiveProfileRoute = route('client.profile.company');

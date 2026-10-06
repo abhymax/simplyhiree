@@ -46,7 +46,7 @@
             <label class="block text-sm font-medium">Account number<input name="bank_account_number" value="{{ old('bank_account_number',$profile?->bank_account_number) }}" class="referral-input mt-1 w-full rounded-lg" @if(!$isClient) style="border: 1px solid #cbd5e1" @endif></label>
             <label class="block text-sm font-medium">IFSC<input name="bank_ifsc" value="{{ old('bank_ifsc',$profile?->bank_ifsc) }}" class="referral-input mt-1 w-full rounded-lg" maxlength="20" @if(!$isClient) style="border: 1px solid #cbd5e1" @endif></label>
         </div>
-        <label class="flex gap-3 text-sm"><input required type="checkbox" name="agreement_accepted" value="1" class="mt-0.5 rounded border-slate-300"> <span>I accept the <a href="{{ asset('documents/Simply_Hiree_Client_Referral_Policy.docx') }}" target="_blank" rel="noopener" class="font-bold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Referral Partner Agreement</a> and understand that commission is payable only after Finance verifies the referred client's payment.</span></label>
+        @include('referral.partials.agreement', ['dark' => $isClient])
         @if($errors->any())<div class="text-sm text-rose-400">{{ $errors->first() }}</div>@endif
         <button class="rounded-lg bg-blue-600 px-5 py-2.5 text-white font-bold hover:bg-blue-500">{{ $profile?->status === 'active' ? 'Update profile' : 'Submit for approval' }}</button>
     </form>

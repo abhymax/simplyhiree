@@ -30,13 +30,14 @@ class AuthController extends Controller
             'phone_number' => ['required', 'regex:/^[6-9][0-9]{9}$/', 'unique:user_profiles,phone_number'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['nullable', 'in:candidate,partner,client'],
+            'role' => ['nullable', 'in:candidate,partner,client,referral_partner'],
             'company_type' => ['nullable', 'in:Placement Agency,Freelancer,Recruiter'],
             'otp_verification_token' => ['nullable', 'string'],
+            'marketing_consent' => ['nullable', 'boolean'],
         ]);
 
         $role = $validated['role'] ?? 'candidate';
-        $isPendingRole = in_array($role, ['partner', 'client'], true);
+        $isPendingRole = in_array($role, ['partner', 'client', 'referral_partner'], true);
         $normalizedPhone = $otpService->normalizePhone($validated['phone_number']);
 
         if (!$normalizedPhone) {
@@ -71,6 +72,9 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'status' => $isPendingRole ? 'pending' : 'active',
             'billable_period_days' => $role === 'client' ? 30 : null,
+            'marketing_consent' => $role === 'client' && (bool) ($validated['marketing_consent'] ?? false),
+            'marketing_consent_at' => $role === 'client' && (bool) ($validated['marketing_consent'] ?? false) ? now() : null,
+            'marketing_consent_source' => $role === 'client' && (bool) ($validated['marketing_consent'] ?? false) ? 'mobile_registration' : null,
         ]);
 
         $user->assignRole($role);
@@ -88,6 +92,12 @@ class AuthController extends Controller
         } elseif ($role === 'client') {
             ClientProfile::create([
                 'user_id' => $user->id,
+            ]);
+        } elseif ($role === 'referral_partner') {
+            \App\Models\ReferralPartnerProfile::create([
+                'user_id' => $user->id,
+                'referral_code' => 'SHR-'.strtoupper(\Illuminate\Support\Str::random(8)),
+                'status' => 'pending',
             ]);
         }
 
@@ -173,13 +183,13 @@ class AuthController extends Controller
         $validated = $request->validate([
             'phone_number' => ['required', 'string'],
             'purpose' => ['required', 'in:registration,google_login,google_candidate_login'],
-            'role' => ['nullable', 'in:candidate,partner,client,admin'],
+            'role' => ['nullable', 'in:candidate,partner,client,referral_partner,admin'],
         ]);
 
         $purpose = (string) $validated['purpose'];
         $role = $validated['role'] ?? null;
 
-        if ($purpose === 'registration' && !in_array($role, ['partner', 'client', 'candidate'], true)) {
+        if ($purpose === 'registration' && !in_array($role, ['partner', 'client', 'candidate', 'referral_partner'], true)) {
             return response()->json([
                 'message' => 'Role is required for registration OTP.',
             ], 422);
@@ -220,7 +230,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'phone_number' => ['required', 'string'],
             'purpose' => ['required', 'in:registration,google_login,google_candidate_login'],
-            'role' => ['nullable', 'in:candidate,partner,client,admin'],
+            'role' => ['nullable', 'in:candidate,partner,client,referral_partner,admin'],
             'otp' => ['required', 'digits:6'],
         ]);
 

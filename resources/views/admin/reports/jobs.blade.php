@@ -32,23 +32,6 @@
                 </div>
             </div>
 
-            {{-- FLASH MESSAGES --}}
-            @if(session('success'))
-                <div class="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 rounded-xl text-sm font-semibold">
-                    <i class="fa-solid fa-circle-check mr-2"></i> {{ session('success') }}
-                </div>
-            @endif
-            @if(session('info'))
-                <div class="mb-4 px-4 py-3 bg-blue-500/20 border border-blue-400/40 text-blue-100 rounded-xl text-sm font-semibold">
-                    <i class="fa-solid fa-circle-info mr-2"></i> {{ session('info') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="mb-4 px-4 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold">
-                    <i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ session('error') }}
-                </div>
-            @endif
-
             {{-- MAIN GLASS CONTAINER --}}
             <div class="bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                 
@@ -112,6 +95,7 @@
                             <tr>
                                 <th class="px-6 py-5">Job Details</th>
                                 <th class="px-6 py-5 text-center">Performance Stats</th>
+                                <th class="px-6 py-5 text-center">Assigned Partners</th>
                                 <th class="px-6 py-5 text-center">Current Status</th>
                                 <th class="px-6 py-5 text-right">Management</th>
                             </tr>
@@ -123,17 +107,15 @@
                                     {{-- Job Details --}}
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
-                                            <a href="{{ route('jobs.show', $job->id) }}" class="font-bold text-white text-lg hover:text-cyan-400 transition" target="_blank">
-                                                {{ $job->title }} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1 opacity-50"></i>
+                                            <a href="{{ route('admin.jobs.show', $job->id) }}" class="font-bold text-white text-lg hover:text-cyan-400 transition" title="Open Superadmin Job Control">
+                                                {{ $job->title }} <i class="fa-solid fa-arrow-right text-xs ml-1 opacity-50"></i>
                                             </a>
                                             <div class="text-amber-300 font-bold text-sm mt-1 flex items-center gap-1.5" style="color: #fcd34d !important;">
                                                 <i class="fa-solid fa-building"></i> {{ $job->company_name }}
                                             </div>
-                                            <div class="flex items-center gap-2 mt-1.5 text-xs">
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800/80 border border-white/10 font-mono font-bold text-cyan-200 text-[11px]">
-                                                    <i class="fa-solid fa-hashtag text-[9px] opacity-70"></i>{{ $job->job_code ?? 'SH-JOB-'.str_pad($job->id, 6, '0', STR_PAD_LEFT) }}
-                                                </span>
-                                                <span class="text-blue-300 opacity-70">Posted {{ $job->created_at->format('M d, Y') }}</span>
+                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                                                <span class="inline-flex items-center gap-1 rounded-md border border-violet-300/25 bg-violet-500/15 px-2 py-1 text-violet-100"><i class="fa-solid fa-briefcase"></i>{{ $job->job_type ?? 'Type not specified' }}</span>
+                                                <span class="inline-flex items-center gap-1 text-blue-200/80" title="Posted {{ $job->created_at->format('d M Y') }}"><i class="fa-regular fa-clock text-cyan-300"></i>Posted {{ $job->created_at->diffForHumans() }} &middot; {{ $job->created_at->format('d M Y') }}</span>
                                             </div>
                                         </div>
                                     </td>
@@ -164,6 +146,32 @@
                                             @endif
                                         </div>
                                     </td>
+                                    
+                                    {{-- Assigned Partners --}}
+                                    <td class="px-6 py-5 text-center align-middle">
+                                        @if($job->partner_visibility === 'all')
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 text-xs font-bold shadow-lg shadow-cyan-500/10" title="Visible to all registered sourcing partners">
+                                                <i class="fa-solid fa-earth-americas"></i> Open to All
+                                            </span>
+                                        @else
+                                            @php
+                                                $names = $job->allowedPartners->pluck('name')->toArray();
+                                                $list = implode(', ', $names);
+                                            @endphp
+                                            @if(count($names) > 0)
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/50 text-xs font-bold shadow-lg shadow-indigo-500/10 cursor-help" title="{{ $list }}">
+                                                    <i class="fa-solid fa-handshake"></i> {{ count($names) }} {{ count($names) === 1 ? 'Partner' : 'Partners' }}
+                                                </span>
+                                                <div class="text-[10px] text-slate-400 mt-1 max-w-[200px] truncate mx-auto" title="{{ $list }}">
+                                                    {{ $list }}
+                                                </div>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/50 text-xs font-bold" title="No partners assigned to this restricted job">
+                                                    <i class="fa-solid fa-triangle-exclamation"></i> No Partners
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </td>
 
                                     {{-- Status --}}
                                     <td class="px-6 py-5 text-center align-middle">
@@ -189,6 +197,13 @@
                                     {{-- Actions --}}
                                     <td class="px-6 py-5 text-right align-middle">
                                         <div class="flex justify-end gap-2">
+                                            <a href="{{ route('admin.jobs.show', $job->id) }}" class="h-9 w-9 rounded-lg bg-cyan-600/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center hover:bg-cyan-600 hover:text-white transition shadow-md" title="Open Admin Job Control">
+                                                <i class="fa-solid fa-clipboard-check"></i>
+                                            </a>
+                                            <a href="{{ route('admin.jobs.edit', $job->id) }}" class="h-9 rounded-lg bg-violet-600/20 px-3 text-violet-200 border border-violet-500/40 inline-flex items-center justify-center gap-2 hover:bg-violet-600 hover:text-white transition shadow-md whitespace-nowrap" title="Edit Job, Commercials & Vendor Controls">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                                <span class="text-xs font-bold">{{ $job->status === 'approved' ? 'Edit Live Job' : 'Edit Job' }}</span>
+                                            </a>
                                             <a href="{{ route('jobs.show', $job->id) }}" target="_blank" class="h-9 w-9 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shadow-md" title="View Public Page">
                                                 <i class="fa-solid fa-eye"></i>
                                             </a>

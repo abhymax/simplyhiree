@@ -45,6 +45,10 @@
                                 <td class="px-6 py-5 align-top">
                                     <div class="text-white font-bold">{{ $job->title }}</div>
                                     <div class="text-blue-200 text-xs mt-0.5">{{ $job->company_name ?? '—' }} &middot; {{ $job->location }}</div>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                                        <span class="rounded-md border border-violet-300/25 bg-violet-500/15 px-2 py-1 text-violet-100"><i class="fa-solid fa-briefcase mr-1"></i>{{ $job->job_type ?? 'Type not specified' }}</span>
+                                        <span class="text-blue-200/80"><i class="fa-regular fa-clock mr-1 text-cyan-300"></i>Posted {{ $job->created_at->diffForHumans() }} &middot; {{ $job->created_at->format('d M Y') }}</span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-5 align-top text-blue-100">
                                     {{ $job->user->name ?? '—' }}

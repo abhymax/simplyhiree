@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -67,6 +68,7 @@ class RegisteredUserController extends Controller
             'company_type' => ['required', 'string', 'in:Placement Agency,Freelancer,Recruiter'],
             'otp_verification_token' => ['nullable', 'string'],
             'invite_token' => ['nullable', 'string', 'size:40'],
+            'marketing_consent' => ['nullable', 'accepted'],
         ]);
 
         // Resolve the invite (if any) BEFORE creating the user so we can hook
@@ -95,6 +97,9 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'status' => 'pending', // Default to Pending
+            'marketing_consent' => $request->boolean('marketing_consent'),
+            'marketing_consent_at' => $request->boolean('marketing_consent') ? now() : null,
+            'marketing_consent_source' => $request->boolean('marketing_consent') ? 'web_registration' : null,
         ]);
         
         $user->assignRole('partner');
@@ -157,6 +162,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'otp_verification_token' => ['nullable', 'string'],
+            'marketing_consent' => ['nullable', 'accepted'],
         ]);
 
         $phone = $otpService->normalizePhone($request->phone_number);
@@ -176,6 +182,9 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'status' => 'active', 
+            'marketing_consent' => $request->boolean('marketing_consent'),
+            'marketing_consent_at' => $request->boolean('marketing_consent') ? now() : null,
+            'marketing_consent_source' => $request->boolean('marketing_consent') ? 'web_registration' : null,
         ]);
 
         $user->assignRole('candidate');
@@ -195,7 +204,7 @@ class RegisteredUserController extends Controller
 
     public function showClientRegistrationForm(): View
     {
-        return view('auth.register_client');
+        return view('auth.register_client', ['referralCode' => request()->query('ref')]);
     }
 
     public function registerClient(
@@ -213,6 +222,8 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'otp_verification_token' => ['nullable', 'string'],
+            'referral_code' => ['nullable', 'string', 'max:32'],
+            'marketing_consent' => ['nullable', 'accepted'],
         ]);
 
         $phone = $otpService->normalizePhone($request->phone_number);
@@ -233,6 +244,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'billable_period_days' => 30, 
             'status' => 'pending', 
+            'marketing_consent' => $request->boolean('marketing_consent'),
+            'marketing_consent_at' => $request->boolean('marketing_consent') ? now() : null,
+            'marketing_consent_source' => $request->boolean('marketing_consent') ? 'web_registration' : null,
         ]);
 
         $user->assignRole('client');
@@ -247,9 +261,53 @@ class RegisteredUserController extends Controller
             'service_required' => $request->service_required,
         ]);
 
+        if ($request->filled('referral_code')) {
+            $profile = \App\Models\ReferralPartnerProfile::where('referral_code', strtoupper(trim($request->referral_code)))->where('status', 'active')->first();
+            if ($profile) \App\Models\ClientReferral::firstOrCreate(['client_id' => $user->id], ['referral_partner_id' => $profile->user_id, 'referral_code_snapshot' => $profile->referral_code, 'status' => 'active', 'approved_at' => now()]);
+        }
+
         event(new Registered($user));
         $activityService->logUserSignup($user, 'client', 'web');
 
         return redirect()->route('login')->with('status', 'Registration successful! Your account is pending Admin approval.');
+    }
+
+    public function showReferralRegistrationForm(): View { return view('auth.register_referral'); }
+
+    public function registerReferralPartner(Request $request, SuperadminActivityService $activityService, PhoneOtpService $otpService): RedirectResponse
+    {
+        $request->validate(['name'=>['required','string','max:255'],'phone_number'=>['required','regex:/^[6-9][0-9]{9}$/','unique:user_profiles,phone_number'],'email'=>['required','email','max:255','unique:'.User::class],'password'=>['required','confirmed',Rules\Password::defaults()],'partner_type'=>['required','in:Individual,Consultant,Freelancer,Ex HR,Sales Person,Channel Partner'],'otp_verification_token'=>['nullable','string'],'agreement_accepted'=>['accepted']]);
+        $phone = $otpService->normalizePhone($request->phone_number);
+        $verified = $phone && $request->filled('otp_verification_token') ? $otpService->consumeVerificationToken($phone, trim($request->otp_verification_token), 'registration', 'referral_partner') : false;
+        if (!$verified) return back()->withInput()->withErrors(['phone_number'=>'Please verify your mobile number with OTP before registering.']);
+        $user = User::create(['name'=>$request->name,'email'=>$request->email,'password'=>Hash::make($request->password),'status'=>'pending']);
+        UserProfile::create(['user_id'=>$user->id,'phone_number'=>$phone]);
+        $profile = \App\Models\ReferralPartnerProfile::create([
+            'user_id' => $user->id,
+            'referral_code' => 'SHR-'.strtoupper(\Illuminate\Support\Str::random(8)),
+            'partner_type' => $request->partner_type,
+            'status' => 'pending',
+            'agreement_version' => '2026-08-23',
+            'agreement_accepted_at' => now(),
+            'agreement_accepted_ip' => $request->ip(),
+            'agreement_accepted_user_agent' => \Illuminate\Support\Str::limit((string) $request->userAgent(), 1000, ''),
+            'agreement_acceptance_method' => 'registration_checkbox_otp',
+        ]);
+        event(new Registered($user));
+        $activityService->logUserSignup($user, 'referral_partner', 'web');
+
+        try {
+            Mail::send('emails.referral_registration_received', [
+                'user' => $user,
+                'profile' => $profile,
+            ], function ($mail) use ($user) {
+                $mail->to($user->email, $user->name)
+                    ->subject('We received your SimplyHiree Referral Partner application');
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return redirect()->route('login')->with('status','Referral Partner registration submitted for Superadmin approval.');
     }
 }

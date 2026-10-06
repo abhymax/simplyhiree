@@ -1,8 +1,8 @@
-@extends(Auth::check() && Auth::user()->role === 'client' ? 'layouts.client' : 'layouts.app')
+@extends(Auth::check() && Auth::user()->hasRole('client') ? 'layouts.client' : 'layouts.app')
 
-@section(Auth::check() && Auth::user()->role === 'client' ? 'client_content' : 'content')
+@section(Auth::check() && Auth::user()->hasRole('client') ? 'client_content' : 'content')
 
-@if(Auth::check() && Auth::user()->role === 'client')
+@if(Auth::check() && Auth::user()->hasRole('client'))
 <div class="relative z-10 max-w-4xl mx-auto">
 @else
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
@@ -42,8 +42,8 @@
             </div>
         @endif
 
-        <div class="{{ Auth::check() && Auth::user()->role === 'client' ? 'premium-card' : 'bg-white/10 border border-white/10 backdrop-blur-md rounded-3xl' }} p-6 md:p-8 shadow-lg">
-            <form method="POST" action="{{ route('support.submit') }}" enctype="multipart/form-data" class="space-y-5 {{ Auth::check() && Auth::user()->role === 'client' ? 'premium-form' : '' }}">
+        <div class="{{ Auth::check() && Auth::user()->hasRole('client') ? 'premium-card' : 'bg-white/10 border border-white/10 backdrop-blur-md rounded-3xl' }} p-6 md:p-8 shadow-lg">
+            <form method="POST" action="{{ route('support.submit') }}" enctype="multipart/form-data" class="space-y-5 {{ Auth::check() && Auth::user()->hasRole('client') ? 'premium-form' : '' }}">
                 @csrf
 
                 <div>
@@ -83,7 +83,7 @@
             Or email us directly at <a href="mailto:{{ env('SUPPORT_EMAIL', 'support@simplyhiree.com') }}" class="text-blue-300 hover:text-white font-semibold">{{ env('SUPPORT_EMAIL', 'support@simplyhiree.com') }}</a>
         </div>
     </div>
-@if(!(Auth::check() && Auth::user()->role === 'client'))
+@if(!(Auth::check() && Auth::user()->hasRole('client')))
 </div>
 @endif
 @endsection

@@ -10,6 +10,7 @@ use App\Models\JobApplication; // Import this so we can look up Job IDs
 class NotificationsBell extends Component
 {
     public $unreadNotifications;
+    public $notifications;
     public $notificationCount;
 
     public function mount()
@@ -24,13 +25,15 @@ class NotificationsBell extends Component
         // Fail-safe for guest users or missing notifications table.
         if (!$user || !Schema::hasTable('notifications')) {
             $this->unreadNotifications = collect();
+            $this->notifications = collect();
             $this->notificationCount = 0;
             return;
         }
 
-        // We load unread notifications to show in the list.
+        // Keep recent notifications visible after opening the bell marks them read.
         $this->unreadNotifications = $user->unreadNotifications;
         $this->notificationCount = $this->unreadNotifications->count();
+        $this->notifications = $user->notifications()->latest()->limit(10)->get();
     }
 
     /**
@@ -78,7 +81,7 @@ class NotificationsBell extends Component
                 // Candidates go to their applications list
                 return redirect()->route('candidate.applications');
             } 
-            elseif ($user->hasRole('Superadmin')) {
+            elseif ($user->hasAnyRole(['Superadmin', 'Manager'])) {
                 // Admins go to the master list
                 return redirect()->route('admin.applications.index');
             }
@@ -89,7 +92,7 @@ class NotificationsBell extends Component
             if ($user->hasRole('client')) {
                 return redirect()->route('client.dashboard');
             }
-            if ($user->hasRole('Superadmin')) {
+            if ($user->hasAnyRole(['Superadmin', 'Manager'])) {
                 return redirect()->route('admin.jobs.pending');
             }
         }
@@ -105,8 +108,14 @@ class NotificationsBell extends Component
             return;
         }
 
-        Auth::user()->unreadNotifications->markAsRead();
-        $this->loadNotifications();
+        $user = Auth::user();
+        $user->unreadNotifications()->update(['read_at' => now()]);
+
+        // Update the component state in the same request so the badge vanishes
+        // immediately, even when the menu is rendered through Alpine teleport.
+        $this->notificationCount = 0;
+        $this->unreadNotifications = collect();
+        $this->notifications = $user->notifications()->latest()->limit(10)->get();
     }
 
     public function render()

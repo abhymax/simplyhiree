@@ -1,6 +1,10 @@
-@extends('layouts.client')
+@extends('layouts.app')
 
-@section('client_content')
+@section('content')
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 animate-pulse"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20"></div>
+
     <div class="relative z-10 max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-5">
             <div>
@@ -28,7 +32,7 @@
                                     <div class="text-lg font-bold text-blue-200">{{ $app->interview_at->format('g:i A') }}</div>
                                 </td>
                                 <td class="py-4 px-4">
-                                    <div class="font-medium text-white">{{ $app->candidate_name }}</div>
+                                    <a href="{{ route('client.applications.show', $app->id) }}" class="font-medium text-cyan-300 hover:text-cyan-200 hover:underline transition-colors">{{ $app->candidate_name }}</a>
                                     @if($app->candidate)
                                         <div class="text-xs text-slate-300">{{ $app->candidate->phone_number }}</div>
                                     @endif
@@ -53,4 +57,6 @@
                 </table>
             </div>
         </div>
+    </div>
+</div>
 @endsection

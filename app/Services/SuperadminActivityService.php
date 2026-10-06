@@ -40,6 +40,8 @@ class SuperadminActivityService
             'icon' => $icon,
             'actor_id' => $actorUser?->id,
             'actor_name' => $actorUser?->name,
+            'ip_address' => app()->runningInConsole() ? null : request()->ip(),
+            'user_agent' => app()->runningInConsole() ? null : request()->userAgent(),
             'subject_type' => $subject ? $subject::class : null,
             'subject_id' => $subject?->getKey(),
             'metadata' => $metadata,
@@ -51,9 +53,9 @@ class SuperadminActivityService
             return;
         }
 
-        $superadmins = User::role('Superadmin')->get();
-        foreach ($superadmins as $superadmin) {
-            $superadmin->notify(new SuperadminActivityNotification(
+        $internalUsers = User::role(['Superadmin', 'Manager'])->get();
+        foreach ($internalUsers as $internalUser) {
+            $internalUser->notify(new SuperadminActivityNotification(
                 eventKey: $eventKey,
                 title: $title,
                 message: $message,
@@ -113,6 +115,16 @@ class SuperadminActivityService
         $clientName = (string) ($application->job?->user?->name ?? 'Unknown Client');
 
         $map = [
+            'client.candidate_shortlisted' => [
+                'title' => 'Candidate Shortlisted',
+                'message' => "{$clientName} shortlisted {$candidateName} for {$jobTitle}.",
+                'icon' => 'user-check',
+            ],
+            'client.candidate_maybe' => [
+                'title' => 'Candidate Saved for Review',
+                'message' => "{$clientName} moved {$candidateName} to Maybe for {$jobTitle}.",
+                'icon' => 'bookmark',
+            ],
             'client.candidate_approved' => [
                 'title' => 'Client Approved Candidate',
                 'message' => "{$clientName} approved {$candidateName} for {$jobTitle}.",
@@ -122,6 +134,16 @@ class SuperadminActivityService
                 'title' => 'Interview Scheduled',
                 'message' => "{$clientName} scheduled interview for {$candidateName} ({$jobTitle}).",
                 'icon' => 'calendar-event',
+            ],
+            'client.interview_appeared' => [
+                'title' => 'Candidate Appeared for Interview',
+                'message' => "{$clientName} marked {$candidateName} as appeared for {$jobTitle}.",
+                'icon' => 'user-check',
+            ],
+            'client.interview_no_show' => [
+                'title' => 'Candidate Did Not Attend Interview',
+                'message' => "{$clientName} marked {$candidateName} as a no-show for {$jobTitle}.",
+                'icon' => 'user-x',
             ],
             'client.candidate_selected' => [
                 'title' => 'Candidate Selected',

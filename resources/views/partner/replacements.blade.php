@@ -89,7 +89,7 @@
 
                     <div class="flex flex-col sm:flex-row gap-2 lg:flex-shrink-0">
                         @if($rr->job)
-                            <a href="{{ route('partner.jobs.show', $rr->job->id) }}"
+                            <a href="{{ route('partner.replacements.candidate', $rr) }}"
                                class="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 text-sm font-bold px-4 py-2.5 rounded-lg whitespace-nowrap shadow-lg transition">
                                 <i class="fa-solid fa-paper-plane"></i> Send Replacement
                             </a>

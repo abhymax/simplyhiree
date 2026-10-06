@@ -95,11 +95,13 @@
             <input type="hidden" name="role" value="candidate">
         </div>
 
+        <label class="mt-4 flex items-start gap-2 text-sm text-slate-300"><input type="checkbox" name="marketing_consent" value="1" {{ old('marketing_consent') ? 'checked' : '' }} class="mt-0.5 rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500"><span>I agree to receive SimplyHiree product updates, career insights, offers, and marketing communications by email, WhatsApp, and in-app notification. Optional; I can withdraw consent later.</span></label>
+
         {{-- Row 5: Submit & Google SSO --}}
         <div class="pt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-center border-t border-white/5 mt-4">
             <div>
                 <a href="{{ route('google.login', ['role' => 'candidate']) }}" class="w-full flex justify-center items-center px-4 py-3 bg-slate-950/40 border border-white/8 hover:border-blue-500/30 text-slate-200 hover:text-white rounded-xl font-extrabold text-[10px] uppercase tracking-widest shadow-md hover:bg-slate-900/60 transition-all duration-150">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="h-4 w-4 mr-2" alt="Google Logo">
+                    <img src="{{ asset('images/google.svg') }}" class="h-4 w-4 mr-2" alt="Google">
                     Google Signup
                 </a>
             </div>

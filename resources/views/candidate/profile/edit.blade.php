@@ -159,12 +159,7 @@
 
                     <div class="mb-4">
                         <label class="block text-blue-100 text-sm font-bold mb-2">Resume (PDF/DOC)</label>
-                        @if($profile->resume_path)
-                            <div class="text-sm text-emerald-300 mb-2">
-                                Current Resume:
-                                <a href="{{ asset('storage/'.$profile->resume_path) }}" target="_blank" class="underline hover:text-white">View File</a>
-                            </div>
-                        @endif
+                        <x-current-upload :path="$profile->resume_path" label="Current resume" />
                         <input type="file" name="resume" class="block w-full text-sm text-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600">
                         @error('resume') <p class="text-rose-300 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>

@@ -142,12 +142,12 @@
                 <div class="absolute -bottom-12 -right-12 w-80 h-80 bg-indigo-500/10 rounded-full filter blur-[80px]"></div>
                 
                 {{-- Brand Logo --}}
-                <div class="relative z-10 flex items-center gap-3">
+                <a href="/" class="relative z-10 flex items-center gap-3 hover:opacity-80 transition cursor-pointer decoration-none no-underline">
                     <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-blue-500/30">
                         SH
                     </div>
                     <div class="font-black text-2xl text-white tracking-tight">Simply<span class="text-blue-500">Hiree</span></div>
-                </div>
+                </a>
 
                 {{-- Graphics and Slogans Center --}}
                 <div class="relative z-10 my-auto py-12 flex flex-col items-center text-center">
@@ -173,12 +173,12 @@
             {{-- RIGHT SIDE PANEL - Forms --}}
             <main class="lg:col-span-7 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto bg-[#020512]" style="background-color: #020512 !important;">
                 {{-- Mobile Brand Logo --}}
-                <div class="lg:hidden absolute top-6 left-6 flex items-center gap-2">
+                <a href="/" class="lg:hidden absolute top-6 left-6 flex items-center gap-2 hover:opacity-80 transition cursor-pointer decoration-none no-underline">
                     <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-extrabold text-sm shadow-md">
                         SH
                     </div>
                     <span class="font-bold text-lg text-white">SimplyHiree</span>
-                </div>
+                </a>
 
                 <div class="w-full {{ (request()->is('register*') || request()->is('signup*')) ? 'sm:max-w-2xl' : 'sm:max-w-md' }} my-8">
                     {{-- Standard Guest Form Wrap --}}

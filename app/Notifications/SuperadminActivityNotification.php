@@ -20,6 +20,10 @@ class SuperadminActivityNotification extends Notification
 
     public function via(object $notifiable): array
     {
+        if (!method_exists($notifiable, 'hasAnyRole') || !$notifiable->hasAnyRole(['Superadmin', 'Manager'])) {
+            return [];
+        }
+
         return ['database'];
     }
 
@@ -30,6 +34,8 @@ class SuperadminActivityNotification extends Notification
             'title' => $this->title,
             'message' => $this->message,
             'icon' => $this->icon,
+            'audience' => 'internal',
+            'scope' => 'internal_operations',
         ], $this->extra);
     }
 }

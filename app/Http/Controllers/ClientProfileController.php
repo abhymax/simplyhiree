@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ClientProfile;
+use App\Models\ComplianceDocument;
 use Illuminate\Validation\Rule;
 
 class ClientProfileController extends Controller
@@ -17,8 +18,18 @@ class ClientProfileController extends Controller
     {
         $user = Auth::user();
         $profile = $user->clientProfile ?? new ClientProfile(['user_id' => $user->id]);
+        $sharedDocuments = ComplianceDocument::query()
+            ->where(function ($query) use ($user) {
+                $query->where('party_type', 'global')
+                    ->orWhere(function ($partyQuery) use ($user) {
+                        $partyQuery->where('party_type', 'client')
+                            ->where('party_id', $user->id);
+                    });
+            })
+            ->latest()
+            ->get();
 
-        return view('client.profile.edit', compact('user', 'profile'));
+        return view('client.profile.edit', compact('user', 'profile', 'sharedDocuments'));
     }
 
     /**
@@ -38,7 +49,7 @@ class ClientProfileController extends Controller
             'description' => 'nullable|string|max:2000',
             'contact_person_name' => 'required|string|max:255',
             'contact_phone' => 'nullable|string|max:20',
-            'gst_number' => 'nullable|string|max:50',
+            'gst_number' => ['nullable', 'string', 'max:50', Rule::unique('client_profiles', 'gst_number')->ignore($profile?->id)],
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
@@ -46,7 +57,7 @@ class ClientProfileController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             
             // Compliance Validations
-            'pan_number' => 'required|string|max:20',
+            'pan_number' => ['required', 'string', 'max:20', Rule::unique('client_profiles', 'pan_number')->ignore($profile?->id)],
             'pan_file' => [
                 function ($attribute, $value, $fail) use ($profile) {
                     if ((!$profile || empty($profile->pan_file_path)) && empty($value)) {

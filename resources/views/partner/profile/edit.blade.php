@@ -151,7 +151,8 @@
                                 </select>
                                 <div>
                                     <label class="text-xs text-slate-300">Cancelled Cheque</label>
-                                    <input type="file" name="cancelled_cheque" class="block w-full text-xs text-slate-200 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:bg-blue-500 file:text-white">
+                                    <input type="file" name="cancelled_cheque" accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-xs text-slate-200 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:bg-blue-500 file:text-white">
+                                    <x-current-upload :path="$profile->cancelled_cheque_path" label="Current cancelled cheque" />
                                 </div>
                             </div>
                         </div>
@@ -162,18 +163,38 @@
                                 <input type="text" name="pan_name" value="{{ old('pan_name', $profile->pan_name) }}" placeholder="Name on PAN" class="w-full rounded-xl border border-white/20 bg-slate-900/50 text-white text-sm mb-2 px-3 py-2" required>
                                 <input type="text" name="pan_number" value="{{ old('pan_number', $profile->pan_number) }}" placeholder="PAN Number" class="w-full rounded-xl border border-white/20 bg-slate-900/50 text-white text-sm mb-2 px-3 py-2" required>
                                 <label class="text-xs text-slate-300">Upload PAN</label>
-                                <input type="file" name="pan_card" class="block w-full text-xs text-slate-200 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:bg-emerald-500 file:text-white">
+                                <input type="file" name="pan_card" accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-xs text-slate-200 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:bg-emerald-500 file:text-white">
+                                <x-current-upload :path="$profile->pan_card_path" label="Current PAN document" />
                             </div>
 
                             <div class="p-4 bg-slate-900/40 rounded-xl border border-white/10">
                                 <h4 class="font-bold text-blue-100 mb-3 text-sm uppercase">GST Details</h4>
                                 <input type="text" name="gst_number" value="{{ old('gst_number', $profile->gst_number) }}" placeholder="GST Number" class="w-full rounded-xl border border-white/20 bg-slate-900/50 text-white text-sm mb-2 px-3 py-2" required>
                                 <label class="text-xs text-slate-300">Upload Certificate</label>
-                                <input type="file" name="gst_certificate" class="block w-full text-xs text-slate-200 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:bg-violet-500 file:text-white">
+                                <input type="file" name="gst_certificate" accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-xs text-slate-200 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:bg-violet-500 file:text-white">
+                                <x-current-upload :path="$profile->gst_certificate_path" label="Current GST certificate" />
                             </div>
                         </div>
                     </div>
                 </div>
+
+                @if($sharedDocuments->isNotEmpty())
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-6 md:col-span-2 xl:col-span-3">
+                        <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-scale-balanced text-cyan-300"></i> Shared Legal Documents
+                        </h3>
+                        <p class="mb-4 text-xs text-blue-100">Agreements, policies and documents shared with you by SimplyHiree.</p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            @foreach($sharedDocuments as $document)
+                                <x-current-upload
+                                    :path="$document->file_path"
+                                    :label="$document->title"
+                                    :meta="collect([$document->version ? 'Version '.$document->version : null, ucfirst(str_replace('_', ' ', $document->document_type))])->filter()->join(' | ')"
+                                />
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="mt-8 flex justify-end pb-6">

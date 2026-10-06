@@ -380,6 +380,24 @@
                         <p class="text-xs text-blue-100">Uploading PAN and COI documents speeds up verification and unlocks faster invoice processing.</p>
                     </div>
 
+                    @if($sharedDocuments->isNotEmpty())
+                        <div class="profile-card">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2 mb-2 pb-3 border-b border-white/10">
+                                <i class="fa-solid fa-scale-balanced text-violet-300"></i> Shared Legal Documents
+                            </h3>
+                            <p class="mb-3 text-xs text-blue-100">Agreements, policies and documents shared with you by SimplyHiree.</p>
+                            <div class="space-y-2">
+                                @foreach($sharedDocuments as $document)
+                                    <x-current-upload
+                                        :path="$document->file_path"
+                                        :label="$document->title"
+                                        :meta="collect([$document->version ? 'Version '.$document->version : null, ucfirst(str_replace('_', ' ', $document->document_type))])->filter()->join(' | ')"
+                                    />
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Save --}}
                     <button type="submit" class="w-full justify-center inline-flex items-center gap-2 px-5 py-3 rounded-lg font-bold text-sm text-white bg-cyan-600 hover:bg-cyan-500 transition shadow-lg hover:shadow-cyan-500/30">
                         <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes

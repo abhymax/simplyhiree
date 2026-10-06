@@ -24,7 +24,11 @@ class CheckAccountStatus
                 $owner = $user->parent_partner_id ? \App\Models\User::find($user->parent_partner_id) : $user;
 
                 if ($owner && $owner->status === 'active') {
-                    if ($owner->created_at && $owner->created_at <= now()->subDays(15)) {
+                    // Check that the account was created at least 15 days ago AND that the status 
+                    // wasn't updated/approved by the admin in the last 15 days (grace period)
+                    if ($owner->created_at && $owner->created_at <= now()->subDays(15) &&
+                        $owner->updated_at && $owner->updated_at <= now()->subDays(15)) {
+                        
                         $teamIds = \App\Models\User::where('parent_partner_id', $owner->id)->pluck('id')->push($owner->id)->all();
 
                         $hasActivity = \App\Models\JobApplication::whereIn('submitted_by_user_id', $teamIds)
@@ -42,13 +46,6 @@ class CheckAccountStatus
                     }
                 }
 
-                if ($owner && $owner->status === 'on_hold') {
-                    $routeName = optional($request->route())->getName();
-                    if (in_array($routeName, ['partner.dashboard', 'dashboard'], true)) {
-                        return $next($request);
-                    }
-                    return redirect()->route('partner.dashboard');
-                }
             }
 
             // Check Status
@@ -68,7 +65,16 @@ class CheckAccountStatus
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
-                return redirect()->route('login')->withErrors(['email' => $message]);
+                $redirect = redirect()->route('login')->withErrors(['email' => $message]);
+                if ($user->status === 'on_hold') {
+                    $request->session()->put([
+                        'hold_user_id' => $user->id,
+                        'hold_email' => $user->email,
+                        'hold_name' => $user->name,
+                    ]);
+                    $redirect->with('account_on_hold', true);
+                }
+                return $redirect;
             }
         }
 

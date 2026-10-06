@@ -7,6 +7,34 @@
 
     <div class="relative z-10 max-w-4xl mx-auto">
 
+        @if(session('info'))
+            <div class="mb-6 px-5 py-3 bg-blue-500/20 border border-blue-400/40 text-blue-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-circle-info"></i> {{ session('info') }}
+            </div>
+        @endif
+        @if(session('success'))
+            <div class="mb-6 px-5 py-3 bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i> {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-6 px-5 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> {{ session('error') }}
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="mb-6 px-5 py-3 bg-rose-500/20 border border-rose-400/40 text-rose-100 rounded-xl text-sm font-semibold">
+                <div class="flex items-center gap-2 mb-1">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> <span>Please fix the errors below:</span>
+                </div>
+                <ul class="list-disc list-inside pl-4 text-xs text-rose-200">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="flex items-center justify-between mb-6">
             <a href="{{ route('partner.candidates.index') }}" class="inline-flex items-center text-cyan-300 hover:text-white text-sm font-bold uppercase tracking-wider">
                 <i class="fa-solid fa-arrow-left mr-2"></i> My Candidates
@@ -174,15 +202,38 @@
         </div>
 
         {{-- Resume --}}
-        @if($candidate->resume_path)
-        <div class="mt-6">
-            <a href="{{ Storage::url($candidate->resume_path) }}" target="_blank"
-               class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-slate-900 transition-all hover:-translate-y-0.5"
-               style="background: linear-gradient(135deg,#22d3ee,#0ea5e9); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
-                <i class="fa-solid fa-file-arrow-down"></i> Download Resume
-            </a>
+        <div class="mt-6 bg-slate-900/60 backdrop-blur-xl border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xs font-extrabold uppercase tracking-widest text-cyan-300 mb-3">Resume / CV</h3>
+            @if($candidate->resume_path)
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="{{ Storage::url($candidate->resume_path) }}" target="_blank"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-slate-900 transition-all hover:-translate-y-0.5"
+                       style="background: linear-gradient(135deg,#22d3ee,#0ea5e9); box-shadow: 0 8px 20px -6px rgba(34,211,238,.5);">
+                        <i class="fa-solid fa-file-arrow-down"></i> Download Resume
+                    </a>
+
+                    <form id="edit-resume-form" action="{{ route('partner.candidates.update-resume', $candidate->id) }}" method="POST" enctype="multipart/form-data" class="inline m-0 p-0">
+                        @csrf
+                        <input type="file" id="resume-file-input" name="resume" accept=".pdf,.doc,.docx" class="hidden" onchange="document.getElementById('edit-resume-form').submit()">
+                        <button type="button" onclick="document.getElementById('resume-file-input').click()" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition transform hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit CV
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="text-center py-4 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-3">
+                    <p class="text-slate-400 italic text-sm">No resume uploaded for this candidate.</p>
+                    
+                    <form id="edit-resume-form" action="{{ route('partner.candidates.update-resume', $candidate->id) }}" method="POST" enctype="multipart/form-data" class="inline m-0 p-0">
+                        @csrf
+                        <input type="file" id="resume-file-input" name="resume" accept=".pdf,.doc,.docx" class="hidden" onchange="document.getElementById('edit-resume-form').submit()">
+                        <button type="button" onclick="document.getElementById('resume-file-input').click()" class="bg-blue-600/30 hover:bg-blue-600/40 text-blue-200 px-5 py-2 rounded-xl font-bold border border-blue-500/30 transition flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Resume
+                        </button>
+                    </form>
+                </div>
+            @endif
         </div>
-        @endif
 
     </div>
 </div>

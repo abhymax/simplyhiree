@@ -100,7 +100,10 @@
                                         @endif
                                     </div>
                                     <div class="text-blue-200 text-xs">{{ $job->location }} | {{ $job->category->name ?? 'N/A' }}</div>
-                                    <div class="text-slate-300 text-xs mt-1">Posted: {{ $job->created_at->format('d M, Y') }}</div>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                                        <span class="inline-flex items-center gap-1 rounded-md border border-violet-300/30 bg-violet-500/15 px-2 py-1 text-violet-100"><i class="fa-solid fa-briefcase"></i>{{ $job->job_type ?? 'Type not specified' }}</span>
+                                        <span class="inline-flex items-center gap-1 text-slate-300" title="Posted {{ $job->created_at->format('d M Y') }}"><i class="fa-regular fa-clock text-cyan-300"></i>Posted {{ $job->created_at->diffForHumans() }} &middot; {{ $job->created_at->format('d M Y') }}</span>
+                                    </div>
                                 </td>
 
                                 <td class="px-6 py-5 align-top text-blue-100 text-sm">

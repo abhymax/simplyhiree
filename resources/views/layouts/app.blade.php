@@ -370,6 +370,7 @@
                     <div>
                         &copy; {{ date('Y') }} <span class="font-semibold {{ $usesSidebar ? 'text-slate-200' : 'text-slate-700' }}">SimplyHiree</span>. All rights reserved.
                     </div>
+                    @include('partials.google-play-link')
                     <div class="flex gap-5 font-medium">
                         <a href="{{ route('privacy') }}" class="hover:{{ $usesSidebar ? 'text-white' : 'text-indigo-600' }} transition-colors">Privacy Policy</a>
                         <a href="{{ route('terms') }}" class="hover:{{ $usesSidebar ? 'text-white' : 'text-indigo-600' }} transition-colors">Terms of Service</a>

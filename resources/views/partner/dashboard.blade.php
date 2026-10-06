@@ -2,32 +2,6 @@
 
 @section('content')
 
-@if(Auth::check() && Auth::user()->status === 'on_hold')
-<div class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 backdrop-blur-md px-4 select-none pointer-events-auto">
-    <div class="bg-gradient-to-br from-slate-900 to-red-950 border border-red-500/40 rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl animate-fade-in relative">
-        <div class="mx-auto w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mb-6 text-red-400">
-            <i class="fa-solid fa-triangle-exclamation text-4xl animate-bounce"></i>
-        </div>
-        <h2 class="text-2xl font-black text-white tracking-tight mb-3">Account on Hold</h2>
-        <p class="text-red-200/90 text-sm leading-relaxed mb-6">
-            Your profile is on Hold due to lack of any activity.<br>
-            Kindly reach out to us at <a href="mailto:support@simplyhiree.com" class="text-cyan-400 hover:underline font-bold font-mono">support@simplyhiree.com</a> to reactivate your workspace.
-        </p>
-        <div class="flex flex-col gap-3">
-            <a href="mailto:support@simplyhiree.com" class="w-full bg-red-600 hover:bg-red-500 active:scale-[0.98] transition-all text-white font-extrabold py-3 rounded-xl shadow-lg shadow-red-500/20 inline-block text-center decoration-none">
-                Contact Support
-            </a>
-            <form method="POST" action="{{ route('logout') }}" class="m-0 w-full">
-                @csrf
-                <button type="submit" class="w-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white font-bold py-2.5 rounded-xl transition border border-white/15 text-sm">
-                    Logout
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
-
 {{-- Replacement Requests pop-up (shows once per login session) --}}
 @if(!empty($showReplacementModal) && $showReplacementModal && $replacementRequests->isNotEmpty())
 <div id="replacement-modal"
@@ -120,14 +94,23 @@
         @endif
 
         @if(!empty($replacementRequests) && $replacementRequests->count())
-            <div class="mb-8 bg-amber-500/10 border border-amber-400/40 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
-                <div class="px-6 py-4 border-b border-amber-400/30 flex items-center justify-between">
-                    <h3 class="text-amber-200 font-extrabold text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-rotate"></i>
-                        Replacement Requests
-                        <span class="bg-amber-500 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $replacementRequests->count() }}</span>
-                    </h3>
-                    <p class="text-amber-100/80 text-xs">Clients have asked for replacements on these candidates. Send fresh candidates for the listed jobs.</p>
+            <div x-data="{ showBanner: !sessionStorage.getItem('dismissed_replacements') }"
+                 x-show="showBanner"
+                 class="mb-8 bg-amber-500/10 border border-amber-400/40 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-amber-400/30 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-wrap md:flex-nowrap">
+                        <h3 class="text-amber-200 font-extrabold text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-rotate"></i>
+                            Replacement Requests
+                            <span class="bg-amber-500 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full">{{ $replacementRequests->count() }}</span>
+                        </h3>
+                        <p class="text-amber-100/80 text-xs">Clients have asked for replacements on these candidates. Send fresh candidates for the listed jobs.</p>
+                    </div>
+                    <button type="button" @click="showBanner = false; sessionStorage.setItem('dismissed_replacements', 'true')"
+                            class="text-slate-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition flex-shrink-0"
+                            aria-label="Close">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
                 </div>
                 <div class="divide-y divide-amber-400/10">
                     @foreach($replacementRequests as $rr)
@@ -284,7 +267,7 @@
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-            <a href="{{ route('partner.profile.business') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
+            <a href="{{ auth()->user()->isPartnerOwner() ? route('partner.profile.business') : route('profile.edit') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-user-gear"></i>
                 </div>
@@ -316,7 +299,7 @@
                 <p class="text-slate-400 text-xs">Track submissions</p>
             </a>
 
-            @if(Auth::user()->canSeeCommercials())
+            @if(Auth::user()->isPartnerOwner())
             <a href="{{ route('partner.earnings') }}" class="group fx-card bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/20 hover:-translate-y-1 transition-all">
                 <div class="h-10 w-10 bg-amber-500/20 text-amber-400 rounded-lg flex items-center justify-center mb-3">
                     <i class="fa-solid fa-sack-dollar"></i>

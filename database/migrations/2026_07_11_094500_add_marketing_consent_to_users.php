@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration;use Illuminate\Database\Schema\Blueprint;use Illuminate\Support\Facades\Schema;
+return new class extends Migration {public function up():void{Schema::table('users',function(Blueprint $t){$t->boolean('marketing_consent')->default(false)->after('status');$t->timestamp('marketing_consent_at')->nullable()->after('marketing_consent');$t->string('marketing_consent_source',30)->nullable()->after('marketing_consent_at');});}public function down():void{Schema::table('users',fn(Blueprint $t)=>$t->dropColumn(['marketing_consent','marketing_consent_at','marketing_consent_source']));}};

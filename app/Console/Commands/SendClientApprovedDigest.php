@@ -64,6 +64,10 @@ class SendClientApprovedDigest extends Command
                     'date'         => now(),
                 ], function ($message) use ($client, $rows, $csvBody, $csvName) {
                     $message->to($client->email, $client->name)
+                        ->bcc([
+                            'simplyhire1@gmail.com',
+                            'client@simplyhiree.com',
+                        ])
                         ->subject('[SimplyHiree] ' . $rows->count() . ' new approved candidate' . ($rows->count() === 1 ? '' : 's') . ' for your jobs — ' . now()->format('d M Y'));
                     $message->attachData($csvBody, $csvName, [
                         'mime' => 'text/csv',

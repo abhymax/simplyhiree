@@ -14,8 +14,16 @@ class JobApplicationObserver
         if ($application->wasChanged('hiring_status')) {
             $status = (string) $application->hiring_status;
 
-            if ($status === 'Interviewed') {
-                $activity->logApplicationLifecycle($application, 'client.candidate_approved');
+            $eventKey = match ($status) {
+                'Shortlisted', 'shortlisted' => 'client.candidate_shortlisted',
+                'Maybe' => 'client.candidate_maybe',
+                'Interviewed' => 'client.interview_appeared',
+                'No-Show' => 'client.interview_no_show',
+                default => null,
+            };
+
+            if ($eventKey) {
+                $activity->logApplicationLifecycle($application, $eventKey);
             }
 
             if ($status === 'Interview Scheduled') {

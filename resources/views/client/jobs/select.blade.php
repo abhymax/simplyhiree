@@ -1,9 +1,10 @@
 @extends('layouts.client')
 
 @section('client_content')
+
     <div class="relative z-10 max-w-3xl mx-auto">
         <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl">
-            <h1 class="text-3xl font-extrabold">{{ $isEdit ? 'Edit Selection Details' : 'Select Candidate for Job' }}</h1>
+            <h1 class="text-3xl font-extrabold text-white">{{ $isEdit ? 'Edit Selection Details' : 'Select Candidate for Job' }}</h1>
             <p class="text-blue-200 mt-1">{{ $application->job->title }}</p>
 
             <div class="mt-6 mb-4 border-b border-white/10 pb-4">
@@ -13,7 +14,7 @@
                 </h2>
             </div>
 
-            <form action="{{ $isEdit ? route('client.applications.select.update', $application) : route('client.applications.select.store', $application) }}" method="POST">
+            <form action="{{ $isEdit ? route('client.applications.select.update', $application) : route('client.applications.select.store', $application) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if($isEdit)
                     @method('PATCH')
@@ -29,6 +30,7 @@
                         min="{{ now()->toDateString() }}" />
                     @error('joining_date') <p class="mt-2 text-rose-300 text-sm">{{ $message }}</p> @enderror
                 </div>
+                <div class="mt-4"><label class="block text-sm text-blue-100">Offer Letter (PDF, optional)</label><input type="file" name="offer_letter" accept="application/pdf" class="block mt-1 w-full text-sm text-blue-100">@if($application->offer_letter_path)<a class="text-xs text-cyan-300" target="_blank" href="{{ Storage::disk('public')->url($application->offer_letter_path) }}">View current offer letter</a>@endif</div>
 
                 <div class="mt-4">
                     <label for="final_ctc" class="block text-sm text-blue-100">Final Offered CTC (₹ / year)</label>

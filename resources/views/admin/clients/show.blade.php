@@ -99,7 +99,7 @@
                                         <th class="px-6 py-4">Job Title</th>
                                         <th class="px-6 py-4">Posted Date</th>
                                         <th class="px-6 py-4">Status</th>
-                                        <th class="px-6 py-4 text-right">View</th>
+                                        <th class="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-white/5 text-white">
@@ -117,9 +117,10 @@
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 text-right">
-                                                <a href="{{ route('admin.jobs.show', $job->id) }}" class="text-emerald-400 hover:text-white transition">
-                                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                                </a>
+                                                <div class="flex justify-end gap-2">
+                                                    <a href="{{ route('admin.jobs.show', $job->id) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 transition hover:bg-cyan-500 hover:text-white" title="Open Admin Job Control"><i class="fa-solid fa-eye"></i></a>
+                                                    <a href="{{ route('admin.jobs.edit', $job->id) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-violet-400/30 bg-violet-500/10 text-violet-300 transition hover:bg-violet-500 hover:text-white" title="Edit Live Job"><i class="fa-solid fa-pen-to-square"></i></a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
