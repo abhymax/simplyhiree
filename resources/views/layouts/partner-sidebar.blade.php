@@ -23,8 +23,10 @@
             {!! $link('partner.earnings', 'partner.earnings*', 'Earnings', 'fa-indian-rupee-sign') !!}
             {!! $link('partner.wallet', 'partner.wallet', 'Wallet', 'fa-wallet') !!}
         @endif
-        {!! $link('partner.team.index', 'partner.team.*', 'My Team', 'fa-user-group') !!}
-        {!! $link('partner.upgrade', 'partner.upgrade*', 'Plans & Upgrade', 'fa-gem') !!}
+        @if($partner->isPartnerOwner())
+            {!! $link('partner.team.index', 'partner.team.*', 'My Team', 'fa-user-group') !!}
+            {!! $link('partner.upgrade', 'partner.upgrade*', 'Plans & Upgrade', 'fa-gem') !!}
+        @endif
         <div class="partner-sidebar-label">Account</div>
         {!! $link($profileRoute, $profilePattern, 'My Account', 'fa-gear') !!}
         {!! $link('support', 'support*', 'Help & Support', 'fa-circle-question') !!}

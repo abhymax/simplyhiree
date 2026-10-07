@@ -15,6 +15,8 @@ class EnforcePartnerAccess
      * upgrades, wallet, billing-side commercials, profile/business edit.
      */
     private const OWNER_ONLY = [
+        'partner.team.index',
+        'partner.upgrade',
         'partner.team.store',
         'partner.team.update',
         'partner.team.toggle',
@@ -70,8 +72,8 @@ class EnforcePartnerAccess
         if (in_array($routeName, self::OWNER_ONLY, true)) {
             if (in_array($routeName, ['partner.upgrade.request', 'partner.upgrade.cancel'], true)) {
                 return redirect()
-                    ->route('partner.upgrade')
-                    ->with('error', 'Only the partner-account owner can request, cancel, or modify a plan.');
+                    ->route('partner.dashboard')
+                    ->with('error', 'Only the partner-account owner can view or change the plan.');
             }
 
             abort(403, 'This action is restricted to the partner account owner. Please ask your account owner.');
