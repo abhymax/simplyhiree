@@ -221,7 +221,11 @@
 
                                     {{-- Job Details (Fixed High Visibility) --}}
                                     <td class="px-6 py-5">
-                                        <div class="job-name font-bold text-white">{{ $application->job->title ?? 'Deleted Job' }}</div>
+                                        @if($application->job)
+                                            <a href="{{ route('admin.jobs.show', $application->job) }}" class="job-name font-bold text-white hover:text-cyan-300 hover:underline" title="Open job details">{{ $application->job->title }}</a>
+                                        @else
+                                            <div class="job-name font-bold text-white">Deleted Job</div>
+                                        @endif
                                         <div class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">{{ $jobCode }}</div>
                                         <div class="font-bold text-xs mt-1 flex items-center gap-1.5" style="color: #fcd34d;">
                                             <i class="fa-solid fa-building text-amber-400"></i>
@@ -232,9 +236,9 @@
                                     {{-- Source --}}
                                     <td class="px-6 py-5">
                                         @if($sourcePartner)
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-600 text-white text-[11px] font-bold shadow-sm">
+                                            <a href="{{ route('admin.partners.show', $sourcePartner) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold shadow-sm" title="Open vendor details">
                                                 <i class="fa-solid fa-handshake"></i> {{ Str::limit($sourcePartner->name, 12) }}
-                                            </span>
+                                            </a>
                                             <div class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">
                                                 {{ $sourcePartner->entity_code ?? ('SH-PRT-' . str_pad((string) $sourcePartner->id, 6, '0', STR_PAD_LEFT)) }}
                                             </div>
