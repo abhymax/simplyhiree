@@ -763,7 +763,13 @@ class AdminController extends Controller
 
     public function listClients(Request $request)
     {
-        $query = User::role('client')->with(['roles', 'profile'])->withCount('jobs');
+        // Only client ACCOUNTS belong here. Team members are sub-users of a
+        // client, not clients in their own right, and listing them inflated
+        // the client count and the billing view.
+        $query = User::role('client')
+            ->whereNull('parent_partner_id')
+            ->with(['roles', 'profile'])
+            ->withCount(['jobs', 'teamMembers']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
