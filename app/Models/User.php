@@ -131,6 +131,12 @@ class User extends Authenticatable
         return $this->hasOne(Candidate::class);
     }
 
+    /** Candidates this partner/vendor has sourced (used for broadcast targeting). */
+    public function sourcedCandidates()
+    {
+        return $this->hasMany(Candidate::class, 'partner_id');
+    }
+
     public function partnerProfile(): HasOne
     {
         return $this->hasOne(PartnerProfile::class);

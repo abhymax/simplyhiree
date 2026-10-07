@@ -47,7 +47,7 @@
             </h3>
 
             <form method="POST" action="{{ route($scope['type'] === 'admin' ? 'admin.broadcasts.store' : 'client.broadcasts.store') }}"
-                  class="space-y-5" id="broadcast-form" onsubmit="return confirm('Send this broadcast to ' + {{ $audience }} + ' vendors right now?');">
+                  class="space-y-5" id="broadcast-form" onsubmit="return confirm('Send this broadcast to ' + (document.getElementById('aud-count').textContent||'0') + ' vendors right now?');">
                 @csrf
 
                 {{-- Templates --}}
@@ -67,6 +67,96 @@
                         @endforeach
                     </div>
                     <input type="hidden" name="template_key" id="template_key" value="custom">
+                </div>
+
+                {{-- Audience targeting --}}
+                <div class="rounded-xl border border-white/10 bg-slate-900/40 p-4">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <label class="block text-xs font-bold text-blue-200 uppercase tracking-wider">
+                            <i class="fa-solid fa-filter mr-1"></i> Who receives this
+                        </label>
+                        <span class="text-xs font-bold text-white bg-blue-600/80 rounded-lg px-3 py-1">
+                            <i class="fa-solid fa-users mr-1"></i><span id="aud-count">{{ $audience }}</span> vendors
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @if(($tierOptions ?? collect())->isNotEmpty())
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Tier <span class="text-slate-500">(none = all)</span></label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($tierOptions as $t)
+                                    <label class="inline-flex items-center gap-1.5 bg-slate-800/70 border border-white/10 rounded-lg px-2.5 py-1.5 cursor-pointer">
+                                        <input type="checkbox" name="tier[]" value="{{ $t }}" class="aud-f rounded bg-slate-900 border-white/30" @checked(in_array($t, (array)($filters['tier'] ?? []), true))>
+                                        <span class="text-xs text-white font-semibold">{{ ucfirst($t) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        @if(($planOptions ?? collect())->isNotEmpty())
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Plan <span class="text-slate-500">(none = all)</span></label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($planOptions as $p)
+                                    <label class="inline-flex items-center gap-1.5 bg-slate-800/70 border border-white/10 rounded-lg px-2.5 py-1.5 cursor-pointer">
+                                        <input type="checkbox" name="plan[]" value="{{ $p }}" class="aud-f rounded bg-slate-900 border-white/30" @checked(in_array($p, (array)($filters['plan'] ?? []), true))>
+                                        <span class="text-xs text-white font-semibold">{{ ucfirst($p) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Submission activity</label>
+                            <div class="flex gap-2">
+                                <select name="activity" class="aud-f flex-1 bg-slate-900/60 border border-white/10 rounded-lg text-white text-xs px-2 py-2">
+                                    <option value="any" @selected(($filters['activity'] ?? 'any')==='any')>Everyone</option>
+                                    <option value="active" @selected(($filters['activity'] ?? '')==='active')>Submitted recently</option>
+                                    <option value="dormant" @selected(($filters['activity'] ?? '')==='dormant')>Not submitted recently</option>
+                                    <option value="never" @selected(($filters['activity'] ?? '')==='never')>Never submitted</option>
+                                </select>
+                                <input type="number" name="activity_days" min="1" max="365" value="{{ $filters['activity_days'] ?? 30 }}" title="Days"
+                                       class="aud-f w-20 bg-slate-900/60 border border-white/10 rounded-lg text-white text-xs px-2 py-2">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Minimum rating</label>
+                            <input type="number" name="min_rating" step="0.1" min="0" max="5" placeholder="e.g. 3.5"
+                                   value="{{ $filters['min_rating'] ?? '' }}"
+                                   class="aud-f w-full bg-slate-900/60 border border-white/10 rounded-lg text-white text-xs px-2 py-2">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Location contains</label>
+                            <input type="text" name="location" maxlength="120" placeholder="e.g. Noida"
+                                   value="{{ $filters['location'] ?? '' }}"
+                                   class="aud-f w-full bg-slate-900/60 border border-white/10 rounded-lg text-white text-xs px-2 py-2">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Skill / specialisation contains</label>
+                            <input type="text" name="category" maxlength="120" placeholder="e.g. Sales, IT"
+                                   value="{{ $filters['category'] ?? '' }}"
+                                   class="aud-f w-full bg-slate-900/60 border border-white/10 rounded-lg text-white text-xs px-2 py-2">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 mt-3 pt-3 border-t border-white/10">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="exclude_penalised" value="1" class="aud-f rounded bg-slate-900 border-white/30" @checked(!empty($filters['exclude_penalised']))>
+                            <span class="text-xs text-slate-200 font-semibold">Skip penalised vendors</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="consent_only" value="1" class="aud-f rounded bg-slate-900 border-white/30" @checked(!empty($filters['consent_only']))>
+                            <span class="text-xs text-slate-200 font-semibold">Only vendors who opted in to marketing</span>
+                        </label>
+                    </div>
+
+                    <p id="aud-sample" class="text-[11px] text-slate-400 mt-3"></p>
                 </div>
 
                 <div>
@@ -103,7 +193,7 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-extrabold py-3 px-7 rounded-xl transition flex items-center gap-2 shadow-lg hover:shadow-blue-500/40">
-                        <i class="fa-solid fa-paper-plane"></i> Send Broadcast to {{ $audience }} Vendor{{ $audience === 1 ? '' : 's' }}
+                        <i class="fa-solid fa-paper-plane"></i> Send Broadcast to <span id="aud-count-btn">{{ $audience }}</span>&nbsp;Vendors
                     </button>
                 </div>
             </form>
@@ -180,3 +270,40 @@
     }
 </script>
 @endsection
+
+<script>
+(function () {
+  var url = @json(route($scope['type'] === 'admin' ? 'admin.broadcasts.preview' : 'client.broadcasts.preview'));
+  var form = document.getElementById('broadcast-form');
+  if (!form) return;
+  var timer = null;
+
+  function refresh() {
+    var fd = new FormData(form);
+    var qs = new URLSearchParams();
+    ['tier[]','plan[]'].forEach(function (k) { fd.getAll(k).forEach(function (v) { qs.append(k, v); }); });
+    ['min_rating','location','category','activity','activity_days'].forEach(function (k) {
+      var v = fd.get(k); if (v) qs.append(k, v);
+    });
+    ['exclude_penalised','consent_only'].forEach(function (k) { if (fd.get(k)) qs.append(k, 1); });
+
+    fetch(url + '?' + qs.toString(), { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        document.getElementById('aud-count').textContent = d.count;
+        var btn = document.getElementById('aud-count-btn');
+        if (btn) btn.textContent = d.count;
+        var names = (d.sample || []).map(function (s) { return s.name; }).join(', ');
+        document.getElementById('aud-sample').textContent =
+          d.count ? ('e.g. ' + names + (d.count > 8 ? ' and ' + (d.count - 8) + ' more' : '')) : 'No vendors match these filters.';
+      })
+      .catch(function () {});
+  }
+
+  form.querySelectorAll('.aud-f').forEach(function (el) {
+    el.addEventListener('change', function () { clearTimeout(timer); timer = setTimeout(refresh, 250); });
+    el.addEventListener('keyup', function () { clearTimeout(timer); timer = setTimeout(refresh, 450); });
+  });
+  refresh();
+})();
+</script>

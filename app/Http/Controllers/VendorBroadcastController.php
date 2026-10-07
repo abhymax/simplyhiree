@@ -47,14 +47,22 @@ class VendorBroadcastController extends Controller
             ->latest()
             ->paginate(20);
 
-        // Audience size
-        $audience = $this->audienceQuery($scope)->count();
+        // Audience size (respects any filters already chosen)
+        $filters  = $this->filtersFromRequest($request);
+        $audience = $this->audienceQuery($scope, $filters)->count();
 
         return view('vendor_broadcasts.index', [
-            'broadcasts' => $broadcasts,
-            'templates'  => self::TEMPLATES,
-            'audience'   => $audience,
-            'scope'      => $scope,
+            'broadcasts'  => $broadcasts,
+            'templates'   => self::TEMPLATES,
+            'audience'    => $audience,
+            'scope'       => $scope,
+            'filters'     => $filters,
+            'tierOptions' => User::role('partner')->whereNull('parent_partner_id')
+                                ->whereNotNull('partner_tier')->distinct()
+                                ->orderBy('partner_tier')->pluck('partner_tier')->filter()->values(),
+            'planOptions' => User::role('partner')->whereNull('parent_partner_id')
+                                ->whereNotNull('partner_plan')->distinct()
+                                ->orderBy('partner_plan')->pluck('partner_plan')->filter()->values(),
         ]);
     }
 
@@ -68,8 +76,11 @@ class VendorBroadcastController extends Controller
             'channels.*'   => 'in:whatsapp,email',
         ]);
 
+        $request->validate(self::FILTER_RULES);
+
         $scope = $this->resolveScope();
-        $partners = $this->audienceQuery($scope)->get();
+        $filters = $this->filtersFromRequest($request);
+        $partners = $this->audienceQuery($scope, $filters)->get();
 
         if ($partners->isEmpty()) {
             return back()->withInput()->with('error', 'No partners in your audience right now. Nothing was sent.');
@@ -180,6 +191,13 @@ class VendorBroadcastController extends Controller
                 'error'          => $err,
                 'delivered_at'   => $rowSucceeded ? now() : null,
             ]);
+
+            // Persist progress as we go. A large audience can outrun the web
+            // request timeout, and counts written only at the end would then
+            // stay at 0 even though hundreds of messages had gone out.
+            if ((($sent + $failed) % 25) === 0) {
+                $broadcast->update(['sent_count' => $sent, 'failed_count' => $failed]);
+            }
         }
 
         $broadcast->update(['sent_count' => $sent, 'failed_count' => $failed]);
@@ -301,6 +319,42 @@ class VendorBroadcastController extends Controller
      * Resolve who's calling — admin or client — and what audience they
      * can reach.
      */
+    /** Pull the targeting filters out of the request. */
+    private function filtersFromRequest(Request $request): array
+    {
+        return [
+            'tier'              => array_filter((array) $request->input('tier', [])),
+            'plan'              => array_filter((array) $request->input('plan', [])),
+            'min_rating'        => $request->input('min_rating'),
+            'location'          => trim((string) $request->input('location', '')) ?: null,
+            'category'          => trim((string) $request->input('category', '')) ?: null,
+            'activity'          => $request->input('activity', 'any'),
+            'activity_days'     => (int) $request->input('activity_days', 30) ?: 30,
+            'exclude_penalised' => (bool) $request->boolean('exclude_penalised'),
+            'consent_only'      => (bool) $request->boolean('consent_only'),
+            'exclude_ids'       => array_filter((array) $request->input('exclude_ids', [])),
+        ];
+    }
+
+    /** Live audience preview for the compose form (count + a few names). */
+    public function preview(Request $request)
+    {
+        $request->validate(self::FILTER_RULES);
+        $scope   = $this->resolveScope();
+        $filters = $this->filtersFromRequest($request);
+        $query   = $this->audienceQuery($scope, $filters);
+
+        return response()->json([
+            'count'  => (clone $query)->count(),
+            'sample' => (clone $query)->limit(8)->get(['id', 'name', 'partner_tier', 'partner_plan'])
+                            ->map(fn ($u) => [
+                                'id'   => $u->id,
+                                'name' => $u->name,
+                                'meta' => trim(($u->partner_tier ?? '') . ' ' . ($u->partner_plan ?? '')),
+                            ]),
+        ]);
+    }
+
     private function resolveScope(): array
     {
         $u = Auth::user();
@@ -320,12 +374,77 @@ class VendorBroadcastController extends Controller
      * Build the audience query: admin = all active partner-owners;
      * client = vendors connected to that client (preferred + invited-joined).
      */
-    private function audienceQuery(array $scope)
+    /**
+     * Allowed targeting filters, surfaced in the compose form so an operator
+     * can narrow the audience instead of always messaging every vendor.
+     */
+    public const FILTER_RULES = [
+        'tier'            => 'nullable|array',
+        'tier.*'          => 'string|max:40',
+        'plan'            => 'nullable|array',
+        'plan.*'          => 'string|max:40',
+        'min_rating'      => 'nullable|numeric|min:0|max:5',
+        'location'        => 'nullable|string|max:120',
+        'category'        => 'nullable|string|max:120',
+        'activity'        => 'nullable|in:any,active,dormant,never',
+        'activity_days'   => 'nullable|integer|min:1|max:365',
+        'exclude_penalised' => 'nullable|boolean',
+        'consent_only'    => 'nullable|boolean',
+        'exclude_ids'     => 'nullable|array',
+        'exclude_ids.*'   => 'integer',
+    ];
+
+    private function audienceQuery(array $scope, array $f = [])
     {
         $base = User::role('partner')
             ->whereNull('parent_partner_id')
             ->where('status', 'active')
             ->with('profile');
+
+        // --- targeting filters ---
+        if (!empty($f['tier'])) {
+            $base->whereIn('partner_tier', (array) $f['tier']);
+        }
+        if (!empty($f['plan'])) {
+            $base->whereIn('partner_plan', (array) $f['plan']);
+        }
+        if (isset($f['min_rating']) && $f['min_rating'] !== null && $f['min_rating'] !== '') {
+            $base->where('avg_rating', '>=', (float) $f['min_rating']);
+        }
+        if (!empty($f['exclude_penalised'])) {
+            $base->where(fn ($q) => $q->whereNull('penalty_active')->orWhere('penalty_active', false));
+        }
+        if (!empty($f['consent_only'])) {
+            $base->where('marketing_consent', true);
+        }
+        if (!empty($f['location'])) {
+            $loc = $f['location'];
+            $base->whereHas('profile', fn ($q) => $q->where('preferred_locations', 'like', "%{$loc}%")
+                                                    ->orWhere('location', 'like', "%{$loc}%"));
+        }
+        if (!empty($f['category'])) {
+            $cat = $f['category'];
+            $base->whereHas('profile', fn ($q) => $q->where('specialization', 'like', "%{$cat}%")
+                                                    ->orWhere('skills', 'like', "%{$cat}%"));
+        }
+        $activity = $f['activity'] ?? 'any';
+        if ($activity !== 'any' && $activity !== null) {
+            $days = (int) ($f['activity_days'] ?? 30);
+            $since = now()->subDays($days);
+            $submitted = function ($q) use ($since) {
+                $q->whereHas('sourcedCandidates', fn ($c) => $c->where('created_at', '>=', $since));
+            };
+            if ($activity === 'active') {
+                $base->where($submitted);
+            } elseif ($activity === 'dormant') {
+                $base->whereDoesntHave('sourcedCandidates', fn ($c) => $c->where('created_at', '>=', $since));
+            } elseif ($activity === 'never') {
+                $base->whereDoesntHave('sourcedCandidates');
+            }
+        }
+        if (!empty($f['exclude_ids'])) {
+            $base->whereNotIn('id', array_map('intval', (array) $f['exclude_ids']));
+        }
 
         if ($scope['type'] === 'client') {
             $client = Auth::user();

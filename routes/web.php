@@ -262,6 +262,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             // Broadcast to vendors
             Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
             Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');
+            Route::get('/broadcasts/audience-preview', [\App\Http\Controllers\VendorBroadcastController::class, 'preview'])->name('broadcasts.preview');
             Route::get('/broadcasts/{broadcast}', [\App\Http\Controllers\VendorBroadcastController::class, 'show'])->name('broadcasts.show');
             Route::post('/broadcasts/{broadcast}/retry', [\App\Http\Controllers\VendorBroadcastController::class, 'retryFailed'])->name('broadcasts.retry');
         });
@@ -444,6 +445,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         // Broadcast to my connected vendors
         Route::get('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'index'])->name('broadcasts.index');
         Route::post('/broadcasts', [\App\Http\Controllers\VendorBroadcastController::class, 'store'])->name('broadcasts.store');
+        Route::get('/broadcasts/audience-preview', [\App\Http\Controllers\VendorBroadcastController::class, 'preview'])->name('broadcasts.preview');
         Route::get('/broadcasts/{broadcast}', [\App\Http\Controllers\VendorBroadcastController::class, 'show'])->name('broadcasts.show');
         Route::post('/broadcasts/{broadcast}/retry', [\App\Http\Controllers\VendorBroadcastController::class, 'retryFailed'])->name('broadcasts.retry');
         
