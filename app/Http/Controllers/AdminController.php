@@ -121,9 +121,19 @@ class AdminController extends Controller
         $pendingApplications = JobApplication::where('status', 'Pending Review')->count();
 
         // --- Daily Pulse Data ---
-        $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())->count();
-        $scheduledInterviews = JobApplication::where('hiring_status', 'Interview Scheduled')
-            ->where('interview_at', '>=', Carbon::now())
+        // Counted from interview_rounds, which is the source of truth for
+        // scheduling (the legacy interview_at column only ever mirrors the
+        // latest round, so multi-round interviews were undercounted).
+        $todayInterviews = \App\Models\InterviewRound::where('status', 'Scheduled')
+            ->whereDate('scheduled_at', Carbon::today())
+            ->count();
+        $scheduledInterviews = \App\Models\InterviewRound::where('status', 'Scheduled')
+            ->where('scheduled_at', '>=', Carbon::now())
+            ->count();
+        // Rounds whose slot has passed but were never marked appeared / no-show.
+        // These stall the pipeline silently, so surface them on the card.
+        $awaitingInterviewOutcome = \App\Models\InterviewRound::where('status', 'Scheduled')
+            ->where('scheduled_at', '<', Carbon::now())
             ->count();
         $joiningsThisMonth = JobApplication::where('joined_status', 'Joined')
             ->whereYear('joining_date', Carbon::now()->year)
@@ -220,6 +230,7 @@ class AdminController extends Controller
             'pendingApplications'     => $pendingApplications,
             'todayInterviews'         => $todayInterviews,
             'scheduledInterviews'     => $scheduledInterviews,
+            'awaitingInterviewOutcome' => $awaitingInterviewOutcome,
             'joiningsThisMonth'       => $joiningsThisMonth,
             'revenueThisMonth'        => $revenueThisMonth,
             'revenueThisQuarter'      => $revenueThisQuarter,

@@ -88,6 +88,9 @@
                         <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-fuchsia-200">Interviews Scheduled</h3><i class="fa-solid fa-video text-fuchsia-400"></i></div>
                         <p class="mt-3 text-3xl font-extrabold text-white">{{ $scheduledInterviews }}</p>
                         <p class="mt-3 text-xs text-blue-300">{{ $todayInterviews }} scheduled today</p>
+                        @if(($awaitingInterviewOutcome ?? 0) > 0)
+                            <p class="mt-1 text-xs font-bold text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1"></i>{{ $awaitingInterviewOutcome }} past due &mdash; outcome not marked</p>
+                        @endif
                     </a>
 
                     <a href="{{ route('admin.applications.index', ['joined_status' => 'Joined']) }}" class="master-metric-card min-h-28 rounded-2xl border border-emerald-400/20 p-4 transition">
