@@ -34,7 +34,39 @@ class PartnerController extends Controller
 
     private function ownsCandidate($partner, Candidate $candidate): bool
     {
-        return in_array((int) $candidate->partner_id, $this->partnerPoolIds($partner), true);
+        if (!in_array((int) $candidate->partner_id, $this->partnerPoolIds($partner), true)) {
+            return false;
+        }
+
+        // A team member only reaches candidates they added themselves.
+        if ($partner->isPartnerTeamMember()) {
+            return (int) $candidate->added_by_user_id === (int) $partner->id;
+        }
+
+        return true;
+    }
+
+    /**
+     * Restrict a candidates query for team members to their own submissions.
+     * The account owner keeps full visibility of the team's pool.
+     */
+    private function scopeOwnCandidates($query, $partner)
+    {
+        if ($partner->isPartnerTeamMember()) {
+            $query->where('added_by_user_id', (int) $partner->id);
+        }
+        return $query;
+    }
+
+    /**
+     * Restrict a job-applications query for team members to what they submitted.
+     */
+    private function scopeOwnApplications($query, $partner)
+    {
+        if ($partner->isPartnerTeamMember()) {
+            $query->where('submitted_by_user_id', (int) $partner->id);
+        }
+        return $query;
     }
 
     public function upgrade()
@@ -318,6 +350,7 @@ class PartnerController extends Controller
 
         $query = JobApplication::whereHas('candidate', $baseScope)
                     ->with(['job', 'candidate', 'interviewRounds', 'assessmentSession.attempts']);
+        $this->scopeOwnApplications($query, $partner);
 
         // Filter: Interviews Today
         if ($request->has('interview_today')) {
@@ -459,6 +492,12 @@ class PartnerController extends Controller
         // Ensure this application's candidate belongs to this partner team.
         if (!$application->candidate || !$teamPartnerIds->contains((int) $application->candidate->partner_id)) {
             abort(403);
+        }
+
+        // Team members can only open applications they submitted themselves.
+        if ($partner->isPartnerTeamMember()
+            && (int) $application->submitted_by_user_id !== (int) $partner->id) {
+            abort(403, 'You can only view candidates you submitted.');
         }
 
         $application->load(['job', 'candidate', 'interviewRounds']);
@@ -780,6 +819,7 @@ class PartnerController extends Controller
         $resumeFingerprint = $duplicateService->fingerprint($request->file('resume'));
         $assessment = $duplicateService->assess($ownerId, $validatedData['email'] ?? null, $validatedData['phone_number'], $resumeFingerprint);
         $validatedData['partner_id'] = $ownerId;
+        $validatedData['added_by_user_id'] = (int) $partner->id;
         $validatedData['resume_fingerprint'] = $resumeFingerprint;
         $validatedData['duplicate_status'] = 'clear';
         $validatedData['preferred_locations'] = array_values(array_filter(array_map('trim', explode(',', $validatedData['preferred_locations']))));
@@ -810,6 +850,7 @@ class PartnerController extends Controller
         $poolIds = $this->partnerPoolIds($partner);
 
         $query = Candidate::whereIn('partner_id', $poolIds);
+        $this->scopeOwnCandidates($query, $partner);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {

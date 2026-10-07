@@ -10,6 +10,19 @@ use App\Services\DuplicateCandidateService;
 
 class PartnerCandidateController extends Controller
 {
+    /** The partner account owner plus its team members. */
+    private function poolIds($partner): array
+    {
+        $ownerId = (int) $partner->partnerOwnerId();
+
+        return \App\Models\User::query()
+            ->whereKey($ownerId)
+            ->orWhere('parent_partner_id', $ownerId)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function index(Request $request)
     {
         $partner = $request->user();
@@ -19,7 +32,9 @@ class PartnerCandidateController extends Controller
         }
 
         $query = Candidate::query()
-            ->where('partner_id', $partner->id);
+            ->whereIn('partner_id', $this->poolIds($partner))
+            ->when($partner->isPartnerTeamMember(),
+                fn ($q) => $q->where('added_by_user_id', (int) $partner->id));
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -83,7 +98,8 @@ class PartnerCandidateController extends Controller
 
         $duplicateService = app(DuplicateCandidateService::class);
         $assessment = $duplicateService->assess($partner->id, $validated['email'] ?? null, $validated['phone_number']);
-        $validated['partner_id'] = $partner->id;
+        $validated['partner_id'] = (int) $partner->partnerOwnerId();
+        $validated['added_by_user_id'] = (int) $partner->id;
         $validated['duplicate_status'] = 'clear';
         $candidate = Candidate::create($validated);
         $duplicateService->quarantine($candidate, $assessment, 'candidate_create_api');
@@ -104,7 +120,9 @@ class PartnerCandidateController extends Controller
             return response()->json(['message' => 'Only partner users can access this endpoint.'], 403);
         }
 
-        if ((int) $candidate->partner_id !== (int) $partner->id) {
+        if (!in_array((int) $candidate->partner_id, $this->poolIds($partner), true)
+            || ($partner->isPartnerTeamMember()
+                && (int) $candidate->added_by_user_id !== (int) $partner->id)) {
             return response()->json(['message' => 'Candidate not found.'], 404);
         }
 
@@ -119,7 +137,9 @@ class PartnerCandidateController extends Controller
             return response()->json(['message' => 'Only partner users can access this endpoint.'], 403);
         }
 
-        if ((int) $candidate->partner_id !== (int) $partner->id) {
+        if (!in_array((int) $candidate->partner_id, $this->poolIds($partner), true)
+            || ($partner->isPartnerTeamMember()
+                && (int) $candidate->added_by_user_id !== (int) $partner->id)) {
             return response()->json(['message' => 'Candidate not found.'], 404);
         }
 

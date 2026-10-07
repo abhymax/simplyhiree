@@ -44,6 +44,7 @@ class Candidate extends Model
         'skills',
         'resume_path',
         'resume_fingerprint',
+        'added_by_user_id',
         'duplicate_status',
         'duplicate_blocked_job_id',
         'duplicate_of_candidate_id',
