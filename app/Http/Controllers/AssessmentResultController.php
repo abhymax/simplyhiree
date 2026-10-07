@@ -34,6 +34,16 @@ class AssessmentResultController extends Controller
             // Clients only see results for jobs that are live (approved by admin) —
             // never for jobs still pending approval / on hold / rejected.
             $query->whereHas('job', fn ($q) => $q->where('user_id', $ownerId)->where('status', 'approved'));
+
+            // ...and only once the candidate's CV has cleared admin screening.
+            // A vendor submission starts its assessment immediately, so without
+            // this gate a client would see results for candidates whose CV is
+            // still pending review or was rejected. Mirrors the visibility rule
+            // used by the applicants and applications lists.
+            $query->whereHas('application', function ($a) {
+                $a->where('status', 'Approved')
+                  ->orWhereHas('job', fn ($j) => $j->where('screening_required', false));
+            });
         }
 
         return $query;
