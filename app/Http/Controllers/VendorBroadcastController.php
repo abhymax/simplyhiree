@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendVendorBroadcastMessage;
 use App\Models\User;
 use App\Models\VendorBroadcast;
 use App\Models\VendorBroadcastRecipient;
@@ -104,106 +105,15 @@ class VendorBroadcastController extends Controller
         $useWhatsapp = in_array('whatsapp', $validated['channels'], true);
         $useEmail    = in_array('email', $validated['channels'], true);
 
-        // Register a one-off "broadcast_smtp" mailer that talks to the local
-        // Exim listener directly. The sendmail binary path hits
-        // "Cannot open /var/log/exim_mainlog: Permission denied" under PHP-FPM
-        // when called in a tight loop, so we bypass it and use SMTP/127.0.0.1.
-        config(['mail.mailers.broadcast_smtp' => [
-            'transport'   => 'smtp',
-            'host'        => '127.0.0.1',
-            'port'        => 25,
-            'encryption'  => null,
-            'username'    => null,
-            'password'    => null,
-            'timeout'     => 10,
-            'local_domain' => 'simplyhiree.com',
-            'verify_peer' => false,
-        ]]);
-
-        $sent = 0;
-        $failed = 0;
-
+        // Hand each recipient to the queue. Sending inline could not finish a
+        // large audience inside the web request, so most vendors were silently
+        // never contacted. Jobs go on a dedicated "broadcasts" queue.
         foreach ($partners as $p) {
-            $waStatus = $emStatus = null;
-            $err = null;
-
-            // --- WhatsApp ---
-            if ($useWhatsapp) {
-                $phone = optional($p->profile)->phone_number ?: $p->phone ?? null;
-                if (!$phone) {
-                    $waStatus = 'skipped';
-                    $err = 'no_phone';
-                } else {
-                    try {
-                        $res = $whatsapp->sendEventAlert(
-                            $phone,
-                            'vendor_broadcast',
-                            $validated['subject'],
-                            $validated['body'],
-                            ['template_params' => [
-                                $p->name ?? 'Partner',
-                                $validated['subject'],
-                                mb_strimwidth($validated['body'], 0, 280, '…'),
-                            ]]
-                        );
-                        $waStatus = ($res['ok'] ?? false) ? 'sent' : 'failed';
-                        if (!($res['ok'] ?? false)) $err = $res['error'] ?? 'whatsapp_failed';
-                    } catch (\Throwable $e) {
-                        $waStatus = 'failed';
-                        $err = $e->getMessage();
-                    }
-                }
-            }
-
-            // --- Email ---
-            if ($useEmail && !empty($p->email)) {
-                try {
-                    Mail::mailer('broadcast_smtp')->send('vendor_broadcasts.email', [
-                        'partner'   => $p,
-                        'subject'   => $validated['subject'],
-                        'body'      => $validated['body'],
-                        'broadcast' => $broadcast,
-                    ], function ($message) use ($p, $validated) {
-                        $message->to($p->email, $p->name)
-                            ->subject('[SimplyHiree] ' . $validated['subject']);
-                    });
-                    $emStatus = 'sent';
-                } catch (\Throwable $e) {
-                    $emStatus = 'failed';
-                    $err = ($err ? $err . ' | ' : '') . 'email: ' . $e->getMessage();
-                    Log::warning('Vendor broadcast email failed', ['partner_id' => $p->id, 'broadcast_id' => $broadcast->id, 'err' => $e->getMessage()]);
-                }
-            }
-
-            // Pace the loop so Exim isn't hammered (the sendmail binary
-            // would crash with permission errors under PHP-FPM otherwise).
-            // 80ms × 50 partners ≈ 4 sec — well within request timeout.
-            usleep(80000);
-
-            $rowSucceeded = ($waStatus === 'sent') || ($emStatus === 'sent');
-            $rowSucceeded ? $sent++ : $failed++;
-
-            VendorBroadcastRecipient::create([
-                'broadcast_id'   => $broadcast->id,
-                'partner_id'     => $p->id,
-                'whatsapp_status' => $waStatus,
-                'email_status'   => $emStatus,
-                'error'          => $err,
-                'delivered_at'   => $rowSucceeded ? now() : null,
-            ]);
-
-            // Persist progress as we go. A large audience can outrun the web
-            // request timeout, and counts written only at the end would then
-            // stay at 0 even though hundreds of messages had gone out.
-            if ((($sent + $failed) % 25) === 0) {
-                $broadcast->update(['sent_count' => $sent, 'failed_count' => $failed]);
-            }
+            SendVendorBroadcastMessage::dispatch($broadcast->id, $p->id, $useWhatsapp, $useEmail);
         }
 
-        $broadcast->update(['sent_count' => $sent, 'failed_count' => $failed]);
-
-        $msg = "Broadcast sent to {$sent} of {$partners->count()} partners.";
-        if ($failed > 0) $msg .= " ({$failed} failed — see history)";
+        $msg = "Broadcast queued for {$partners->count()} vendors. Delivery runs in the background — "
+             . "watch the history below for live sent / failed counts.";
 
         return redirect()->route($scope['route'])->with('success', $msg);
     }
@@ -212,28 +122,12 @@ class VendorBroadcastController extends Controller
      * Re-attempt delivery for recipients that previously failed.
      * Skips partners that already succeeded via either channel.
      */
-    public function retryFailed(VendorBroadcast $broadcast, AiSensyWhatsAppService $whatsapp)
+    public function retryFailed(VendorBroadcast $broadcast)
     {
         $scope = $this->resolveScope();
         if ($scope['type'] === 'client' && (int) $broadcast->sender_id !== (int) Auth::id()) abort(403);
 
-        // Same one-off broadcast_smtp mailer config
-        config(['mail.mailers.broadcast_smtp' => [
-            'transport'    => 'smtp',
-            'host'         => '127.0.0.1',
-            'port'         => 25,
-            'encryption'   => null,
-            'username'     => null,
-            'password'     => null,
-            'timeout'      => 10,
-            'local_domain' => 'simplyhiree.com',
-            'verify_peer'  => false,
-        ]]);
-
-        $failures = $broadcast->recipients()
-            ->whereNull('delivered_at')
-            ->with('partner')
-            ->get();
+        $failures = $broadcast->recipients()->whereNull('delivered_at')->get();
 
         if ($failures->isEmpty()) {
             return back()->with('success', 'Nothing to retry — all recipients already delivered.');
@@ -243,82 +137,14 @@ class VendorBroadcastController extends Controller
         $useWhatsapp = in_array('whatsapp', $channels, true);
         $useEmail    = in_array('email', $channels, true);
 
-        $newlySent = 0;
         foreach ($failures as $rec) {
-            $p = $rec->partner;
-            if (!$p) continue;
-
-            $waStatus = $rec->whatsapp_status;
-            $emStatus = $rec->email_status;
-            $err = null;
-
-            if ($useWhatsapp && $waStatus !== 'sent') {
-                $phone = optional($p->profile)->phone_number ?: $p->phone ?? null;
-                if ($phone) {
-                    try {
-                        $res = $whatsapp->sendEventAlert($phone, 'vendor_broadcast', $broadcast->subject, $broadcast->body,
-                            ['template_params' => [$p->name ?? 'Partner', $broadcast->subject, mb_strimwidth($broadcast->body, 0, 280, '…')]]);
-                        $waStatus = ($res['ok'] ?? false) ? 'sent' : 'failed';
-                        if (!($res['ok'] ?? false)) $err = $res['error'] ?? 'whatsapp_failed';
-                    } catch (\Throwable $e) {
-                        $waStatus = 'failed';
-                        $err = $e->getMessage();
-                    }
-                } else {
-                    $waStatus = 'skipped';
-                    $err = 'no_phone';
-                }
-            }
-
-            if ($useEmail && $emStatus !== 'sent' && !empty($p->email)) {
-                try {
-                    Mail::mailer('broadcast_smtp')->send('vendor_broadcasts.email', [
-                        'partner' => $p, 'subject' => $broadcast->subject, 'body' => $broadcast->body, 'broadcast' => $broadcast,
-                    ], function ($m) use ($p, $broadcast) {
-                        $m->to($p->email, $p->name)->subject('[SimplyHiree] ' . $broadcast->subject);
-                    });
-                    $emStatus = 'sent';
-                } catch (\Throwable $e) {
-                    $emStatus = 'failed';
-                    $err = ($err ? $err . ' | ' : '') . 'email: ' . $e->getMessage();
-                }
-            }
-
-            $rowOk = ($waStatus === 'sent') || ($emStatus === 'sent');
-            $rec->update([
-                'whatsapp_status' => $waStatus,
-                'email_status'    => $emStatus,
-                'error'           => $rowOk ? null : $err,
-                'delivered_at'    => $rowOk ? now() : null,
-            ]);
-            if ($rowOk) $newlySent++;
-            usleep(80000);
+            if (!$rec->partner_id) continue;
+            SendVendorBroadcastMessage::dispatch($broadcast->id, (int) $rec->partner_id, $useWhatsapp, $useEmail);
         }
 
-        // Recompute counts
-        $broadcast->update([
-            'sent_count'   => $broadcast->recipients()->whereNotNull('delivered_at')->count(),
-            'failed_count' => $broadcast->recipients()->whereNull('delivered_at')->count(),
-        ]);
-
-        return back()->with('success', "Retry complete. {$newlySent} of {$failures->count()} previously-failed recipients now delivered.");
+        return back()->with('success', 'Re-queued ' . $failures->count() . ' recipient(s). Delivery runs in the background.');
     }
 
-    public function show(VendorBroadcast $broadcast)
-    {
-        $scope = $this->resolveScope();
-        // Clients can only see their own broadcasts
-        if ($scope['type'] === 'client' && (int) $broadcast->sender_id !== (int) Auth::id()) {
-            abort(403);
-        }
-        $broadcast->load(['sender', 'recipients.partner']);
-        return view('vendor_broadcasts.show', compact('broadcast'));
-    }
-
-    /**
-     * Resolve who's calling — admin or client — and what audience they
-     * can reach.
-     */
     /** Pull the targeting filters out of the request. */
     private function filtersFromRequest(Request $request): array
     {
