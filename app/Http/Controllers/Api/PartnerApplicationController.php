@@ -19,10 +19,20 @@ class PartnerApplicationController extends Controller
 
         $perPage = max(min((int) $request->input('per_page', 20), 100), 1);
 
+        // Candidates belong to the partner-account owner, so scope to the
+        // owner's tree; a team member only sees what they submitted.
+        $ownerId = (int) $partner->partnerOwnerId();
+        $poolIds = \App\Models\User::query()
+            ->whereKey($ownerId)
+            ->orWhere('parent_partner_id', $ownerId)
+            ->pluck('id');
+
         $applications = JobApplication::query()
-            ->whereHas('candidate', function ($query) use ($partner) {
-                $query->where('partner_id', $partner->id);
+            ->whereHas('candidate', function ($query) use ($poolIds) {
+                $query->whereIn('partner_id', $poolIds);
             })
+            ->when($partner->isPartnerTeamMember(),
+                fn ($q) => $q->where('submitted_by_user_id', (int) $partner->id))
             ->with(['job', 'candidate'])
             ->latest()
             ->paginate($perPage)
