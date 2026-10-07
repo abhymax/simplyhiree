@@ -9,10 +9,11 @@
      {{ optional($app->job)->title }} @ {{ optional($app->job)->company_name }}.
      The SimplyHiree letterhead &amp; director signature are added automatically.</p>
 
-  <form method="POST" action="{{ route('admin.offer-letters.store') }}" onsubmit="document.getElementById('body_html').value = document.getElementById('editor').innerHTML;">
+  <form method="POST" action="{{ isset($letter) ? route('admin.offer-letters.update', $letter) : route('admin.offer-letters.store') }}" onsubmit="document.getElementById('body_html').value = document.getElementById('editor').innerHTML;">
+    @isset($letter) @method('PATCH') @endisset
     @csrf
     <input type="hidden" name="job_application_id" value="{{ $app->id }}">
-    <input type="hidden" name="template_id" value="{{ $template->id }}">
+    <input type="hidden" name="template_id" value="{{ optional($template)->id }}">
     <input type="hidden" name="body_html" id="body_html">
 
     <label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Document heading *</label>
@@ -75,7 +76,7 @@
 
     <div class="flex justify-end gap-3 mt-5">
       <button type="button" onclick="previewOffer()" class="rounded-xl border border-cyan-300/40 bg-cyan-500/10 text-cyan-100 font-bold px-5 py-3 hover:bg-cyan-500/20"><i class="fa-solid fa-eye mr-1"></i>Preview PDF</button>
-      <button type="submit" name="action" value="draft" class="rounded-xl border border-white/15 text-slate-100 font-bold px-5 py-3 hover:bg-white/10">Save draft</button>
+      <button type="submit" name="action" value="draft" class="rounded-xl border border-white/15 text-slate-100 font-bold px-5 py-3 hover:bg-white/10">{{ isset($letter) ? 'Update draft' : 'Save draft' }}</button>
       <button type="submit" name="action" value="send" class="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold px-6 py-3" onclick="return confirm('Generate the PDF and email it to the candidate now?');">Generate &amp; Send</button>
     </div>
   </form>

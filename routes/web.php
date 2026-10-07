@@ -362,6 +362,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
                 Route::get('/signatures/{offerSignature}/edit', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.edit');
                 Route::patch('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.update');
                 Route::delete('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureDelete'])->name('signature.delete');
+                Route::get('/{offerLetter}/edit', [\App\Http\Controllers\OfferLetterController::class, 'edit'])->name('edit');
+                Route::patch('/{offerLetter}', [\App\Http\Controllers\OfferLetterController::class, 'update'])->name('update');
                 Route::get('/{offerLetter}/download', [\App\Http\Controllers\OfferLetterController::class, 'download'])->name('download');
             });
 

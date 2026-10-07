@@ -122,6 +122,112 @@ class OfferLetterController extends Controller
         ]);
     }
 
+    /**
+     * Reopen a saved draft in the compose screen.
+     *
+     * The stored body already has the signature block substituted, so swap it
+     * back to the {{signature_block}} token. Otherwise saving again would
+     * append a second signature, and the signatory could never be changed.
+     */
+    public function edit(OfferLetter $offerLetter)
+    {
+        if ($offerLetter->status === 'sent') {
+            return redirect()->route('admin.offer-letters.index')
+                ->with('error', 'This letter has already been sent, so it cannot be edited. Create a new one instead.');
+        }
+
+        $app = JobApplication::with(['job', 'candidate', 'candidateUser'])
+            ->findOrFail($offerLetter->job_application_id);
+
+        $body = $this->signatureBlockToToken((string) $offerLetter->body_html);
+
+        // Re-read the structured values straight from the body's tagged spans,
+        // so the Offer Details panel shows what was saved.
+        $fields = [];
+        foreach (['ref_no', 'department', 'reporting_to', 'monthly_ctc', 'annual_ctc'] as $f) {
+            preg_match('/<span data-field="' . $f . '">(.*?)<\/span>/s', $body, $m);
+            $value = isset($m[1]) ? trim(strip_tags($m[1])) : '';
+            $fields[$f] = ($value === '' || str_starts_with($value, '____')) ? '' : $value;
+        }
+
+        $template = $offerLetter->template_id
+            ? OfferLetterTemplate::find($offerLetter->template_id)
+            : OfferLetterTemplate::where('is_active', true)->first();
+
+        return view('admin.offer_letters.compose', [
+            'app'        => $app,
+            'template'   => $template,
+            'letter'     => $offerLetter,
+            'bodyHtml'   => $body,
+            'subject'    => $offerLetter->subject,
+            'heading'    => $offerLetter->heading ?: 'OFFER LETTER',
+            'tokens'     => [],
+            'fields'     => $fields,
+            'signatures' => OfferLetterSignature::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
+        ]);
+    }
+
+    /** Save changes to a draft, optionally sending it. */
+    public function update(Request $request, OfferLetter $offerLetter)
+    {
+        if ($offerLetter->status === 'sent') {
+            return redirect()->route('admin.offer-letters.index')
+                ->with('error', 'This letter has already been sent, so it cannot be edited.');
+        }
+
+        $data = $request->validate([
+            'subject'      => 'required|string|max:255',
+            'heading'      => 'nullable|string|max:120',
+            'body_html'    => 'required|string',
+            'signature_id' => 'nullable|exists:offer_letter_signatures,id',
+            'action'       => 'required|in:send,draft',
+        ]);
+
+        $app = JobApplication::with(['job', 'candidate', 'candidateUser'])
+            ->findOrFail($offerLetter->job_application_id);
+        $email = $app->candidate->email ?? $app->candidateUser->email ?? null;
+
+        $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
+
+        $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
+        $sigBlock = $this->signatureBlockHtml($sig);
+        $finalBody = str_contains($data['body_html'], '{{signature_block}}')
+            ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
+            : $data['body_html'] . $sigBlock;
+
+        $heading = trim((string) ($data['heading'] ?? '')) ?: 'OFFER LETTER';
+        $pdf = $this->renderPdf($data['subject'], $finalBody, $heading);
+
+        // Replace the previous PDF rather than leaving orphans behind.
+        if ($offerLetter->pdf_path) {
+            Storage::disk('public')->delete($offerLetter->pdf_path);
+        }
+        $fileName = 'offer-letters/offer_' . $app->id . '_' . now()->format('Ymd_His') . '.pdf';
+        Storage::disk('public')->put($fileName, $pdf);
+
+        $offerLetter->update([
+            'subject'                  => $data['subject'],
+            'heading'                  => $heading,
+            'body_html'                => $finalBody,
+            'pdf_path'                 => $fileName,
+            'signatory_name'           => $sig?->name,
+            'signatory_designation'    => $sig?->designation,
+            'signatory_signature_path' => $sig?->signature_path,
+        ]);
+
+        if ($data['action'] === 'send') {
+            if (!$email) {
+                return redirect()->route('admin.offer-letters.index')
+                    ->with('error', 'Draft updated but the candidate has no email on file, so it was not sent.');
+            }
+            $this->sendEmails($offerLetter->fresh(), $pdf, $email);
+            $offerLetter->update(['status' => 'sent', 'sent_at' => now()]);
+            return redirect()->route('admin.offer-letters.index')->with('success', 'Offer letter sent to ' . $email . '.');
+        }
+
+        return redirect()->route('admin.offer-letters.index')->with('success', 'Draft updated.');
+    }
+
     /** Final: generate the PDF, save, email candidate + admin. */
     public function store(Request $request)
     {
@@ -406,6 +512,62 @@ class OfferLetterController extends Controller
         $html = preg_replace('/\sclass="Mso[^"]*"/i', '', $html) ?? $html;
 
         return $html;
+    }
+
+    /**
+     * Swap a rendered signature block back to the {{signature_block}} token.
+     *
+     * Parsed with DOM rather than a regex: the block contains a nested div and
+     * is followed by the acceptance section, so pattern matching either stops
+     * short and orphans a closing tag, or runs past the end of the block. Get
+     * this wrong and the letter ends up with two signatures.
+     */
+    private function signatureBlockToToken(string $html): string
+    {
+        if (!str_contains($html, 'sigblock')) {
+            return $html;
+        }
+
+        $doc = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $loaded = $doc->loadHTML(
+            '<?xml encoding="UTF-8"?><div id="olroot">' . $html . '</div>',
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+        );
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        if (!$loaded) {
+            return $html;
+        }
+
+        $xpath = new \DOMXPath($doc);
+        $nodes = $xpath->query("//div[contains(concat(' ', normalize-space(@class), ' '), ' sigblock ')]");
+        if (!$nodes || $nodes->length === 0) {
+            return $html;
+        }
+
+        $first = true;
+        foreach (iterator_to_array($nodes) as $node) {
+            // Keep one token; drop any duplicates that crept in earlier.
+            $replacement = $first
+                ? $doc->createTextNode('{{signature_block}}')
+                : $doc->createTextNode('');
+            $node->parentNode->replaceChild($replacement, $node);
+            $first = false;
+        }
+
+        $root = $xpath->query("//div[@id='olroot']")->item(0);
+        if (!$root) {
+            return $html;
+        }
+
+        $out = '';
+        foreach ($root->childNodes as $child) {
+            $out .= $doc->saveHTML($child);
+        }
+
+        return $out !== '' ? $out : $html;
     }
 
     private function signatureBlockHtml(?OfferLetterSignature $sig): string
