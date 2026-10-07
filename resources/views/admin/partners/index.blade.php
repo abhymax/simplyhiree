@@ -129,6 +129,9 @@
                                                     {{ $user->name }}
                                                 </a>
                                                 <div class="text-xs text-slate-400 mt-0.5">{{ $user->email }}</div>
+                                                @if(($user->team_members_count ?? 0) > 0)
+                                                    <div class="text-[10px] font-bold text-indigo-300 mt-0.5"><i class="fa-solid fa-user-group mr-1"></i>{{ $user->team_members_count }} team member{{ $user->team_members_count == 1 ? '' : 's' }}</div>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>

@@ -923,7 +923,9 @@ class AdminController extends Controller
             $q->where('user_id', $user->id);
         })->whereIn('hiring_status', ['Joined', 'Selected'])->count();
 
-        return view('admin.clients.show', compact('user', 'jobs', 'totalJobs', 'activeJobs', 'totalHires'));
+        $teamMembers = $user->teamMembers()->orderBy('name')->get();
+
+        return view('admin.clients.show', compact('user', 'jobs', 'totalJobs', 'activeJobs', 'totalHires', 'teamMembers'));
     }
 
     // --- CLIENT COMMERCIALS (Permanent Hiring Format) ---
@@ -1076,7 +1078,11 @@ class AdminController extends Controller
 
     public function listPartners(Request $request)
     {
-        $query = User::role('partner')->with(['partnerProfile', 'profile']);
+        // Same as clients: team members are sub-users of a vendor, not vendors.
+        $query = User::role('partner')
+            ->whereNull('parent_partner_id')
+            ->with(['partnerProfile', 'profile'])
+            ->withCount('teamMembers');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -1261,7 +1267,13 @@ class AdminController extends Controller
     {
         if (!$user->hasRole('partner')) abort(404);
         $user->load(['partnerProfile', 'profile']);
-        return view('admin.partners.show', ['user' => $user, 'profile' => $user->partnerProfile]);
+        $teamMembers = $user->teamMembers()->orderBy('name')->get();
+
+        return view('admin.partners.show', [
+            'user' => $user,
+            'profile' => $user->partnerProfile,
+            'teamMembers' => $teamMembers,
+        ]);
     }
 
     // --- JOB MANAGEMENT ---

@@ -218,4 +218,53 @@
             </div>
         </div>
     </div>
+
+    {{-- Team members --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+        <div class="rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                <h3 class="text-white font-bold"><i class="fa-solid fa-user-group text-indigo-300 mr-2"></i>Team Members</h3>
+                <span class="text-xs font-bold text-slate-300">{{ $teamMembers->count() }}</span>
+            </div>
+            @if($teamMembers->isEmpty())
+                <p class="px-6 py-6 text-sm text-slate-400">This client has not added any team members.</p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-white/5 text-left text-xs uppercase tracking-wide text-slate-300">
+                            <tr>
+                                <th class="px-6 py-3">Member</th>
+                                <th class="px-6 py-3">Role</th>
+                                <th class="px-6 py-3">Modules they can access</th>
+                                <th class="px-6 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-white">
+                            @foreach($teamMembers as $m)
+                                @php $mods = is_array($m->team_modules) ? $m->team_modules : []; @endphp
+                                <tr>
+                                    <td class="px-6 py-3">
+                                        <div class="font-bold">{{ $m->name }}</div>
+                                        <div class="text-xs text-slate-400">{{ $m->email }}</div>
+                                    </td>
+                                    <td class="px-6 py-3 text-slate-200">{{ $m->team_role ?: '—' }}</td>
+                                    <td class="px-6 py-3">
+                                        @forelse($mods as $mod)
+                                            <span class="inline-block rounded-md border border-indigo-400/30 bg-indigo-500/15 text-indigo-100 text-[10px] font-bold px-2 py-0.5 mr-1 mb-1">{{ \App\Http\Controllers\ClientTeamController::MODULES[$mod] ?? $mod }}</span>
+                                        @empty
+                                            <span class="text-xs text-amber-300">No modules assigned &mdash; they can only see the dashboard</span>
+                                        @endforelse
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <span class="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase {{ $m->status === 'active' ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200' : 'border-slate-400/30 bg-slate-500/15 text-slate-300' }}">{{ $m->status ?: 'unknown' }}</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
 </x-app-layout>
