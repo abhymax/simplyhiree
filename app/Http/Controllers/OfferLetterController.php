@@ -89,12 +89,18 @@ class OfferLetterController extends Controller
             'monthly_ctc'  => $annual ? $this->inr($annual / 12) : '',
             'annual_ctc'   => $annual ? $this->inr($annual) : '',
         ];
+        // Wrap each value in a tagged span. The compose screen's Offer Details
+        // inputs write into these spans, so what the operator types ends up in
+        // the saved body. Plain text here meant typing changed nothing.
+        $bindable = fn (string $field, string $value) =>
+            '<span data-field="' . $field . '">' . e($value !== '' ? $value : '________') . '</span>';
+
         $fieldTokens = [
-            '{{ref_no}}'       => $fields['ref_no'] ?: '________',
-            '{{department}}'   => $fields['department'] ?: '________',
-            '{{reporting_to}}' => $fields['reporting_to'] ?: '________',
-            '{{monthly_ctc}}'  => $fields['monthly_ctc'] ?: '________',
-            '{{annual_ctc}}'   => $fields['annual_ctc'] ?: '________',
+            '{{ref_no}}'       => $bindable('ref_no', (string) $fields['ref_no']),
+            '{{department}}'   => $bindable('department', (string) $fields['department']),
+            '{{reporting_to}}' => $bindable('reporting_to', (string) $fields['reporting_to']),
+            '{{monthly_ctc}}'  => $bindable('monthly_ctc', (string) $fields['monthly_ctc']),
+            '{{annual_ctc}}'   => $bindable('annual_ctc', (string) $fields['annual_ctc']),
         ];
 
         $monthlyForBreakup = $annual ? $annual / 12 : 0;
@@ -384,13 +390,16 @@ class OfferLetterController extends Controller
                 if ($prop === '' || str_starts_with($prop, '--tw-') || str_starts_with($prop, 'mso-')) {
                     continue;
                 }
-                if (in_array($prop, ['color', 'background', 'background-color', 'background-image'], true)) {
+                if (in_array($prop, ['color', 'background', 'background-color', 'background-image', 'font-family'], true)) {
                     continue;
                 }
                 $keep[] = $prop . ':' . trim($val);
             }
             return $keep ? ' style="' . implode(';', $keep) . '"' : '';
         }, $html) ?? $html;
+
+        // <code>/<tt> force a monospace face in the PDF; keep the text, drop the tag.
+        $html = preg_replace('/<\/?(?:code|tt)\b[^>]*>/i', '', $html) ?? $html;
 
         // Legacy color attributes and empty Word class names
         $html = preg_replace('/\scolor="[^"]*"/i', '', $html) ?? $html;
