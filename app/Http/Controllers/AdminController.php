@@ -100,13 +100,13 @@ class AdminController extends Controller
         $activityService->checkBillingDueAlerts();
 
         $totalUsers = User::count();
-        $totalClients = User::role('client')->count();
-        $activeClients = User::role('client')->where('status', 'active')->count();
+        $totalClients = User::role('client')->whereNull('parent_partner_id')->count();
+        $activeClients = User::role('client')->whereNull('parent_partner_id')->where('status', 'active')->count();
         $inactiveClients = $totalClients - $activeClients;
-        $totalPartners = User::role('partner')->count();
-        $activePartners = User::role('partner')->where('status', 'active')->count();
+        $totalPartners = User::role('partner')->whereNull('parent_partner_id')->count();
+        $activePartners = User::role('partner')->whereNull('parent_partner_id')->where('status', 'active')->count();
         // "restricted" is the platform's enforced blacklist state.
-        $blacklistedPartners = User::role('partner')->where('status', 'restricted')->count();
+        $blacklistedPartners = User::role('partner')->whereNull('parent_partner_id')->where('status', 'restricted')->count();
         // Candidate counts:
         //  - direct  = users with role 'candidate' (signed up themselves)
         //  - vendor  = rows in candidates table (uploaded by partner agencies)
@@ -245,14 +245,27 @@ class AdminController extends Controller
         ]);
     }
 
-    public function dailySchedule()
+    public function dailySchedule(Request $request)
     {
-        $todayInterviews = JobApplication::whereDate('interview_at', Carbon::today())
-            ->with(['job', 'candidate', 'candidateUser.profile', 'job.user'])
-            ->orderBy('interview_at', 'asc')
-            ->get();
+        // Built from interview_rounds, matching the dashboard card. This page
+        // used to query job_applications.interview_at for today only, so the
+        // card could count upcoming interviews and still land on a blank page.
+        $with = ['application.job', 'application.candidate', 'application.candidateUser.profile'];
 
-        return view('admin.daily_interviews', compact('todayInterviews'));
+        $todayRounds = \App\Models\InterviewRound::where('status', 'Scheduled')
+            ->whereDate('scheduled_at', Carbon::today())
+            ->with($with)->orderBy('scheduled_at')->get();
+
+        $upcomingRounds = \App\Models\InterviewRound::where('status', 'Scheduled')
+            ->where('scheduled_at', '>', Carbon::now())
+            ->whereDate('scheduled_at', '>', Carbon::today())
+            ->with($with)->orderBy('scheduled_at')->get();
+
+        $pastDueRounds = \App\Models\InterviewRound::where('status', 'Scheduled')
+            ->where('scheduled_at', '<', Carbon::now())
+            ->with($with)->orderByDesc('scheduled_at')->get();
+
+        return view('admin.daily_interviews', compact('todayRounds', 'upcomingRounds', 'pastDueRounds'));
     }
 
     // --- CANDIDATE (USER) MANAGEMENT ---
