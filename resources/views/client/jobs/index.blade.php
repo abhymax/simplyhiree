@@ -361,11 +361,20 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-extrabold text-emerald-300 uppercase tracking-wide">
                                         {{ $job->job_applications_count }} Responses
                                     </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-500/15 border border-slate-400/25 text-[10px] font-extrabold text-slate-200 uppercase tracking-wide" title="Awaiting your review">
+                                        {{ $job->new_responses_count }} To review
+                                    </span>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[10px] font-extrabold text-cyan-200 uppercase tracking-wide">
                                         {{ $job->shortlisted_responses_count }} Shortlisted
                                     </span>
+                                    <a href="{{ route('client.interviews.calendar') }}" class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-500/15 border border-indigo-400/30 text-[10px] font-extrabold text-indigo-200 uppercase tracking-wide transition hover:bg-indigo-500/30" title="Scheduled, interviewed or no-show">
+                                        {{ $job->interview_responses_count }} Interview
+                                    </a>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/25 text-[10px] font-extrabold text-amber-200 uppercase tracking-wide">
                                         {{ $job->maybe_responses_count }} Maybe
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-fuchsia-500/15 border border-fuchsia-400/30 text-[10px] font-extrabold text-fuchsia-200 uppercase tracking-wide">
+                                        {{ $job->selected_responses_count }} Selected
                                     </span>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/25 text-[10px] font-extrabold text-rose-200 uppercase tracking-wide">
                                         {{ $job->rejected_responses_count }} Rejected

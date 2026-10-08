@@ -280,6 +280,20 @@ class ClientController extends Controller
                 'jobApplications as rejected_responses_count' => function ($q) {
                     $q->where('status', 'Approved')->where('hiring_status', 'Client Rejected');
                 },
+                // Added so the badges account for every response: previously
+                // shortlisted + maybe + rejected left most of the total
+                // unexplained, with no sign of anyone at interview stage.
+                'jobApplications as new_responses_count' => function ($q) {
+                    $q->where('status', 'Approved')
+                        ->where(fn ($w) => $w->whereNull('hiring_status')->orWhere('hiring_status', ''));
+                },
+                'jobApplications as interview_responses_count' => function ($q) {
+                    $q->where('status', 'Approved')
+                        ->whereIn('hiring_status', ['Interview Scheduled', 'Interviewed', 'No-Show']);
+                },
+                'jobApplications as selected_responses_count' => function ($q) {
+                    $q->where('status', 'Approved')->where('hiring_status', 'Selected');
+                },
             ]);
 
         // Map UI status keys → actual DB values so the tabs filter correctly.
