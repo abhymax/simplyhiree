@@ -63,6 +63,7 @@ class EnforceClientModule
         'client.rounds.appeared' => 'interviews',
         'client.rounds.noshow' => 'interviews',
         'client.rounds.cancel' => 'interviews',
+        'client.rounds.resend' => 'interviews',
         'client.rounds.feedback.create' => 'interviews',
         'client.rounds.feedback' => 'interviews',
 

@@ -491,6 +491,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/rounds/{round}/appeared', [ClientController::class, 'markRoundAppeared'])->name('rounds.appeared');
         Route::post('/rounds/{round}/noshow', [ClientController::class, 'markRoundNoShow'])->name('rounds.noshow');
         Route::post('/rounds/{round}/cancel', [ClientController::class, 'cancelInterviewRound'])->name('rounds.cancel');
+        Route::post('/rounds/{round}/resend', [ClientController::class, 'resendInterviewInvite'])->middleware('throttle:20,1')->name('rounds.resend');
         Route::get('/rounds/{round}/feedback', [ClientController::class, 'showRoundFeedbackForm'])->name('rounds.feedback.create');
         Route::post('/rounds/{round}/feedback', [ClientController::class, 'submitRoundFeedback'])->name('rounds.feedback');
 

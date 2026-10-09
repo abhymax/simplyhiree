@@ -43,6 +43,18 @@
                 <span class="tracking-tight text-amber-300" aria-hidden="true">@for($i = 1; $i <= 5; $i++){{ $i <= $rating ? '★' : '☆' }}@endfor</span>
                 @if($done && filled($r->feedback))<i class="fa-regular fa-comment-dots text-[9px] opacity-80"></i>@endif
             </button>
+
+            @if(strtolower((string) ($r->status ?? '')) === 'scheduled' && auth()->check() && auth()->user()->hasRole('client'))
+                <form method="POST" action="{{ route('client.rounds.resend', $r->id) }}" class="inline"
+                      onsubmit="event.stopPropagation(); return confirm('Re-send the Round {{ $r->round_number }} interview invite to this candidate?');">
+                    @csrf
+                    <button type="submit" @click.stop
+                            title="Re-send the Round {{ $r->round_number }} invite by email and WhatsApp"
+                            class="inline-flex items-center gap-1 rounded-md border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-bold leading-none text-cyan-100 transition hover:bg-cyan-400/25">
+                        <i class="fa-regular fa-paper-plane text-[9px]"></i><span class="sr-only">Re-send Round {{ $r->round_number }} invite</span>
+                    </button>
+                </form>
+            @endif
         @endforeach
     </div>
 @endif

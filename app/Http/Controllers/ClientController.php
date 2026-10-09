@@ -1834,6 +1834,51 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Re-send the interview invite for one round.
+     *
+     * Uses that round's own date, link and note rather than the legacy
+     * mirrored columns on the application, which only ever reflect the
+     * latest round — so an earlier round would otherwise be re-sent with
+     * the wrong details.
+     */
+    public function resendInterviewInvite(InterviewRound $round)
+    {
+        $application = $round->application;
+        if (!$application || $application->job->user_id !== $this->ownerId()) {
+            abort(403);
+        }
+
+        if ($round->status === 'Cancelled') {
+            return back()->with('error', "Round {$round->round_number} was cancelled, so the invite cannot be re-sent. Schedule a new round instead.");
+        }
+
+        $app = $application->fresh(['job', 'candidate', 'candidateUser.profile']);
+
+        $email = $app->candidate?->email ?: $app->candidateUser?->email;
+        $phone = $app->candidate?->phone_number ?: optional($app->candidateUser?->profile)->phone_number;
+        if (!$email && !$phone) {
+            return back()->with('error', 'This candidate has no email address or phone number on file, so there is nothing to send to.');
+        }
+
+        // Point the mirrored fields at THIS round, in memory only.
+        $app->interview_at       = $round->scheduled_at;
+        $app->meeting_link       = $round->meeting_link;
+        $app->interview_location = $round->location;
+
+        $this->sendInterviewConfirmationToCandidate(
+            $app,
+            true,
+            $round->candidate_message,
+            $round->round_number,
+            $round->cc_emails
+        );
+
+        $to = $email ?: $phone;
+
+        return back()->with('success', "Round {$round->round_number} invite re-sent to {$to}.");
+    }
+
     public function markRoundAppeared(InterviewRound $round)
     {
         if ($round->application->job->user_id !== $this->ownerId()) abort(403);
