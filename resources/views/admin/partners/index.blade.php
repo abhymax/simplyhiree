@@ -55,6 +55,15 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
+                            <select name="payment" class="w-full bg-slate-800 border border-purple-500/30 rounded-xl text-white focus:ring-2 focus:ring-purple-400 focus:border-purple-400 font-medium h-[42px]">
+                                <option value="" class="text-gray-400">All Plans</option>
+                                <option value="unpaid" {{ request('payment') == 'unpaid' ? 'selected' : '' }}>Unpaid (upgrade not completed)</option>
+                                <option value="paid" {{ request('payment') == 'paid' ? 'selected' : '' }}>Paid</option>
+                                <option value="expired" {{ request('payment') == 'expired' ? 'selected' : '' }}>Plan expired</option>
+                                <option value="never" {{ request('payment') == 'never' ? 'selected' : '' }}>Never upgraded</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
                             <select name="status" class="w-full bg-slate-800 border border-purple-500/30 rounded-xl text-white focus:ring-2 focus:ring-purple-400 focus:border-purple-400 font-medium h-[42px]">
                                 <option value="" class="text-gray-400">All Status</option>
                                 <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
@@ -63,7 +72,7 @@
                         </div>
                         <div class="md:col-span-2 flex items-center gap-2">
                             <button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-xl font-bold shadow-lg transition h-[42px] flex items-center justify-center">Filter</button>
-                            @if(request()->anyFilled(['search', 'type', 'status']))
+                            @if(request()->anyFilled(['search', 'type', 'status', 'payment']))
                                 <a href="{{ route('admin.partners.index') }}" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-xl transition h-[42px] flex items-center justify-center"><i class="fa-solid fa-xmark"></i></a>
                             @endif
                         </div>

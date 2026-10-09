@@ -1113,6 +1113,26 @@ class AdminController extends Controller
             });
         }
 
+        // Plan payment state. "unpaid" = started a plan upgrade and never
+        // completed it, so the Razorpay order exists with no payment against it.
+        if ($request->filled('payment')) {
+            $paidPartnerIds = \App\Models\PartnerPayment::where('status', 'paid')
+                ->distinct()->pluck('partner_id');
+            $startedPartnerIds = \App\Models\PartnerPayment::distinct()->pluck('partner_id');
+
+            if ($request->input('payment') === 'unpaid') {
+                $query->whereIn('id', \App\Models\PartnerPayment::where('status', '!=', 'paid')
+                        ->distinct()->pluck('partner_id'))
+                      ->whereNotIn('id', $paidPartnerIds);
+            } elseif ($request->input('payment') === 'paid') {
+                $query->whereIn('id', $paidPartnerIds);
+            } elseif ($request->input('payment') === 'expired') {
+                $query->whereNotNull('plan_expires_at')->where('plan_expires_at', '<', now());
+            } elseif ($request->input('payment') === 'never') {
+                $query->whereNotIn('id', $startedPartnerIds);
+            }
+        }
+
         $partners = $query->latest()->paginate(10)->withQueryString();
         return view('admin.partners.index', ['users' => $partners]);
     }
