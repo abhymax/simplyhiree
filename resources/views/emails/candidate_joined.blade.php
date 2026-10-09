@@ -8,7 +8,7 @@
         body { font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding: 40px 0; }
         .card { max-width: 600px; background: #ffffff; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); }
-        .header { background-color: #0f172a; background: linear-gradient(135deg, #10b981 0%, #064e3b 100%); padding: 32px 40px; text-align: center; }
+        .header { background-color: #ffffff; padding: 28px 40px; text-align: center; border-bottom: 1px solid #e2e8f0; }
         .logo { font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
         .logo span { color: #a7f3d0; }
         .tagline { color: #d1fae5; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin-top: 4px; }
@@ -32,9 +32,9 @@
     <div class="wrapper">
         <div class="card">
             <!-- Header with stylized logo and brand tagline -->
-            <div class="header" style="background-color:#0f172a;padding:32px 40px;text-align:center;">
-                <div class="logo" style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">Simply<span style="color:#38bdf8;">Hiree</span></div>
-                <div class="tagline" style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;font-weight:700;margin-top:4px;">Connecting Talent · Empowering Careers</div>
+            <div class="header" style="background-color:#ffffff;padding:28px 40px;text-align:center;border-bottom:1px solid #e2e8f0;">
+                <x-email-logo />
+                <div class="tagline" style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;font-weight:700;margin-top:4px;">Connecting Talent · Empowering Careers</div>
             </div>
 
             <!-- Content Area -->
