@@ -18,6 +18,7 @@
         {!! $link('partner.candidates.index', 'partner.candidates.*', 'My Candidates', 'fa-users') !!}
         {!! $link('partner.assessments.index', 'partner.assessments.*', 'Assessments', 'fa-clipboard-check') !!}
         {!! $link('partner.replacements', 'partner.replacements', 'Replacements', 'fa-rotate') !!}
+        {!! $link('partner.chat.index', 'partner.chat*', 'Messages', 'fa-comments') !!}
         <div class="partner-sidebar-label">Business</div>
         @if($partner->isPartnerOwner())
             {!! $link('partner.earnings', 'partner.earnings*', 'Earnings', 'fa-indian-rupee-sign') !!}

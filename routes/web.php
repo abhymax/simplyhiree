@@ -155,6 +155,15 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     //        ADMIN PANEL ROUTES (Shared)
     // ==========================================
     Route::middleware(['role:Superadmin|Manager'])->prefix('admin')->name('admin.')->group(function () {
+        // --- Internal chat ---
+        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+        Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+        Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
+        Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
+        Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+        Route::post('/chat/{conversation}/assign', [\App\Http\Controllers\ChatController::class, 'assign'])->name('chat.assign');
+        Route::post('/chat/{conversation}/status', [\App\Http\Controllers\ChatController::class, 'toggleStatus'])->name('chat.status');
+
         
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
@@ -401,6 +410,13 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     //         CLIENT (EMPLOYER) ROUTES
     // ==========================================
     Route::middleware(['role:client', 'client.module'])->prefix('client')->name('client.')->group(function () {
+        // --- Internal chat ---
+        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+        Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+        Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
+        Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
+        Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+
 
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
 
@@ -529,6 +545,13 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     //          PARTNER (AGENCY) ROUTES
     // ==========================================
     Route::middleware(['role:partner', 'partner.access'])->prefix('partner')->name('partner.')->group(function () {
+        // --- Internal chat ---
+        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+        Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+        Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
+        Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
+        Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
         Route::get('/applications/{application}', [PartnerController::class, 'showApplication'])->name('applications.show');
@@ -587,6 +610,13 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     //          CANDIDATE ROUTES
     // ==========================================
     Route::middleware('role:candidate')->prefix('candidate')->name('candidate.')->group(function () {
+        // --- Internal chat ---
+        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+        Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+        Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
+        Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
+        Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');
 
