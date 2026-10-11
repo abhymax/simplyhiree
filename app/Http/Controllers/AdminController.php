@@ -1920,6 +1920,7 @@ class AdminController extends Controller
             'selected_by_admin_id'  => Auth::id(),
             'selected_by_admin_at'  => now(),
         ]);
+        \App\Models\ApplicationActivity::log($application, 'selected', 'on behalf of the client');
 
         // Stamp the resolved invoice amount and replacement window.
         $resolved = $application->fresh(['job.user'])->resolveCommercial();
@@ -2135,6 +2136,7 @@ class AdminController extends Controller
     {
         $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Approved']);
+        \App\Models\ApplicationActivity::log($application, 'approved');
         $this->notifyApplicationStakeholder($application, true);
 
         $msg = 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' approved.';
@@ -2148,6 +2150,7 @@ class AdminController extends Controller
     {
         $application->loadMissing(['job', 'candidate.partner', 'candidateUser']);
         $application->update(['status' => 'Rejected']);
+        \App\Models\ApplicationActivity::log($application, 'rejected_by_admin');
         $this->notifyApplicationStakeholder($application, false);
 
         $msg = 'Application ' . ($application->application_code ?? ('#' . $application->id)) . ' rejected.';

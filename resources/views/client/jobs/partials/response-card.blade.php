@@ -79,5 +79,6 @@
             <span class="inline-flex items-center gap-2 rounded-xl border border-rose-300/35 bg-rose-500/15 px-3 py-2.5 text-xs font-extrabold text-rose-100"><i class="fa-solid fa-circle-info"></i>Employment closed: Left</span>
         @endif
     </div>
+    <div class="mt-3"><x-done-by :application="$app" side="client" /></div>
     @if($latestRound)<div class="mt-5 border-t border-white/10 pt-4 text-xs text-blue-200"><i class="fa-solid fa-calendar-check mr-2 text-cyan-300"></i>Latest interview: Round {{ $latestRound->round_number }} - {{ $latestRound->status }} @if($latestRound->scheduled_at)on {{ $latestRound->scheduled_at->format('d M, g:i A') }}@endif</div>@endif
 </article>

@@ -1106,6 +1106,7 @@ class ClientController extends Controller
             abort(403);
         }
         $application->update(['hiring_status' => 'Client Rejected']);
+        \App\Models\ApplicationActivity::log($application, 'rejected');
         $this->notifyAdminAndPartner(new CandidateRejectedByClient($application), $application);
         return redirect()->back()->with('success', 'Candidate has been rejected.');
     }
@@ -1113,12 +1114,14 @@ class ClientController extends Controller
     public function shortlistApplicant(JobApplication $application)
     {
         $this->setApplicantReviewStatus($application, 'Shortlisted');
+        \App\Models\ApplicationActivity::log($application, 'shortlisted');
         return back()->with('success', 'Candidate moved to Shortlisted.');
     }
 
     public function markApplicantMaybe(JobApplication $application)
     {
         $this->setApplicantReviewStatus($application, 'Maybe');
+        \App\Models\ApplicationActivity::log($application, 'maybe');
         return back()->with('success', 'Candidate saved to Maybe for later review.');
     }
 
@@ -1598,6 +1601,8 @@ class ClientController extends Controller
             'interview_reminder_sent_at' => null,
         ]);
 
+        \App\Models\ApplicationActivity::log($application, 'interview_scheduled', 'Round ' . $round->round_number);
+
         // In-app notification for admin + partner
         $this->notifyAdminAndPartner(new InterviewScheduled($application), $application);
 
@@ -1749,6 +1754,8 @@ class ClientController extends Controller
             ]);
         }
 
+        \App\Models\ApplicationActivity::log($application, 'interview_cancelled', 'Round ' . $round->round_number);
+
         $this->sendInterviewCancellationToCandidate(
             $application->fresh(['job', 'candidate', 'candidateUser.profile']),
             $round
@@ -1874,6 +1881,8 @@ class ClientController extends Controller
             $round->cc_emails
         );
 
+        \App\Models\ApplicationActivity::log($application, 'interview_resent', 'Round ' . $round->round_number);
+
         $to = $email ?: $phone;
 
         return back()->with('success', "Round {$round->round_number} invite re-sent to {$to}.");
@@ -1884,6 +1893,7 @@ class ClientController extends Controller
         if ($round->application->job->user_id !== $this->ownerId()) abort(403);
         $round->update(['status' => 'Appeared']);
         $round->application->update(['hiring_status' => 'Interviewed']);
+        \App\Models\ApplicationActivity::log($round->application, 'marked_appeared', 'Round ' . $round->round_number);
         $this->notifySourcingPartner(
             new CandidateLifecycleUpdated($round->application, 'interview_appeared', $round->round_number),
             $round->application
@@ -1896,6 +1906,7 @@ class ClientController extends Controller
         if ($round->application->job->user_id !== $this->ownerId()) abort(403);
         $round->update(['status' => 'No-Show']);
         $round->application->update(['hiring_status' => 'No-Show']);
+        \App\Models\ApplicationActivity::log($round->application, 'marked_noshow', 'Round ' . $round->round_number);
         $this->notifySourcingPartner(
             new CandidateLifecycleUpdated($round->application, 'interview_no_show', $round->round_number),
             $round->application
@@ -2054,6 +2065,7 @@ class ClientController extends Controller
             abort(403);
         }
         $application->update(['joined_status' => 'Joined']);
+        \App\Models\ApplicationActivity::log($application, 'marked_joined');
         $this->notifyAdminAndPartner(new CandidateJoined($application), $application);
         $this->sendJoinedNotificationToCandidate($application->fresh(['job', 'candidate', 'candidateUser.profile']));
 
@@ -2112,6 +2124,7 @@ class ClientController extends Controller
             abort(403);
         }
         $application->update(['joined_status' => 'Did Not Join']);
+        \App\Models\ApplicationActivity::log($application, 'marked_not_joined');
         $this->notifyAdminAndPartner(new CandidateDidNotJoin($application), $application);
         return redirect()->back()->with('success', 'Candidate marked as \'Did Not Join\'.');
     }

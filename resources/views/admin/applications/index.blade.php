@@ -215,6 +215,7 @@
                                                 <div class="text-[10px] text-slate-300 font-semibold tracking-wide mt-0.5">
                                                     {{ $applicationCode }} · {{ $candidateCode }} · {{ $application->created_at->format('M d, Y') }}
                                                 </div>
+                                                <x-done-by :application="$application" class="mt-1" />
                                             </div>
                                         </div>
                                     </td>

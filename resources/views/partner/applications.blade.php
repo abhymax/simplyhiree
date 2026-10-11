@@ -161,6 +161,7 @@
                                         <div>
                                             <div class="font-bold text-white group-hover:text-cyan-300 transition-colors">{{ $name }}</div>
                                             <div class="text-cyan-200 text-xs">{{ $application->candidate->email ?? 'N/A' }}</div>
+                                            <x-done-by :application="$application" side="vendor" class="mt-1" />
                                         </div>
                                     </a>
                                     <x-interview-rounds :rounds="$application->interviewRounds" />

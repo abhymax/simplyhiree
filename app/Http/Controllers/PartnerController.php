@@ -1120,6 +1120,7 @@ class PartnerController extends Controller
                     'submitted_by_user_id' => Auth::id(),
                 ]);
                 $submittedCount++;
+                \App\Models\ApplicationActivity::log($application, 'submitted');
 
                 // If the job carries questionnaire stages, create the candidate's
                 // assessment session and email them the magic link.
