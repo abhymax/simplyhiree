@@ -92,8 +92,28 @@ class ChatController extends Controller
             'teamMembers'   => $this->isInternal()
                 ? User::role('Manager')->orderBy('name')->get(['id', 'name'])
                 : collect(),
+            'partyOptions'  => $this->isInternal() ? $this->partyOptions() : [],
             'homeRoute'     => $this->homeRoute(),
         ]);
+    }
+
+    /**
+     * Clients, vendors and self-registered candidates SimplyHiree can write to.
+     * Account owners only: a team member shares their organisation's thread.
+     */
+    private function partyOptions(): array
+    {
+        return User::query()
+            ->whereNull('parent_partner_id')
+            ->where(fn ($q) => $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['client', 'partner', 'candidate'])))
+            ->orderBy('name')
+            ->limit(500)
+            ->get(['id', 'name', 'email'])
+            ->map(fn ($u) => [
+                'id'    => $u->id,
+                'label' => trim($u->name . ' — ' . $u->email),
+            ])
+            ->all();
     }
 
     public function show(ChatConversation $conversation)

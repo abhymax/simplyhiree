@@ -670,6 +670,7 @@
                 <a href="{{ route('support') }}" class="hover:text-white transition">Help &amp; Support</a>
             </div>
         </main>
+        <x-chat-widget />
     </div>
 
     <!-- Premium Notification and Confirmation Modals -->

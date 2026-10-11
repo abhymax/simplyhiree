@@ -33,8 +33,13 @@
                         <option value="vendor">A vendor</option>
                         <option value="candidate">A candidate</option>
                     </select>
-                    <input type="number" name="party_user_id" placeholder="Their user ID" required
+                    <input list="chat-party-list" name="party_user_id" required placeholder="Type a name, then pick"
                            class="rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
+                    <datalist id="chat-party-list">
+                        @foreach($partyOptions ?? [] as $opt)
+                            <option value="{{ $opt['id'] }}">{{ $opt['label'] }}</option>
+                        @endforeach
+                    </datalist>
                     <input type="text" name="subject" maxlength="200" placeholder="Subject (optional)"
                            class="rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
                 </div>

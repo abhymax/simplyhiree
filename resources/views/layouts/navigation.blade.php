@@ -137,6 +137,9 @@
                         <x-nav-link :href="route('candidate.applications')" :active="request()->routeIs('candidate.applications')" class="text-slate-600 hover:text-indigo-600">
                             My Applications
                         </x-nav-link>
+                        <x-nav-link :href="route('candidate.chat.index')" :active="request()->routeIs('candidate.chat.*')" class="text-slate-600 hover:text-indigo-600">
+                            {{ __('Messages') }}
+                        </x-nav-link>
                     @endrole
                 </div>
             </div>
@@ -313,6 +316,9 @@
             @role('candidate')
                 <x-responsive-nav-link :href="route('candidate.applications')" :active="request()->routeIs('candidate.applications')">
                     My Applications
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('candidate.chat.index')" :active="request()->routeIs('candidate.chat.*')">
+                    {{ __('Messages') }}
                 </x-responsive-nav-link>
             @endrole
         </div>

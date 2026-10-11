@@ -423,5 +423,6 @@
                 scrim?.addEventListener('click', toggle);
             })();
         </script>@endif
+        <x-chat-widget />
     </body>
 </html>
