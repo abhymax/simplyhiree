@@ -145,9 +145,26 @@
                '</span></div>';
         }
 
+        if (!INTERNAL) {
+          h += '<div style="padding:11px 13px;border-bottom:1px solid rgba(148,163,184,.14);">' +
+               '<button onclick="shdNew()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#4f46e5);border:0;border-radius:10px;' +
+                 'padding:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">+ Message SimplyHiree</button>' +
+               '<div id="shd-new" style="display:none;margin-top:9px;">' +
+                 '<textarea id="shd-new-body" rows="3" placeholder="What do you need help with?" ' +
+                   'style="width:100%;box-sizing:border-box;background:#111c31;border:1px solid rgba(148,163,184,.25);border-radius:9px;' +
+                   'padding:8px 10px;color:#fff;font-size:12px;outline:none;resize:vertical;"></textarea>' +
+                 '<div id="shd-new-prev" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>' +
+                 '<div style="display:flex;gap:6px;align-items:center;margin-top:6px;">' +
+                   '<label title="Attach files" style="cursor:pointer;background:rgba(148,163,184,.15);border-radius:8px;padding:6px 9px;color:#cbd5e1;font-size:12px;">' +
+                     '&#128206;<input type="file" multiple style="display:none" onchange="shdFiles(\'new\',this)"></label>' +
+                   '<button onclick="shdStart()" style="flex:1;background:#06b6d4;border:0;border-radius:9px;padding:7px;color:#042f2e;font-size:11.5px;font-weight:900;cursor:pointer;">Send</button>' +
+                 '</div></div></div>';
+        }
+
         h += '<div style="max-height:300px;overflow-y:auto;">';
         h += (d.threads.length ? d.threads.map(function (t) { return row(t, false); }).join('')
-                               : '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:12px;">No chats assigned to you.</div>');
+                               : '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:12px;">' +
+                                 (INTERNAL ? 'No chats assigned to you.' : 'No chats yet. Start one above.') + '</div>');
 
         if (INTERNAL && d.queue.length) {
           h += '<div style="padding:8px 13px;background:rgba(251,191,36,.08);border-top:1px solid rgba(251,191,36,.2);' +
@@ -163,6 +180,36 @@
         document.getElementById('shd-list').innerHTML = h;
       }).catch(function () {});
   }
+
+  window.shdNew = function () {
+    var p = document.getElementById('shd-new'); if (!p) return;
+    var opening = p.style.display === 'none';
+    p.style.display = opening ? 'block' : 'none';
+    if (opening) { var t = document.getElementById('shd-new-body'); if (t) t.focus(); }
+  };
+
+  window.shdStart = function () {
+    var t = document.getElementById('shd-new-body');
+    var body = t ? t.value.trim() : '';
+    var files = pending['new'];
+    if (!body && !(files && files.length)) return;
+
+    var fd = new FormData();
+    fd.append('_token', CSRF);
+    if (body) fd.append('body', body);
+    if (files) files.forEach(function (f) { fd.append('attachments[]', f); });
+
+    fetch(u('/chat'), { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) { alert(res.d.message || 'Could not send that message.'); return; }
+        if (t) t.value = '';
+        clearFiles('new');
+        shdNew();
+        shdOpen(res.d.conversation_id, 'SimplyHiree');
+        refresh();
+      }).catch(function () { alert('Could not send that message.'); });
+  };
 
   window.shdCap = function (v) {
     var fd = new FormData(); fd.append('capacity', v); fd.append('_token', CSRF);
@@ -262,17 +309,74 @@
     act(id, '', 'DELETE', function () { shdClose(id); });
   };
 
-  var pending = {};   // id -> FileList
+  // ---- attachments -------------------------------------------------------
+  var pending = {},   // id (or 'new') -> array of File
+      previewUrls = {};
+
+  function previewBox(id) { return document.getElementById(id === 'new' ? 'shd-new-prev' : 'shf-' + id); }
+
+  function revoke(id) {
+    (previewUrls[id] || []).forEach(function (u2) { try { URL.revokeObjectURL(u2); } catch (e) {} });
+    previewUrls[id] = [];
+  }
+
+  function clearFiles(id) {
+    revoke(id);
+    pending[id] = [];
+    var box = previewBox(id); if (box) box.innerHTML = '';
+  }
+
+  function kb(n) { return n < 1024 ? n + ' B' : (n < 1048576 ? Math.round(n / 1024) + ' KB' : (n / 1048576).toFixed(1) + ' MB'); }
+
+  function drawPreviews(id) {
+    var box = previewBox(id); if (!box) return;
+    revoke(id);
+    var files = pending[id] || [];
+    if (!files.length) { box.innerHTML = ''; return; }
+
+    box.style.display = 'flex'; box.style.flexWrap = 'wrap'; box.style.gap = '5px';
+    box.innerHTML = files.map(function (f, k) {
+      var isImg = /^image\//.test(f.type), thumb;
+      if (isImg) {
+        var o = URL.createObjectURL(f);
+        (previewUrls[id] = previewUrls[id] || []).push(o);
+        thumb = '<img src="' + o + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">';
+      } else {
+        thumb = '<span style="display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;">&#128196;</span>';
+      }
+      return '<span title="' + esc(f.name) + ' · ' + kb(f.size) + '" style="position:relative;width:52px;height:52px;border-radius:8px;overflow:hidden;' +
+               'background:#111c31;border:1px solid rgba(148,163,184,.3);display:block;">' + thumb +
+               '<button onclick="shdDrop(\'' + id + '\',' + k + ')" title="Remove" style="position:absolute;top:0;right:0;background:rgba(2,6,23,.8);' +
+                 'border:0;color:#fda4af;font-size:11px;font-weight:900;line-height:1;padding:1px 4px;cursor:pointer;">&times;</button>' +
+               '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(2,6,23,.8);color:#cbd5e1;font-size:8px;' +
+                 'padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(f.name) + '</span>' +
+             '</span>';
+    }).join('');
+  }
+
   window.shdFiles = function (id, input) {
-    pending[id] = input.files;
-    var n = input.files.length;
-    document.getElementById('shf-' + id).textContent = n ? (n + ' file' + (n > 1 ? 's' : '') + ' ready') : '';
+    var add = Array.prototype.slice.call(input.files);
+    pending[id] = (pending[id] || []).concat(add).slice(0, 5);
+    input.value = '';
+    drawPreviews(id);
+  };
+
+  window.shdDrop = function (id, k) {
+    (pending[id] || []).splice(k, 1);
+    drawPreviews(id);
   };
 
   function bubble(m) {
     var mine = m.side === MYSIDE;
     var files = (m.files || []).map(function (f) {
-      return '<a href="' + f.url + '" target="_blank" style="display:block;margin-top:3px;color:#67e8f9;font-size:10.5px;font-weight:700;">&#128206; ' + esc(f.name) + '</a>';
+      if (f.image) {
+        return '<a href="' + f.url + '" target="_blank" style="display:block;margin-top:4px;">' +
+          '<img src="' + f.url + '" alt="' + esc(f.name) + '" style="max-width:170px;max-height:150px;border-radius:8px;display:block;border:1px solid rgba(148,163,184,.25);">' +
+          '<span style="display:block;color:#67e8f9;font-size:9.5px;font-weight:700;margin-top:2px;">' + esc(f.name) + '</span></a>';
+      }
+      return '<a href="' + f.url + '" target="_blank" style="display:flex;gap:5px;align-items:center;margin-top:4px;padding:5px 7px;border-radius:8px;' +
+        'background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.22);color:#67e8f9;font-size:10.5px;font-weight:700;text-decoration:none;">' +
+        '<span style="font-size:14px;">&#128196;</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(f.name) + '</span></a>';
     }).join('');
     return '<div style="display:flex;justify-content:' + (mine ? 'flex-end' : 'flex-start') + ';margin-bottom:7px;">' +
       '<div style="max-width:80%;padding:6px 10px;border-radius:12px;background:' + (mine ? 'rgba(6,182,212,.22)' : 'rgba(255,255,255,.07)') +
@@ -306,29 +410,56 @@
       }).catch(function () {});
   }
 
+  var localSeq = 0;
   window.shdSend = function (id) {
     var i = document.getElementById('shi-' + id);
     var body = i ? i.value.trim() : '';
-    var files = pending[id];
-    if (!body && (!files || !files.length)) return;
+    var files = (pending[id] || []).slice();
+    if (!body && !files.length) return;
 
     var fd = new FormData();
     fd.append('_token', CSRF);
     if (body) fd.append('body', body);
-    if (files) for (var k = 0; k < files.length; k++) fd.append('attachments[]', files[k]);
+    files.forEach(function (f) { fd.append('attachments[]', f); });
 
     if (i) i.value = '';
-    pending[id] = null;
-    var fl = document.getElementById('shf-' + id); if (fl) fl.textContent = '';
+    clearFiles(id);
+
+    // Show it straight away. The upload and the notification e-mail used to
+    // hold the bubble back for several seconds.
+    var tag = 'shp-' + (++localSeq);
+    var box = document.getElementById('shm-' + id);
+    if (box) {
+      var thumbs = files.map(function (f) {
+        if (/^image\//.test(f.type)) {
+          var o = URL.createObjectURL(f);
+          return '<img src="' + o + '" alt="" style="max-width:170px;max-height:150px;border-radius:8px;display:block;margin-top:4px;border:1px solid rgba(148,163,184,.25);">';
+        }
+        return '<span style="display:flex;gap:5px;align-items:center;margin-top:4px;padding:5px 7px;border-radius:8px;background:rgba(148,163,184,.12);color:#67e8f9;font-size:10.5px;font-weight:700;">&#128196; ' + esc(f.name) + '</span>';
+      }).join('');
+      box.insertAdjacentHTML('beforeend',
+        '<div id="' + tag + '" style="display:flex;justify-content:flex-end;margin-bottom:7px;opacity:.6;">' +
+          '<div style="max-width:80%;padding:6px 10px;border-radius:12px;background:rgba(6,182,212,.22);border:1px solid rgba(103,232,249,.3);">' +
+            '<div style="font-size:9px;font-weight:800;text-transform:uppercase;color:#a5f3fc;margin-bottom:2px;">Sending…</div>' +
+            (body ? '<div style="color:#fff;font-size:12px;white-space:pre-wrap;">' + esc(body) + '</div>' : '') + thumbs +
+          '</div></div>');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function drop() { var g = document.getElementById(tag); if (g) g.remove(); }
 
     fetch(u('/chat/' + id + '/reply'), { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json(); })
       .then(function (d) {
+        drop();
         if (d && d.message && render(id, d.message)) {
-          var box = document.getElementById('shm-' + id);
-          if (box) box.scrollTop = box.scrollHeight;
+          var b2 = document.getElementById('shm-' + id);
+          if (b2) b2.scrollTop = b2.scrollHeight;
         }
-      }).catch(function () {});
+      }).catch(function () {
+        var g = document.getElementById(tag);
+        if (g) { g.style.opacity = 1; g.querySelector('div div').innerHTML = '<span style="color:#fda4af;">Not sent — check your connection</span>'; }
+      });
   };
 
   refresh();

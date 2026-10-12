@@ -164,10 +164,20 @@ class ChatController extends Controller
 
         $data = $request->validate([
             'subject'       => 'nullable|string|max:200',
-            'body'          => 'required|string|max:5000',
+            'body'          => 'nullable|string|max:5000',
             'party_type'    => 'nullable|in:client,vendor,candidate',
             'party_user_id' => 'nullable|integer|exists:users,id',
+            'attachments'   => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg,webp,txt,csv',
         ]);
+
+        if (blank($data['body'] ?? null) && !$request->hasFile('attachments')) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Write a message or attach a file.'], 422);
+            }
+
+            return back()->withInput()->with('error', 'Write a message or attach a file.');
+        }
 
         if ($this->isInternal()) {
             if (empty($data['party_type']) || empty($data['party_user_id'])) {
@@ -189,7 +199,7 @@ class ChatController extends Controller
                 ->first();
 
             if ($existing) {
-                $message = $this->appendMessage($existing, $data['body'], $request);
+                $message = $this->appendMessage($existing, $data['body'] ?? null, $request);
 
                 if ($request->wantsJson()) {
                     return response()->json([
@@ -214,7 +224,7 @@ class ChatController extends Controller
             'last_message_at'     => now(),
         ]);
 
-        $message = $this->appendMessage($conversation, $data['body'], $request);
+        $message = $this->appendMessage($conversation, $data['body'] ?? null, $request);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -296,7 +306,13 @@ class ChatController extends Controller
             'side'   => $m->sender_side,
             'sender' => $m->sender?->name ?? 'Unknown',
             'at'     => $m->created_at?->format('d M, h:i A'),
-            'files'  => $m->attachments->map(fn ($a) => ['name' => $a->original_name, 'url' => $a->url()])->all(),
+            'files'  => $m->attachments->map(fn ($a) => [
+                'name'  => $a->original_name,
+                'url'   => $a->url(),
+                'mime'  => (string) $a->mime,
+                'size'  => (int) $a->size,
+                'image' => \Illuminate\Support\Str::startsWith((string) $a->mime, 'image/'),
+            ])->all(),
         ];
     }
 
@@ -582,10 +598,18 @@ class ChatController extends Controller
             $who     = $message->sender?->name ?? 'SimplyHiree';
             $subject = '[SimplyHiree] New message' . ($conversation->subject ? ': ' . $conversation->subject : '');
 
-            Mail::raw(
-                "{$who} sent you a message on SimplyHiree:\n\n{$preview}\n\nSign in to reply.",
-                fn ($m) => $m->to($recipients)->subject($subject)
-            );
+            // Sent once the response has already gone out. Doing it inline
+            // made the sender wait on the SMTP handshake, so a message with a
+            // file attached took several seconds to appear.
+            $lines = "{$who} sent you a message on SimplyHiree:\n\n{$preview}\n\nSign in to reply.";
+
+            dispatch(function () use ($recipients, $subject, $lines) {
+                try {
+                    Mail::raw($lines, fn ($m) => $m->to($recipients)->subject($subject));
+                } catch (\Throwable $e) {
+                    Log::warning('Chat notification could not be sent: ' . $e->getMessage());
+                }
+            })->afterResponse();
         } catch (\Throwable $e) {
             Log::warning('Chat notification failed for conversation ' . $conversation->id . ': ' . $e->getMessage());
         }
