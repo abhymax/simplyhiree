@@ -99,7 +99,12 @@
   window.shdToggle = function () {
     listOpen = !listOpen;
     document.getElementById('shd-list').style.display = listOpen ? 'block' : 'none';
-    if (listOpen) refresh();
+    if (!listOpen) return;
+    refresh();
+
+    // A party always lands in a fresh conversation. Earlier ones are listed
+    // in the panel and reopen when clicked.
+    if (!INTERNAL) shdCompose();
   };
 
   function row(t, claimable) {
@@ -152,16 +157,14 @@
                '</span></div>';
         }
 
-        if (!INTERNAL) {
-          h += '<div style="padding:11px 13px;border-bottom:1px solid rgba(148,163,184,.14);">' +
-               '<button onclick="shdCompose()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#4f46e5);border:0;border-radius:10px;' +
-                 'padding:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">&#10133; New chat with SimplyHiree</button></div>';
-        }
-
         h += '<div style="max-height:300px;overflow-y:auto;">';
+        if (!INTERNAL && d.threads.length) {
+          h += '<div style="padding:8px 13px;background:rgba(148,163,184,.06);border-bottom:1px solid rgba(148,163,184,.12);' +
+               'color:#94a3b8;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;">Earlier chats</div>';
+        }
         h += (d.threads.length ? d.threads.map(function (t) { return row(t, false); }).join('')
                                : '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:12px;">' +
-                                 (INTERNAL ? 'No chats assigned to you.' : 'No chats yet. Use the button above.') + '</div>');
+                                 (INTERNAL ? 'No chats assigned to you.' : 'No earlier chats yet.') + '</div>');
 
         if (INTERNAL && d.queue.length) {
           h += '<div style="padding:8px 13px;background:rgba(251,191,36,.08);border-top:1px solid rgba(251,191,36,.2);' +
@@ -182,7 +185,6 @@
   // below and are reopened by clicking them.
   window.shdCompose = function () {
     shdOpen('new', 'New chat');
-    if (listOpen) shdToggle();
     var i = document.getElementById('shi-new');
     if (i) i.focus();
   };
@@ -215,12 +217,12 @@
     el.innerHTML =
       '<div style="padding:9px 11px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="shdMin(\'' + id + '\')">' +
         '<span style="flex:1;min-width:0;color:#fff;font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(title) + '</span>' +
-        (INTERNAL && id !== 'new' ? '<button onclick="event.stopPropagation();shdMenu(\'' + id + '\')" title="Chat actions" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800;cursor:pointer;line-height:1;">&#8942;</button>' : '') +
+        (id !== 'new' ? '<button onclick="event.stopPropagation();shdMenu(\'' + id + '\')" title="Chat actions" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800;cursor:pointer;line-height:1;">&#8942;</button>' : '') +
         '<button onclick="event.stopPropagation();shdClose(\'' + id + '\')" aria-label="Hide this window" title="Hide window (the chat stays open)" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:21px;height:21px;cursor:pointer;line-height:1;">&times;</button>' +
       '</div>' +
       '<div id="shmenu-' + id + '" style="display:none;background:#111c31;border-bottom:1px solid rgba(148,163,184,.18);padding:7px;">' +
-        '<button onclick="shdResolve(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#10003; Mark resolved</button>' +
-        '<button onclick="shdRelease(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#8631; Return to queue</button>' +
+        (INTERNAL ? '<button onclick="shdResolve(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#10003; Mark resolved</button>' +
+        '<button onclick="shdRelease(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#8631; Return to queue</button>' : '') +
         '<button onclick="shdArchive(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fcd34d;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128230; Archive</button>' +
         (SUPER ? '<button onclick="shdDelete(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fda4af;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128465; Delete permanently</button>' : '') +
       '</div>' +

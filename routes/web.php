@@ -428,6 +428,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
         Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
+        Route::post('/chat/{conversation}/archive', [\App\Http\Controllers\ChatController::class, 'archive'])->name('chat.archive');
 
 
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
@@ -564,6 +565,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
         Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
+        Route::post('/chat/{conversation}/archive', [\App\Http\Controllers\ChatController::class, 'archive'])->name('chat.archive');
 
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
@@ -630,6 +632,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
         Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
+        Route::post('/chat/{conversation}/archive', [\App\Http\Controllers\ChatController::class, 'archive'])->name('chat.archive');
 
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');

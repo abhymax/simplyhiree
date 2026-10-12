@@ -419,7 +419,6 @@ class ChatController extends Controller
     public function archive(ChatConversation $conversation)
     {
         $this->authorizeConversation($conversation);
-        abort_unless($this->isInternal(), 403);
 
         $conversation->update(['archived_at' => $conversation->archived_at ? null : now()]);
         $archived = (bool) $conversation->fresh()->archived_at;
