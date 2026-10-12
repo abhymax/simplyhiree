@@ -51,6 +51,7 @@
                     ['route'=>'admin.assessments.index',      'label'=>'Questionnaires',      'icon'=>'fa-clipboard-question',  'active'=>['admin.assessments.*']],
                     ['route'=>'admin.assessment-results.index','label'=>'Assessment Results', 'icon'=>'fa-square-poll-vertical', 'active'=>['admin.assessment-results.*']],
                     ['route'=>'admin.chat.index',            'label'=>'Messages',            'icon'=>'fa-comments',            'active'=>['admin.chat.*']],
+                    ['route'=>'admin.deletion-requests.index','label'=>'Deletion Requests','icon'=>'fa-user-slash',        'active'=>['admin.deletion-requests.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.billing.index',          'label'=>'Billing Report',      'icon'=>'fa-file-invoice-dollar', 'active'=>['admin.billing.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.revenue-control.index',  'label'=>'Revenue & Payout',    'icon'=>'fa-sack-dollar',         'active'=>['admin.revenue-control.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.risk-control.index',     'label'=>'Risk & Fraud',        'icon'=>'fa-shield-halved',       'active'=>['admin.risk-control.*'], 'role'=>'Superadmin'],

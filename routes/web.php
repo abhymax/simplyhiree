@@ -162,6 +162,11 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
         Route::post('/chat/{conversation}/assign', [\App\Http\Controllers\ChatController::class, 'assign'])->name('chat.assign');
+
+        // --- Account deletion requests (GDPR / DPDP erasure) ---
+        Route::get('/deletion-requests', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'index'])->name('deletion-requests.index');
+        Route::post('/deletion-requests/{deletionRequest}/erase', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'erase'])->name('deletion-requests.erase');
+        Route::post('/deletion-requests/{deletionRequest}/reject', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'reject'])->name('deletion-requests.reject');
         Route::post('/chat/{conversation}/status', [\App\Http\Controllers\ChatController::class, 'toggleStatus'])->name('chat.status');
 
         
