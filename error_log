@@ -285,3 +285,8 @@ Stack trace:
 #6 /tmp/t4.php(8): config(Array)
 #7 {main}
   thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1124
+[12-Oct-2026 11:49:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\View\Compilers\BladeCompiler" not found in Command line code:3
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 3
+[12-Oct-2026 11:49:31 UTC] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /tmp/comp.php on line 18

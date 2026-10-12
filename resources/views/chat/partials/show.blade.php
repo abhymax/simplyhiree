@@ -13,7 +13,8 @@
                 </h1>
                 <p class="mt-0.5 text-sm text-blue-200">
                     {{ $isInternal ? ($conversation->party->name ?? 'Unknown') . ' · ' . (\App\Models\ChatConversation::PARTY_TYPES[$conversation->party_type] ?? $conversation->party_type) : 'SimplyHiree team' }}
-                    @if($conversation->status === 'closed') · <span class="font-bold text-slate-400">Resolved</span>@endif@if($conversation->archived_at) · <span class="font-bold text-amber-300">Archived</span>@endif
+                    @if($conversation->status === 'closed') · <span class="font-bold text-slate-400">Resolved</span>@endif
+                    @if($conversation->archived_at) · <span class="font-bold text-amber-300">Archived</span>@endif
                 </p>
             </div>
 

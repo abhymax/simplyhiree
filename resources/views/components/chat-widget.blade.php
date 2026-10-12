@@ -52,7 +52,7 @@
 
   var listOpen = false,
       windows = {},          // id -> { lastId, seen, minimised, title }
-      capacity = 5, active = 0, canClaim = true,
+      capacity = 5, active = 0, canClaim = true, myThreads = [],
       lastTotal = 0, firstRun = true;
 
   function u(p) { return ROOT + PREFIX + p; }
@@ -122,6 +122,7 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         capacity = d.capacity; active = d.active; canClaim = d.can_claim;
+        myThreads = d.threads || [];
 
         var b = document.getElementById('shd-badge');
         if (d.unread_total > 0) { b.textContent = d.unread_total > 9 ? '9+' : d.unread_total; b.style.display = 'flex'; }
@@ -130,6 +131,12 @@
         lastTotal = d.unread_total; firstRun = false;
 
         if (!listOpen) return;
+
+        // Never redraw under the user's cursor -- it used to swallow keystrokes.
+        var focused = document.activeElement;
+        var panel = document.getElementById('shd-list');
+        if (focused && panel && panel.contains(focused)) return;
+
         var h = '<div style="padding:12px 14px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);display:flex;align-items:center;justify-content:space-between;">' +
             '<span style="color:#fff;font-weight:800;font-size:14px;">Chats</span>' +
             '<button onclick="shdToggle()" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:8px;width:24px;height:24px;cursor:pointer;">&times;</button></div>';
@@ -147,24 +154,14 @@
 
         if (!INTERNAL) {
           h += '<div style="padding:11px 13px;border-bottom:1px solid rgba(148,163,184,.14);">' +
-               '<button onclick="shdNew()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#4f46e5);border:0;border-radius:10px;' +
-                 'padding:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">+ Message SimplyHiree</button>' +
-               '<div id="shd-new" style="display:none;margin-top:9px;">' +
-                 '<textarea id="shd-new-body" rows="3" placeholder="What do you need help with?" ' +
-                   'style="width:100%;box-sizing:border-box;background:#111c31;border:1px solid rgba(148,163,184,.25);border-radius:9px;' +
-                   'padding:8px 10px;color:#fff;font-size:12px;outline:none;resize:vertical;"></textarea>' +
-                 '<div id="shd-new-prev" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>' +
-                 '<div style="display:flex;gap:6px;align-items:center;margin-top:6px;">' +
-                   '<label title="Attach files" style="cursor:pointer;background:rgba(148,163,184,.15);border-radius:8px;padding:6px 9px;color:#cbd5e1;font-size:12px;">' +
-                     '&#128206;<input type="file" multiple style="display:none" onchange="shdFiles(\'new\',this)"></label>' +
-                   '<button onclick="shdStart()" style="flex:1;background:#06b6d4;border:0;border-radius:9px;padding:7px;color:#042f2e;font-size:11.5px;font-weight:900;cursor:pointer;">Send</button>' +
-                 '</div></div></div>';
+               '<button onclick="shdCompose()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#4f46e5);border:0;border-radius:10px;' +
+                 'padding:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">&#9998; Message SimplyHiree</button></div>';
         }
 
         h += '<div style="max-height:300px;overflow-y:auto;">';
         h += (d.threads.length ? d.threads.map(function (t) { return row(t, false); }).join('')
                                : '<div style="padding:18px;text-align:center;color:#94a3b8;font-size:12px;">' +
-                                 (INTERNAL ? 'No chats assigned to you.' : 'No chats yet. Start one above.') + '</div>');
+                                 (INTERNAL ? 'No chats assigned to you.' : 'No chats yet. Use the button above.') + '</div>');
 
         if (INTERNAL && d.queue.length) {
           h += '<div style="padding:8px 13px;background:rgba(251,191,36,.08);border-top:1px solid rgba(251,191,36,.2);' +
@@ -181,34 +178,19 @@
       }).catch(function () {});
   }
 
-  window.shdNew = function () {
-    var p = document.getElementById('shd-new'); if (!p) return;
-    var opening = p.style.display === 'none';
-    p.style.display = opening ? 'block' : 'none';
-    if (opening) { var t = document.getElementById('shd-new-body'); if (t) t.focus(); }
-  };
-
-  window.shdStart = function () {
-    var t = document.getElementById('shd-new-body');
-    var body = t ? t.value.trim() : '';
-    var files = pending['new'];
-    if (!body && !(files && files.length)) return;
-
-    var fd = new FormData();
-    fd.append('_token', CSRF);
-    if (body) fd.append('body', body);
-    if (files) files.forEach(function (f) { fd.append('attachments[]', f); });
-
-    fetch(u('/chat'), { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
-      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
-      .then(function (res) {
-        if (!res.ok) { alert(res.d.message || 'Could not send that message.'); return; }
-        if (t) t.value = '';
-        clearFiles('new');
-        shdNew();
-        shdOpen(res.d.conversation_id, 'SimplyHiree');
-        refresh();
-      }).catch(function () { alert('Could not send that message.'); });
+  // Opens a proper chat window rather than a box inside the panel. The party's
+  // messages all belong to one running thread with SimplyHiree, so an open one
+  // is reopened instead of starting a parallel thread.
+  window.shdCompose = function () {
+    if (myThreads.length) {
+      var t = myThreads[0];
+      shdOpen(t.id, t.title || 'SimplyHiree');
+    } else {
+      shdOpen('new', 'SimplyHiree');
+    }
+    if (listOpen) shdToggle();
+    var i = document.getElementById('shi-' + (myThreads.length ? myThreads[0].id : 'new'));
+    if (i) i.focus();
   };
 
   window.shdCap = function (v) {
@@ -237,32 +219,39 @@
     el.style.cssText = 'width:290px;border-radius:14px 14px 0 0;overflow:hidden;background:#0b1220;' +
       'border:1px solid rgba(148,163,184,.22);box-shadow:0 18px 44px -10px rgba(0,0,0,.7);';
     el.innerHTML =
-      '<div style="padding:9px 11px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="shdMin(' + id + ')">' +
+      '<div style="padding:9px 11px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="shdMin(\'' + id + '\')">' +
         '<span style="flex:1;min-width:0;color:#fff;font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(title) + '</span>' +
-        (INTERNAL ? '<button onclick="event.stopPropagation();shdMenu(' + id + ')" title="Chat actions" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800;cursor:pointer;line-height:1;">&#8942;</button>' : '') +
-        '<button onclick="event.stopPropagation();shdClose(' + id + ')" aria-label="Hide this window" title="Hide window (the chat stays open)" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:21px;height:21px;cursor:pointer;line-height:1;">&times;</button>' +
+        (INTERNAL && id !== 'new' ? '<button onclick="event.stopPropagation();shdMenu(\'' + id + '\')" title="Chat actions" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800;cursor:pointer;line-height:1;">&#8942;</button>' : '') +
+        '<button onclick="event.stopPropagation();shdClose(\'' + id + '\')" aria-label="Hide this window" title="Hide window (the chat stays open)" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:21px;height:21px;cursor:pointer;line-height:1;">&times;</button>' +
       '</div>' +
       '<div id="shmenu-' + id + '" style="display:none;background:#111c31;border-bottom:1px solid rgba(148,163,184,.18);padding:7px;">' +
-        '<button onclick="shdResolve(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#10003; Mark resolved</button>' +
-        '<button onclick="shdRelease(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#8631; Return to queue</button>' +
-        '<button onclick="shdArchive(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fcd34d;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128230; Archive</button>' +
-        (SUPER ? '<button onclick="shdDelete(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fda4af;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128465; Delete permanently</button>' : '') +
+        '<button onclick="shdResolve(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#10003; Mark resolved</button>' +
+        '<button onclick="shdRelease(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#8631; Return to queue</button>' +
+        '<button onclick="shdArchive(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fcd34d;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128230; Archive</button>' +
+        (SUPER ? '<button onclick="shdDelete(\'' + id + '\')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fda4af;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128465; Delete permanently</button>' : '') +
       '</div>' +
       '<div class="shw-body">' +
         '<div id="shm-' + id + '" style="height:240px;overflow-y:auto;padding:10px;background:#070e1b;"></div>' +
         '<div style="padding:8px 10px;border-top:1px solid rgba(148,163,184,.14);">' +
           '<div style="display:flex;gap:6px;align-items:center;">' +
             '<label title="Attach files" style="flex:0 0 auto;cursor:pointer;background:rgba(148,163,184,.15);border-radius:8px;padding:7px 9px;color:#cbd5e1;font-size:12px;">' +
-              '&#128206;<input type="file" multiple style="display:none" onchange="shdFiles(' + id + ',this)"></label>' +
-            '<input id="shi-' + id + '" type="text" placeholder="Message…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();shdSend(' + id + ');}" ' +
+              '&#128206;<input type="file" multiple style="display:none" onchange="shdFiles(\'' + id + '\',this)"></label>' +
+            '<input id="shi-' + id + '" type="text" placeholder="Message…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();shdSend(\'' + id + '\');}" ' +
               'style="flex:1;min-width:0;background:#111c31;border:1px solid rgba(148,163,184,.25);border-radius:9px;padding:8px 10px;color:#fff;font-size:12px;outline:none;">' +
-            '<button onclick="shdSend(' + id + ')" style="background:#06b6d4;border:0;border-radius:9px;padding:0 11px;color:#042f2e;font-weight:900;cursor:pointer;">&#10148;</button>' +
+            '<button onclick="shdSend(\'' + id + '\')" style="background:#06b6d4;border:0;border-radius:9px;padding:0 11px;color:#042f2e;font-weight:900;cursor:pointer;">&#10148;</button>' +
           '</div>' +
           '<div id="shf-' + id + '" style="color:#6ee7b7;font-size:10px;font-weight:700;margin-top:4px;"></div>' +
         '</div>' +
       '</div>';
     document.getElementById('shd-windows').appendChild(el);
-    pollWin(id, true);
+
+    if (id === 'new') {
+      var box = document.getElementById('shm-new');
+      if (box) box.innerHTML = '<div style="padding:14px 8px;text-align:center;color:#94a3b8;font-size:11.5px;line-height:1.5;">' +
+        'Write your first message to the SimplyHiree team.<br>Someone will pick it up and reply here.</div>';
+    } else {
+      pollWin(id, true);
+    }
   };
 
   window.shdMin = function (id) {
@@ -313,7 +302,7 @@
   var pending = {},   // id (or 'new') -> array of File
       previewUrls = {};
 
-  function previewBox(id) { return document.getElementById(id === 'new' ? 'shd-new-prev' : 'shf-' + id); }
+  function previewBox(id) { return document.getElementById('shf-' + id); }
 
   function revoke(id) {
     (previewUrls[id] || []).forEach(function (u2) { try { URL.revokeObjectURL(u2); } catch (e) {} });
@@ -448,9 +437,26 @@
 
     function drop() { var g = document.getElementById(tag); if (g) g.remove(); }
 
-    fetch(u('/chat/' + id + '/reply'), { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
+    var url = id === 'new' ? u('/chat') : u('/chat/' + id + '/reply');
+
+    fetch(url, { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, d: j }; }); })
+      .then(function (res) {
+        var d = res.d;
+        if (!res.ok) {
+          var g0 = document.getElementById(tag);
+          if (g0) { g0.style.opacity = 1; g0.querySelector('div div').innerHTML = '<span style="color:#fda4af;">' + esc(d.message || 'Not sent') + '</span>'; }
+          return;
+        }
+
+        // The compose window becomes the real conversation's window.
+        if (id === 'new' && d.conversation_id) {
+          shdClose('new');
+          shdOpen(d.conversation_id, 'SimplyHiree');
+          refresh();
+          return;
+        }
+
         drop();
         if (d && d.message && render(id, d.message)) {
           var b2 = document.getElementById('shm-' + id);
@@ -465,7 +471,7 @@
   refresh();
   setInterval(function () {
     refresh();
-    Object.keys(windows).forEach(function (id) { pollWin(id, false); });
+    Object.keys(windows).forEach(function (id) { if (id !== 'new') pollWin(id, false); });
   }, 7000);
 })();
 </script>
