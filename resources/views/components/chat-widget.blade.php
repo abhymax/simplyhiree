@@ -54,6 +54,8 @@
 
     <div style="padding:9px 13px;border-top:1px solid rgba(148,163,184,.12);">
       <a href="{{ route($cwBase . '.index') }}" style="color:#67e8f9;font-size:11px;font-weight:700;text-decoration:none;">Open full chats page →</a>
+      <a href="#" onclick="shTestSound(event)" title="Play the notification sound"
+         style="float:right;color:#94a3b8;font-size:11px;font-weight:700;text-decoration:none;">🔊 Test sound</a>
     </div>
   </div>
 
@@ -80,27 +82,88 @@
 
   var open = false, current = null, lastId = 0, lastTotal = 0, firstRun = true;
 
+  // Ids already on screen. The poll and the send response can both carry the
+  // same message, which previously rendered it twice.
+  var seen = Object.create(null);
+
+  function render(box, m) {
+    if (seen[m.id]) return false;
+    seen[m.id] = true;
+    if (m.id > lastId) lastId = m.id;
+    box.insertAdjacentHTML('beforeend', bubble(m));
+    return true;
+  }
+
   function url(p) { return ROOT + PREFIX + p; }
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
 
-  // A short two-tone chime, generated so no audio file is needed.
+  // Notification chime.
+  //
+  // One shared AudioContext: Chrome caps how many a page may create, and the
+  // previous code made a new one per ping until it started throwing. It also
+  // starts suspended until the user has interacted with the page, so it is
+  // resumed on the first click or keypress and again before each play.
+  var audioCtx = null;
+
+  function getCtx() {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    if (!audioCtx) {
+      try { audioCtx = new Ctx(); } catch (e) { return null; }
+    }
+    return audioCtx;
+  }
+
+  function unlockAudio() {
+    var ctx = getCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(function () {});
+  }
+  ['click', 'keydown', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, unlockAudio, { passive: true });
+  });
+
   function ping() {
+    var ctx = getCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(function () {});
+
     try {
-      var Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      var ctx = new Ctx();
       [880, 1180].forEach(function (f, i) {
         var o = ctx.createOscillator(), g = ctx.createGain();
         o.type = 'sine'; o.frequency.value = f;
         o.connect(g); g.connect(ctx.destination);
         var t = ctx.currentTime + i * 0.13;
         g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
         o.start(t); o.stop(t + 0.24);
       });
     } catch (e) {}
+
+    flashTitle();
   }
+
+  // Visible fallback: the tab title blinks, so a muted tab still shows activity.
+  var titleTimer = null, realTitle = document.title;
+  function flashTitle() {
+    if (titleTimer) return;
+    var on = false;
+    titleTimer = setInterval(function () {
+      document.title = on ? realTitle : '\u25CF New message';
+      on = !on;
+    }, 900);
+    setTimeout(function () {
+      clearInterval(titleTimer); titleTimer = null; document.title = realTitle;
+    }, 9000);
+  }
+  ['click', 'focus'].forEach(function (ev) {
+    window.addEventListener(ev, function () {
+      if (titleTimer) { clearInterval(titleTimer); titleTimer = null; document.title = realTitle; }
+    });
+  });
+
+  // Let the user confirm sound works without waiting for a message.
+  window.shTestSound = function (e) { if (e) e.preventDefault(); unlockAudio(); ping(); };
 
   window.shToggle = function () {
     open = !open;
@@ -156,7 +219,7 @@
   }
 
   window.shOpen = function (id, title) {
-    current = id; lastId = 0;
+    current = id; lastId = 0; seen = Object.create(null);
     document.getElementById('sh-list').style.display = 'none';
     document.getElementById('sh-thread').style.display = 'block';
     document.getElementById('sh-back').style.display = 'block';
@@ -185,13 +248,13 @@
     fetch(url('/chat/' + current + '/poll?after=' + lastId), { headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        var box = document.getElementById('sh-msgs'), incoming = 0;
+        var box = document.getElementById('sh-msgs'), incoming = 0, added = 0;
         (d.messages || []).forEach(function (m) {
-          lastId = m.id;
+          if (!render(box, m)) return;
+          added++;
           if (m.side !== MYSIDE) incoming++;
-          box.insertAdjacentHTML('beforeend', bubble(m));
         });
-        if ((d.messages || []).length) box.scrollTop = box.scrollHeight;
+        if (added) box.scrollTop = box.scrollHeight;
         if (!initial && incoming > 0) ping();
       }).catch(function () {});
   }
@@ -205,10 +268,8 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.message) {
-          lastId = d.message.id;
           var box = document.getElementById('sh-msgs');
-          box.insertAdjacentHTML('beforeend', bubble(d.message));
-          box.scrollTop = box.scrollHeight;
+          if (render(box, d.message)) box.scrollTop = box.scrollHeight;
         }
       }).catch(function () {});
   };

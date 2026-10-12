@@ -101,6 +101,10 @@
 
     var pollUrl = @json(route($base . '.poll', $conversation));
     var lastId  = {{ $messages->last()->id ?? 0 }};
+
+    // Ids already rendered, so a message can never be appended twice.
+    var seen = Object.create(null);
+    thread.querySelectorAll('[data-mid]').forEach(function (el) { seen[el.getAttribute('data-mid')] = true; });
     var me      = {{ auth()->id() }};
 
     function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
@@ -112,7 +116,9 @@
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 (d.messages || []).forEach(function (m) {
-                    lastId = m.id;
+                    if (seen[m.id]) return;
+                    seen[m.id] = true;
+                    if (m.id > lastId) lastId = m.id;
                     var mine = m.side === @json(auth()->user() && \App\Models\ChatConversation::isInternal(auth()->user()) ? 'simplyhiree' : 'party');
                     var files = (m.files || []).map(function (f) {
                         return '<a href="' + f.url + '" target="_blank" class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs font-bold text-cyan-100">' + esc(f.name) + '</a>';
