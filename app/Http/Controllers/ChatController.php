@@ -265,33 +265,122 @@ class ChatController extends Controller
         ];
     }
 
-    /** Thread list for the floating popup, with unread counts. */
+    /**
+     * Feeds the popup: the chats this user is handling, plus — for the
+     * SimplyHiree side — the queue of unclaimed chats and their wait time.
+     */
     public function threads(Request $request)
     {
         $user = $this->user();
+        $internal = $this->isInternal();
 
-        $rows = ChatConversation::query()
-            ->visibleTo($user)
-            ->with(['party:id,name', 'latestMessage'])
-            ->orderByDesc('last_message_at')->orderByDesc('id')
-            ->limit(15)->get();
-
-        $total = 0;
-        $threads = $rows->map(function ($c) use ($user, &$total) {
-            $n = $c->unreadCountFor($user);
-            $total += $n;
-
+        $shape = function (ChatConversation $c) use ($user, $internal) {
             return [
-                'id'      => $c->id,
-                'title'   => $this->isInternal() ? ($c->party->name ?? 'Unknown') : ($c->subject ?: 'SimplyHiree'),
-                'type'    => $c->party_type,
-                'preview' => \Illuminate\Support\Str::limit($c->latestMessage?->body ?? 'No messages yet', 42),
-                'unread'  => $n,
-                'when'    => $c->last_message_at?->diffForHumans(null, true),
+                'id'       => $c->id,
+                'title'    => $internal ? ($c->party->name ?? 'Unknown') : ($c->subject ?: 'SimplyHiree'),
+                'type'     => $c->party_type,
+                'preview'  => \Illuminate\Support\Str::limit($c->latestMessage?->body ?? 'No messages yet', 40),
+                'unread'   => $c->unreadCountFor($user),
+                'when'     => $c->last_message_at?->diffForHumans(null, true),
+                'waiting'  => $c->last_message_at ? $c->last_message_at->diffForHumans(null, true) : null,
+                'assignee' => $c->assignee?->name,
             ];
-        });
+        };
 
-        return response()->json(['threads' => $threads, 'unread_total' => $total]);
+        $mineQuery = ChatConversation::query()
+            ->visibleTo($user)
+            ->with(['party:id,name', 'latestMessage', 'assignee:id,name'])
+            ->when($internal, fn ($q) => $q->where('assigned_to_user_id', $user->id))
+            ->orderByDesc('last_message_at')->orderByDesc('id')
+            ->limit(20);
+
+        $mine = $mineQuery->get()->map($shape);
+
+        $queue = collect();
+        $capacity = (int) ($user->chat_capacity ?: 5);
+        $active = 0;
+
+        if ($internal) {
+            $active = ChatConversation::where('assigned_to_user_id', $user->id)
+                ->where('status', 'open')->count();
+
+            // Unclaimed and still open: oldest wait first, so nobody is forgotten.
+            $queue = ChatConversation::query()
+                ->whereNull('assigned_to_user_id')
+                ->where('status', 'open')
+                ->with(['party:id,name', 'latestMessage'])
+                ->orderBy('last_message_at')
+                ->limit(25)->get()->map($shape);
+        }
+
+        return response()->json([
+            'threads'      => $mine,
+            'queue'        => $queue,
+            'unread_total' => $mine->sum('unread') + $queue->sum('unread'),
+            'internal'     => $internal,
+            'capacity'     => $capacity,
+            'active'       => $active,
+            'can_claim'    => $internal && $active < $capacity,
+        ]);
+    }
+
+    /** Take a waiting chat, if under capacity. */
+    public function claim(ChatConversation $conversation)
+    {
+        $user = $this->user();
+        abort_unless($this->isInternal(), 403);
+
+        $capacity = (int) ($user->chat_capacity ?: 5);
+        $active = ChatConversation::where('assigned_to_user_id', $user->id)->where('status', 'open')->count();
+
+        if ($conversation->assigned_to_user_id && (int) $conversation->assigned_to_user_id !== (int) $user->id) {
+            $msg = 'Already taken by ' . ($conversation->assignee?->name ?? 'someone else') . '.';
+
+            return request()->wantsJson()
+                ? response()->json(['ok' => false, 'message' => $msg], 409)
+                : back()->with('error', $msg);
+        }
+
+        if ($active >= $capacity && (int) $conversation->assigned_to_user_id !== (int) $user->id) {
+            $msg = "You are handling {$active} of {$capacity} chats. Close or release one first.";
+
+            return request()->wantsJson()
+                ? response()->json(['ok' => false, 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $conversation->update(['assigned_to_user_id' => $user->id]);
+
+        return request()->wantsJson()
+            ? response()->json(['ok' => true, 'conversation_id' => $conversation->id])
+            : back()->with('success', 'Chat claimed.');
+    }
+
+    /** Hand a chat back to the queue. */
+    public function release(ChatConversation $conversation)
+    {
+        abort_unless($this->isInternal(), 403);
+        $this->authorizeConversation($conversation);
+
+        $conversation->update(['assigned_to_user_id' => null]);
+
+        return request()->wantsJson()
+            ? response()->json(['ok' => true])
+            : back()->with('success', 'Chat returned to the queue.');
+    }
+
+    /** How many chats this user will handle at once. */
+    public function setCapacity(Request $request)
+    {
+        abort_unless($this->isInternal(), 403);
+
+        $data = $request->validate(['capacity' => 'required|integer|min:1|max:20']);
+        $user = $this->user();
+        $user->forceFill(['chat_capacity' => $data['capacity']])->save();
+
+        return $request->wantsJson()
+            ? response()->json(['ok' => true, 'capacity' => (int) $data['capacity']])
+            : back()->with('success', 'Chat capacity updated.');
     }
 
     /** Poll endpoint: the thread refreshes without websockets. */
