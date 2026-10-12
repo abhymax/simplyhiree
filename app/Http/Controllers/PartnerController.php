@@ -991,9 +991,9 @@ class PartnerController extends Controller
         $partner = Auth::user();
         $ownerId = $partner->partnerOwnerId();
         $poolIds = $this->partnerPoolIds($partner);
-        $candidates = Candidate::whereIn('partner_id', $poolIds)
-                                ->latest()
-                                ->get();
+        $candidatesQuery = Candidate::whereIn('partner_id', $poolIds)->latest();
+        $this->scopeOwnCandidates($candidatesQuery, $partner);
+        $candidates = $candidatesQuery->get();
         $appliedCandidateIds = JobApplication::where('job_id', $job->id)
             ->whereIn('candidate_id', $candidates->pluck('id'))
             ->pluck('candidate_id')
@@ -1026,8 +1026,10 @@ class PartnerController extends Controller
             ->map(fn ($candidateId) => (int) $candidateId)
             ->unique()
             ->values();
-        $candidateIds = Candidate::whereIn('partner_id', $poolIds)
-            ->whereIn('id', $requestedCandidateIds)
+        $candidateIdsQuery = Candidate::whereIn('partner_id', $poolIds)
+            ->whereIn('id', $requestedCandidateIds);
+        $this->scopeOwnCandidates($candidateIdsQuery, $partner);
+        $candidateIds = $candidateIdsQuery
             ->pluck('id')
             ->map(fn ($candidateId) => (int) $candidateId);
 
