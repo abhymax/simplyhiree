@@ -13,7 +13,7 @@
                 </h1>
                 <p class="mt-0.5 text-sm text-blue-200">
                     {{ $isInternal ? ($conversation->party->name ?? 'Unknown') . ' · ' . (\App\Models\ChatConversation::PARTY_TYPES[$conversation->party_type] ?? $conversation->party_type) : 'SimplyHiree team' }}
-                    @if($conversation->status === 'closed') · <span class="font-bold text-slate-400">Closed</span>@endif
+                    @if($conversation->status === 'closed') · <span class="font-bold text-slate-400">Resolved</span>@endif@if($conversation->archived_at) · <span class="font-bold text-amber-300">Archived</span>@endif
                 </p>
             </div>
 
@@ -35,10 +35,29 @@
                     @endif
                     <form method="POST" action="{{ route($base . '.status', $conversation) }}">
                         @csrf
-                        <button class="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-white/10">
-                            {{ $conversation->status === 'open' ? 'Close' : 'Reopen' }}
+                        <button title="{{ $conversation->status === 'open' ? 'Mark this conversation handled' : 'Make this conversation active again' }}"
+                                class="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-white/10">
+                            {{ $conversation->status === 'open' ? 'Mark resolved' : 'Reopen' }}
                         </button>
                     </form>
+                    <form method="POST" action="{{ route($base . '.archive', $conversation) }}">
+                        @csrf
+                        <button title="{{ $conversation->archived_at ? 'Put this chat back in the active list' : 'Hide from the active list, keeping the history' }}"
+                                class="rounded-lg border border-amber-300/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-100 hover:bg-amber-500/20">
+                            {{ $conversation->archived_at ? 'Unarchive' : 'Archive' }}
+                        </button>
+                    </form>
+                    @if(auth()->user()->hasRole('Superadmin'))
+                        <form method="POST" action="{{ route($base . '.destroy', $conversation) }}"
+                              onsubmit="return confirm('Delete this chat and every message in it permanently? Archiving keeps the history; this does not.')">
+                            @csrf
+                            @method('DELETE')
+                            <button title="Delete permanently"
+                                    class="rounded-lg border border-rose-400/35 bg-rose-500/15 px-3 py-1.5 text-xs font-bold text-rose-200 hover:bg-rose-500/25">
+                                Delete
+                            </button>
+                        </form>
+                    @endif
                 </div>
             @endif
         </div>

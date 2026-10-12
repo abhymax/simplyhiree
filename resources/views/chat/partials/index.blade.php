@@ -70,9 +70,15 @@
                     @if($key && isset($partyCounts[$key]))<span class="ml-1 opacity-70">{{ $partyCounts[$key] }}</span>@endif
                 </a>
             @endforeach
+            <a href="{{ route($base . '.index', ['view' => 'archived']) }}"
+               class="rounded-xl border px-4 py-2 text-xs font-extrabold transition
+               {{ request('view') === 'archived' ? 'border-amber-300/50 bg-amber-500/20 text-amber-100' : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10' }}">
+                Archived
+            </a>
         </div>
 
         <form method="GET" class="mb-4 flex flex-wrap gap-2">
+            <input type="hidden" name="view" value="{{ request('view') }}">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email or subject…"
                    class="min-w-[200px] flex-1 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 text-sm text-white placeholder-slate-400">
             <input type="hidden" name="party_type" value="{{ request('party_type') }}">

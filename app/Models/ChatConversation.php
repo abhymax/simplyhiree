@@ -11,10 +11,10 @@ class ChatConversation extends Model
 
     protected $fillable = [
         'subject', 'party_type', 'party_user_id', 'job_id', 'job_application_id',
-        'assigned_to_user_id', 'status', 'last_message_at', 'created_by',
+        'assigned_to_user_id', 'status', 'archived_at', 'last_message_at', 'created_by',
     ];
 
-    protected $casts = ['last_message_at' => 'datetime'];
+    protected $casts = ['last_message_at' => 'datetime', 'archived_at' => 'datetime'];
 
     public const PARTY_TYPES = ['client' => 'Client', 'vendor' => 'Vendor', 'candidate' => 'Candidate'];
 

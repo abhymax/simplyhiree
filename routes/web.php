@@ -166,6 +166,8 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::post('/chat/{conversation}/claim', [\App\Http\Controllers\ChatController::class, 'claim'])->name('chat.claim');
         Route::post('/chat/{conversation}/release', [\App\Http\Controllers\ChatController::class, 'release'])->name('chat.release');
         Route::post('/chat-capacity', [\App\Http\Controllers\ChatController::class, 'setCapacity'])->name('chat.capacity');
+        Route::post('/chat/{conversation}/archive', [\App\Http\Controllers\ChatController::class, 'archive'])->name('chat.archive');
+        Route::delete('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'destroy'])->name('chat.destroy');
 
         // --- Account deletion requests (GDPR / DPDP erasure) ---
         Route::get('/deletion-requests', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'index'])->name('deletion-requests.index');

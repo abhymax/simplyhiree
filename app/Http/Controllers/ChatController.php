@@ -63,6 +63,11 @@ class ChatController extends Controller
         if ($request->filled('party_type') && $this->isInternal()) {
             $query->where('party_type', $request->input('party_type'));
         }
+        if ($request->input('view') === 'archived') {
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
@@ -290,6 +295,7 @@ class ChatController extends Controller
         $mineQuery = ChatConversation::query()
             ->visibleTo($user)
             ->with(['party:id,name', 'latestMessage', 'assignee:id,name'])
+            ->whereNull('archived_at')
             ->when($internal, fn ($q) => $q->where('assigned_to_user_id', $user->id))
             ->orderByDesc('last_message_at')->orderByDesc('id')
             ->limit(20);
@@ -307,6 +313,7 @@ class ChatController extends Controller
             // Unclaimed and still open: oldest wait first, so nobody is forgotten.
             $queue = ChatConversation::query()
                 ->whereNull('assigned_to_user_id')
+                ->whereNull('archived_at')
                 ->where('status', 'open')
                 ->with(['party:id,name', 'latestMessage'])
                 ->orderBy('last_message_at')
@@ -381,6 +388,53 @@ class ChatController extends Controller
         return $request->wantsJson()
             ? response()->json(['ok' => true, 'capacity' => (int) $data['capacity']])
             : back()->with('success', 'Chat capacity updated.');
+    }
+
+    /** Move a chat out of the way without losing it. */
+    public function archive(ChatConversation $conversation)
+    {
+        $this->authorizeConversation($conversation);
+        abort_unless($this->isInternal(), 403);
+
+        $conversation->update(['archived_at' => $conversation->archived_at ? null : now()]);
+
+        return back()->with('success', $conversation->fresh()->archived_at
+            ? 'Chat archived. Find it under Archived.'
+            : 'Chat restored to the active list.');
+    }
+
+    /**
+     * Delete a chat and its messages for good, including uploaded files.
+     * Superadmin only: an archive is recoverable, this is not.
+     */
+    public function destroy(ChatConversation $conversation)
+    {
+        abort_unless($this->user()->hasRole('Superadmin'), 403, 'Only a Superadmin can delete a chat.');
+
+        $messageIds = $conversation->messages()->pluck('id')->all();
+        $paths = $messageIds
+            ? \App\Models\ChatAttachment::whereIn('message_id', $messageIds)->pluck('path')->all()
+            : [];
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($conversation, $messageIds) {
+            if ($messageIds) {
+                \App\Models\ChatAttachment::whereIn('message_id', $messageIds)->delete();
+            }
+            $conversation->messages()->delete();
+            $conversation->reads()->delete();
+            $conversation->delete();
+        });
+
+        // Files only after the rows are safely gone.
+        foreach ($paths as $p) {
+            try {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($p);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Could not remove chat file ' . $p . ': ' . $e->getMessage());
+            }
+        }
+
+        return redirect()->route($this->homeRoute())->with('success', 'Chat deleted permanently.');
     }
 
     /** Poll endpoint: the thread refreshes without websockets. */

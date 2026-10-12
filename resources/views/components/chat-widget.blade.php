@@ -192,7 +192,7 @@
       '<div style="padding:9px 11px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="shdMin(' + id + ')">' +
         '<span style="flex:1;min-width:0;color:#fff;font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(title) + '</span>' +
         (INTERNAL ? '<button onclick="event.stopPropagation();shdRelease(' + id + ')" title="Return to queue" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;cursor:pointer;">Release</button>' : '') +
-        '<button onclick="event.stopPropagation();shdClose(' + id + ')" aria-label="Close" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:21px;height:21px;cursor:pointer;line-height:1;">&times;</button>' +
+        '<button onclick="event.stopPropagation();shdClose(' + id + ')" aria-label="Hide this window" title="Hide window (the chat stays open)" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:21px;height:21px;cursor:pointer;line-height:1;">&times;</button>' +
       '</div>' +
       '<div class="shw-body">' +
         '<div id="shm-' + id + '" style="height:240px;overflow-y:auto;padding:10px;background:#070e1b;"></div>' +
