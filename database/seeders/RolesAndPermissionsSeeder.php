@@ -28,6 +28,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_candidate_data',
             'view_interview_data',
             'view_billing_data',
+
+            // Modules added after the original set. Each one is separate so a
+            // manager can be given it without being given everything else.
+            'view_assessments',         // Questionnaires
+            'view_assessment_results',  // Assessment reports
+            'view_chats',               // Answering chats
+            'view_activity_logs',       // Audit trail
+            'manage_offer_letters',     // Offer letters and templates
+            'view_vendor_ratings',      // Vendor scorecards
+            'view_analytics',           // Advanced analytics
         ];
 
         foreach ($permissions as $permission) {

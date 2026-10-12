@@ -84,16 +84,7 @@
                         <i class="fa-solid fa-key text-amber-400"></i> Update Permissions
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @foreach($permissions as $permission)
-                            <label class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition cursor-pointer">
-                                <input type="checkbox" name="permissions[]" value="{{ $permission }}" 
-                                    class="w-5 h-5 text-amber-500 bg-slate-800 border-slate-600 rounded focus:ring-amber-500 focus:ring-offset-slate-900"
-                                    {{ in_array($permission, $userPermissions) ? 'checked' : '' }}>
-                                <span class="text-sm font-medium text-slate-200 capitalize">{{ str_replace('_', ' ', $permission) }}</span>
-                            </label>
-                        @endforeach
-                    </div>
+                    @include('admin.sub_admins._permissions')
                 </div>
 
                 {{-- ACTIONS --}}

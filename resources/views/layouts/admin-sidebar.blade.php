@@ -74,7 +74,7 @@
                     ['route'=>'admin.partners.index',         'label'=>'Partners',            'icon'=>'fa-handshake',           'active'=>['admin.partners.*']],
                     ['route'=>'admin.partner-plans.index',    'label'=>'Partner Plans',       'icon'=>'fa-crown',               'active'=>['admin.partner-plans.*']],
                     ['route'=>'admin.candidates.index',       'label'=>'Candidates',          'icon'=>'fa-users',               'active'=>['admin.candidates.*']],
-                    ['route'=>'admin.managers.index',         'label'=>'Managers',            'icon'=>'fa-user-shield',         'active'=>['admin.managers.*']],
+                    ['route'=>'admin.sub_admins.index',       'label'=>'Managers',            'icon'=>'fa-user-shield',         'active'=>['admin.sub_admins.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.landing-pages.index',    'label'=>'Landing Pages',       'icon'=>'fa-globe',               'active'=>['admin.landing-pages.*']],
                 ];
             @endphp
