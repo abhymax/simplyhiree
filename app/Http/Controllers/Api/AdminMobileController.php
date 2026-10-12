@@ -537,7 +537,7 @@ class AdminMobileController extends Controller
                 'location' => $job->location,
                 'salary' => $job->salary,
                 'job_type' => $job->job_type,
-                'category' => $job->category?->name,
+                'category' => $job->category_name,
                 'education_level' => $job->educationLevel?->name,
                 'description' => $job->description,
                 'openings' => $job->openings,

@@ -55,7 +55,7 @@
                     <h3 class="text-cyan-300 text-xs font-bold uppercase tracking-wider mb-3">Job Details</h3>
                     <dl class="text-sm space-y-2">
                         <div class="flex justify-between gap-3"><dt class="text-blue-200">Type</dt><dd class="text-white font-semibold text-right">{{ $job->job_type ?? '—' }}</dd></div>
-                        <div class="flex justify-between gap-3"><dt class="text-blue-200">Category</dt><dd class="text-white font-semibold text-right">{{ $job->category->name ?? $job->category ?? '—' }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-blue-200">Category</dt><dd class="text-white font-semibold text-right">{{ $job->category_name ?? '—' }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-blue-200">Salary</dt><dd class="text-white font-semibold text-right">{{ $job->salary ?? '—' }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-blue-200">Experience</dt><dd class="text-white font-semibold text-right">{{ $job->formatted_experience }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-blue-200">Education</dt><dd class="text-white font-semibold text-right">{{ $job->educationLevel->name ?? '—' }}</dd></div>

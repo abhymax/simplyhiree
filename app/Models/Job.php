@@ -134,9 +134,31 @@ class Job extends Model
      * Get the job category (Alias Method).
      * ADDED: This supports the Admin Controller which calls 'category'.
      */
+    /**
+     * Kept for backwards compatibility, but do NOT read $job->category: the
+     * jobs table still carries a legacy free-text `category` column, and an
+     * attribute of the same name wins over a relation. Reading it returns the
+     * column -- NULL on everything but five old jobs -- which is why listings
+     * showed "N/A". Use $job->jobCategory, or $job->category_name below.
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(JobCategory::class, 'category_id');
+    }
+
+    /**
+     * The category to show: the linked one, falling back to the legacy text
+     * for jobs created before job_categories existed.
+     */
+    public function getCategoryNameAttribute(): ?string
+    {
+        if ($name = $this->jobCategory?->name) {
+            return $name;
+        }
+
+        $legacy = $this->attributes['category'] ?? null;
+
+        return is_string($legacy) && $legacy !== '' ? $legacy : null;
     }
 
     /**

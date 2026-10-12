@@ -929,7 +929,7 @@ class AdminController extends Controller
     {
         if (!$user->hasRole('client')) abort(404);
         $user->load(['profile', 'clientProfile']);
-        $jobs = \App\Models\Job::where('user_id', $user->id)->with(['category'])->latest()->paginate(10);
+        $jobs = \App\Models\Job::where('user_id', $user->id)->with(['jobCategory'])->latest()->paginate(10);
         $totalJobs = \App\Models\Job::where('user_id', $user->id)->count();
         $activeJobs = \App\Models\Job::where('user_id', $user->id)->where('status', 'approved')->count();
         $totalHires = \App\Models\JobApplication::whereHas('job', function($q) use ($user) {

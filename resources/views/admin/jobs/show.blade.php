@@ -76,7 +76,7 @@
                             <div class="grid grid-cols-2 gap-4 mt-8">
                                 <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10">
                                     <span class="block text-xs font-bold text-cyan-300 uppercase mb-1">Category</span>
-                                    <span class="text-white font-medium">{{ $job->category->name ?? 'General' }}</span>
+                                    <span class="text-white font-medium">{{ $job->category_name ?? 'General' }}</span>
                                 </div>
                                 <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10">
                                     <span class="block text-xs font-bold text-cyan-300 uppercase mb-1">Type</span>

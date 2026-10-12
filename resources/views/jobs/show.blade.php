@@ -240,7 +240,7 @@
                             <div class="space-y-4 text-sm">
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Category</span>
-                                    <span class="font-semibold text-white">{{ $job->jobCategory->name ?? $job->category ?? 'General' }}</span>
+                                    <span class="font-semibold text-white">{{ $job->category_name ?? 'General' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-white/10">
                                     <span class="text-blue-200">Experience</span>

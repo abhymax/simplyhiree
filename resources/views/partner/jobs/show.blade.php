@@ -21,7 +21,7 @@
                             {{ $job->job_type }}
                         </span>
                         <span class="bg-indigo-500/20 border border-indigo-400/30 text-indigo-100 text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wide">
-                            {{ $job->category->name ?? 'General' }}
+                            {{ $job->category_name ?? 'General' }}
                         </span>
                         @if($job->is_walkin)
                             <span class="bg-cyan-500/20 border border-cyan-400/30 text-cyan-100 text-xs font-bold px-2.5 py-1 rounded uppercase tracking-wide">
