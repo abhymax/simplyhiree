@@ -155,7 +155,7 @@
         if (!INTERNAL) {
           h += '<div style="padding:11px 13px;border-bottom:1px solid rgba(148,163,184,.14);">' +
                '<button onclick="shdCompose()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#4f46e5);border:0;border-radius:10px;' +
-                 'padding:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">&#9998; Message SimplyHiree</button></div>';
+                 'padding:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">&#10133; New chat with SimplyHiree</button></div>';
         }
 
         h += '<div style="max-height:300px;overflow-y:auto;">';
@@ -178,18 +178,12 @@
       }).catch(function () {});
   }
 
-  // Opens a proper chat window rather than a box inside the panel. The party's
-  // messages all belong to one running thread with SimplyHiree, so an open one
-  // is reopened instead of starting a parallel thread.
+  // Always starts a separate conversation. Existing threads stay in the list
+  // below and are reopened by clicking them.
   window.shdCompose = function () {
-    if (myThreads.length) {
-      var t = myThreads[0];
-      shdOpen(t.id, t.title || 'SimplyHiree');
-    } else {
-      shdOpen('new', 'SimplyHiree');
-    }
+    shdOpen('new', 'New chat');
     if (listOpen) shdToggle();
-    var i = document.getElementById('shi-' + (myThreads.length ? myThreads[0].id : 'new'));
+    var i = document.getElementById('shi-new');
     if (i) i.focus();
   };
 
@@ -453,6 +447,7 @@
         if (id === 'new' && d.conversation_id) {
           shdClose('new');
           shdOpen(d.conversation_id, 'SimplyHiree');
+          if (d.message) render(d.conversation_id, d.message);
           refresh();
           return;
         }

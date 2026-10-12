@@ -81,10 +81,18 @@
                         <div class="whitespace-pre-wrap text-sm text-white">{{ $m->body }}</div>
                     @endif
                     @foreach($m->attachments as $a)
-                        <a href="{{ $a->url() }}" target="_blank" rel="noopener"
-                           class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs font-bold text-cyan-100 hover:bg-white/10">
-                            <i class="fa-regular fa-file"></i> {{ $a->original_name }}
-                        </a>
+                        @if(\Illuminate\Support\Str::startsWith((string) $a->mime, 'image/'))
+                            <a href="{{ $a->url() }}" target="_blank" rel="noopener" class="mt-1.5 block">
+                                <img src="{{ $a->url() }}" alt="{{ $a->original_name }}" loading="lazy"
+                                     class="max-h-64 max-w-full rounded-xl border border-white/15">
+                                <span class="mt-1 block text-[11px] font-bold text-cyan-200">{{ $a->original_name }}</span>
+                            </a>
+                        @else
+                            <a href="{{ $a->url() }}" target="_blank" rel="noopener"
+                               class="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs font-bold text-cyan-100 hover:bg-white/10">
+                                <i class="fa-regular fa-file"></i> {{ $a->original_name }}
+                            </a>
+                        @endif
                     @endforeach
                 </div>
             </div>

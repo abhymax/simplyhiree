@@ -187,32 +187,11 @@ class ChatController extends Controller
             $partyId   = (int) $data['party_user_id'];
         } else {
             [$partyType, $partyId] = $this->partyFor($user);
-
-            // Reuse the open thread rather than opening another one. Sending
-            // from the popup previously created a fresh conversation every
-            // time, so one client appeared several times in the queue.
-            $existing = ChatConversation::where('party_type', $partyType)
-                ->where('party_user_id', $partyId)
-                ->whereNull('archived_at')
-                ->where('status', 'open')
-                ->orderByDesc('last_message_at')
-                ->first();
-
-            if ($existing) {
-                $message = $this->appendMessage($existing, $data['body'] ?? null, $request);
-
-                if ($request->wantsJson()) {
-                    return response()->json([
-                        'ok'              => true,
-                        'conversation_id' => $existing->id,
-                        'message'         => $this->messagePayload($message),
-                    ]);
-                }
-
-                return redirect()->route(str_replace('.index', '.show', $this->homeRoute()), $existing)
-                    ->with('success', 'Message added to your open conversation.');
-            }
         }
+
+        // Every call here is a deliberate "new chat": ordinary messages go
+        // through reply() on a conversation that already exists, so this no
+        // longer has to fold them into one running thread.
 
         $conversation = ChatConversation::create([
             'subject'             => $data['subject'] ?? null,
