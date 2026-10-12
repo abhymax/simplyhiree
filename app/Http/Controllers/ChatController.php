@@ -93,8 +93,20 @@ class ChatController extends Controller
                 ? User::role('Manager')->orderBy('name')->get(['id', 'name'])
                 : collect(),
             'partyOptions'  => $this->isInternal() ? $this->partyOptions() : [],
+            'partyCounts'   => $this->isInternal() ? $this->partyCounts($user) : [],
             'homeRoute'     => $this->homeRoute(),
         ]);
+    }
+
+    /** How many chats sit under each tab. */
+    private function partyCounts(User $user): array
+    {
+        return ChatConversation::query()
+            ->visibleTo($user)
+            ->selectRaw('party_type, COUNT(*) as c')
+            ->groupBy('party_type')
+            ->pluck('c', 'party_type')
+            ->all();
     }
 
     /**
@@ -172,7 +184,15 @@ class ChatController extends Controller
             'last_message_at'     => now(),
         ]);
 
-        $this->appendMessage($conversation, $data['body'], $request);
+        $message = $this->appendMessage($conversation, $data['body'], $request);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'ok'              => true,
+                'conversation_id' => $conversation->id,
+                'message'         => $this->messagePayload($message),
+            ]);
+        }
 
         return redirect()->route(str_replace('.index', '.show', $this->homeRoute()), $conversation)
             ->with('success', 'Conversation started.');
@@ -196,7 +216,11 @@ class ChatController extends Controller
             $conversation->update(['status' => 'open']);
         }
 
-        $this->appendMessage($conversation, $data['body'] ?? null, $request);
+        $message = $this->appendMessage($conversation, $data['body'] ?? null, $request);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'message' => $this->messagePayload($message)]);
+        }
 
         return back()->with('success', 'Message sent.');
     }
@@ -226,6 +250,48 @@ class ChatController extends Controller
         $conversation->update(['status' => $conversation->status === 'open' ? 'closed' : 'open']);
 
         return back()->with('success', 'Conversation marked ' . $conversation->fresh()->status . '.');
+    }
+
+    /** Shape one message for the JSON endpoints. */
+    private function messagePayload(ChatMessage $m): array
+    {
+        return [
+            'id'     => $m->id,
+            'body'   => $m->body,
+            'side'   => $m->sender_side,
+            'sender' => $m->sender?->name ?? 'Unknown',
+            'at'     => $m->created_at?->format('d M, h:i A'),
+            'files'  => $m->attachments->map(fn ($a) => ['name' => $a->original_name, 'url' => $a->url()])->all(),
+        ];
+    }
+
+    /** Thread list for the floating popup, with unread counts. */
+    public function threads(Request $request)
+    {
+        $user = $this->user();
+
+        $rows = ChatConversation::query()
+            ->visibleTo($user)
+            ->with(['party:id,name', 'latestMessage'])
+            ->orderByDesc('last_message_at')->orderByDesc('id')
+            ->limit(15)->get();
+
+        $total = 0;
+        $threads = $rows->map(function ($c) use ($user, &$total) {
+            $n = $c->unreadCountFor($user);
+            $total += $n;
+
+            return [
+                'id'      => $c->id,
+                'title'   => $this->isInternal() ? ($c->party->name ?? 'Unknown') : ($c->subject ?: 'SimplyHiree'),
+                'type'    => $c->party_type,
+                'preview' => \Illuminate\Support\Str::limit($c->latestMessage?->body ?? 'No messages yet', 42),
+                'unread'  => $n,
+                'when'    => $c->last_message_at?->diffForHumans(null, true),
+            ];
+        });
+
+        return response()->json(['threads' => $threads, 'unread_total' => $total]);
     }
 
     /** Poll endpoint: the thread refreshes without websockets. */

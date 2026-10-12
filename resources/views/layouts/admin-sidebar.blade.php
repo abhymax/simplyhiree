@@ -50,7 +50,7 @@
                     ['route'=>'admin.jobs.archived',          'label'=>'Archived Jobs',       'icon'=>'fa-box-archive',         'active'=>['admin.jobs.archived*'], 'can'=>'view_pending_jobs'],
                     ['route'=>'admin.assessments.index',      'label'=>'Questionnaires',      'icon'=>'fa-clipboard-question',  'active'=>['admin.assessments.*']],
                     ['route'=>'admin.assessment-results.index','label'=>'Assessment Results', 'icon'=>'fa-square-poll-vertical', 'active'=>['admin.assessment-results.*']],
-                    ['route'=>'admin.chat.index',            'label'=>'Messages',            'icon'=>'fa-comments',            'active'=>['admin.chat.*']],
+                    ['route'=>'admin.chat.index',            'label'=>'Chats',               'icon'=>'fa-comments',            'active'=>['admin.chat.*']],
                     ['route'=>'admin.deletion-requests.index','label'=>'Deletion Requests','icon'=>'fa-user-slash',        'active'=>['admin.deletion-requests.*'], 'role'=>'Superadmin'],
                     ['route'=>'admin.billing.index',          'label'=>'Billing Report',      'icon'=>'fa-file-invoice-dollar', 'active'=>['admin.billing.*'], 'can'=>'view_billing_data'],
                     ['route'=>'admin.revenue-control.index',  'label'=>'Revenue & Payout',    'icon'=>'fa-sack-dollar',         'active'=>['admin.revenue-control.*'], 'role'=>'Superadmin'],

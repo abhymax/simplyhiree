@@ -38,7 +38,7 @@ class ClientNav
             ['icon' => 'fa-solid fa-file-invoice-dollar',   'label' => 'Invoices & Billing',  'route' => route('client.billing'),            'active' => request()->is('client/billing*'), 'visible' => $mod('billing')],
             ['icon' => 'fa-solid fa-share-nodes',           'label' => $isReferral ? 'Referral Dashboard' : 'Refer & Earn', 'route' => $isReferral ? route('referral.dashboard') : route('referral.enroll'), 'active' => request()->routeIs('referral.*')],
             ['icon' => 'fa-solid fa-gear',                  'label' => 'Settings',            'route' => route('client.profile.company'),    'active' => request()->is('client/profile*'), 'visible' => $mod('company')],
-            ['icon' => 'fa-regular fa-comments',            'label' => 'Messages',            'route' => route('client.chat.index'),         'active' => request()->is('client/chat*')],
+            ['icon' => 'fa-regular fa-comments',            'label' => 'Chats',               'route' => route('client.chat.index'),         'active' => request()->is('client/chat*')],
             ['icon' => 'fa-solid fa-circle-question',       'label' => 'Help & Support',      'route' => route('support'),                   'active' => request()->is('support*')],
         ];
 

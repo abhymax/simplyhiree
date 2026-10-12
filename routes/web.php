@@ -161,6 +161,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+        Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
         Route::post('/chat/{conversation}/assign', [\App\Http\Controllers\ChatController::class, 'assign'])->name('chat.assign');
 
         // --- Account deletion requests (GDPR / DPDP erasure) ---
@@ -421,6 +422,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+        Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
 
 
         Route::get('/dashboard', [ClientController::class, 'index'])->name('dashboard');
@@ -556,6 +558,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+        Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
 
         Route::get('/dashboard', [PartnerController::class, 'index'])->name('dashboard');
         Route::get('/applications', [PartnerController::class, 'applications'])->name('applications');
@@ -621,6 +624,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
         Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
         Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+        Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
 
         Route::get('/dashboard', [CandidateController::class, 'index'])->name('dashboard');
         Route::get('/applications', [CandidateController::class, 'applications'])->name('applications');

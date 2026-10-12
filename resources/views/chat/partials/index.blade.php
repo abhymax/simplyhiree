@@ -3,14 +3,14 @@
 <div class="relative z-10 max-w-6xl mx-auto">
     <div class="mb-5 flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-end md:justify-between">
         <div>
-            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white">Messages</h1>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white">Chats</h1>
             <p class="mt-1 text-sm text-blue-200">
                 {{ $isInternal ? 'Conversations with clients, vendors and candidates.' : 'Talk directly to the SimplyHiree team.' }}
             </p>
         </div>
         <button type="button" onclick="document.getElementById('new-chat').classList.toggle('hidden')"
                 class="inline-flex items-center gap-2 self-start rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 transition hover:bg-cyan-400 md:self-auto">
-            <i class="fa-solid fa-plus"></i> New conversation
+            <i class="fa-solid fa-plus"></i> New chat
         </button>
     </div>
 
@@ -57,15 +57,25 @@
 
     {{-- Filters (SimplyHiree side only) --}}
     @if($isInternal)
+        @php
+            $tabs = ['' => 'All chats', 'vendor' => 'Vendors', 'client' => 'Clients', 'candidate' => 'Candidates'];
+            $active = request('party_type', '');
+        @endphp
+        <div class="mb-3 flex flex-wrap gap-2">
+            @foreach($tabs as $key => $label)
+                <a href="{{ route($base . '.index', array_filter(['party_type' => $key, 'status' => request('status'), 'mine' => request('mine')])) }}"
+                   class="rounded-xl border px-4 py-2 text-xs font-extrabold transition
+                   {{ $active === $key ? 'border-cyan-300/50 bg-cyan-500/20 text-cyan-100' : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10' }}">
+                    {{ $label }}
+                    @if($key && isset($partyCounts[$key]))<span class="ml-1 opacity-70">{{ $partyCounts[$key] }}</span>@endif
+                </a>
+            @endforeach
+        </div>
+
         <form method="GET" class="mb-4 flex flex-wrap gap-2">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email or subject…"
                    class="min-w-[200px] flex-1 rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 text-sm text-white placeholder-slate-400">
-            <select name="party_type" class="rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 text-sm text-white">
-                <option value="">All parties</option>
-                @foreach(\App\Models\ChatConversation::PARTY_TYPES as $k => $label)
-                    <option value="{{ $k }}" @selected(request('party_type') === $k)>{{ $label }}s</option>
-                @endforeach
-            </select>
+            <input type="hidden" name="party_type" value="{{ request('party_type') }}">
             <select name="status" class="rounded-xl border border-white/20 bg-slate-900/40 px-3 py-2 text-sm text-white">
                 <option value="">Any status</option>
                 <option value="open" @selected(request('status') === 'open')>Open</option>

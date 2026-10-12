@@ -78,8 +78,13 @@
         <textarea name="body" rows="3" maxlength="5000" placeholder="Write a reply…"
                   class="w-full rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white"></textarea>
         <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <input type="file" name="attachments[]" multiple
-                   class="text-xs text-slate-300 file:mr-2 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white">
+            <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-bold text-cyan-100 transition hover:bg-cyan-400/20">
+                <i class="fa-solid fa-paperclip"></i>
+                <span>Attach files</span>
+                <input type="file" name="attachments[]" multiple class="hidden"
+                       onchange="var n=this.files.length; document.getElementById('att-count').textContent = n ? (n + ' file' + (n>1?'s':'') + ' ready') : '';">
+            </label>
+            <span id="att-count" class="text-xs font-bold text-emerald-300"></span>
             <button class="rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-cyan-400">
                 <i class="fa-solid fa-paper-plane mr-1"></i> Send
             </button>
