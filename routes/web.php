@@ -156,45 +156,45 @@ Route::middleware(['auth', 'status.check'])->group(function () {
     // ==========================================
     Route::middleware(['role:Superadmin|Manager'])->prefix('admin')->name('admin.')->group(function () {
         // --- Internal chat ---
-        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
-        Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
-        Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat.show');
-        Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->name('chat.reply');
-        Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
-        Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->name('chat.threads');
-        Route::post('/chat/{conversation}/assign', [\App\Http\Controllers\ChatController::class, 'assign'])->name('chat.assign');
-        Route::post('/chat/{conversation}/claim', [\App\Http\Controllers\ChatController::class, 'claim'])->name('chat.claim');
-        Route::post('/chat/{conversation}/release', [\App\Http\Controllers\ChatController::class, 'release'])->name('chat.release');
-        Route::post('/chat-capacity', [\App\Http\Controllers\ChatController::class, 'setCapacity'])->name('chat.capacity');
-        Route::post('/chat/{conversation}/archive', [\App\Http\Controllers\ChatController::class, 'archive'])->name('chat.archive');
-        Route::delete('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'destroy'])->name('chat.destroy');
+        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->middleware('can:view_chats')->name('chat.index');
+        Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store'])->middleware('can:view_chats')->name('chat.store');
+        Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])->middleware('can:view_chats')->name('chat.show');
+        Route::post('/chat/{conversation}/reply', [\App\Http\Controllers\ChatController::class, 'reply'])->middleware('can:view_chats')->name('chat.reply');
+        Route::get('/chat/{conversation}/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->middleware('can:view_chats')->name('chat.poll');
+        Route::get('/chat-threads', [\App\Http\Controllers\ChatController::class, 'threads'])->middleware('can:view_chats')->name('chat.threads');
+        Route::post('/chat/{conversation}/assign', [\App\Http\Controllers\ChatController::class, 'assign'])->middleware('can:view_chats')->name('chat.assign');
+        Route::post('/chat/{conversation}/claim', [\App\Http\Controllers\ChatController::class, 'claim'])->middleware('can:view_chats')->name('chat.claim');
+        Route::post('/chat/{conversation}/release', [\App\Http\Controllers\ChatController::class, 'release'])->middleware('can:view_chats')->name('chat.release');
+        Route::post('/chat-capacity', [\App\Http\Controllers\ChatController::class, 'setCapacity'])->middleware('can:view_chats')->name('chat.capacity');
+        Route::post('/chat/{conversation}/archive', [\App\Http\Controllers\ChatController::class, 'archive'])->middleware('can:view_chats')->name('chat.archive');
+        Route::delete('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'destroy'])->middleware('can:view_chats')->name('chat.destroy');
 
         // --- Account deletion requests (GDPR / DPDP erasure) ---
-        Route::get('/deletion-requests', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'index'])->name('deletion-requests.index');
-        Route::post('/deletion-requests/{deletionRequest}/erase', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'erase'])->name('deletion-requests.erase');
-        Route::post('/deletion-requests/{deletionRequest}/reject', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'reject'])->name('deletion-requests.reject');
-        Route::post('/chat/{conversation}/status', [\App\Http\Controllers\ChatController::class, 'toggleStatus'])->name('chat.status');
+        Route::get('/deletion-requests', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'index'])->middleware('role:Superadmin')->name('deletion-requests.index');
+        Route::post('/deletion-requests/{deletionRequest}/erase', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'erase'])->middleware('role:Superadmin')->name('deletion-requests.erase');
+        Route::post('/deletion-requests/{deletionRequest}/reject', [\App\Http\Controllers\Admin\DeletionRequestAdminController::class, 'reject'])->middleware('role:Superadmin')->name('deletion-requests.reject');
+        Route::post('/chat/{conversation}/status', [\App\Http\Controllers\ChatController::class, 'toggleStatus'])->middleware('can:view_chats')->name('chat.status');
 
         
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
         // Assessment questionnaires (global library, Superadmin/Manager)
-        Route::get('/assessments', [\App\Http\Controllers\AssessmentController::class, 'index'])->name('assessments.index');
-        Route::get('/assessments/create', [\App\Http\Controllers\AssessmentController::class, 'create'])->name('assessments.create');
-        Route::post('/assessments', [\App\Http\Controllers\AssessmentController::class, 'store'])->name('assessments.store');
-        Route::get('/assessments/{assessment}/edit', [\App\Http\Controllers\AssessmentController::class, 'edit'])->name('assessments.edit');
-        Route::patch('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->name('assessments.update');
-        Route::delete('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+        Route::get('/assessments', [\App\Http\Controllers\AssessmentController::class, 'index'])->middleware('can:view_assessments')->name('assessments.index');
+        Route::get('/assessments/create', [\App\Http\Controllers\AssessmentController::class, 'create'])->middleware('can:view_assessments')->name('assessments.create');
+        Route::post('/assessments', [\App\Http\Controllers\AssessmentController::class, 'store'])->middleware('can:view_assessments')->name('assessments.store');
+        Route::get('/assessments/{assessment}/edit', [\App\Http\Controllers\AssessmentController::class, 'edit'])->middleware('can:view_assessments')->name('assessments.edit');
+        Route::patch('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->middleware('can:view_assessments')->name('assessments.update');
+        Route::delete('/assessments/{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->middleware('can:view_assessments')->name('assessments.destroy');
 
         // Assessment results / reporting (Superadmin/Manager: all clients)
-        Route::get('/assessment-results', [\App\Http\Controllers\AssessmentResultController::class, 'index'])->name('assessment-results.index');
-        Route::get('/assessment-results/{session}', [\App\Http\Controllers\AssessmentResultController::class, 'show'])->name('assessment-results.show');
+        Route::get('/assessment-results', [\App\Http\Controllers\AssessmentResultController::class, 'index'])->middleware('can:view_assessment_results')->name('assessment-results.index');
+        Route::get('/assessment-results/{session}', [\App\Http\Controllers\AssessmentResultController::class, 'show'])->middleware('can:view_assessment_results')->name('assessment-results.show');
 
         Route::post('/jobs/description-images', \App\Http\Controllers\JobDescriptionImageController::class)
             ->middleware('throttle:20,1')->name('jobs.description-images.store');
         Route::get('/finance-offers', [FinanceOfferController::class, 'index'])->middleware('can:view_billing_data')->name('finance-offers.index');
         Route::post('/finance-offers/{application}/approve', [FinanceOfferController::class, 'approve'])->middleware('can:view_billing_data')->name('finance-offers.approve');
-        Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->middleware('can:view_activity_logs')->name('activity-logs.index');
 
         // --- IMPERSONATION ---
         Route::get('/impersonate/stop', [SubAdminController::class, 'stopImpersonating'])->name('impersonate.stop');
@@ -322,6 +322,48 @@ Route::middleware(['auth', 'status.check'])->group(function () {
         });
 
 
+
+        // --- Modules with their own permission, deliberately outside the
+        //     billing group so they can be granted without granting finance.
+        Route::middleware(['can:view_analytics'])->group(function () {
+        Route::get('/analytics', [\App\Http\Controllers\Admin\ControlPanelController::class, 'analytics'])->name('analytics.index');
+        });
+
+        Route::middleware(['can:view_vendor_ratings'])->group(function () {
+        // Vendor ratings
+        Route::get('/vendor-ratings', [AdminController::class, 'vendorRatingsIndex'])->name('vendor-ratings.index');
+        Route::post('/vendor-ratings/{user}/penalty', [AdminController::class, 'vendorRatingPenalty'])->name('vendor-ratings.penalty');
+        Route::post('/vendor-ratings/{user}/lift', [AdminController::class, 'vendorRatingLiftPenalty'])->name('vendor-ratings.lift');
+        });
+
+        Route::middleware(['can:manage_offer_letters'])->group(function () {
+        Route::prefix('offer-letters')->name('offer-letters.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\OfferLetterController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\OfferLetterController::class, 'create'])->name('create');
+            Route::post('/compose', [\App\Http\Controllers\OfferLetterController::class, 'compose'])->name('compose');
+            Route::post('/', [\App\Http\Controllers\OfferLetterController::class, 'store'])->name('store');
+            Route::post('/preview-pdf', [\App\Http\Controllers\OfferLetterController::class, 'previewPdf'])->name('preview-pdf');
+            Route::get('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settings'])->name('settings');
+            Route::post('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settingsUpdate'])->name('settings.update');
+            Route::get('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templates'])->name('templates');
+            Route::post('/templates/preview-pdf', [\App\Http\Controllers\OfferLetterController::class, 'templatePreviewPdf'])->name('template.preview-pdf');
+            Route::get('/templates/create', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.create');
+            Route::post('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.store');
+            Route::get('/templates/{offerTemplate}/edit', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.edit');
+            Route::patch('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.update');
+            Route::delete('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateDelete'])->name('template.delete');
+            Route::get('/signatures', [\App\Http\Controllers\OfferLetterController::class, 'signatures'])->name('signatures');
+            Route::get('/signatures/create', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.create');
+            Route::post('/signatures', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.store');
+            Route::get('/signatures/{offerSignature}/edit', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.edit');
+            Route::patch('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.update');
+            Route::delete('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureDelete'])->name('signature.delete');
+            Route::get('/{offerLetter}/edit', [\App\Http\Controllers\OfferLetterController::class, 'edit'])->name('edit');
+            Route::patch('/{offerLetter}', [\App\Http\Controllers\OfferLetterController::class, 'update'])->name('update');
+            Route::get('/{offerLetter}/download', [\App\Http\Controllers\OfferLetterController::class, 'download'])->name('download');
+        });
+        });
+
         // --- BILLING & REPORTS ---
         Route::middleware(['can:view_billing_data'])->group(function() {
             Route::get('/billing', [AdminController::class, 'billingReport'])->name('billing.index');
@@ -335,7 +377,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/marketplace-controls/jobs/{job}/commission', [\App\Http\Controllers\Admin\AdminControlController::class, 'overrideCommission'])->name('marketplace.jobs.commission');
             Route::post('/marketplace-controls/clients/{client}', [\App\Http\Controllers\Admin\AdminControlController::class, 'clientAction'])->name('marketplace.clients.action');
             Route::post('/marketplace-controls/revenue', [\App\Http\Controllers\Admin\AdminControlController::class, 'manualRevenue'])->name('marketplace.revenue.store');
-            Route::get('/analytics', [\App\Http\Controllers\Admin\ControlPanelController::class, 'analytics'])->name('analytics.index');
+
             Route::patch('/applications/{application}/mark-paid', [AdminController::class, 'markAsPaid'])->name('applications.markPaid');
             Route::patch('/applications/{application}/mark-raised', [AdminController::class, 'markInvoiceRaised'])->name('applications.markRaised');
             Route::post('/applications/{application}/admin-select', [AdminController::class, 'adminSelectApplicant'])->name('applications.adminSelect');
@@ -349,10 +391,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::post('/replacements/{application}/cost-adjustment', [AdminController::class, 'replacementCostAdjustment'])->name('replacements.cost-adjustment');
             Route::post('/replacements/{application}/issue-credit', [AdminController::class, 'creditNotesIssue'])->name('replacements.issue-credit');
 
-            // Vendor ratings
-            Route::get('/vendor-ratings', [AdminController::class, 'vendorRatingsIndex'])->name('vendor-ratings.index');
-            Route::post('/vendor-ratings/{user}/penalty', [AdminController::class, 'vendorRatingPenalty'])->name('vendor-ratings.penalty');
-            Route::post('/vendor-ratings/{user}/lift', [AdminController::class, 'vendorRatingLiftPenalty'])->name('vendor-ratings.lift');
+
 
             // Plan upgrade requests
             Route::get('/plan-requests', [AdminController::class, 'planRequestsIndex'])->name('plan-requests.index');
@@ -362,31 +401,7 @@ Route::middleware(['auth', 'status.check'])->group(function () {
             Route::get('/vendor-payments', [AdminController::class, 'vendorPayments'])->name('payments.index');
 
             // Offer Letter Engine
-            Route::prefix('offer-letters')->name('offer-letters.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\OfferLetterController::class, 'index'])->name('index');
-                Route::get('/create', [\App\Http\Controllers\OfferLetterController::class, 'create'])->name('create');
-                Route::post('/compose', [\App\Http\Controllers\OfferLetterController::class, 'compose'])->name('compose');
-                Route::post('/', [\App\Http\Controllers\OfferLetterController::class, 'store'])->name('store');
-                Route::post('/preview-pdf', [\App\Http\Controllers\OfferLetterController::class, 'previewPdf'])->name('preview-pdf');
-                Route::get('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settings'])->name('settings');
-                Route::post('/settings', [\App\Http\Controllers\OfferLetterController::class, 'settingsUpdate'])->name('settings.update');
-                Route::get('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templates'])->name('templates');
-                Route::post('/templates/preview-pdf', [\App\Http\Controllers\OfferLetterController::class, 'templatePreviewPdf'])->name('template.preview-pdf');
-                Route::get('/templates/create', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.create');
-                Route::post('/templates', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.store');
-                Route::get('/templates/{offerTemplate}/edit', [\App\Http\Controllers\OfferLetterController::class, 'templateForm'])->name('template.edit');
-                Route::patch('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateSave'])->name('template.update');
-                Route::delete('/templates/{offerTemplate}', [\App\Http\Controllers\OfferLetterController::class, 'templateDelete'])->name('template.delete');
-                Route::get('/signatures', [\App\Http\Controllers\OfferLetterController::class, 'signatures'])->name('signatures');
-                Route::get('/signatures/create', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.create');
-                Route::post('/signatures', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.store');
-                Route::get('/signatures/{offerSignature}/edit', [\App\Http\Controllers\OfferLetterController::class, 'signatureForm'])->name('signature.edit');
-                Route::patch('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureSave'])->name('signature.update');
-                Route::delete('/signatures/{offerSignature}', [\App\Http\Controllers\OfferLetterController::class, 'signatureDelete'])->name('signature.delete');
-                Route::get('/{offerLetter}/edit', [\App\Http\Controllers\OfferLetterController::class, 'edit'])->name('edit');
-                Route::patch('/{offerLetter}', [\App\Http\Controllers\OfferLetterController::class, 'update'])->name('update');
-                Route::get('/{offerLetter}/download', [\App\Http\Controllers\OfferLetterController::class, 'download'])->name('download');
-            });
+
 
             // Credit notes
             Route::get('/credit-notes', [AdminController::class, 'creditNotesIndex'])->name('credit-notes.index');
