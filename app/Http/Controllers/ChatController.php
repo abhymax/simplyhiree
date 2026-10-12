@@ -97,7 +97,7 @@ class ChatController extends Controller
             'teamMembers'   => $this->isInternal()
                 ? User::role('Manager')->orderBy('name')->get(['id', 'name'])
                 : collect(),
-            'partyOptions'  => $this->isInternal() ? $this->partyOptions() : [],
+            'partyOptions'  => [],
             'partyCounts'   => $this->isInternal() ? $this->partyCounts($user) : [],
             'homeRoute'     => $this->homeRoute(),
         ]);
@@ -118,21 +118,6 @@ class ChatController extends Controller
      * Clients, vendors and self-registered candidates SimplyHiree can write to.
      * Account owners only: a team member shares their organisation's thread.
      */
-    private function partyOptions(): array
-    {
-        return User::query()
-            ->whereNull('parent_partner_id')
-            ->where(fn ($q) => $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['client', 'partner', 'candidate'])))
-            ->orderBy('name')
-            ->limit(500)
-            ->get(['id', 'name', 'email'])
-            ->map(fn ($u) => [
-                'id'    => $u->id,
-                'label' => trim($u->name . ' — ' . $u->email),
-            ])
-            ->all();
-    }
-
     public function show(ChatConversation $conversation)
     {
         $user = $this->user();
@@ -179,15 +164,19 @@ class ChatController extends Controller
             return back()->withInput()->with('error', 'Write a message or attach a file.');
         }
 
+        // The SimplyHiree side only ever answers: a conversation is started by
+        // the client, vendor or candidate, never from here.
         if ($this->isInternal()) {
-            if (empty($data['party_type']) || empty($data['party_user_id'])) {
-                return back()->withInput()->with('error', 'Choose who this conversation is with.');
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Conversations are started by the client, vendor or candidate. You can reply to any chat that comes in.',
+                ], 403);
             }
-            $partyType = $data['party_type'];
-            $partyId   = (int) $data['party_user_id'];
-        } else {
-            [$partyType, $partyId] = $this->partyFor($user);
+
+            return back()->with('error', 'Conversations are started by the client, vendor or candidate. You can reply to any chat that comes in.');
         }
+
+        [$partyType, $partyId] = $this->partyFor($user);
 
         // Every call here is a deliberate "new chat": ordinary messages go
         // through reply() on a conversation that already exists, so this no

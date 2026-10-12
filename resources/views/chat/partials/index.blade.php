@@ -5,13 +5,15 @@
         <div>
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white">Chats</h1>
             <p class="mt-1 text-sm text-blue-200">
-                {{ $isInternal ? 'Conversations with clients, vendors and candidates.' : 'Talk directly to the SimplyHiree team.' }}
+                {{ $isInternal ? 'Chats started by clients, vendors and candidates. Reply to any of them here.' : 'Talk directly to the SimplyHiree team.' }}
             </p>
         </div>
-        <button type="button" onclick="document.getElementById('new-chat').classList.toggle('hidden')"
-                class="inline-flex items-center gap-2 self-start rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 transition hover:bg-cyan-400 md:self-auto">
-            <i class="fa-solid fa-plus"></i> New chat
-        </button>
+        @unless($isInternal)
+            <button type="button" onclick="document.getElementById('new-chat').classList.toggle('hidden')"
+                    class="inline-flex items-center gap-2 self-start rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 transition hover:bg-cyan-400 md:self-auto">
+                <i class="fa-solid fa-plus"></i> New chat
+            </button>
+        @endunless
     </div>
 
     @if(session('success'))
@@ -21,32 +23,14 @@
         <div class="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/15 p-3 text-sm text-rose-100">{{ session('error') }}</div>
     @endif
 
-    {{-- Start a conversation --}}
+    {{-- Start a conversation. Outside parties only: SimplyHiree replies, it
+         does not open conversations. --}}
+    @unless($isInternal)
     <div id="new-chat" class="hidden mb-5 rounded-2xl border border-white/10 bg-slate-900/60 p-4">
         <form method="POST" action="{{ route($base . '.store') }}" class="space-y-3">
             @csrf
-            @if($isInternal)
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <select name="party_type" required class="rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
-                        <option value="">Who is this with?</option>
-                        <option value="client">A client</option>
-                        <option value="vendor">A vendor</option>
-                        <option value="candidate">A candidate</option>
-                    </select>
-                    <input list="chat-party-list" name="party_user_id" required placeholder="Type a name, then pick"
-                           class="rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
-                    <datalist id="chat-party-list">
-                        @foreach($partyOptions ?? [] as $opt)
-                            <option value="{{ $opt['id'] }}">{{ $opt['label'] }}</option>
-                        @endforeach
-                    </datalist>
-                    <input type="text" name="subject" maxlength="200" placeholder="Subject (optional)"
-                           class="rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
-                </div>
-            @else
-                <input type="text" name="subject" maxlength="200" placeholder="Subject (optional)"
-                       class="w-full rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
-            @endif
+            <input type="text" name="subject" maxlength="200" placeholder="Subject (optional)"
+                   class="w-full rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white">
             <textarea name="body" rows="3" required maxlength="5000" placeholder="Write your message…"
                       class="w-full rounded-xl border border-white/20 bg-slate-800 px-3 py-2.5 text-sm text-white"></textarea>
             <div class="flex justify-end">
@@ -54,6 +38,7 @@
             </div>
         </form>
     </div>
+    @endunless
 
     {{-- Filters (SimplyHiree side only) --}}
     @if($isInternal)
@@ -132,7 +117,7 @@
             </a>
         @empty
             <p class="px-6 py-12 text-center text-sm text-slate-400">
-                No conversations yet. Start one with the button above.
+                {{ $isInternal ? 'No chats here yet. They appear as clients, vendors and candidates write in.' : 'No conversations yet. Start one with the button above.' }}
             </p>
         @endforelse
     </div>
