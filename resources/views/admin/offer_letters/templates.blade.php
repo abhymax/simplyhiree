@@ -14,6 +14,12 @@
      <tr class="hover:bg-white/5"><td class="px-5 py-3 font-bold">{{ $t->name }}</td><td class="px-5 py-3 text-blue-200/80">{{ $t->subject }}</td>
        <td class="px-5 py-3">{{ $t->is_active ? 'Yes' : 'No' }}</td>
        <td class="px-5 py-3 text-right">
+         <form method="POST" action="{{ route('admin.offer-letters.template.preview-pdf') }}" target="_blank" class="inline">@csrf
+           <input type="hidden" name="subject" value="{{ $t->subject }}">
+           <input type="hidden" name="heading" value="{{ $t->default_heading }}">
+           <input type="hidden" name="body_html" value="{{ $t->body_html }}">
+           <button class="text-emerald-300 font-bold text-xs mr-3">Preview</button>
+         </form>
          <a href="{{ route('admin.offer-letters.template.edit', $t) }}" class="text-cyan-300 font-bold text-xs mr-3">Edit</a>
          <form method="POST" action="{{ route('admin.offer-letters.template.delete', $t) }}" class="inline" onsubmit="return confirm('Delete this template?');">@csrf @method('DELETE')<button class="text-rose-300 font-bold text-xs">Delete</button></form>
        </td></tr>

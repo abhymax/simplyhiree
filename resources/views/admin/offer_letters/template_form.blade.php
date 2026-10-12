@@ -25,7 +25,27 @@
       <div id="editor" contenteditable="true" class="bg-white text-slate-900 rounded-xl px-5 py-4 min-h-[320px]" style="font-family:Georgia,serif;">{!! $editorHtml !!}</div>
     </div>
     <label class="flex items-center gap-2 text-slate-200 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $tpl->is_active ?? true))> Active</label>
-    <div class="flex justify-end"><button class="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold px-6 py-3">Save Template</button></div>
+    <div class="flex justify-end gap-3">
+      <button type="button" onclick="previewTemplate()" class="rounded-xl border border-cyan-300/40 bg-cyan-500/10 text-cyan-100 font-bold px-5 py-3 hover:bg-cyan-500/20"><i class="fa-solid fa-eye mr-1"></i>Preview PDF</button>
+      <button class="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold px-6 py-3">Save Template</button>
+    </div>
   </form>
+
+  {{-- Previews whatever is in the editor right now, saved or not, with sample
+       candidate details filled into the placeholders. --}}
+  <form id="tplPreviewForm" method="POST" action="{{ route('admin.offer-letters.template.preview-pdf') }}" target="_blank" style="display:none">
+    @csrf
+    <input type="hidden" name="subject" id="pv_subject">
+    <input type="hidden" name="heading" id="pv_heading">
+    <input type="hidden" name="body_html" id="pv_body">
+  </form>
+  <script>
+    function previewTemplate() {
+      document.getElementById('pv_subject').value = document.querySelector('[name=subject]').value;
+      document.getElementById('pv_heading').value = document.querySelector('[name=default_heading]').value;
+      document.getElementById('pv_body').value    = document.getElementById('editor').innerHTML;
+      document.getElementById('tplPreviewForm').submit();
+    }
+  </script>
  </div></div>
 </x-app-layout>

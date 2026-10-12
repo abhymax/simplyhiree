@@ -18,14 +18,14 @@
   .body p { margin:6px 0; }
   .body table { width:100%; border-collapse:collapse; margin:8px 0; }
   .body table td, .body table th { border:1px solid #cbd5e1; padding:5px 8px; font-size:11px; vertical-align:top; }
-  .body table th, .body table tr:first-child td { background:#eef2f7; font-weight:bold; }
+  .body table th { font-weight:bold; }
   .body ul { margin:6px 0 6px 4px; padding-left:16px; }
   .body li { list-style-type: square; margin:3px 0; }
   .body b, .body strong { color:#111827; }
   /* Safeguard: neutralise pasted inline colors so letters stay readable on white */
-  .body, .body p, .body span, .body td, .body th, .body li, .body div, .body b, .body strong { color:#1f2937 !important; background-color: transparent !important; }
+  .body, .body p, .body span, .body td, .body th, .body li, .body div, .body b, .body strong,
+  .body table, .body thead, .body tbody, .body tr { color:#1f2937 !important; background:transparent !important; background-color:transparent !important; }
   .body h2, .body h3 { color:#1d4ed8 !important; }
-  .body table th, .body table tr:first-child td { background:#eef2f7 !important; }
   .sigblock { margin-top:26px; }
 </style></head>
 <body>

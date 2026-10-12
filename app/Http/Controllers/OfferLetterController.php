@@ -432,6 +432,69 @@ class OfferLetterController extends Controller
     }
 
     // ---- Helpers ---------------------------------------------------------
+    /**
+     * Stand-in values so a template can be previewed on its own, before any
+     * candidate is attached to it.
+     */
+    private function sampleTokens(): array
+    {
+        $s = OfferLetterSetting::current();
+
+        return [
+            '{{candidate_name}}'       => 'Satyam Bansal',
+            '{{job_title}}'            => 'Senior Software Engineer',
+            '{{designation}}'          => 'Senior Software Engineer',
+            '{{company}}'              => 'Acme Technologies Pvt Ltd',
+            '{{company_name}}'         => 'Acme Technologies Pvt Ltd',
+            '{{location}}'             => 'Bengaluru',
+            '{{ctc}}'                  => '₹12,00,000',
+            '{{joining_date}}'         => now()->addWeeks(3)->format('d M Y'),
+            '{{date}}'                 => now()->format('d M Y'),
+            '{{director_name}}'        => $s->director_name ?: 'Aman Yadav',
+            '{{director_designation}}' => $s->director_designation ?: 'Director',
+        ];
+    }
+
+    /**
+     * Preview a template by itself. Unlike previewPdf() there is no application
+     * behind it, so the tokens are filled with sample values and the body is
+     * taken from whatever is in the editor, saved or not.
+     */
+    public function templatePreviewPdf(Request $request)
+    {
+        $data = $request->validate([
+            'subject'      => 'nullable|string|max:255',
+            'heading'      => 'nullable|string|max:120',
+            'body_html'    => 'required|string',
+            'signature_id' => 'nullable|exists:offer_letter_signatures,id',
+        ]);
+
+        $sig = !empty($data['signature_id'])
+            ? OfferLetterSignature::find($data['signature_id'])
+            : OfferLetterSignature::where('is_active', true)->orderBy('sort_order')->orderBy('name')->first();
+
+        $tokens = array_merge($this->sampleTokens(), [
+            '{{ctc_breakup}}' => $this->ctcBreakupTable(100000.0),
+        ]);
+
+        $body = strtr($this->cleanPastedHtml($data['body_html']), $tokens);
+
+        $sigBlock = $this->signatureBlockHtml($sig);
+        $body = str_contains($body, '{{signature_block}}')
+            ? str_replace('{{signature_block}}', $sigBlock, $body)
+            : $body . $sigBlock;
+
+        $subject = strtr(trim((string) ($data['subject'] ?? '')) ?: 'Offer of Employment', $tokens);
+        $heading = trim((string) ($data['heading'] ?? '')) ?: 'OFFER LETTER';
+
+        $pdf = $this->renderPdf($subject, $body, $heading);
+
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="template-preview.pdf"',
+        ]);
+    }
+
     private function tokens(JobApplication $app): array
     {
         $s = OfferLetterSetting::current();
@@ -509,6 +572,7 @@ class OfferLetterController extends Controller
 
         // Legacy color attributes and empty Word class names
         $html = preg_replace('/\scolor="[^"]*"/i', '', $html) ?? $html;
+        $html = preg_replace('/\s(?:bgcolor|background)="[^"]*"/i', '', $html) ?? $html;
         $html = preg_replace('/\sclass="Mso[^"]*"/i', '', $html) ?? $html;
 
         return $html;
@@ -621,7 +685,9 @@ class OfferLetterController extends Controller
             $o = $strong ? '<b>' : ''; $c = $strong ? '</b>' : '';
             return '<tr><td>' . $o . $label . $c . '</td><td>' . $o . 'Rs. ' . $this->inr($mv) . $c . '</td><td>' . $o . 'Rs. ' . $this->inr($yv) . $c . '</td></tr>';
         };
-        $h  = '<div class="ctc-breakup"><table><tr><td>Salary Component</td><td>Monthly (Rs.)</td><td>Annual (Rs.)</td></tr>';
+        // <th> rather than a shaded first row: the heading stays bold now that
+        // nothing in the letter body paints a background.
+        $h  = '<div class="ctc-breakup"><table><tr><th>Salary Component</th><th>Monthly (Rs.)</th><th>Annual (Rs.)</th></tr>';
         $h .= $row('Basic Salary', $basic, $basic * 12);
         $h .= $row('HRA', $hra, $hra * 12);
         $h .= $row('Special Allowance', $special, $special * 12);
