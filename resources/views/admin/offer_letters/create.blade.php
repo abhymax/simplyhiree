@@ -1,8 +1,8 @@
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-3xl mx-auto">
-  <a href="{{ route('admin.offer-letters.index') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Back</a>
-  <h1 class="text-3xl font-extrabold text-white mt-3 mb-6">Create Offer Letter</h1>
+  @include('admin.offer_letters._nav')
+  <h1 class="text-3xl font-extrabold text-white mb-6">Create Offer Letter</h1>
   @if($templates->isEmpty())
     <div class="rounded-2xl border border-amber-400/40 bg-amber-500/15 p-4 text-amber-100">No templates yet. <a class="underline font-bold" href="{{ route('admin.offer-letters.template.create') }}">Create a template</a> first.</div>
   @else

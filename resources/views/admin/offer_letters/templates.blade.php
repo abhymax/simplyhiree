@@ -1,9 +1,9 @@
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-5xl mx-auto">
+  @include('admin.offer_letters._nav')
   <div class="flex items-center justify-between mb-6">
-    <div><a href="{{ route('admin.offer-letters.index') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Offer Letters</a>
-    <h1 class="text-3xl font-extrabold text-white mt-2">Offer Letter Templates</h1></div>
+    <div><h1 class="text-3xl font-extrabold text-white">Offer Letter Templates</h1></div>
     <a href="{{ route('admin.offer-letters.template.create') }}" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5">+ New Template</a>
   </div>
   @if(session('success'))<div class="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-emerald-100">{{ session('success') }}</div>@endif

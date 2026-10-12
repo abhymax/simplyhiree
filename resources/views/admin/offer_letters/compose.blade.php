@@ -2,7 +2,8 @@
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-4xl mx-auto">
-  <a href="{{ route('admin.offer-letters.create') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Back</a>
+  @include('admin.offer_letters._nav')
+  <a href="{{ route('admin.offer-letters.create') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Pick a different candidate</a>
   <h1 class="text-3xl font-extrabold text-white mt-3 mb-1">Compose Offer Letter</h1>
   <p class="text-blue-200/80 mb-5 text-sm">To: <b class="text-white">{{ $app->candidate_name }}</b>
      ({{ $app->candidate->email ?? $app->candidateUser->email ?? 'no email on file' }}) ·

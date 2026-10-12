@@ -1,9 +1,9 @@
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-4xl mx-auto">
+  @include('admin.offer_letters._nav')
   <div class="flex items-center justify-between mb-6">
-    <div><a href="{{ route('admin.offer-letters.index') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Offer Letters</a>
-      <h1 class="text-3xl font-extrabold text-white mt-2">Signature Manager</h1>
+    <div><h1 class="text-3xl font-extrabold text-white">Signature Manager</h1>
       <p class="text-blue-200/80 text-sm mt-1">Signatories that can be selected when sending an offer letter.</p></div>
     <a href="{{ route('admin.offer-letters.signature.create') }}" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5">+ Add Signature</a>
   </div>

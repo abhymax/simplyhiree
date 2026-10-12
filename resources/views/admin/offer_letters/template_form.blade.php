@@ -2,7 +2,8 @@
 <x-app-layout>
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-10">
  <div class="max-w-3xl mx-auto">
-  <a href="{{ route('admin.offer-letters.templates') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Templates</a>
+  @include('admin.offer_letters._nav')
+  <a href="{{ route('admin.offer-letters.templates') }}" class="text-cyan-300 hover:text-white text-sm font-bold">← Back to all templates</a>
   <h1 class="text-3xl font-extrabold text-white mt-3 mb-2">{{ $tpl && $tpl->exists ? 'Edit' : 'New' }} Template</h1>
   <p class="text-blue-200/80 text-xs mb-3">Placeholders you can use: <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{candidate_name}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{job_title}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{company}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{location}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{joining_date}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{date}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{ref_no}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{department}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{reporting_to}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{monthly_ctc}}</code> <code class="bg-white/10 text-cyan-200 px-1 rounded">@{{annual_ctc}}</code></p>
   <p class="text-blue-200/80 text-xs mb-5">Special blocks: <code class="bg-emerald-500/15 text-emerald-200 px-1 rounded">@{{ctc_breakup}}</code> auto-inserts the salary breakup table &middot; <code class="bg-emerald-500/15 text-emerald-200 px-1 rounded">@{{signature_block}}</code> is where the chosen signature goes.</p>

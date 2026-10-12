@@ -4,13 +4,9 @@
   <div class="mb-8 border-b border-white/10 pb-6">
     <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Offer Letters</h1>
     <p class="text-blue-200 mt-1">Generate and send branded offer letters to candidates.</p>
-    <div class="flex flex-wrap gap-2 mt-4">
-      <a href="{{ route('admin.offer-letters.create') }}" class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5"><i class="fa-solid fa-plus mr-1"></i>Create Offer Letter</a>
-      <a href="{{ route('admin.offer-letters.templates') }}" class="rounded-xl border border-white/20 bg-white/5 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10"><i class="fa-solid fa-file-lines mr-1"></i>Templates</a>
-      <a href="{{ route('admin.offer-letters.signatures') }}" class="rounded-xl border border-white/20 bg-white/5 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10"><i class="fa-solid fa-signature mr-1"></i>Signatures</a>
-      <a href="{{ route('admin.offer-letters.settings') }}" class="rounded-xl border border-white/20 bg-white/5 text-slate-100 font-bold px-4 py-2.5 hover:bg-white/10"><i class="fa-solid fa-image mr-1"></i>Branding</a>
-    </div>
   </div>
+  @include('admin.offer_letters._nav')
+
   @if(session('success'))<div class="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 p-4 text-emerald-100">{{ session('success') }}</div>@endif
   @if(session('error'))<div class="mb-5 rounded-2xl border border-rose-400/40 bg-rose-500/15 p-4 text-rose-100">{{ session('error') }}</div>@endif
 
