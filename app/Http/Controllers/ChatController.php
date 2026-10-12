@@ -177,6 +177,31 @@ class ChatController extends Controller
             $partyId   = (int) $data['party_user_id'];
         } else {
             [$partyType, $partyId] = $this->partyFor($user);
+
+            // Reuse the open thread rather than opening another one. Sending
+            // from the popup previously created a fresh conversation every
+            // time, so one client appeared several times in the queue.
+            $existing = ChatConversation::where('party_type', $partyType)
+                ->where('party_user_id', $partyId)
+                ->whereNull('archived_at')
+                ->where('status', 'open')
+                ->orderByDesc('last_message_at')
+                ->first();
+
+            if ($existing) {
+                $message = $this->appendMessage($existing, $data['body'], $request);
+
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'ok'              => true,
+                        'conversation_id' => $existing->id,
+                        'message'         => $this->messagePayload($message),
+                    ]);
+                }
+
+                return redirect()->route(str_replace('.index', '.show', $this->homeRoute()), $existing)
+                    ->with('success', 'Message added to your open conversation.');
+            }
         }
 
         $conversation = ChatConversation::create([
@@ -253,8 +278,13 @@ class ChatController extends Controller
         }
 
         $conversation->update(['status' => $conversation->status === 'open' ? 'closed' : 'open']);
+        $now = $conversation->fresh()->status;
 
-        return back()->with('success', 'Conversation marked ' . $conversation->fresh()->status . '.');
+        if (request()->wantsJson()) {
+            return response()->json(['ok' => true, 'status' => $now]);
+        }
+
+        return back()->with('success', 'Conversation marked ' . $now . '.');
     }
 
     /** Shape one message for the JSON endpoints. */
@@ -397,6 +427,11 @@ class ChatController extends Controller
         abort_unless($this->isInternal(), 403);
 
         $conversation->update(['archived_at' => $conversation->archived_at ? null : now()]);
+        $archived = (bool) $conversation->fresh()->archived_at;
+
+        if (request()->wantsJson()) {
+            return response()->json(['ok' => true, 'archived' => $archived]);
+        }
 
         return back()->with('success', $conversation->fresh()->archived_at
             ? 'Chat archived. Find it under Archived.'
@@ -432,6 +467,10 @@ class ChatController extends Controller
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Could not remove chat file ' . $p . ': ' . $e->getMessage());
             }
+        }
+
+        if (request()->wantsJson()) {
+            return response()->json(['ok' => true]);
         }
 
         return redirect()->route($this->homeRoute())->with('success', 'Chat deleted permanently.');

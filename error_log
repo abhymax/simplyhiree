@@ -257,3 +257,8 @@ Stack trace:
 #7 /home/simplyhiree/public_html/repro.php(7): Illuminate\Database\Eloquent\Model::__callStatic('role', Array)
 #8 {main}
   thrown in /home/simplyhiree/public_html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php on line 1984
+[12-Oct-2026 11:36:26 UTC] PHP Warning:  require(/tmp/vendor/autoload.php): Failed to open stream: No such file or directory in /tmp/t.php on line 2
+[12-Oct-2026 11:36:26 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/tmp/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /tmp/t.php:2
+Stack trace:
+#0 {main}
+  thrown in /tmp/t.php on line 2

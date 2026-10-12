@@ -47,6 +47,7 @@
       CSRF = @json(csrf_token()),
       INTERNAL = @json($cwInternal),
       MYSIDE = @json($cwInternal ? 'simplyhiree' : 'party'),
+      SUPER = @json($cwUser->hasRole('Superadmin')),
       FULL = @json(route($cwIndex));
 
   var listOpen = false,
@@ -103,7 +104,7 @@
 
   function row(t, claimable) {
     return '<div style="display:flex;gap:9px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.12);">' +
-      '<span onclick="shdOpen(' + t.id + ',\'' + esc(t.title).replace(/'/g,"\\'") + '\')" style="flex:1;min-width:0;cursor:pointer;">' +
+      '<span onclick="' + (claimable ? 'shdClaim' : 'shdOpen') + '(' + t.id + ',\'' + esc(t.title).replace(/'/g,"\\'") + '\')" style="flex:1;min-width:0;cursor:pointer;">' +
         '<span style="display:block;color:#fff;font-weight:700;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
           esc(t.title) + (INTERNAL ? ' <span style="color:#94a3b8;font-size:10px;font-weight:600;">· ' + esc(t.type) + '</span>' : '') + '</span>' +
         '<span style="display:block;color:#94a3b8;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t.preview) + '</span>' +
@@ -191,8 +192,14 @@
     el.innerHTML =
       '<div style="padding:9px 11px;background:linear-gradient(135deg,#0ea5e9,#4f46e5);display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="shdMin(' + id + ')">' +
         '<span style="flex:1;min-width:0;color:#fff;font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(title) + '</span>' +
-        (INTERNAL ? '<button onclick="event.stopPropagation();shdRelease(' + id + ')" title="Return to queue" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:800;cursor:pointer;">Release</button>' : '') +
+        (INTERNAL ? '<button onclick="event.stopPropagation();shdMenu(' + id + ')" title="Chat actions" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:800;cursor:pointer;line-height:1;">&#8942;</button>' : '') +
         '<button onclick="event.stopPropagation();shdClose(' + id + ')" aria-label="Hide this window" title="Hide window (the chat stays open)" style="background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:6px;width:21px;height:21px;cursor:pointer;line-height:1;">&times;</button>' +
+      '</div>' +
+      '<div id="shmenu-' + id + '" style="display:none;background:#111c31;border-bottom:1px solid rgba(148,163,184,.18);padding:7px;">' +
+        '<button onclick="shdResolve(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#10003; Mark resolved</button>' +
+        '<button onclick="shdRelease(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#cbd5e1;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#8631; Return to queue</button>' +
+        '<button onclick="shdArchive(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fcd34d;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128230; Archive</button>' +
+        (SUPER ? '<button onclick="shdDelete(' + id + ')" style="display:block;width:100%;text-align:left;background:none;border:0;color:#fda4af;font-size:11.5px;font-weight:700;padding:6px 8px;cursor:pointer;border-radius:6px;">&#128465; Delete permanently</button>' : '') +
       '</div>' +
       '<div class="shw-body">' +
         '<div id="shm-' + id + '" style="height:240px;overflow-y:auto;padding:10px;background:#070e1b;"></div>' +
@@ -229,6 +236,30 @@
     var fd = new FormData(); fd.append('_token', CSRF);
     fetch(u('/chat/' + id + '/release'), { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
       .then(function () { shdClose(id); refresh(); }).catch(function () {});
+  };
+
+  window.shdMenu = function (id) {
+    var m = document.getElementById('shmenu-' + id);
+    if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none';
+  };
+
+  function act(id, path, method, after) {
+    var fd = new FormData(); fd.append('_token', CSRF);
+    if (method) fd.append('_method', method);
+    fetch(u('/chat/' + id + path), { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) { if (after) after(d); refresh(); })
+      .catch(function () {});
+  }
+
+  window.shdResolve = function (id) { act(id, '/status', null, function () { shdMenu(id); }); };
+  window.shdArchive = function (id) {
+    if (!confirm('Archive this chat? It leaves the active list but every message is kept.')) return;
+    act(id, '/archive', null, function () { shdClose(id); });
+  };
+  window.shdDelete = function (id) {
+    if (!confirm('Delete this chat and every message in it permanently? Archiving keeps the history; this does not.')) return;
+    act(id, '', 'DELETE', function () { shdClose(id); });
   };
 
   var pending = {};   // id -> FileList
