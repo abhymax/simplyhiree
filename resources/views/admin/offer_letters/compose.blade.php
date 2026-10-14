@@ -10,6 +10,16 @@
      {{ optional($app->job)->title }} @ {{ optional($app->job)->company_name }}.
      The SimplyHiree letterhead &amp; director signature are added automatically.</p>
 
+  @if($isRevision ?? false)
+    <div class="mb-5 rounded-2xl border border-amber-400/40 bg-amber-500/15 p-4 text-amber-100">
+      <p class="font-bold">This letter was already sent{{ $letter->sent_at ? ' on ' . $letter->sent_at->format('d M Y, h:i A') : '' }}.</p>
+      <p class="mt-1 text-sm text-amber-100/90">
+        The candidate holds the version that was emailed to them. Editing here replaces the stored copy and the PDF;
+        they only receive the change if you choose <b>Save &amp; resend</b>.
+      </p>
+    </div>
+  @endif
+
   <form method="POST" action="{{ isset($letter) ? route('admin.offer-letters.update', $letter) : route('admin.offer-letters.store') }}" onsubmit="document.getElementById('body_html').value = document.getElementById('editor').innerHTML;">
     @isset($letter) @method('PATCH') @endisset
     @csrf
@@ -59,6 +69,12 @@
           <label class="block text-[11px] font-bold text-slate-300 mb-1">Annual CTC (₹)</label>
           <input type="text" data-olfield="annual_ctc" value="{{ $fields['annual_ctc'] ?? '' }}" placeholder="e.g. 2,40,000" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
         </div>
+        <div>
+          <label class="block text-[11px] font-bold text-cyan-300 uppercase mb-1">Joining date</label>
+          <input type="date" name="joining_date" value="{{ old('joining_date', $joiningDate ?? optional($app->joining_date)->format('Y-m-d')) }}"
+                 class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+          <p class="mt-1 text-[11px] text-blue-200/70">Changing this updates the application and rewrites the date in the letter below.</p>
+        </div>
       </div>
       <div class="mt-3">
         <button type="button" onclick="recalcCtcBreakup()" class="rounded-lg border border-emerald-300/40 bg-emerald-500/15 text-emerald-100 text-xs font-bold px-3.5 py-2 hover:bg-emerald-500/25"><i class="fa-solid fa-calculator mr-1"></i>Insert salary breakup</button>
@@ -77,8 +93,9 @@
 
     <div class="flex justify-end gap-3 mt-5">
       <button type="button" onclick="previewOffer()" class="rounded-xl border border-cyan-300/40 bg-cyan-500/10 text-cyan-100 font-bold px-5 py-3 hover:bg-cyan-500/20"><i class="fa-solid fa-eye mr-1"></i>Preview PDF</button>
-      <button type="submit" name="action" value="draft" class="rounded-xl border border-white/15 text-slate-100 font-bold px-5 py-3 hover:bg-white/10">{{ isset($letter) ? 'Update draft' : 'Save draft' }}</button>
-      <button type="submit" name="action" value="send" class="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold px-6 py-3" onclick="return confirm('Generate the PDF and email it to the candidate now?');">Generate &amp; Send</button>
+      <button type="submit" name="action" value="draft" class="rounded-xl border border-white/15 text-slate-100 font-bold px-5 py-3 hover:bg-white/10">{{ ($isRevision ?? false) ? 'Save revision' : (isset($letter) ? 'Update draft' : 'Save draft') }}</button>
+      <button type="submit" name="action" value="send" class="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold px-6 py-3"
+              onclick="return confirm(@js(($isRevision ?? false) ? 'Email the revised letter to the candidate now? It replaces the one they already have.' : 'Generate the PDF and email it to the candidate now?'));">{{ ($isRevision ?? false) ? 'Save &amp; resend' : 'Generate &amp; Send' }}</button>
     </div>
   </form>
 

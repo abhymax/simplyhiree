@@ -10,6 +10,7 @@ use App\Models\OfferLetterSignature;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -131,11 +132,6 @@ class OfferLetterController extends Controller
      */
     public function edit(OfferLetter $offerLetter)
     {
-        if ($offerLetter->status === 'sent') {
-            return redirect()->route('admin.offer-letters.index')
-                ->with('error', 'This letter has already been sent, so it cannot be edited. Create a new one instead.');
-        }
-
         $app = JobApplication::with(['job', 'candidate', 'candidateUser'])
             ->findOrFail($offerLetter->job_application_id);
 
@@ -144,7 +140,7 @@ class OfferLetterController extends Controller
         // Re-read the structured values straight from the body's tagged spans,
         // so the Offer Details panel shows what was saved.
         $fields = [];
-        foreach (['ref_no', 'department', 'reporting_to', 'monthly_ctc', 'annual_ctc'] as $f) {
+        foreach (['ref_no', 'department', 'reporting_to', 'monthly_ctc', 'annual_ctc', 'joining_date'] as $f) {
             preg_match('/<span data-field="' . $f . '">(.*?)<\/span>/s', $body, $m);
             $value = isset($m[1]) ? trim(strip_tags($m[1])) : '';
             $fields[$f] = ($value === '' || str_starts_with($value, '____')) ? '' : $value;
@@ -155,9 +151,11 @@ class OfferLetterController extends Controller
             : OfferLetterTemplate::where('is_active', true)->first();
 
         return view('admin.offer_letters.compose', [
-            'app'        => $app,
-            'template'   => $template,
-            'letter'     => $offerLetter,
+            'app'         => $app,
+            'template'    => $template,
+            'letter'      => $offerLetter,
+            'isRevision'  => $offerLetter->status === 'sent',
+            'joiningDate' => $app->joining_date?->format('Y-m-d'),
             'bodyHtml'   => $body,
             'subject'    => $offerLetter->subject,
             'heading'    => $offerLetter->heading ?: 'OFFER LETTER',
@@ -170,16 +168,14 @@ class OfferLetterController extends Controller
     /** Save changes to a draft, optionally sending it. */
     public function update(Request $request, OfferLetter $offerLetter)
     {
-        if ($offerLetter->status === 'sent') {
-            return redirect()->route('admin.offer-letters.index')
-                ->with('error', 'This letter has already been sent, so it cannot be edited.');
-        }
+        $wasSent = $offerLetter->status === 'sent';
 
         $data = $request->validate([
             'subject'      => 'required|string|max:255',
             'heading'      => 'nullable|string|max:120',
             'body_html'    => 'required|string',
             'signature_id' => 'nullable|exists:offer_letter_signatures,id',
+            'joining_date' => 'nullable|date',
             'action'       => 'required|in:send,draft',
         ]);
 
@@ -190,6 +186,20 @@ class OfferLetterController extends Controller
         $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
 
         $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
+
+        // Rescheduling: the application carries the real joining date, the
+        // letter has it written into the text, so both have to move together.
+        $oldJoining  = $app->joining_date;
+        $newJoining  = filled($data['joining_date'] ?? null) ? Carbon::parse($data['joining_date']) : null;
+        $rescheduled = $newJoining && (!$oldJoining || !$oldJoining->isSameDay($newJoining));
+        $replacements = 0;
+
+        if ($rescheduled) {
+            [$data['body_html'], $replacements] =
+                $this->replaceJoiningDate($data['body_html'], $oldJoining, $newJoining);
+            $app->forceFill(['joining_date' => $newJoining])->save();
+        }
+
         $sigBlock = $this->signatureBlockHtml($sig);
         $finalBody = str_contains($data['body_html'], '{{signature_block}}')
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
@@ -215,17 +225,37 @@ class OfferLetterController extends Controller
             'signatory_signature_path' => $sig?->signature_path,
         ]);
 
+        $note = '';
+        if ($rescheduled) {
+            \App\Models\ApplicationActivity::log(
+                $app,
+                'offer_joining_date_changed',
+                'Joining date moved from ' . ($oldJoining?->format('d M Y') ?? 'not set')
+                    . ' to ' . $newJoining->format('d M Y') . ($wasSent ? ' (letter already sent)' : '')
+            );
+
+            $note = ' Joining date is now ' . $newJoining->format('d M Y') . '.';
+            if ($replacements === 0) {
+                $note .= ' The old date was not found in the letter text, so check the wording before sending.';
+            }
+        }
+
         if ($data['action'] === 'send') {
             if (!$email) {
                 return redirect()->route('admin.offer-letters.index')
-                    ->with('error', 'Draft updated but the candidate has no email on file, so it was not sent.');
+                    ->with('error', 'Changes saved, but the candidate has no email on file, so nothing was sent.' . $note);
             }
             $this->sendEmails($offerLetter->fresh(), $pdf, $email);
             $offerLetter->update(['status' => 'sent', 'sent_at' => now()]);
-            return redirect()->route('admin.offer-letters.index')->with('success', 'Offer letter sent to ' . $email . '.');
+
+            return redirect()->route('admin.offer-letters.index')->with('success',
+                ($wasSent ? 'Revised offer letter re-sent to ' : 'Offer letter sent to ') . $email . '.' . $note);
         }
 
-        return redirect()->route('admin.offer-letters.index')->with('success', 'Draft updated.');
+        return redirect()->route('admin.offer-letters.index')->with('success',
+            ($wasSent
+                ? 'Letter revised. The candidate still holds the version already emailed to them, so use Save & resend when you want them to have this one.'
+                : 'Draft updated.') . $note);
     }
 
     /** Final: generate the PDF, save, email candidate + admin. */
@@ -493,6 +523,64 @@ class OfferLetterController extends Controller
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="template-preview.pdf"',
         ]);
+    }
+
+    /**
+     * Move the joining date inside an already-written letter.
+     *
+     * The date is substituted from {{joining_date}} when the letter is composed,
+     * so by the time it is sent it is ordinary text. A tagged span is rewritten
+     * directly; otherwise the old date is matched in the formats the templates
+     * use. Returns the body and how many occurrences were changed, so the
+     * caller can warn when a letter words the date some other way.
+     *
+     * @return array{0: string, 1: int}
+     */
+    private function replaceJoiningDate(string $html, ?Carbon $old, Carbon $new): array
+    {
+        $replacements = 0;
+        $newText = $new->format('d M Y');
+
+        // A tagged span is unambiguous, so prefer it.
+        $html = preg_replace(
+            '/(<span data-field="joining_date">)(.*?)(<\/span>)/s',
+            '$1' . $newText . '$3',
+            $html,
+            -1,
+            $spanHits
+        ) ?? $html;
+        $replacements += (int) $spanHits;
+
+        if (!$old) {
+            return [$html, $replacements];
+        }
+
+        // Otherwise match the written-out date, in the formats the templates use.
+        $formats = ['d M Y', 'd-m-Y', 'd/m/Y', 'jS F Y', 'j F Y', 'F j, Y', 'd F Y', 'Y-m-d'];
+        foreach (array_unique(array_map(fn ($f) => $old->format($f), $formats)) as $needle) {
+            if ($needle === '' || !str_contains($html, $needle)) {
+                continue;
+            }
+            $count = 0;
+            $html = str_replace($needle, $new->format(
+                $needle === $old->format('d M Y') ? 'd M Y' : $this->matchingFormat($old, $needle)
+            ), $html, $count);
+            $replacements += $count;
+        }
+
+        return [$html, $replacements];
+    }
+
+    /** Which of the known formats produced this rendering of the old date. */
+    private function matchingFormat(Carbon $old, string $rendered): string
+    {
+        foreach (['d M Y', 'd-m-Y', 'd/m/Y', 'jS F Y', 'j F Y', 'F j, Y', 'd F Y', 'Y-m-d'] as $f) {
+            if ($old->format($f) === $rendered) {
+                return $f;
+            }
+        }
+
+        return 'd M Y';
     }
 
     private function tokens(JobApplication $app): array

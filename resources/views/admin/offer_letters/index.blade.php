@@ -51,7 +51,9 @@
        <td class="px-5 py-3">@if($l->status==='sent')<span class="rounded-full border border-emerald-400/30 bg-emerald-500/15 text-emerald-200 px-2.5 py-1 text-xs font-bold">Sent</span>@else<span class="rounded-full border border-amber-400/30 bg-amber-500/15 text-amber-200 px-2.5 py-1 text-xs font-bold">Draft</span>@endif</td>
        <td class="px-5 py-3 text-blue-200/70 text-xs">{{ optional($l->sent_at ?? $l->created_at)->format('d M Y, h:i A') }}</td>
        <td class="px-5 py-3 text-right whitespace-nowrap">
-         @if($l->status !== 'sent')
+         @if($l->status === 'sent')
+           <a href="{{ route('admin.offer-letters.edit', $l) }}" title="Change the joining date or wording and optionally resend" class="rounded-lg border border-violet-400/40 bg-violet-500/15 text-violet-200 text-xs font-bold px-3 py-1.5 hover:bg-violet-500/25 mr-1">Revise</a>
+         @else
            <a href="{{ route('admin.offer-letters.edit', $l) }}" class="rounded-lg border border-amber-400/40 bg-amber-500/15 text-amber-200 text-xs font-bold px-3 py-1.5 hover:bg-amber-500/25 mr-1">Edit</a>
          @endif
          <a href="{{ route('admin.offer-letters.download', $l) }}" class="rounded-lg border border-cyan-400/40 bg-cyan-500/15 text-cyan-200 text-xs font-bold px-3 py-1.5 hover:bg-cyan-500/25">Download PDF</a>
