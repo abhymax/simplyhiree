@@ -40,7 +40,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.jobs.store') }}" method="POST" x-data="{ visibility: 'all', clientMode: 'simplyhiree', candidateSearch: '' }">
+            <form action="{{ route('admin.jobs.store') }}" method="POST" x-data="{ visibility: 'all', clientMode: 'simplyhiree', candidateSearch: '', partnerSearch: '', partnersPicked: 0 }">
                 @csrf
                 
                 {{-- SECTION 1: POSTING CONTEXT --}}
@@ -331,15 +331,42 @@
 
                     {{-- Partner Selection Logic --}}
                     <div x-show="visibility === 'selected'" class="mt-4 p-6 bg-slate-800/50 rounded-2xl border border-white/10" x-transition>
-                        <p class="text-sm font-bold text-emerald-300 mb-4 uppercase">Select Allowed Partners:</p>
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                            <p class="text-sm font-bold text-emerald-300 uppercase">Select Allowed Partners:</p>
+                            <span class="text-xs font-bold rounded-full px-2.5 py-1"
+                                  :class="partnersPicked === 1 ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-slate-300'"
+                                  x-text="partnersPicked + (partnersPicked === 1 ? ' partner selected' : ' partners selected')"></span>
+                        </div>
+
+                        {{-- The list runs to dozens of partners, so let them type the one they want. --}}
+                        <div class="relative mb-4">
+                            <input type="text" x-model="partnerSearch"
+                                   placeholder="Search partners by name or email..."
+                                   class="w-full bg-slate-900/70 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition h-10 px-4 pl-10 text-sm">
+                            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </div>
+                            <button type="button" x-show="partnerSearch" @click="partnerSearch = ''"
+                                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+
                         <div class="h-48 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-3 pr-2 custom-scrollbar">
                             @foreach($partners as $partner)
-                                <label class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition cursor-pointer border border-transparent hover:border-emerald-500/30">
-                                    <input type="checkbox" name="allowed_partners[]" value="{{ $partner->id }}" class="rounded bg-slate-900 border-slate-600 text-emerald-500 focus:ring-emerald-500">
+                                <label data-search="{{ strtolower($partner->name . ' ' . $partner->email) }}"
+                                       x-show="!partnerSearch || $el.getAttribute('data-search').includes(partnerSearch.toLowerCase())"
+                                       class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition cursor-pointer border border-transparent hover:border-emerald-500/30">
+                                    <input type="checkbox" name="allowed_partners[]" value="{{ $partner->id }}"
+                                           @change="partnersPicked = $root.querySelectorAll('input[name=\'allowed_partners[]\']:checked').length"
+                                           class="rounded bg-slate-900 border-slate-600 text-emerald-500 focus:ring-emerald-500">
                                     <span class="text-sm text-slate-200">{{ $partner->name }}</span>
                                 </label>
                             @endforeach
                         </div>
+                        <p x-show="partnerSearch" class="mt-2 text-xs text-slate-400">
+                            Showing partners matching &ldquo;<span x-text="partnerSearch"></span>&rdquo;. Ticks you have already made are kept while you search.
+                        </p>
                     </div>
                 </div>
 

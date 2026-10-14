@@ -29,7 +29,7 @@
         $travelRequiredVal=old('travel_required', isset($job->travel_required)?(int)$job->travel_required:'');
         $travelRequiredVal=($travelRequiredVal===''||$travelRequiredVal===null)?'':(string)$travelRequiredVal;
     @endphp
-    <form method="POST" action="{{ route('admin.jobs.update',$job) }}" class="space-y-6" x-data="{ commercial: '{{ old('commercial_source',$job->commercial_source ?: 'simplyhire') }}', visibility: '{{ old('partner_visibility',$job->partner_visibility ?: 'all') }}' }">
+    <form method="POST" action="{{ route('admin.jobs.update',$job) }}" class="space-y-6" x-data="{ commercial: '{{ old('commercial_source',$job->commercial_source ?: 'simplyhire') }}', visibility: '{{ old('partner_visibility',$job->partner_visibility ?: 'all') }}', partnerSearch: '' }">
         @csrf @method('PATCH')
         <section class="rounded-2xl border border-blue-400/20 bg-blue-500/5 p-6">
             <h2 class="mb-5 text-xl font-bold"><i class="fa-solid fa-briefcase mr-2 text-blue-300"></i>Job details</h2>
@@ -102,8 +102,17 @@
             <p class="mb-5 text-sm text-slate-400">Control which sourcing partners can access this job and when screened resumes are forwarded.</p>
             <label class="{{ $label }}">Job access</label>
             <select name="partner_visibility" x-model="visibility" class="{{ $input }}"><option value="all">All active partners</option><option value="selected">Selected partners only</option></select>
-            <div x-cloak x-show="visibility==='selected'" class="mt-4 grid max-h-64 gap-2 overflow-y-auto md:grid-cols-3">
-                @foreach($partners as $partner)<label class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 p-3"><input type="checkbox" name="allowed_partners[]" value="{{ $partner->id }}" @checked(in_array($partner->id,$selectedPartners))><span>{{ $partner->name }}</span></label>@endforeach
+            <div x-cloak x-show="visibility==='selected'" class="mt-4">
+                <div class="relative mb-3 max-w-md">
+                    <input type="text" x-model="partnerSearch" placeholder="Search partners by name or email..."
+                           class="w-full bg-slate-900/70 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 h-10 px-4 pl-10 text-sm">
+                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><i class="fa-solid fa-magnifying-glass text-xs"></i></div>
+                    <button type="button" x-show="partnerSearch" @click="partnerSearch = ''"
+                            class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xs"></i></button>
+                </div>
+                <div class="grid max-h-64 gap-2 overflow-y-auto md:grid-cols-3">
+                    @foreach($partners as $partner)<label data-search="{{ strtolower($partner->name . ' ' . $partner->email) }}" x-show="!partnerSearch || $el.getAttribute('data-search').includes(partnerSearch.toLowerCase())" class="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 p-3"><input type="checkbox" name="allowed_partners[]" value="{{ $partner->id }}" @checked(in_array($partner->id,$selectedPartners))><span>{{ $partner->name }}</span></label>@endforeach
+                </div>
             </div>
             <div class="mt-5 max-w-sm">
                 <label class="{{ $label }}">Auto-forward after hours</label>
