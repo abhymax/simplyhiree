@@ -53,14 +53,7 @@
                     </h3>
                     <p class="text-slate-400 text-sm mb-6">Select which clients this manager is allowed to access.</p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                        @foreach($clients as $client)
-                            <label class="relative flex items-center p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-emerald-500/50 transition-all group">
-                                <input type="checkbox" name="clients[]" value="{{ $client->id }}" class="w-5 h-5 text-emerald-500 bg-slate-800 border-slate-600 rounded focus:ring-emerald-500 focus:ring-offset-slate-900">
-                                <span class="ml-3 text-sm font-bold text-slate-300 group-hover:text-white transition-colors">{{ $client->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
+                    @include('admin.sub_admins._clients')
                 </div>
 
                 {{-- SECTION 3: PERMISSIONS --}}
