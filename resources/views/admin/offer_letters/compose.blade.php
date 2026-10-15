@@ -51,7 +51,11 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <label class="block text-[11px] font-bold text-slate-300 mb-1">Reference No.</label>
-          <input type="text" data-olfield="ref_no" value="{{ $fields['ref_no'] ?? '' }}" class="w-full rounded-lg border border-white/20 bg-slate-800/80 text-white text-sm px-3 py-2">
+          <input type="text" data-olfield="ref_no" value="{{ $letter->serial_no ?? ($fields['ref_no'] ?? '') }}" readonly
+                 class="w-full rounded-lg border border-white/20 bg-slate-900/80 text-cyan-200 font-mono text-sm px-3 py-2 cursor-not-allowed">
+          <p class="mt-1 text-[11px] text-blue-200/70">
+            {{ isset($letter) ? "This letter's serial number." : 'Issued automatically when you save, and reserved so no two letters share one.' }}
+          </p>
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-300 mb-1">Department</label>

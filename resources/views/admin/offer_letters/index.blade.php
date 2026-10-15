@@ -32,7 +32,7 @@
       <option value="sent" @selected(request('status')==='sent')>Sent</option>
       <option value="draft" @selected(request('status')==='draft')>Draft</option>
     </select>
-    <input type="text" name="search" value="{{ request('search') }}" placeholder="Candidate name or email…" class="flex-1 min-w-[180px] rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-2.5">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="Ref no, candidate name or email…" class="flex-1 min-w-[180px] rounded-xl border border-white/20 bg-slate-900/40 text-white placeholder-slate-400 px-4 py-2.5">
     <button class="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5">Filter</button>
     @if(request()->hasAny(['company','role','status','search']))<a href="{{ route('admin.offer-letters.index') }}" class="rounded-xl border border-white/20 text-slate-200 px-4 py-2.5">Clear</a>@endif
   </form>
@@ -40,11 +40,12 @@
 
   <div class="rounded-2xl border border-white/10 bg-slate-900/40 overflow-hidden"><div class="overflow-x-auto">
    <table class="w-full text-sm"><thead class="bg-white/5 text-blue-200/80 text-xs uppercase tracking-wide"><tr>
-     <th class="text-left px-5 py-3">Candidate</th><th class="text-left px-5 py-3">Role</th><th class="text-left px-5 py-3">Company</th>
+     <th class="text-left px-5 py-3">Ref No</th><th class="text-left px-5 py-3">Candidate</th><th class="text-left px-5 py-3">Role</th><th class="text-left px-5 py-3">Company</th>
      <th class="text-left px-5 py-3">Status</th><th class="text-left px-5 py-3">Sent</th><th class="text-right px-5 py-3"></th></tr></thead>
    <tbody class="divide-y divide-white/5 text-white">
    @forelse($letters as $l)
      <tr class="hover:bg-white/5">
+       <td class="px-5 py-3 whitespace-nowrap font-mono text-xs text-cyan-200">{{ $l->serial_no ?: '—' }}</td>
        <td class="px-5 py-3"><div class="font-bold">{{ $l->candidate_name }}</div><div class="text-blue-200/60 text-xs">{{ $l->candidate_email }}</div></td>
        <td class="px-5 py-3">{{ $l->job_title ?: '—' }}</td>
        <td class="px-5 py-3">{{ $l->company_name ?: '—' }}</td>
@@ -59,7 +60,7 @@
          <a href="{{ route('admin.offer-letters.download', $l) }}" class="rounded-lg border border-cyan-400/40 bg-cyan-500/15 text-cyan-200 text-xs font-bold px-3 py-1.5 hover:bg-cyan-500/25">Download PDF</a>
        </td>
      </tr>
-   @empty<tr><td colspan="6" class="px-5 py-12 text-center text-blue-200/60">No offer letters match. Click “Create Offer Letter”.</td></tr>@endforelse
+   @empty<tr><td colspan="7" class="px-5 py-12 text-center text-blue-200/60">No offer letters match. Click “Create Offer Letter”.</td></tr>@endforelse
    </tbody></table></div></div>
   <div class="mt-5">{{ $letters->links() }}</div>
  </div></div>

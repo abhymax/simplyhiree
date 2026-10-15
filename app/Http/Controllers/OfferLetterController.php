@@ -37,7 +37,9 @@ class OfferLetterController extends Controller
         if ($request->filled('status'))  { $q->where('status', $request->input('status')); }
         if ($request->filled('search')) {
             $sv = $request->input('search');
-            $q->where(fn ($x) => $x->where('candidate_name', 'like', "%{$sv}%")->orWhere('candidate_email', 'like', "%{$sv}%"));
+            $q->where(fn ($x) => $x->where('candidate_name', 'like', "%{$sv}%")
+                ->orWhere('candidate_email', 'like', "%{$sv}%")
+                ->orWhere('serial_no', 'like', "%{$sv}%"));
         }
         $letters = $q->latest()->paginate(25)->withQueryString();
 
@@ -84,7 +86,10 @@ class OfferLetterController extends Controller
 
         $annual = $app->final_ctc ? (float) $app->final_ctc : null;
         $fields = [
-            'ref_no'       => 'SHPL/HR/OL/' . date('Y') . '/' . str_pad((int) ((OfferLetter::max('id') ?? 0) + 3001), 4, '0', STR_PAD_LEFT),
+            // Shown so the operator can see it; the definitive number is
+            // reserved when the letter is saved, so two people composing at
+            // once cannot end up sharing one.
+            'ref_no'       => OfferLetter::reserveSerial(),
             'department'   => optional($app->job)->department ?? '',
             'reporting_to' => '',
             'monthly_ctc'  => $annual ? $this->inr($annual / 12) : '',
@@ -187,6 +192,11 @@ class OfferLetterController extends Controller
 
         $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
 
+        // A revision keeps the letter's own number; it is the same document.
+        if ($offerLetter->serial_no) {
+            $data['body_html'] = $this->stampSerial($data['body_html'], $offerLetter->serial_no);
+        }
+
         // Rescheduling: the application carries the real joining date, the
         // letter has it written into the text, so both have to move together.
         $oldJoining  = $app->joining_date;
@@ -283,11 +293,18 @@ class OfferLetterController extends Controller
             : $data['body_html'] . $sigBlock;
 
         $heading = trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER';
+
+        // Reserve before rendering: whatever number the compose screen was
+        // showing, the PDF has to carry the one actually held for this row.
+        $serial = OfferLetter::reserveSerial();
+        $finalBody = $this->stampSerial($finalBody, $serial);
+
         $pdf = $this->renderPdf($data['subject'], $finalBody, $heading);
         $fileName = 'offer-letters/offer_' . $app->id . '_' . now()->format('Ymd_His') . '.pdf';
         Storage::disk('public')->put($fileName, $pdf);
 
         $letter = OfferLetter::create([
+            'serial_no'          => $serial,
             'job_application_id' => $app->id,
             'candidate_id'       => $app->candidate_id,
             'candidate_user_id'  => $app->candidate_user_id,
@@ -569,6 +586,28 @@ class OfferLetterController extends Controller
         }
 
         return [$html, $replacements];
+    }
+
+    /**
+     * Put the reserved serial into the letter body, whether the template tags it
+     * or writes it as plain text.
+     */
+    private function stampSerial(string $html, string $serial): string
+    {
+        $tagged = preg_replace(
+            '/(<span data-field="ref_no">)(.*?)(<\/span>)/s',
+            '$1' . e($serial) . '$3',
+            $html,
+            -1,
+            $hits
+        );
+
+        if ($hits) {
+            return $tagged ?? $html;
+        }
+
+        // Not tagged: replace a previously written number of the same shape.
+        return preg_replace('~SHPL/[A-Z]+/[A-Z]+/\d{4}/\d+~', $serial, $html) ?? $html;
     }
 
     /** Which of the known formats produced this rendering of the old date. */
