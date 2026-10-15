@@ -46,5 +46,11 @@
   </footer>
 
   <h1 class="title">{{ $heading ?? 'OFFER LETTER' }}</h1>
+  @if(!empty($serialNo))
+    <table class="refrow"><tr>
+      <td>Ref: <b>{{ $serialNo }}</b></td>
+      <td class="r">Date: <b>{{ now()->format('d M Y') }}</b></td>
+    </tr></table>
+  @endif
   <div class="body">{!! $bodyHtml !!}</div>
 </body></html>

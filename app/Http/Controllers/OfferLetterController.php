@@ -12,6 +12,7 @@ use Dompdf\Options;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -216,7 +217,7 @@ class OfferLetterController extends Controller
             : $data['body_html'] . $sigBlock;
 
         $heading = trim((string) ($data['heading'] ?? '')) ?: 'OFFER LETTER';
-        $pdf = $this->renderPdf($data['subject'], $finalBody, $heading);
+        $pdf = $this->renderPdf($data['subject'], $finalBody, $heading, $offerLetter->serial_no);
 
         // Replace the previous PDF rather than leaving orphans behind.
         if ($offerLetter->pdf_path) {
@@ -294,16 +295,21 @@ class OfferLetterController extends Controller
 
         $heading = trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER';
 
-        // Reserve before rendering: whatever number the compose screen was
-        // showing, the PDF has to carry the one actually held for this row.
-        $serial = OfferLetter::reserveSerial();
-        $finalBody = $this->stampSerial($finalBody, $serial);
-
-        $pdf = $this->renderPdf($data['subject'], $finalBody, $heading);
+        // The number is allocated and the row written inside one transaction.
+        // reserveSerial() locks within it, and InnoDB keeps that lock until the
+        // outermost commit, so a save running at the same moment waits until
+        // this row exists rather than being handed the same number.
         $fileName = 'offer-letters/offer_' . $app->id . '_' . now()->format('Ymd_His') . '.pdf';
-        Storage::disk('public')->put($fileName, $pdf);
 
-        $letter = OfferLetter::create([
+        [$letter, $pdf, $finalBody] = DB::transaction(function () use (
+            $data, $app, $email, $sig, $heading, $finalBody, $fileName
+        ) {
+            $serial = OfferLetter::reserveSerial();
+            $finalBody = $this->stampSerial($finalBody, $serial);
+
+            $pdf = $this->renderPdf($data['subject'], $finalBody, $heading, $serial);
+
+            $letter = OfferLetter::create([
             'serial_no'          => $serial,
             'job_application_id' => $app->id,
             'candidate_id'       => $app->candidate_id,
@@ -322,7 +328,13 @@ class OfferLetterController extends Controller
             'pdf_path'           => $fileName,
             'status'             => 'draft',
             'created_by'         => Auth::id(),
-        ]);
+            ]);
+
+            return [$letter, $pdf, $finalBody];
+        });
+
+        // Written after the row is committed, so a rolled back save leaves no file.
+        Storage::disk('public')->put($fileName, $pdf);
 
         if ($data['action'] === 'send') {
             if (!$email) {
@@ -353,7 +365,8 @@ class OfferLetterController extends Controller
         $body = str_contains($data['body_html'], '{{signature_block}}')
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
             : $data['body_html'] . $sigBlock;
-        $pdf = $this->renderPdf($data['subject'], $body, trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER');
+        $pdf = $this->renderPdf($data['subject'], $body, trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER',
+            OfferLetter::reserveSerial());
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="offer-preview.pdf"',
@@ -534,7 +547,7 @@ class OfferLetterController extends Controller
         $subject = strtr(trim((string) ($data['subject'] ?? '')) ?: 'Offer of Employment', $tokens);
         $heading = trim((string) ($data['heading'] ?? '')) ?: 'OFFER LETTER';
 
-        $pdf = $this->renderPdf($subject, $body, $heading);
+        $pdf = $this->renderPdf($subject, $body, $heading, 'SHPL/HR/OL/' . date('Y') . '/XXXX');
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
@@ -829,15 +842,25 @@ class OfferLetterController extends Controller
         return $h;
     }
 
-    private function renderPdf(string $subject, string $bodyHtml, string $heading = 'OFFER LETTER'): string
-    {
+    private function renderPdf(
+        string $subject,
+        string $bodyHtml,
+        string $heading = 'OFFER LETTER',
+        ?string $serial = null
+    ): string {
         $s = OfferLetterSetting::current();
+
+        // No template currently writes {{ref_no}}, so the number is printed by
+        // the layout. Suppressed when the body already shows it, to avoid two.
+        $showSerial = $serial && !str_contains($bodyHtml, $serial);
+
         $html = view('admin.offer_letters.pdf', [
             'subject'  => $subject,
             'heading'  => $heading,
             'bodyHtml' => $bodyHtml,
             'settings' => $s,
             'logo'     => $this->dataUri($s->logo_path),
+            'serialNo' => $showSerial ? $serial : null,
         ])->render();
 
         $options = new Options();
