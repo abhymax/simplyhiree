@@ -211,10 +211,13 @@ class OfferLetterController extends Controller
             $app->forceFill(['joining_date' => $newJoining])->save();
         }
 
-        $sigBlock = $this->signatureBlockHtml($sig);
-        $finalBody = str_contains($data['body_html'], '{{signature_block}}')
-            ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
-            : $data['body_html'] . $sigBlock;
+        // No marker means no signature. Appending one to the end used to make
+        // a letter carry a signature the template never asked for.
+        $finalBody = str_replace(
+            '{{signature_block}}',
+            $this->signatureBlockHtml($sig),
+            $data['body_html']
+        );
 
         $heading = trim((string) ($data['heading'] ?? '')) ?: 'OFFER LETTER';
         $pdf = $this->renderPdf($data['subject'], $finalBody, $heading, $offerLetter->serial_no);
@@ -288,19 +291,18 @@ class OfferLetterController extends Controller
         $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
 
         $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
-        $sigBlock = $this->signatureBlockHtml($sig);
-
-        // The signature belongs wherever {{signature_block}} sits. Falling back
-        // to the end keeps the letter valid, but it is worth saying so rather
-        // than quietly putting it where the template did not ask for.
+        // No marker means no signature. Appending one to the end used to make
+        // a letter carry a signature the template never asked for.
         $placed = str_contains($data['body_html'], '{{signature_block}}');
-        $finalBody = $placed
-            ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
-            : $data['body_html'] . $sigBlock;
+        $finalBody = str_replace(
+            '{{signature_block}}',
+            $this->signatureBlockHtml($sig),
+            $data['body_html']
+        );
         $sigNote = $placed
             ? ''
-            : ' Note: this letter has no signature-block marker, so the signature went to the end.'
-            . ' Put {{signature_block}} in the template where you want it.';
+            : ' Note: this letter has no {{signature_block}} marker, so it carries no signature.'
+            . ' Add the marker to the template where the signature should appear.';
 
         $heading = trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER';
 
@@ -371,10 +373,13 @@ class OfferLetterController extends Controller
         ]);
         $sig = !empty($data['signature_id']) ? OfferLetterSignature::find($data['signature_id']) : null;
         $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
-        $sigBlock = $this->signatureBlockHtml($sig);
-        $body = str_contains($data['body_html'], '{{signature_block}}')
-            ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
-            : $data['body_html'] . $sigBlock;
+        // No marker means no signature. Appending one to the end used to make
+        // a letter carry a signature the template never asked for.
+        $body = str_replace(
+            '{{signature_block}}',
+            $this->signatureBlockHtml($sig),
+            $data['body_html']
+        );
         $pdf = $this->renderPdf($data['subject'], $body, trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER',
             OfferLetter::reserveSerial());
         return response($pdf, 200, [
@@ -549,10 +554,9 @@ class OfferLetterController extends Controller
 
         $body = strtr($this->cleanPastedHtml($data['body_html']), $tokens);
 
-        $sigBlock = $this->signatureBlockHtml($sig);
-        $body = str_contains($body, '{{signature_block}}')
-            ? str_replace('{{signature_block}}', $sigBlock, $body)
-            : $body . $sigBlock;
+        // No marker means no signature. Appending one to the end used to make
+        // a letter carry a signature the template never asked for.
+        $body = str_replace('{{signature_block}}', $this->signatureBlockHtml($sig), $body);
 
         $subject = strtr(trim((string) ($data['subject'] ?? '')) ?: 'Offer of Employment', $tokens);
         $heading = trim((string) ($data['heading'] ?? '')) ?: 'OFFER LETTER';

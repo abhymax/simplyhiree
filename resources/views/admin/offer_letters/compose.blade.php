@@ -47,8 +47,8 @@
         @if($hasSigMarker)
           The chosen signature replaces the <code class="bg-white/10 text-cyan-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> marker below.
         @else
-          <b>This letter has no @{{signature_block}} marker</b>, so the signature will be added at the very end.
-          Type <code class="bg-white/10 text-amber-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> in the body where you want it instead.
+          <b>This letter has no @{{signature_block}} marker, so it will carry no signature.</b>
+          Type <code class="bg-white/10 text-amber-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> in the body where the signature should appear.
         @endif
       </p>
     @endif

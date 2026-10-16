@@ -68,7 +68,7 @@
           el = document.getElementById('sigState');
       if (!ed || !el) return;
       var has = ed.innerText.indexOf('@{{signature_block}}') !== -1;
-      el.textContent = has ? '\u2713 signature block placed' : '\u26a0 no signature block \u2014 it will go to the end';
+      el.textContent = has ? '\u2713 signature block placed' : '\u26a0 no signature block \u2014 no signature will be shown';
       el.className = 'ml-auto self-center text-[11px] font-bold ' + (has ? 'text-emerald-300' : 'text-amber-300');
     }
 
