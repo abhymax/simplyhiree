@@ -187,10 +187,7 @@ class ClientVendorController extends Controller
 
         // Notify every active Superadmin via email so they pick this up quickly.
         try {
-            $admins = \App\Models\User::role(['Superadmin', 'Manager'])
-                ->where('status', 'active')
-                ->whereNotNull('email')
-                ->get();
+            $admins = \App\Models\User::internalRecipients();
 
             foreach ($admins as $admin) {
                 \Illuminate\Support\Facades\Mail::send('admin.vendor_assignment_requests.email_notification', [

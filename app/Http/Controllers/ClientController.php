@@ -2303,7 +2303,7 @@ class ClientController extends Controller
     {
         $application->load(['job.user', 'candidate.partner', 'candidateUser']);
         
-        $admins = User::role(['Superadmin', 'Manager'])->get();
+        $admins = User::internalRecipients('view_application_data');
         Notification::send($admins, $notification);
 
         if ($application->candidate && $application->candidate->partner?->hasRole('partner')) {

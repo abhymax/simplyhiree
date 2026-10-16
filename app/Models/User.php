@@ -202,6 +202,33 @@ class User extends Authenticatable
      * The owner id for whichever partner team this user is part of.
      * For an owner this returns their own id; for a team-member, their parent.
      */
+    /**
+     * Internal staff who should hear about something.
+     *
+     * Superadmins always. Managers only when a permission is named and they
+     * hold it, so nobody is emailed about a screen they cannot open: every
+     * manager was being told about referral leads, for instance, while the
+     * Referrals page is Superadmin-only.
+     *
+     * @return \Illuminate\Support\Collection<int, static>
+     */
+    public static function internalRecipients(?string $permission = null)
+    {
+        // status is a candidate/partner lifecycle field and means little for
+        // staff: both Superadmins sit at 'pending'. Requiring 'active' here
+        // excluded them from these emails entirely, which is why only managers
+        // were getting them. Only genuinely disabled accounts are skipped.
+        return static::query()
+            ->whereHas('roles', fn ($r) => $r->whereIn('name', ['Superadmin', 'Manager']))
+            ->whereNotIn('status', ['inactive', 'archived'])
+            ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->get()
+            ->filter(fn (self $u) => $u->hasRole('Superadmin')
+                || ($permission !== null && $u->can($permission)))
+            ->values();
+    }
+
     public function partnerOwnerId(): ?int
     {
         return $this->parent_partner_id ?? $this->id;

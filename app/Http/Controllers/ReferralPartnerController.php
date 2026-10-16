@@ -100,7 +100,7 @@ class ReferralPartnerController extends Controller
         $partner = Auth::user();
         $lead = ReferralLead::create([...$data, 'referral_partner_id' => $partner->id]);
 
-        $admins = User::role(['Superadmin', 'Manager'])->get();
+        $admins = User::internalRecipients();
         if ($admins->isNotEmpty()) {
             Notification::send($admins, new SuperadminActivityNotification(
                 'referral.lead_submitted',

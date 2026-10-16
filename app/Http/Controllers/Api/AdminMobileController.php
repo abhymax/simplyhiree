@@ -219,7 +219,7 @@ class AdminMobileController extends Controller
         }
 
         $actorName = auth()->user()?->name;
-        $superadmins = User::role(['Superadmin', 'Manager'])->get();
+        $superadmins = User::internalRecipients('view_pending_jobs');
         foreach ($superadmins as $superadmin) {
             $superadmin->notify(new ClientJobApprovedForAdmin($job, $actorName));
         }
