@@ -42,7 +42,15 @@
         <option value="">— Choose who signs —</option>
         @foreach($signatures as $sg)<option value="{{ $sg->id }}">{{ $sg->name }}@if($sg->designation) — {{ $sg->designation }}@endif</option>@endforeach
       </select>
-      <p class="text-[11px] text-slate-300 -mt-3 mb-4">The chosen signature replaces the <code class="bg-white/10 text-cyan-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> marker in the letter.</p>
+      @php $hasSigMarker = str_contains((string) $bodyHtml, '{{signature_block}}'); @endphp
+      <p class="text-[11px] -mt-3 mb-4 {{ $hasSigMarker ? 'text-slate-300' : 'text-amber-200' }}">
+        @if($hasSigMarker)
+          The chosen signature replaces the <code class="bg-white/10 text-cyan-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> marker below.
+        @else
+          <b>This letter has no @{{signature_block}} marker</b>, so the signature will be added at the very end.
+          Type <code class="bg-white/10 text-amber-200 px-1.5 py-0.5 rounded">@{{signature_block}}</code> in the body where you want it instead.
+        @endif
+      </p>
     @endif
 
     {{-- Structured fields — typing here updates the matching spots in the letter below --}}

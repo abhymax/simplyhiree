@@ -20,7 +20,12 @@
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Default heading (PDF title)</label>
       <input name="default_heading" value="{{ old('default_heading', $tpl->default_heading ?? 'OFFER LETTER') }}" placeholder="e.g. OFFER LETTER, APPOINTMENT LETTER" class="w-full rounded-xl border border-white/20 bg-slate-800/80 text-white px-3 py-2.5"></div>
     <div><label class="block text-xs font-bold text-cyan-300 uppercase mb-2">Body</label>
-      <div class="flex flex-wrap gap-1 mb-2">@foreach(['bold'=>'B','italic'=>'I','underline'=>'U','insertUnorderedList'=>'• List'] as $cmd=>$lbl)<button type="button" onclick="document.execCommand('{{ $cmd }}',false,null);document.getElementById('editor').focus();" class="px-2.5 py-1 rounded bg-white/10 text-slate-200 text-xs font-bold">{{ $lbl }}</button>@endforeach</div>
+      <div class="flex flex-wrap gap-1 mb-2">@foreach(['bold'=>'B','italic'=>'I','underline'=>'U','insertUnorderedList'=>'• List'] as $cmd=>$lbl)<button type="button" onclick="document.execCommand('{{ $cmd }}',false,null);document.getElementById('editor').focus();" class="px-2.5 py-1 rounded bg-white/10 text-slate-200 text-xs font-bold">{{ $lbl }}</button>@endforeach
+        <span class="mx-1 w-px self-stretch bg-white/15"></span>
+        <button type="button" onclick="insertMarker('@{{signature_block}}')" title="The chosen signature is drawn in at this spot" class="px-2.5 py-1 rounded bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-xs font-bold">+ Signature block</button>
+        <button type="button" onclick="insertMarker('@{{ctc_breakup}}')" title="The salary breakup table is drawn in at this spot" class="px-2.5 py-1 rounded bg-cyan-500/15 border border-cyan-400/40 text-cyan-200 text-xs font-bold">+ CTC breakup</button>
+        <span id="sigState" class="ml-auto self-center text-[11px] font-bold"></span>
+      </div>
       <input type="hidden" name="body_html" id="body_html">
       @php $editorHtml = old('body_html', ($tpl->body_html ?? null) ?: '<p>Dear {{candidate_name}},</p><p>We are pleased to offer you the position of <b>{{job_title}}</b> at {{company}}.</p>'); @endphp
       <div id="editor" contenteditable="true" class="bg-white text-slate-900 rounded-xl px-5 py-4 min-h-[320px]" style="font-family:Georgia,serif;">{!! $editorHtml !!}</div>
@@ -41,6 +46,38 @@
     <input type="hidden" name="body_html" id="pv_body">
   </form>
   <script>
+    // Drops a marker where the cursor is, so the signature lands exactly there
+    // rather than defaulting to the end of the letter.
+    function insertMarker(marker) {
+      var ed = document.getElementById('editor');
+      ed.focus();
+      var sel = window.getSelection();
+      if (sel && sel.rangeCount && ed.contains(sel.anchorNode)) {
+        var range = sel.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(marker));
+        range.collapse(false);
+      } else {
+        ed.appendChild(document.createTextNode(marker));
+      }
+      refreshSigState();
+    }
+
+    function refreshSigState() {
+      var ed = document.getElementById('editor'),
+          el = document.getElementById('sigState');
+      if (!ed || !el) return;
+      var has = ed.innerText.indexOf('@{{signature_block}}') !== -1;
+      el.textContent = has ? '\u2713 signature block placed' : '\u26a0 no signature block \u2014 it will go to the end';
+      el.className = 'ml-auto self-center text-[11px] font-bold ' + (has ? 'text-emerald-300' : 'text-amber-300');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      refreshSigState();
+      var ed = document.getElementById('editor');
+      if (ed) ed.addEventListener('input', refreshSigState);
+    });
+
     function previewTemplate() {
       document.getElementById('pv_subject').value = document.querySelector('[name=subject]').value;
       document.getElementById('pv_heading').value = document.querySelector('[name=default_heading]').value;

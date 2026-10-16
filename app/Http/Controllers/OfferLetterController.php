@@ -289,9 +289,18 @@ class OfferLetterController extends Controller
 
         $data['body_html'] = $this->cleanPastedHtml($data['body_html']);
         $sigBlock = $this->signatureBlockHtml($sig);
-        $finalBody = str_contains($data['body_html'], '{{signature_block}}')
+
+        // The signature belongs wherever {{signature_block}} sits. Falling back
+        // to the end keeps the letter valid, but it is worth saying so rather
+        // than quietly putting it where the template did not ask for.
+        $placed = str_contains($data['body_html'], '{{signature_block}}');
+        $finalBody = $placed
             ? str_replace('{{signature_block}}', $sigBlock, $data['body_html'])
             : $data['body_html'] . $sigBlock;
+        $sigNote = $placed
+            ? ''
+            : ' Note: this letter has no signature-block marker, so the signature went to the end.'
+            . ' Put {{signature_block}} in the template where you want it.';
 
         $heading = trim((string)($data['heading'] ?? '')) ?: 'OFFER LETTER';
 
@@ -343,10 +352,11 @@ class OfferLetterController extends Controller
             }
             $this->sendEmails($letter, $pdf, $email);
             $letter->update(['status' => 'sent', 'sent_at' => now()]);
-            return redirect()->route('admin.offer-letters.index')->with('success', 'Offer letter sent to ' . $email . '.');
+            return redirect()->route('admin.offer-letters.index')
+                ->with('success', 'Offer letter sent to ' . $email . '.' . $sigNote);
         }
 
-        return redirect()->route('admin.offer-letters.index')->with('success', 'Offer letter saved as draft.');
+        return redirect()->route('admin.offer-letters.index')->with('success', 'Offer letter saved as draft.' . $sigNote);
     }
 
     /** Live preview of the current draft as an inline PDF (no save, no email). */
