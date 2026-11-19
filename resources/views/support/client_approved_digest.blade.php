@@ -10,7 +10,7 @@
         <div style="background: linear-gradient(135deg, #0443cd 0%, #312e81 100%); border-radius: 14px 14px 0 0; padding: 28px 32px; color: #fff;">
             <div style="font-size: 13px; letter-spacing: 0.18em; font-weight: 700; color: #93c5fd; text-transform: uppercase; margin-bottom: 6px;">SimplyHiree · Daily Digest</div>
             <h1 style="margin: 0 0 6px 0; font-size: 26px; font-weight: 800;">Approved Candidates for Your Jobs</h1>
-            <p style="margin: 0; color: #cbd5e1; font-size: 14px;">{{ $applications->count() }} candidate{{ $applications->count() === 1 ? '' : 's' }} approved by SimplyHiree on {{ $date->format('l, d M Y') }}</p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 14px;">{{ $applications->count() }} candidate{{ $applications->count() === 1 ? '' : 's' }} newly available for review · {{ $date->format('l, d M Y') }}</p>
         </div>
 
         {{-- Body --}}
@@ -19,8 +19,20 @@
                 Hi <strong style="color:#0f172a;">{{ $client->name }}</strong>,
             </p>
             <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                Here are the candidates that our team approved for your open positions. Log in to your dashboard to schedule interviews or mark selections.
+                Here are the candidates that our team approved for your job postings. Log in to your dashboard to schedule interviews or mark selections.
             </p>
+
+            <h2 style="margin: 0 0 8px; font-size: 17px; color: #0f172a;">New approved candidates by job</h2>
+            <ul style="margin: 0 0 22px; padding-left: 22px; color: #334155;">
+                @foreach ($applications->groupBy('job_id') as $jobApplications)
+                    @php
+                        $job = $jobApplications->first()->job;
+                    @endphp
+                    <li style="margin: 0 0 6px;">
+                        {{ $job->title }} ({{ $job->job_code }}) &mdash; <strong>{{ $jobApplications->count() }}</strong>
+                    </li>
+                @endforeach
+            </ul>
 
             <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                 <thead>

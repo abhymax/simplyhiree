@@ -13,7 +13,8 @@ class SendClientApprovedDigest extends Command
     protected $signature = 'clients:approved-applications-digest
         {--client= : Restrict to a single client user id}
         {--dry : Show counts without sending emails or marking rows}
-        {--resend : Include applications already in a previous digest}';
+        {--resend : Include applications already in a previous digest}
+        {--exclude-backlog : Exclude applications already approved when the schedule was restored}';
 
     protected $description = 'Email each client a branded morning digest of applications approved by superadmin since the last run';
 
@@ -26,6 +27,10 @@ class SendClientApprovedDigest extends Command
         $query = JobApplication::query()
             ->with(['job', 'candidate.partner', 'candidateUser.profile'])
             ->where('status', 'Approved')
+            ->where(function ($query) {
+                $query->whereNull('hiring_status')
+                    ->orWhereRaw('LOWER(hiring_status) NOT LIKE ?', ['%reject%']);
+            })
             ->whereHas('job', function ($q) use ($clientId) {
                 $q->whereNotNull('user_id');
                 if ($clientId) $q->where('user_id', (int) $clientId);
@@ -33,6 +38,16 @@ class SendClientApprovedDigest extends Command
 
         if (!$resend) {
             $query->whereNull('approved_digest_sent_at');
+        }
+
+        if ($this->option('exclude-backlog')) {
+            $path = storage_path('app/client-approved-digest-baseline.json');
+            $baseline = is_readable($path) ? json_decode(file_get_contents($path), true) : null;
+            if (!is_array($baseline) || !array_is_list($baseline)) {
+                $this->error('The digest baseline is missing or invalid.');
+                return self::FAILURE;
+            }
+            $query->whereIntegerNotInRaw('id', $baseline);
         }
 
         $apps = $query->get()->groupBy(fn ($a) => $a->job?->user_id);
@@ -65,7 +80,7 @@ class SendClientApprovedDigest extends Command
                 ], function ($message) use ($client, $rows, $csvBody, $csvName) {
                     $message->to($client->email, $client->name)
                         ->bcc([
-                            'simplyhire1@gmail.com',
+                            'support@simplyhiree.com',
                             'client@simplyhiree.com',
                         ])
                         ->subject('[SimplyHiree] ' . $rows->count() . ' new approved candidate' . ($rows->count() === 1 ? '' : 's') . ' for your jobs — ' . now()->format('d M Y'));
@@ -87,7 +102,7 @@ class SendClientApprovedDigest extends Command
         }
 
         $this->info("Done. Sent {$sentClients} client emails covering {$sentRows} applications. Errors: {$errors}.");
-        return self::SUCCESS;
+        return $errors > 0 ? self::FAILURE : self::SUCCESS;
     }
 
     /**

@@ -14,6 +14,22 @@ echo "==> App dir: $APP_DIR"
 CURRENT_COMMIT="$(git rev-parse HEAD)"
 echo "==> Current commit: $CURRENT_COMMIT"
 
+echo "==> Fetching latest code..."
+git fetch origin "$BRANCH"
+
+NEW_COMMIT="$(git rev-parse "origin/$BRANCH")"
+echo "==> Target commit: $NEW_COMMIT"
+
+echo "==> Checking client digest before deploy..."
+if ! git grep -q -F -e 'clients:approved-applications-digest' "$NEW_COMMIT" -- app/Console/Commands/SendClientApprovedDigest.php ||
+   ! git grep -q -F -e '{--exclude-backlog' "$NEW_COMMIT" -- app/Console/Commands/SendClientApprovedDigest.php ||
+   ! git cat-file -e "$NEW_COMMIT:resources/views/support/client_approved_digest.blade.php" ||
+   ! test -r storage/app/client-approved-digest-baseline.json ||
+   ! crontab -l | grep -F 'clients:approved-applications-digest --exclude-backlog' | grep -E '^0[[:space:]]+8[[:space:]]+\*[[:space:]]+\*[[:space:]]+\*[[:space:]]' >/dev/null; then
+  echo "!! Client digest command, template, backlog cutoff or 08:00 cron entry is missing. Deployment stopped."
+  exit 1
+fi
+
 echo "==> Enabling maintenance mode..."
 $PHP_BIN artisan down --render="errors::503" --retry=60 || true
 
@@ -22,12 +38,6 @@ cleanup() {
   $PHP_BIN artisan up || true
 }
 trap cleanup EXIT
-
-echo "==> Fetching latest code..."
-git fetch origin "$BRANCH"
-
-NEW_COMMIT="$(git rev-parse "origin/$BRANCH")"
-echo "==> Target commit: $NEW_COMMIT"
 
 echo "==> Resetting working tree to origin/$BRANCH..."
 git reset --hard "origin/$BRANCH"
@@ -51,13 +61,19 @@ $PHP_BIN artisan route:cache
 $PHP_BIN artisan view:cache
 $PHP_BIN artisan event:cache
 
+digest_healthy=1
+if ! $PHP_BIN artisan clients:approved-applications-digest --exclude-backlog --dry >/dev/null 2>&1; then
+  echo "!! Client digest dry run failed."
+  digest_healthy=0
+fi
+
 echo "==> Disabling maintenance mode before health check..."
 $PHP_BIN artisan up || true
 
 echo "==> Health check..."
 HTTP_CODE="$(curl -k -s -o /dev/null -w "%{http_code}" https://www.simplyhiree.com/up || true)"
-if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "302" ]; then
-  echo "!! Health check failed with HTTP $HTTP_CODE"
+if [ "$digest_healthy" = 0 ] || { [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "302" ]; }; then
+  echo "!! Deployment verification failed (health HTTP $HTTP_CODE, digest check $digest_healthy)"
   echo "!! Rolling back to previous commit: $CURRENT_COMMIT"
 
   $PHP_BIN artisan down --render="errors::503" --retry=60 || true
